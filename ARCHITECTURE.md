@@ -1,105 +1,157 @@
 Film Picker Technical Architecture
 
-Version 1.0
+Version 3.0 (Implementation Baseline)
 
 ⸻
 
-1. Executive Summary
+1. Overview
 
-Film Picker is a locally hosted, single-user recommendation application designed to help users choose films from their existing Letterboxd watchlist.
+Film Picker is a locally hosted, single-user recommendation application that helps users choose films from their existing Letterboxd watchlist.
 
-The system does not discover new films. All recommendations are generated exclusively from films contained within the user’s active watchlist.
+The application does not discover new films.
 
-The architecture combines:
+All recommendations must originate exclusively from films contained within the user’s active Letterboxd watchlist.
 
-* Deterministic filtering
+The primary objective is to reduce decision paralysis through a combination of:
+
+* Metadata enrichment
 * Semantic enrichment
-* Vector similarity search
+* Embedding-based retrieval
 * Structured scoring
+* Diversity-aware selection
 * LLM-assisted ranking
 
-The objective is to behave like a trusted film-loving friend rather than a deterministic search engine.
+The system should behave like a trusted film-loving friend rather than a deterministic search engine.
 
 ⸻
 
-2. Architectural Principles
+2. Goals
 
-Recommendation Quality Over Determinism
+Functional Goals
 
-Recommendations should be explainable but not rigidly deterministic.
+* Import Letterboxd watchlists
+* Synchronize watchlist changes
+* Enrich films with metadata
+* Enrich films with semantic understanding
+* Generate recommendations
+* Store recommendation history
+* Explain recommendations
+* Provide developer observability
 
-The system should naturally surface different suitable candidates over time while remaining consistent with user preferences.
+Non-Functional Goals
 
-Semantic Understanding Over Genre Matching
+* Local-first deployment
+* Single-user operation
+* Provider independence
+* Full recommendation auditability
+* Explainable recommendation pipeline
+* Fast recommendation generation (<30s)
 
-Genres alone are insufficient.
+⸻
 
-The recommendation engine should understand:
+3. Architectural Principles
+
+Semantic-First Recommendation
+
+Recommendations are driven primarily by semantic understanding rather than genre matching.
+
+The system should understand:
 
 * Themes
+* Emotional outcomes
 * Tone
-* Emotional impact
+* Visual style
 * Complexity
 * Pacing
 * Viewing context
-* Visual style
 
 as first-class recommendation signals.
 
-Enrich Once, Use Many Times
+⸻
 
-Semantic enrichment is generated once per film and persisted indefinitely.
+Enrich Once, Reuse Many Times
 
-Recommendation generation should be fast and should not depend on repeated enrichment calls.
+Film enrichment is generated once and persisted indefinitely.
 
-Letterboxd Is Source Of Truth
-
-Watchlist state originates from Letterboxd.
-
-Local data acts as a cache and enrichment layer.
+Recommendation generation should never depend on repeated enrichment.
 
 ⸻
 
-3. System Architecture
+Auditability Over Reproducibility
 
-High-Level Architecture
+The system should retain sufficient information to understand how recommendations were generated, even if providers, prompts or models evolve.
+
+⸻
+
+Provider Independence
+
+Embedding generation, semantic enrichment and ranking are independent subsystems.
+
+Providers must be replaceable without application redesign.
+
+⸻
+
+Letterboxd As Source Of Truth
+
+Letterboxd remains authoritative for:
+
+* Watchlist state
+* Watched status
+
+Local storage acts as an enrichment and recommendation layer.
+
+⸻
+
+4. High-Level Architecture
 
 ┌──────────────────────────────────────────────┐
 │                 Browser UI                   │
 │            Next.js + TypeScript              │
 └─────────────────────┬────────────────────────┘
-│
-▼
+                      │
+                      ▼
 ┌──────────────────────────────────────────────┐
 │                 FastAPI API                  │
 │                                              │
 │ Import Service                               │
 │ Metadata Service                             │
+│ Semantic Enrichment Service                  │
+│ Recommendation Profile Service               │
 │ Recommendation Service                       │
 │ Sync Service                                 │
 │ Provider Service                             │
 │ Developer Mode Service                       │
-└───────────────┬───────────────┬──────────────┘
-│               │
-▼               ▼
-┌─────────────┐   ┌──────────────┐
-│ PostgreSQL  │   │ Celery Worker│
-│ + pgvector  │   │ + Redis      │
-└──────┬──────┘   └──────┬───────┘
-│                 │
-▼                 ▼
-┌─────────────────────────────────┐
-│ External Providers              │
-│                                 │
-│ TMDB                            │
-│ OMDb                            │
-│ Letterboxd RSS                  │
-│ OpenAI-Compatible LLMs          │
-└─────────────────────────────────┘
+└───────────────┬──────────────────────────────┘
+                │
+                ▼
+┌──────────────────────────────────────────────┐
+│                 PostgreSQL                   │
+│                 + pgvector                   │
+└──────────────────────────────────────────────┘
+                │
+                ▼
+┌──────────────────────────────────────────────┐
+│                 Scheduler                    │
+│                                              │
+│ APScheduler                                  │
+│ FastAPI Background Tasks                     │
+└──────────────────────────────────────────────┘
+                │
+                ▼
+┌──────────────────────────────────────────────┐
+│ External Providers                           │
+│                                              │
+│ TMDB                                         │
+│ OMDb                                         │
+│ Letterboxd RSS                               │
+│ Embedding Provider                           │
+│ Semantic Enrichment Provider                 │
+│ Ranking Provider                             │
+└──────────────────────────────────────────────┘
 
 ⸻
 
-4. Technology Stack
+5. Technology Stack
 
 Frontend
 
@@ -113,19 +165,19 @@ Backend
 
 * FastAPI
 * Pydantic
-* SQLAlchemy 2.x
+* SQLAlchemy
 
 Database
 
 * PostgreSQL 16+
-* pgvector extension
+* pgvector
 
-Background Processing
+Scheduling
 
-* Celery
-* Redis
+* APScheduler
+* FastAPI Background Tasks
 
-Containerisation
+Deployment
 
 Docker Compose
 
@@ -133,590 +185,601 @@ Services:
 
 * frontend
 * api
-* worker
 * postgres
-* redis
 
 ⸻
 
-5. Core Services
+6. Provider Architecture
 
-Import Service
+The system separates AI capabilities into independent providers.
+
+Embedding Provider
 
 Responsibilities:
 
-* CSV validation
-* CSV parsing
-* Duplicate detection
-* Film creation
-* Metadata match workflow
-* Enrichment scheduling
+* Film embeddings
+* Recommendation profile embeddings
 
-Import Pipeline:
+Examples:
 
-CSV Upload
-↓
+* OpenAI
+* Voyage AI
+* Local embedding models
+
+⸻
+
+Semantic Enrichment Provider
+
+Responsibilities:
+
+* Theme extraction
+* Tone analysis
+* Emotional analysis
+* Semantic profiling
+
+Examples:
+
+* OpenAI
+* Ollama
+* LM Studio
+
+⸻
+
+Ranking Provider
+
+Responsibilities:
+
+* Candidate ranking
+* Recommendation explanations
+
+Examples:
+
+* OpenAI
+* Claude
+* OpenRouter
+* Ollama
+
+⸻
+
+7. Import & Enrichment Pipeline
+
+Letterboxd CSV
+       ↓
 Validation
-↓
+       ↓
 Film Creation
-↓
-TMDB Matching
-↓
-Metadata Retrieval
-↓
+       ↓
+Metadata Matching
+       ↓
+TMDB Retrieval
+       ↓
+OMDb Supplementation
+       ↓
 Semantic Enrichment
-↓
+       ↓
 Embedding Generation
-↓
-Persist
+       ↓
+Persistence
 
 ⸻
 
-Metadata Service
+8. Metadata Enrichment Strategy
 
-Responsibilities:
+Stored Metadata
 
-* TMDB search
-* OMDb enrichment
-* Confidence scoring
-* Metadata updates
-
-Stored Metadata:
+Identification
 
 * TMDB ID
 * IMDB ID
 * Letterboxd URI
+
+Core
+
 * Title
 * Original Title
 * Runtime
 * Release Year
 * Synopsis
+
+Classification
+
 * Genres
 * Keywords
+* Language
+* Country
+
+Crew
+
 * Director
-* Ratings
-* Poster
-* Backdrop
+
+Ratings
+
+* TMDB Rating
+* Rotten Tomatoes Score
+* Letterboxd Rating
+
+Assets
+
+* Poster URL
+* Backdrop URL
 
 ⸻
 
-Semantic Enrichment Service
+9. Semantic Enrichment Strategy
 
-Semantic enrichment is a first-class architectural component.
+Semantic enrichment is a first-class architectural subsystem.
 
-It exists independently of recommendation generation.
+Generated once per film.
 
-Each film is enriched once and cached indefinitely.
+Persisted indefinitely.
 
-Inputs:
+Generated Signals
+
+Subgenres
+
+0..n
+
+Examples:
+
+* Folk Horror
+* Psychological Horror
+* Neo-Noir
+
+Themes
+
+0..n
+
+Examples:
+
+* Identity
+* Obsession
+* Isolation
+
+Tones
+
+0..n
+
+Examples:
+
+* Bleak
+* Surreal
+* Hopeful
+
+Visual Descriptors
+
+0..n
+
+Examples:
+
+* Atmospheric
+* Gritty
+* Dreamlike
+
+Emotional Outcomes
+
+0..n
+
+Examples:
+
+* Inspired
+* Disturbed
+* Comforted
+
+Structured Ratings
+
+* Complexity
+* Pacing
+* Energy
+* Obscurity
+
+Semantic Summary
+
+Short narrative description of the film.
+
+⸻
+
+10. Semantic Profile Versioning
+
+Every enrichment record stores:
+
+* semantic_version
+* generated_by_model
+* generated_at
+
+This enables future re-enrichment without losing provenance.
+
+⸻
+
+11. Embedding Strategy
+
+Film Embeddings
+
+Generated once per film.
+
+Input:
 
 * Synopsis
 * Genres
 * Keywords
-* Director
-* Runtime
-* Ratings
-
-Outputs:
-
-* Themes
-* Subgenres
-* Tone descriptors
-* Emotional outcomes
-* Visual descriptors
-* Viewing contexts
-* Complexity score
-* Pacing score
-* Energy score
-* Obscurity score
+* Semantic profile
 * Semantic summary
+
+Stored indefinitely.
+
+⸻
+
+Multi-Embedding Support
+
+The architecture supports multiple embedding types.
+
+Examples:
+
+* semantic
+* synopsis
+* themes
+
+Initial implementation uses:
+
+* semantic
+
+only.
+
+⸻
+
+12. Recommendation Profile Service
+
+The Recommendation Profile Service is the canonical representation of user intent.
+
+The recommendation engine never directly consumes questionnaire answers.
+
+It consumes recommendation profiles.
+
+Responsibilities:
+
+* Transform questionnaire responses
+* Interpret free-text notes
+* Build recommendation profiles
+* Generate recommendation embeddings
+
+⸻
+
+Structured Profile
 
 Example:
 
 {
-“themes”: [
-“obsession”,
-“identity”,
-“grief”
-],
-“subgenres”: [
-“psychological horror”,
-“body horror”
-],
-“tones”: [
-“bleak”,
-“surreal”
-],
-“emotional_outcomes”: [
-“disturbed”,
-“haunted”
-],
-“complexity”: 4,
-“pacing”: 2
+  "genres": ["horror"],
+  "subgenres": ["folk horror"],
+  "pacing": "slow",
+  "desired_emotions": ["unsettled"]
 }
 
 ⸻
 
-Embedding Service
-
-A semantic embedding is generated once for each film.
-
-Embedding Inputs:
-
-* Synopsis
-* Genres
-* Keywords
-* Semantic enrichment tags
-* Semantic summary
-
-Output:
-
-Embedding Vector
-
-Stored using pgvector.
-
-Purpose:
-
-* Similarity search
-* Candidate retrieval
-* Future recommendation enhancements
-
-⸻
-
-6. Recommendation Architecture
-
-Recommendation generation is a four-stage pipeline.
-
-⸻
-
-Stage 1: Hard Constraint Filtering
-
-Mandatory constraints.
-
-Examples:
-
-* Watched status
-* Archived status
-* Runtime limits
-* Subtitle preference
-* Metadata resolution state
-
-Films failing hard constraints are removed.
-
-⸻
-
-Stage 2: Semantic Candidate Retrieval
-
-Inputs:
-
-* Questionnaire responses
-* Additional notes
-
-A recommendation profile is generated.
+Narrative Profile
 
 Example:
 
-“I want a slow-burn folk horror that’s unsettling but not exhausting.”
+“Slow-burn atmospheric folk horror with immersive visuals, emotional unease and strong tension.”
 
-A recommendation embedding is generated.
+⸻
 
-Candidate retrieval uses vector similarity.
+13. Recommendation Profile Caching
 
-SELECT film_id
-FROM film_embeddings
-ORDER BY embedding <=> query_embedding
-LIMIT 100
+Recommendation profiles are canonicalized before hashing.
 
-This produces the semantic candidate pool.
+Normalization rules:
+
+* Sort arrays
+* Remove empty values
+* Remove nulls
+* Normalize case
+* Normalize whitespace
+* Sort object keys recursively
+
+Flow:
+
+Recommendation Profile
+        ↓
+Canonicalization
+        ↓
+SHA-256 Hash
+        ↓
+Cache Lookup
+        ↓
+Embedding Generation (if miss)
+
+This prevents duplicate embedding generation.
+
+⸻
+
+14. Recommendation Pipeline
+
+Stage 1: Hard Constraint Filtering
+
+Remove:
+
+* Watched films
+* Archived films
+* Runtime violations
+* Subtitle violations
+* Unresolved metadata
+
+⸻
+
+Stage 2: Semantic Retrieval
+
+Generate recommendation embedding.
+
+Perform vector similarity search.
+
+Candidate count is configurable.
+
+Example:
+
+recommendation:
+  retrieval_candidate_limit: 100
 
 ⸻
 
 Stage 3: Structured Scoring
 
-Candidates are scored using deterministic signals.
+Signals include:
 
-Signals:
-
-* Genre overlap
-* Theme overlap
-* Emotional outcome overlap
-* Complexity fit
+* Theme fit
+* Emotional fit
 * Pacing fit
+* Complexity fit
 * Era fit
 * Obscurity fit
 * Viewing context fit
-* Diversity adjustment
-
-Score breakdowns are persisted.
-
-Developer Mode exposes all scoring factors.
+* Recommendation history
 
 ⸻
 
-Stage 4: LLM Ranking
+Stage 4: Diversity Adjustment
+
+Apply:
+
+* Exposure penalties
+* Freshness bonuses
+
+Inputs:
+
+* Recommendation count
+* Winner count
+* Last recommendation date
+
+⸻
+
+Stage 5: Controlled Stochastic Selection
+
+Among similarly scored candidates:
+
+* Weighted candidate selection is permitted
+* Diversity-adjusted candidates may be promoted
+
+This prevents recommendation stagnation.
+
+⸻
+
+Stage 6: LLM Ranking
 
 Input:
 
-* User answers
-* Additional notes
+* Recommendation profile
 * Candidate metadata
 * Semantic enrichment
 * Candidate scores
-
-The LLM may:
-
-* Reorder candidates
-* Promote lower-ranked candidates
-* Explain selections
 
 Output:
 
 * Winner
 * Four runners-up
-* Structured explanations
-* Caveats
+* Explanations
 * Trade-offs
 
 ⸻
 
-7. Diversity Strategy
+15. Scoring Configuration
 
-Randomness is not used.
-
-Instead:
-
-Each film tracks:
-
-* Recommendation count
-* Winner count
-* Last recommendation timestamp
-
-A diversity adjustment modifies scores.
+Scoring weights are configuration-driven.
 
 Example:
 
-Freshness Bonus
-+
-Exposure Penalty
+scoring:
+  theme_fit: 0.25
+  emotional_fit: 0.20
+  pacing_fit: 0.15
+  complexity_fit: 0.10
+  era_fit: 0.10
+  obscurity_fit: 0.05
+  viewing_context_fit: 0.05
+  diversity_adjustment: 0.10
 
-This allows similarly suitable films to rotate naturally over time.
+Stored with:
 
-Benefits:
+* scoring_version
+* weight_set
 
-* Reduced repetition
-* More discovery
-* Better long-term recommendation quality
+Developer Mode displays active scoring configuration.
 
 ⸻
 
-8. Database Model
+16. Database Model
 
 films
 
-id
-
-title
-
-year
-
-status
-
-created_at
-
-updated_at
+* id
+* title
+* year
+* status
+* created_at
+* updated_at
 
 ⸻
 
 film_metadata
 
-film_id
-
-tmdb_id
-
-imdb_id
-
-runtime
-
-synopsis
-
-language
-
-country
-
-director
-
-tmdb_rating
-
-rotten_tomatoes_score
-
-letterboxd_rating
-
-poster_url
-
-backdrop_url
-
-⸻
-
-film_keywords
-
-film_id
-
-keyword
+* film_id
+* tmdb_id
+* imdb_id
+* runtime
+* synopsis
+* language
+* country
+* director
+* tmdb_rating
+* rotten_tomatoes_score
+* letterboxd_rating
+* poster_url
+* backdrop_url
 
 ⸻
 
 film_semantic_profiles
 
-film_id
-
-subgenres JSONB
-
-themes JSONB
-
-tones JSONB
-
-visual_descriptors JSONB
-
-emotional_outcomes JSONB
-
-viewing_contexts JSONB
-
-complexity
-
-pacing
-
-energy
-
-obscurity
-
-semantic_summary
+* film_id
+* subgenres JSONB
+* themes JSONB
+* tones JSONB
+* visual_descriptors JSONB
+* emotional_outcomes JSONB
+* viewing_contexts JSONB
+* complexity
+* pacing
+* energy
+* obscurity
+* semantic_summary
+* semantic_version
+* generated_by_model
+* generated_at
 
 ⸻
 
 film_embeddings
 
-film_id
-
-embedding VECTOR
-
-embedding_model
-
-generated_at
+* film_id
+* embedding_type
+* embedding_model
+* embedding_version
+* embedding VECTOR
+* generated_at
 
 ⸻
 
 watchlist_entries
 
-id
+* id
+* film_id
+* letterboxd_uri
+* active
+* added_at
+* removed_at
 
-film_id
+⸻
 
-letterboxd_uri
+recommendation_profiles
 
-active
-
-added_at
-
-removed_at
+* id
+* session_id
+* profile_hash
+* structured_profile JSONB
+* narrative_profile
+* embedding_model
+* embedding_version
+* embedding VECTOR
+* created_at
 
 ⸻
 
 recommendation_sessions
 
-id
-
-created_at
-
-winner_film_id
-
-provider
-
-model
-
-constraint_relaxation
-
-⸻
-
-recommendation_answers
-
-id
-
-session_id
-
-question_key
-
-answer_value
+* id
+* created_at
+* winner_film_id
+* ranking_provider
+* ranking_model
+* semantic_version
+* embedding_version
+* scoring_version
+* weight_set
+* prompt_version
+* constraint_relaxation
 
 ⸻
 
 recommendation_candidates
 
-id
-
-session_id
-
-film_id
-
-raw_score
-
-final_score
-
-score_breakdown JSONB
-
-llm_rank
+* session_id
+* film_id
+* retrieval_rank
+* similarity_score
+* raw_score
+* final_score
+* llm_rank
+* score_breakdown JSONB
 
 ⸻
 
 recommendation_results
 
-session_id
-
-winner_explanation
-
-runner_up_explanations JSONB
+* session_id
+* winner_explanation
+* runner_up_explanations JSONB
 
 ⸻
 
 recommendation_exposure
 
-film_id
-
-recommendation_count
-
-winner_count
-
-last_recommended_at
+* film_id
+* recommendation_count
+* winner_count
+* last_recommended_at
 
 ⸻
 
 rss_sync_events
 
-id
-
-event_type
-
-event_timestamp
-
-payload JSONB
-
-processed
+* id
+* event_type
+* event_timestamp
+* payload JSONB
+* processed
 
 ⸻
 
 metadata_match_reviews
 
-id
-
-film_id
-
-candidate_tmdb_id
-
-confidence_score
-
-review_status
+* id
+* film_id
+* candidate_tmdb_id
+* confidence_score
+* review_status
 
 ⸻
 
-9. API Design
+system_versions
 
-Import
-
-POST /api/import/watchlist
-
-Upload Letterboxd CSV.
-
-Response:
-
-{
-“imported”: 342,
-“failed”: 2,
-“pending_review”: 3
-}
+* id
+* artifact_type
+* artifact_name
+* version
+* configuration JSONB
+* created_at
+* active
 
 ⸻
 
-Metadata
-
-POST /api/films/{id}/enrich
-
-Retry enrichment.
-
-POST /api/matches/{id}/resolve
-
-Resolve ambiguous matches.
-
-⸻
-
-Recommendations
-
-POST /api/recommendations
-
-Create recommendation session.
-
-POST /api/recommendations/{id}/answers
-
-Store questionnaire answer.
-
-POST /api/recommendations/{id}/generate
-
-Generate recommendation.
-
-Response:
-
-{
-“winner”: {},
-“runners_up”: []
-}
-
-⸻
-
-History
-
-GET /api/history
-
-Supports:
-
-* title
-* date
-* watch_status
-
-GET /api/history/{id}
-
-Returns original recommendation.
-
-⸻
-
-Sync
-
-POST /api/sync/rss
-
-Trigger RSS sync.
-
-GET /api/sync/status
-
-Retrieve sync status.
-
-⸻
-
-10. Synchronisation Strategy
-
-Source Of Truth
-
-Letterboxd
-
-Always.
-
-⸻
+17. Synchronization Strategy
 
 Manual Sync
 
 CSV Upload
-↓
-Diff
-↓
-Additions
-Removals
-Updates
+      ↓
+Diff Existing Watchlist
+      ↓
+Apply Changes
 
 ⸻
 
@@ -724,7 +787,7 @@ RSS Sync
 
 Poll every 15 minutes.
 
-Supported Events:
+Supported events:
 
 * Watchlist additions
 * Watchlist removals
@@ -732,37 +795,15 @@ Supported Events:
 
 ⸻
 
-Event Processing
+Event Ledger
 
-Watchlist Addition
-
-Create Film
-↓
-Enrich
-↓
-Activate
-
-Watchlist Removal
-
-Archive
-
-Watched Activity
-
-Mark Watched
-
-⸻
-
-Idempotency
-
-All RSS events are stored.
+rss_sync_events acts as an idempotent event ledger.
 
 Duplicate events are ignored.
 
-rss_sync_events acts as the event ledger.
-
 ⸻
 
-11. Metadata Matching Strategy
+18. Metadata Matching
 
 Confidence Scoring
 
@@ -774,41 +815,52 @@ Inputs:
 
 Thresholds:
 
-95%+     Auto Accept
+95%+ → Auto Accept
 
-80–95%   Accept + Flag
+80–95% → Accept + Flag
 
-Below 80% Manual Review
+<80% → Manual Review
 
 ⸻
 
-12. Developer Mode
+19. Version Registry
 
-Developer Mode exposes the full recommendation pipeline.
+All AI artifacts are versioned.
 
-Filtering
+Examples:
 
-* Candidate counts
-* Constraint removal
-* Relaxation history
+semantic_version: semantic-v1
+embedding_version: embedding-v1
+scoring_version: scoring-v1
+weight_set: default
+prompt_version: recommendation-v1
+
+Recommendation sessions reference active versions at generation time.
+
+⸻
+
+20. Developer Mode
+
+Developer Mode exposes:
+
+Retrieval
+
+* Recommendation profile
+* Narrative profile
+* Retrieval candidates
+* Similarity scores
 
 Scoring
 
-* Raw scores
-* Weightings
+* Weight set
+* Individual scores
 * Diversity adjustments
 
-Semantic Layer
-
-* Enrichment payload
-* Embedding metadata
-
-LLM Layer
+Ranking
 
 * Provider
 * Model
-* Prompt
-* Response
+* Prompt version
 * Token usage
 
 Metadata
@@ -816,39 +868,48 @@ Metadata
 * Match confidence
 * Source attribution
 
+Version Registry
+
+* Semantic version
+* Embedding version
+* Scoring version
+* Prompt version
+
 ⸻
 
-13. Future Expansion
+21. Future Expansion
 
-The architecture supports future enhancements without redesign.
+The architecture supports:
 
-Examples:
-
-* Conversational recommendation flows
-* Similar-film browsing
+* Conversational recommendations
+* Similar-film discovery
 * Watchlist clustering
-* Recommendation collections
-* Alternative ranking models
+* Offline recommendation generation
 * Local embedding models
-* Full semantic search
+* Alternate ranking providers
+* Semantic search
 
-Because semantic enrichment and embeddings are first-class architectural components, future recommendation capabilities can be added without changing the underlying data model.
+without redesigning the core data model.
 
 ⸻
 
-14. Success Criteria
+22. Success Criteria
 
 The system is complete when:
 
 1. Watchlists import successfully.
-2. Metadata enrichment completes successfully.
-3. Semantic enrichment is generated and persisted.
-4. Embeddings are generated and stored.
-5. RSS synchronisation updates watchlist state.
-6. Recommendations are generated from active watchlist films only.
-7. Candidate retrieval uses vector similarity.
-8. Scoring remains explainable.
-9. LLM ranking provides structured reasoning.
-10. Recommendation history is fully reproducible.
-11. Developer Mode exposes all recommendation internals.
+2. Metadata enrichment succeeds.
+3. Semantic enrichment is generated and versioned.
+4. Film embeddings are generated and stored.
+5. Recommendation profiles are generated and cached.
+6. Candidate retrieval uses vector similarity.
+7. Recommendations are generated exclusively from active watchlist films.
+8. Recommendation history is fully auditable.
+9. Retrieval traces are persisted.
+10. Developer Mode exposes recommendation internals.
+11. RSS synchronization updates watchlist state.
 12. Recommendation generation completes within 30 seconds.
+13. All recommendation artifacts are versioned and traceable.
+
+:::
+This is the version I would treat as the authoritative architecture baseline before moving into schema design, service contracts, API implementation, and build planning.
