@@ -293,6 +293,7 @@ sequenceDiagram
                     Sync->>DB: Archive film; deactivate watchlist_entry
                 else watched
                     Sync->>DB: UPDATE films SET status = watched
+                    Sync->>DB: UPDATE watchlist_entries SET active = false, removed_at
                 end
                 Sync->>DB: UPDATE rss_sync_events SET processed = true
             end
