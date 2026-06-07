@@ -1,4 +1,7 @@
-"""SQLAlchemy declarative base.
+"""SQLAlchemy declarative base."""
 
-Phase 1 will define the shared Base class for ORM models.
-"""
+from sqlalchemy.orm import DeclarativeBase
+
+
+class Base(DeclarativeBase):
+    """Shared declarative base for all ORM models."""

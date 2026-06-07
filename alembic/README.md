@@ -1,5 +1,11 @@
 # Alembic
 
-Database migrations are initialized in **Phase 1** per [`documents/database-design.md`](../documents/database-design.md).
+Database migrations live under [`api/alembic/`](../api/alembic/) with config at [`api/alembic.ini`](../api/alembic.ini).
 
-The `versions/` directory is reserved for migration scripts. Dependencies (`alembic`, `psycopg[binary]`, `pgvector`) are already declared in [`api/pyproject.toml`](../api/pyproject.toml).
+Run from the `api/` directory:
+
+```bash
+cd api && alembic upgrade head
+```
+
+In Docker, migrations run via [`api/entrypoint.sh`](../api/entrypoint.sh) before uvicorn starts.
