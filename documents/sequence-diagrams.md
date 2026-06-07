@@ -243,6 +243,7 @@ sequenceDiagram
         end
         loop Newly watched films
             Sync->>DB: UPDATE films SET status = watched
+            Sync->>DB: UPDATE watchlist_entries SET active = false, removed_at
             Note over DB: Excluded from future recommendations
         end
         Sync-->>API: { added, removed, watched, unchanged, failed }
