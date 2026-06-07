@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Repository scaffold is in place (`api/`, `frontend/`, `alembic/`, root config templates, `artifacts/`). Specifications and sample Letterboxd CSV data are in place. Runnable local dev environment (Docker Compose, health endpoint, app factory) is not yet implemented.
+**Current state:** Phase 0 complete. Runnable local dev environment is in place (Docker Compose with `postgres`, `api`, `frontend`; FastAPI app shell with config loading, standardized error handlers, and `GET /api/v1/health`; Next.js frontend with shadcn/ui theme tokens and React Query). Letterboxd CSV fixtures remain local-only (`letterboxd/` is gitignored). Next up: Phase 1 — database schema and Alembic migrations.
 
 ### Reference Documents
 
@@ -22,7 +22,7 @@ Film Picker (repository: **Cuebox**) is a locally hosted, single-user applicatio
 
 ### Test Fixtures
 
-Sample Letterboxd exports in [`../letterboxd/`](../letterboxd/) — primarily [`watchlist.csv`](../letterboxd/watchlist.csv) for integration testing.
+Sample Letterboxd exports in a local `letterboxd/` folder (gitignored) — primarily `watchlist.csv` for integration testing.
 
 ### Technology Stack
 
@@ -122,20 +122,20 @@ Router → Service → Repository → SQLAlchemy (database/)
 
 Dockerfiles are intentionally omitted from the scaffold; they are added with Docker Compose in the runnable pass below.
 
-### Task Checklist — Runnable environment (remaining)
+### Task Checklist — Runnable environment (complete)
 
-- [ ] Add `api/Dockerfile` and `frontend/Dockerfile`
-- [ ] Add `docker-compose.yml` with three services:
+- [x] Add `api/Dockerfile` and `frontend/Dockerfile`
+- [x] Add `docker-compose.yml` with three services:
   - `postgres` — pgvector-enabled image (e.g. `pgvector/pgvector:pg16`)
   - `api` — FastAPI on port 8000
   - `frontend` — Next.js on port 3000
-- [ ] Implement FastAPI app shell in `api/app/main.py`:
+- [x] Implement FastAPI app shell in `api/app/main.py`:
   - `/api/v1` router prefix
   - Standardized error envelope per [api-contracts.md §2](./api-contracts.md)
   - Exception handlers for `VALIDATION_ERROR`, `NOT_FOUND`, etc.
-- [ ] Implement `api/app/core/config.py` — load and validate `config.yaml` via Pydantic
-- [ ] Implement `GET /health` per [api-contracts.md §10.1](./api-contracts.md)
-- [ ] Install frontend dependencies; run `shadcn init`; wire React Query
+- [x] Implement `api/app/core/config.py` — load and validate `config.yaml` via Pydantic
+- [x] Implement `GET /health` per [api-contracts.md §10.1](./api-contracts.md)
+- [x] Install frontend dependencies; run `shadcn init`; wire React Query
 
 ### Suggested Modules
 
@@ -152,9 +152,9 @@ Dockerfiles are intentionally omitted from the scaffold; they are added with Doc
 
 ### Verification Gate
 
-- [ ] `docker compose up` starts all three services without errors
-- [ ] `GET http://localhost:8000/api/v1/health` returns `200` with `status: ok`
-- [ ] Frontend loads at `http://localhost:3000`
+- [x] `docker compose up` starts all three services without errors
+- [x] `GET http://localhost:8000/api/v1/health` returns `200` with `status: ok`
+- [x] Frontend loads at `http://localhost:3000`
 
 ### PRD Success Criteria Addressed
 
