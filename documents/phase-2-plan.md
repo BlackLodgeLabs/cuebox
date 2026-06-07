@@ -4,7 +4,7 @@ overview: "Implement watchlist CSV import with async metadata enrichment via TMD
 depends_on: Phase 1 (complete)
 todos:
   - id: provider-service
-    content: Implement ProviderService plus TMDB and OMDb HTTP clients (search, details, keywords, RT supplementation)
+    content: Implement ProviderService with shared httpx.AsyncClient lifecycle plus TMDB and OMDb clients (search, details, keywords, RT supplementation)
     status: pending
   - id: schemas-repos
     content: Add Pydantic request/response schemas and extend repositories (watchlist, metadata, reviews, films list)
@@ -13,7 +13,7 @@ todos:
     content: Implement CSV parsing and validation (columns, year range, 500-film limit, in-file duplicates)
     status: pending
   - id: import-service
-    content: Implement ImportService — job creation, film/watchlist inserts, background orchestrator, status aggregation
+    content: Implement ImportService — job creation, film/watchlist inserts, failed-film re-import retry, background orchestrator, status aggregation
     status: pending
   - id: metadata-service
     content: Implement MetadataService — TMDB matching, confidence scoring, film_metadata persistence, OMDb supplementation, failure handling
@@ -28,7 +28,7 @@ todos:
     content: Wire POST /reviews/{review_id}/accept and POST /reviews/{review_id}/reject per api-contracts §5
     status: pending
   - id: unit-tests
-    content: Add unit tests for CSV validation, confidence scoring, and import job status aggregation
+    content: Add unit tests for CSV validation, confidence scoring (boundary values incl. 0.945), failed-film re-import retry, and import job status aggregation
     status: pending
   - id: verify-gates
     content: Run all Phase 2 verification gate checks against letterboxd/watchlist.csv fixture
@@ -120,17 +120,43 @@ providers:
 
 API keys remain in `.env` (`TMDB_API_KEY`, `OMDB_API_KEY`) per existing convention.
 
+**Shared HTTP client lifecycle:**
+
+Bulk imports may process up to 500 films, each requiring multiple TMDB/OMDb requests. Creating and destroying an `httpx.AsyncClient` per film or per provider resolution risks socket exhaustion.
+
+`ProviderService` must own a **single, long-lived** `httpx.AsyncClient` shared by all metadata clients:
+
+- Create the client once during FastAPI lifespan startup (or lazily on first use, bound to app state)
+- Configure timeouts: connect 5s, read 30s
+- Inject the shared client into `TmdbClient` and `OmdbClient` constructors — clients do not create their own
+- Close the client on application shutdown (`lifespan` teardown)
+
+```python
+# api/app/main.py lifespan (sketch)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    ...
+    provider_service = ProviderService(settings, app_config)
+    await provider_service.startup()  # creates shared AsyncClient
+    app.state.provider_service = provider_service
+    yield
+    await provider_service.shutdown()  # closes AsyncClient
+```
+
+For tests, inject a client with a mocked `httpx.MockTransport` via the same constructor path.
+
 **TMDB client requirements:**
 
 - Base URL: `https://api.themoviedb.org/3`
 - Auth: `api_key` query parameter
-- Use `httpx.AsyncClient` with reasonable timeouts (connect 5s, read 30s)
+- Accept injected `httpx.AsyncClient` (do not instantiate internally)
 - Retry transient 429/5xx with exponential backoff (max 3 attempts, respect `Retry-After`)
 - Map responses to internal Pydantic/dataclass models (decouple from raw JSON)
 
 **OMDb client requirements:**
 
 - Base URL: `http://www.omdbapi.com/`
+- Accept injected `httpx.AsyncClient` (do not instantiate internally)
 - Parse `Ratings` array for `Source: "Rotten Tomatoes"` → integer percent
 - Graceful degradation: missing RT score is not a failure
 
@@ -138,11 +164,14 @@ API keys remain in `.env` (`TMDB_API_KEY`, `OMDB_API_KEY`) per existing conventi
 
 ```python
 class ProviderService:
+    async def startup(self) -> None: ...   # create shared AsyncClient + clients
+    async def shutdown(self) -> None: ...  # close AsyncClient
+
     def get_tmdb_client(self) -> TmdbClient: ...
     def get_omdb_client(self) -> OmdbClient | None: ...  # None when disabled or no key
 ```
 
-**Acceptance:** Clients can be instantiated in tests with mocked `httpx` transport; missing API key raises clear error at enrichment time (not at import).
+**Acceptance:** A single `AsyncClient` instance is reused across an entire import job; clients can be tested with a mocked transport; missing API key raises clear error at enrichment time (not at import).
 
 ---
 
@@ -167,7 +196,7 @@ Match field names and types exactly to [api-contracts.md §3–§5](./api-contra
 | `watchlist_repository.py` | `create_active_entry`, `get_active_by_film_id` |
 | `film_metadata_repository.py` | `upsert`, `get_by_film_id` |
 | `metadata_review_repository.py` | `create`, `get_by_id`, `list_pending`, `update_status` |
-| `film_repository.py` | `list_films` (filters + pagination), `create`, `update_enrichment_status`, `count_by_import_job_status` |
+| `film_repository.py` | `list_films` (filters + pagination), `create`, `update_enrichment_status`, `reset_failed_for_retry` (pending + new `import_job_id`), `count_by_import_job_status` |
 | `import_job_repository.py` | `mark_complete`, `list_films_for_job` |
 
 **Acceptance:** Schemas validate against api-contracts JSON examples; repositories are thin (no business logic).
@@ -235,12 +264,16 @@ Renormalize weights when director signal is N/A (no credits data).
 
 **Threshold actions** (per roadmap + sequence diagrams):
 
-| Confidence | Action |
-|------------|--------|
-| ≥ 0.95 | Auto-accept: insert `film_metadata`, `enrichment_status → enriching` |
-| 0.80 – 0.94 | Accept + flag: insert `film_metadata`, create `metadata_match_reviews` (`review_status: pending`, `candidate_payload` snapshot), `enrichment_status → enriching` |
-| < 0.80 | Manual review: create `metadata_match_reviews` (`review_status: pending`), `enrichment_status → review_required`; **no** `film_metadata` yet |
+Use **half-open inequality ranges** so every floating-point score maps to exactly one branch (no gap between 0.94 and 0.95):
+
+| Condition | Action |
+|-----------|--------|
+| `score >= 0.95` | Auto-accept: insert `film_metadata`, `enrichment_status → enriching` |
+| `0.80 <= score < 0.95` | Accept + flag: insert `film_metadata`, create `metadata_match_reviews` (`review_status: pending`, `candidate_payload` snapshot), `enrichment_status → enriching` |
+| `score < 0.80` | Manual review: create `metadata_match_reviews` (`review_status: pending`), `enrichment_status → review_required`; **no** `film_metadata` yet |
 | No TMDB match | `enrichment_status → failed`, reason `"TMDB match not found"` |
+
+Example: `score = 0.945` → Accept + flag (`0.80 <= 0.945 < 0.95`).
 
 #### `film_metadata` fields to persist
 
@@ -264,7 +297,7 @@ Renormalize weights when director signal is N/A (no credits data).
 - Set film `enrichment_status → failed`
 - Increment job `failed_films`, append `failure_summary`
 
-**Acceptance:** Unit tests for confidence thresholds; integration test with mocked TMDB responses.
+**Acceptance:** Unit tests for confidence thresholds at boundary values (`0.7999`, `0.80`, `0.945`, `0.9499`, `0.95`); integration test with mocked TMDB responses.
 
 ---
 
@@ -278,11 +311,17 @@ Renormalize weights when director signal is N/A (no credits data).
 
 1. Validate uploaded file via CSV parser
 2. Create `import_jobs` (`status: running`)
-3. For each parsed row:
-   - If `letterboxd_uri` already exists in DB → increment `duplicate_films`, skip insert
-   - Else insert `films` (`enrichment_status: pending`, `status: active`, `import_job_id`)
-   - Insert `watchlist_entries` (`active: true`)
-4. Set `total_films` on job
+3. For each parsed row, resolve by `letterboxd_uri`:
+
+   | Existing film? | `enrichment_status` | Action |
+   |----------------|---------------------|--------|
+   | No | — | Insert `films` (`pending`, `active`, `import_job_id`); insert `watchlist_entries` (`active: true`); queue for enrichment |
+   | Yes | `failed` | **Retry** per [api-contracts.md Appendix A](./api-contracts.md): reset `enrichment_status → pending`, set `import_job_id` to new job, update `title`/`year` from CSV if changed; ensure active `watchlist_entries` row exists; queue for enrichment — **do not** increment `duplicate_films` |
+   | Yes | any other | Increment `duplicate_films`, skip (film already imported and not retryable) |
+
+   Retried films count toward `total_films` and are included in the background enrichment queue.
+
+4. Set `total_films` on job (new inserts + retried `failed` films)
 5. Schedule `run_import_enrichment(job_id)` background task
 6. Return `202 Accepted` with `job_id`
 
@@ -383,7 +422,8 @@ Register in `api/app/routers/v1/__init__.py`.
 | File | Coverage |
 |------|----------|
 | `test_csv_parser.py` | Column validation, year range, 500 limit, dedup |
-| `test_confidence_scoring.py` | Threshold boundaries (0.79, 0.80, 0.94, 0.95) |
+| `test_confidence_scoring.py` | Threshold boundaries (`0.7999`, `0.80`, `0.945`, `0.9499`, `0.95`) |
+| `test_import_retry.py` | Re-import of `failed` film resets to `pending` and queues enrichment; non-failed duplicate skipped |
 | `test_import_job_status.py` | Counter aggregation, completion detection |
 
 **Integration tests** (mocked HTTP):
@@ -517,7 +557,28 @@ curl -s -X POST "http://localhost:8000/api/v1/reviews/$REVIEW_ID/reject" | jq .
 | Reject | `failed` |
 | Re-accept/re-reject same review | `409 CONFLICT` |
 
-### Gate 6 — Error cases
+### Gate 6 — Failed-film re-import retry
+
+Re-import a watchlist CSV that includes a film previously in `enrichment_status = failed` (e.g. from Gate 5 reject, or a TMDB match failure).
+
+```bash
+# After at least one film is failed, re-upload the same CSV
+curl -s -F "file=@letterboxd/watchlist.csv" http://localhost:8000/api/v1/import | jq .
+# Poll new job until complete; verify previously-failed film is no longer failed (or re-failed with new attempt)
+docker compose exec postgres psql -U cuebox -d cuebox -c \
+  "SELECT letterboxd_uri, enrichment_status, import_job_id FROM films WHERE enrichment_status = 'failed';"
+```
+
+**Pass criteria:**
+
+| Check | Expected |
+|-------|----------|
+| Re-import of `failed` film | `duplicate_films` **not** incremented for that row |
+| Film state after retry scheduling | `enrichment_status` reset to `pending`, then processed by new job |
+| `import_job_id` | Updated to the new job ID |
+| Re-import of `ready`/`enriching`/etc. film | `duplicate_films` incremented; no re-processing |
+
+### Gate 7 — Error cases
 
 ```bash
 # Invalid CSV (wrong columns)
@@ -530,7 +591,7 @@ curl -s http://localhost:8000/api/v1/import/00000000-0000-0000-0000-000000000099
 
 **Pass criteria:** `INVALID_CSV_FORMAT` (400), `NOT_FOUND` (404) with standardized error envelope.
 
-### Gate 7 — Regression
+### Gate 8 — Regression
 
 ```bash
 cd api && pytest tests/ -v
@@ -557,7 +618,8 @@ As each todo completes, change `- [ ]` → `- [x]` in the Phase 2 **Task Checkli
 | `GET /import/{job_id}/status` | Gate 3 passes |
 | FastAPI Background Task orchestrator | Films process asynchronously after import |
 | TMDB search by title + year | MetadataService unit tests pass |
-| Confidence scoring | Threshold unit tests pass |
+| Confidence scoring | Threshold unit tests pass (incl. `0.945` → accept + flag) |
+| Failed-film re-import retry | Gate 6 passes |
 | Persist `film_metadata` | Gate 4 detail endpoint shows metadata block |
 | OMDb supplementation | RT score present when OMDb key configured |
 | Handle enrichment failures | `failure_summary` populated in Gate 3 |
@@ -606,7 +668,8 @@ Change the **Current state** line at the top of `roadmap.md`:
 | Missing OMDb key | Skip RT supplementation silently; `rotten_tomatoes_score` remains null |
 | CSV encoding issues | Try UTF-8 with BOM fallback; reject undecodable files with `INVALID_CSV_FORMAT` |
 | Accept review without persisted metadata | Fetch full TMDB details on accept if `candidate_payload` is snapshot-only |
-| Duplicate import of same URI | Skip insert, increment `duplicate_films` (not an error) |
+| Duplicate import of same URI | Skip and increment `duplicate_films` **unless** existing film is `failed` — then retry per Appendix A |
+| Socket exhaustion on bulk import | Single shared `httpx.AsyncClient` in `ProviderService`; closed on app shutdown |
 
 ---
 
@@ -624,7 +687,8 @@ Change the **Current state** line at the top of `roadmap.md`:
 | Repositories | `api/app/repositories/watchlist_repository.py`, `film_metadata_repository.py`, `metadata_review_repository.py` |
 | Routers | `api/app/routers/v1/import.py`, `films.py`, `reviews.py` |
 | Config update | `config.example.yaml`, `api/app/core/config.py` |
-| Tests | `api/tests/test_csv_parser.py`, `test_confidence_scoring.py`, `test_import_api.py`, etc. |
+| Shared HTTP client | `ProviderService.startup()` / `shutdown()` in lifespan; injected into TMDB/OMDb clients |
+| Tests | `api/tests/test_csv_parser.py`, `test_confidence_scoring.py`, `test_import_retry.py`, `test_import_api.py`, etc. |
 | Roadmap | `documents/roadmap.md` — Phase 2 checked off |
 
 ---
@@ -634,7 +698,7 @@ Change the **Current state** line at the top of `roadmap.md`:
 Phase 2 is **done** when:
 
 1. All 11 todos in this plan are `completed`
-2. All 7 verification gates pass
+2. All 8 verification gates pass
 3. `documents/roadmap.md` Phase 2 task checklist and verification gate are fully checked
 4. Overview reflects Phase 2 complete / Phase 3 next
 5. Changes are committed, pushed, and PR is ready for review
@@ -650,7 +714,7 @@ For reviewable incremental PRs within Phase 2:
 | **2a — Providers** | TMDB/OMDb clients, ProviderService, config | — |
 | **2b — Import** | CSV parser, ImportService, import routers, background orchestrator | Gates 1–3 |
 | **2c — Metadata** | MetadataService, confidence scoring, failure handling | Gate 3 film states |
-| **2d — Films & Reviews** | Film/review endpoints, repositories, schemas | Gates 4–6 |
-| **2e — Gates & Roadmap** | Tests, gate verification, roadmap update | All gates |
+| **2d — Films & Reviews** | Film/review endpoints, repositories, schemas | Gates 4–5 |
+| **2e — Gates & Roadmap** | Tests, gate verification (incl. failed-film retry), roadmap update | Gates 6–8 |
 
 Each slice should keep `pytest` green before merging.
