@@ -281,10 +281,11 @@ sequenceDiagram
         RSS-->>Sync: Feed entries (additions, removals, watched)
 
         loop For each feed event
-            Sync->>DB: INSERT rss_sync_events (processed: false)
+            Sync->>DB: Check if event already exists
             alt Duplicate event (idempotent)
                 Sync->>DB: Skip (event already exists)
             else New event
+                Sync->>DB: INSERT rss_sync_events (processed: false)
                 alt watchlist_add
                     Sync->>DB: INSERT/restore film + watchlist_entry
                     Sync->>BG: Schedule enrichment if new
