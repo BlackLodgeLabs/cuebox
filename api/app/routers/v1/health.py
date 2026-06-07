@@ -19,7 +19,7 @@ _PROVIDER_KEY_ATTR: dict[str, str] = {
 
 
 def _provider_status(provider_name: str, settings: Settings) -> Literal["ok", "error"]:
-    attr = _PROVIDER_KEY_ATTR.get(provider_name)
+    attr = _PROVIDER_KEY_ATTR.get(provider_name.lower())
     if attr is None:
         return "error"
 
