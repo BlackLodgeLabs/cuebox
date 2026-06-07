@@ -21,5 +21,7 @@ def check_database() -> bool:
         with _engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         return True
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception("Database connection check failed")
         return False
