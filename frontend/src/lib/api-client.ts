@@ -1,11 +1,23 @@
 /**
  * Base API client for Cuebox backend.
- *
- * Runnable Phase 0 will implement error envelope parsing per api-contracts.md §2.
  */
+
+import type { ErrorResponse, HealthResponse } from "@/types/api";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+
+export class ApiClientError extends Error {
+  readonly code: string;
+  readonly details: ErrorResponse["error"]["details"];
+
+  constructor(error: ErrorResponse["error"]) {
+    super(error.message);
+    this.name = "ApiClientError";
+    this.code = error.code;
+    this.details = error.details;
+  }
+}
 
 export async function fetchApi<T>(
   path: string,
@@ -20,9 +32,27 @@ export async function fetchApi<T>(
   });
 
   if (!response.ok) {
-    // TODO: parse ErrorResponse envelope from api-contracts.md §2
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    let body: ErrorResponse | undefined;
+    try {
+      body = (await response.json()) as ErrorResponse;
+    } catch {
+      throw new Error(
+        `API request failed: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    if (body?.error) {
+      throw new ApiClientError(body.error);
+    }
+
+    throw new Error(
+      `API request failed: ${response.status} ${response.statusText}`,
+    );
   }
 
   return response.json() as Promise<T>;
+}
+
+export function getHealth(): Promise<HealthResponse> {
+  return fetchApi<HealthResponse>("/health");
 }
