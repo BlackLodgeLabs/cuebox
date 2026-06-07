@@ -8,6 +8,8 @@ _engine: Engine | None = None
 
 def init_engine(database_url: str) -> None:
     global _engine
+    if _engine is not None:
+        _engine.dispose()
     _engine = create_engine(database_url)
 
 
