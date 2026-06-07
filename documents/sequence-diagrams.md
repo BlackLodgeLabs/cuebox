@@ -177,7 +177,7 @@ sequenceDiagram
 
     User->>UI: Open films pending review
     UI->>API: GET /films/review-required
-    API->>DB: SELECT films WHERE enrichment_status = review_required
+    API->>DB: SELECT pending reviews from metadata_match_reviews
     DB-->>API: Films with candidate_payload & confidence_score
     API-->>UI: 200 OK { data: [...] }
     UI-->>User: Display candidate match for review
