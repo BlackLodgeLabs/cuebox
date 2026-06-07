@@ -21,10 +21,10 @@ class ProviderService:
         self._tmdb: TmdbClient | None = None
         self._omdb: OmdbClient | None = None
 
-    async def startup(self) -> None:
+    async def startup(self, http_client: httpx.AsyncClient | None = None) -> None:
         if self._http_client is not None:
             return
-        self._http_client = httpx.AsyncClient(timeout=_HTTP_TIMEOUT)
+        self._http_client = http_client or httpx.AsyncClient(timeout=_HTTP_TIMEOUT)
         if self._config.providers.metadata.tmdb.enabled and self._settings.tmdb_api_key:
             self._tmdb = TmdbClient(self._http_client, self._settings.tmdb_api_key)
         if (

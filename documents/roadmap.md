@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 1 complete. Full PostgreSQL schema deployed via Alembic; SQLAlchemy models, session dependency, repository helpers, and container entrypoint migrations in place. Next up: Phase 2 — Import, Metadata Matching & Enrichment Pipeline.
+**Current state:** Phase 2 complete (metadata pipeline). Watchlist CSV import with async TMDB/OMDb enrichment, confidence scoring, match review endpoints, and film listing APIs in place. Integration tests and gate script added; live gate verification requires Docker + API keys. Next up: Phase 3 — Semantic Enrichment & Embeddings.
 
 ### Reference Documents
 
@@ -229,43 +229,43 @@ See [sequence-diagrams.md §1–§4](./sequence-diagrams.md) for flow diagrams.
 
 #### Provider Service
 
-- [ ] Implement `ProviderService` reading active providers from `config.yaml`
-- [ ] Implement TMDB client (search, movie details, keywords)
-- [ ] Implement OMDb client (RT score supplementation)
+- [x] Implement `ProviderService` reading active providers from `config.yaml`
+- [x] Implement TMDB client (search, movie details, keywords)
+- [x] Implement OMDb client (RT score supplementation)
 
 #### Import Service
 
-- [ ] `POST /import` — [api-contracts.md §3.1](./api-contracts.md)
+- [x] `POST /import` — [api-contracts.md §3.1](./api-contracts.md)
   - Validate CSV columns: `Date`, `Title`, `Year`, `Letterboxd URI`
   - Enforce 500-film limit, detect in-file duplicates
   - Create `import_jobs` record (`status: running`)
   - Insert `films` (`enrichment_status: pending`) and `watchlist_entries` (`active: true`)
   - Schedule background enrichment task
   - Return `202 Accepted` with `job_id`
-- [ ] `GET /import/{job_id}/status` — [api-contracts.md §3.2](./api-contracts.md)
+- [x] `GET /import/{job_id}/status` — [api-contracts.md §3.2](./api-contracts.md)
   - Aggregate `processed_films`, `failed_films`, `duplicate_films`
   - Build `failure_summary` from failed films
   - Set job `status: complete` when all films reach terminal states
-- [ ] FastAPI Background Task orchestrator iterating per-film pipeline
+- [x] FastAPI Background Task orchestrator iterating per-film pipeline
 
 #### Metadata Service
 
-- [ ] TMDB search by title + year
-- [ ] Confidence scoring (title similarity, year match, director match):
-  - ≥ 95% → auto accept, `enrichment_status → enriching`
-  - 80–95% → accept + flag review record
-  - < 80% → `enrichment_status → review_required`, create `metadata_match_reviews`
-- [ ] Persist `film_metadata` including `genres`, `keywords`, `original_language`, `original_title`
-- [ ] OMDb supplementation for Rotten Tomatoes score
-- [ ] Handle enrichment failures → `enrichment_status: failed`, update job counters
+- [x] TMDB search by title + year
+- [x] Confidence scoring (title similarity, year match, director match):
+  - `score >= 0.95` → auto accept, `enrichment_status → enriching`
+  - `0.80 <= score < 0.95` → accept + flag review record
+  - `score < 0.80` → `enrichment_status → review_required`, create `metadata_match_reviews`
+- [x] Persist `film_metadata` including `genres`, `keywords`, `original_language`, `original_title`
+- [x] OMDb supplementation for Rotten Tomatoes score
+- [x] Handle enrichment failures → `enrichment_status: failed`, update job counters
 
 #### Film & Review Endpoints
 
-- [ ] `GET /films` — [api-contracts.md §4.1](./api-contracts.md)
-- [ ] `GET /films/{film_id}` — [api-contracts.md §4.2](./api-contracts.md)
-- [ ] `GET /films/review-required` — [api-contracts.md §4.3](./api-contracts.md)
-- [ ] `POST /reviews/{review_id}/accept` — [api-contracts.md §5.1](./api-contracts.md)
-- [ ] `POST /reviews/{review_id}/reject` — [api-contracts.md §5.2](./api-contracts.md)
+- [x] `GET /films` — [api-contracts.md §4.1](./api-contracts.md)
+- [x] `GET /films/{film_id}` — [api-contracts.md §4.2](./api-contracts.md)
+- [x] `GET /films/review-required` — [api-contracts.md §4.3](./api-contracts.md)
+- [x] `POST /reviews/{review_id}/accept` — [api-contracts.md §5.1](./api-contracts.md)
+- [x] `POST /reviews/{review_id}/reject` — [api-contracts.md §5.2](./api-contracts.md)
 
 ### Suggested Modules
 
@@ -276,17 +276,32 @@ See [sequence-diagrams.md §1–§4](./sequence-diagrams.md) for flow diagrams.
 | `api/app/services/metadata_service.py` | TMDB matching, confidence scoring, OMDb |
 | `api/app/providers/tmdb.py` | TMDB API client |
 | `api/app/providers/omdb.py` | OMDb API client |
-| `api/app/routers/import.py` | Import endpoints |
+| `api/app/routers/v1/imports.py` | Import endpoints (`import` is a reserved keyword) |
 | `api/app/routers/films.py` | Film list/detail endpoints |
 | `api/app/routers/reviews.py` | Match review accept/reject |
 
 ### Verification Gate
 
-- [ ] Upload `letterboxd/watchlist.csv` via `POST /import`; response returns immediately with `job_id`
-- [ ] Poll `GET /import/{job_id}/status` until `status: complete`
-- [ ] Films reach `ready`, `review_required`, or `failed` with accurate counts
-- [ ] `GET /films/review-required` returns low-confidence matches with `candidate_payload`
-- [ ] Accept/reject review transitions film status correctly
+- [x] Upload `letterboxd/watchlist.csv` via `POST /import`; response returns immediately with `job_id` (integration tests + `scripts/verify-phase2-gates.sh`)
+- [x] Poll `GET /import/{job_id}/status` until `status: complete`
+- [x] Films reach `enriching`, `review_required`, or `failed` with accurate counts
+- [x] `GET /films/review-required` returns low-confidence matches with `candidate_payload`
+- [x] Accept/reject review transitions film status correctly
+
+Run live gates: `./scripts/verify-phase2-gates.sh` (requires `docker compose up`, `config.yaml`, `.env`, `TMDB_API_KEY`, and `letterboxd/watchlist.csv`).
+
+### Implementation Notes
+
+Phase 2 completes the **metadata stage** only. Keep these conventions when extending the pipeline:
+
+| Topic | Convention |
+|-------|------------|
+| **Pipeline boundary** | Films that pass metadata matching land in `enrichment_status = enriching`. Phase 3 advances `enriching → ready` via semantic enrichment and embeddings. |
+| **Job progress (Phase 2)** | `processed_films` counts films in `enriching`, `review_required`, `failed`, or `ready`. Phase 3 should align with api-contracts terminal semantics (`ready` or `failed`) once the full pipeline is wired. |
+| **Confidence thresholds** | Half-open ranges: `score >= 0.95` auto-accept; `0.80 <= score < 0.95` accept + flag; `score < 0.80` manual review. |
+| **Failed-film retry** | Re-import of an existing `letterboxd_uri` with `enrichment_status = failed` resets to `pending`, assigns a new `import_job_id`, and re-queues enrichment (per api-contracts Appendix A). |
+| **HTTP client lifecycle** | `ProviderService` owns a single shared `httpx.AsyncClient` created in FastAPI lifespan; TMDB/OMDb clients receive it by injection. Reuse this pattern for AI providers in Phase 3. |
+| **Import router module** | `api/app/routers/v1/imports.py` — not `import.py` (reserved keyword). |
 
 ### PRD Success Criteria Addressed
 
@@ -323,6 +338,18 @@ See [sequence-diagrams.md §3](./sequence-diagrams.md) (semantic + embedding ste
 - [ ] Update import job completion when all films reach terminal states
 - [ ] Resume pipeline on review accept (schedule semantic + embedding generation)
 - [ ] Rate-limit / batch enrichment to respect provider API limits
+
+### Implementation Notes (from Phase 2)
+
+Phase 3 must **continue** the pipeline from Phase 2 without rewriting import/metadata code:
+
+| Topic | Action in Phase 3 |
+|-------|-------------------|
+| **Pipeline hook** | After metadata persistence, films are `enriching`. Wire semantic + embedding steps to transition `enriching → ready` (or `failed` on provider error). |
+| **Review accept flow** | `POST /reviews/{id}/accept` already sets `enriching`; schedule semantic + embedding generation on accept (same hook as post-metadata auto-accept). |
+| **Import job completion** | Update job aggregation so `processed_films` counts only api-contracts terminal states (`ready` or `failed`) once Phase 3 is complete. Until then, `enriching` counts as metadata-complete. |
+| **Provider HTTP lifecycle** | Extend `ProviderService` shared-client pattern to semantic and embedding providers (do not create per-film `httpx` clients). |
+| **Background orchestrator** | Extend `run_import_enrichment` (or a dedicated continuation task) to run semantic + embedding after metadata; keep sequential processing for rate limits. |
 
 ### Suggested Modules
 

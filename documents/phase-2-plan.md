@@ -5,37 +5,37 @@ depends_on: Phase 1 (complete)
 todos:
   - id: provider-service
     content: Implement ProviderService with shared httpx.AsyncClient lifecycle plus TMDB and OMDb clients (search, details, keywords, RT supplementation)
-    status: pending
+    status: completed
   - id: schemas-repos
     content: Add Pydantic request/response schemas and extend repositories (watchlist, metadata, reviews, films list)
-    status: pending
+    status: completed
   - id: csv-validation
     content: Implement CSV parsing and validation (columns, year range, 500-film limit, in-file duplicates)
-    status: pending
+    status: completed
   - id: import-service
     content: Implement ImportService — job creation, film/watchlist inserts, failed-film re-import retry, background orchestrator, status aggregation
-    status: pending
+    status: completed
   - id: metadata-service
     content: Implement MetadataService — TMDB matching, confidence scoring, film_metadata persistence, OMDb supplementation, failure handling
-    status: pending
+    status: completed
   - id: import-endpoints
     content: Wire POST /import and GET /import/{job_id}/status routers per api-contracts §3
-    status: pending
+    status: completed
   - id: film-endpoints
     content: Wire GET /films, GET /films/{film_id}, GET /films/review-required per api-contracts §4
-    status: pending
+    status: completed
   - id: review-endpoints
     content: Wire POST /reviews/{review_id}/accept and POST /reviews/{review_id}/reject per api-contracts §5
-    status: pending
+    status: completed
   - id: unit-tests
     content: Add unit tests for CSV validation, confidence scoring (boundary values incl. 0.945), failed-film re-import retry, and import job status aggregation
-    status: pending
+    status: completed
   - id: verify-gates
     content: Run all Phase 2 verification gate checks against letterboxd/watchlist.csv fixture
-    status: pending
+    status: completed
   - id: update-roadmap
     content: Check off Phase 2 task checklist and verification gate items in documents/roadmap.md; update overview current state
-    status: pending
+    status: completed
 isProject: false
 ---
 
