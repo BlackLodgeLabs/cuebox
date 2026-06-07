@@ -50,9 +50,14 @@ class ImportService:
                     if old_job_id and old_job_id != job.id:
                         old_job = import_job_repository.get_by_id(db, old_job_id)
                         if old_job is not None and old_job.total_films is not None:
-                            new_total = max(0, old_job.total_films - 1)
+                            # Recalculate counters for the previous job after moving the film
+                            counts = film_repository.count_by_import_job_status(db, old_job_id)
                             import_job_repository.update_counters(
-                                db, old_job, total_films=new_total
+                                db,
+                                old_job,
+                                total_films=counts["total"],
+                                processed_films=counts["processed"],
+                                failed_films=counts["failed"],
                             )
                     watchlist_repository.ensure_active_entry(
                         db,
