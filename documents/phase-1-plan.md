@@ -19,7 +19,7 @@ todos:
     content: Implement get_db session dependency and SessionLocal factory in api/app/database/session.py
     status: pending
   - id: startup-migrations
-    content: Run alembic upgrade head in API lifespan before serving traffic
+    content: Run alembic upgrade head via container entrypoint script before uvicorn (not blocking FastAPI lifespan)
     status: pending
   - id: repository-helpers
     content: Add basic repository/query helpers for common lookups (films, system_versions, import_jobs)
@@ -61,7 +61,7 @@ flowchart TD
     B --> C[3. Migration 0002]
     B --> D[4. SQLAlchemy models]
     D --> E[5. Session + get_db]
-    E --> F[6. Startup migrations]
+    E --> F[6. Entrypoint migrations]
     F --> G[7. Repository helpers]
     G --> H[8. Verification gates]
     H --> I[9. Update roadmap]
@@ -120,23 +120,66 @@ flowchart TD
    - `recommendation_exposure`
    - `rss_sync_events`
    - `system_versions`
-4. All `ALTER TABLE ... ADD CONSTRAINT` checks from §4 and §6
-5. All indexes from §7 (B-tree, GIN, partial, unique)
+4. All `ALTER TABLE ... ADD CONSTRAINT` checks from §4 and §6 — **except** `watchlist_entries.uq_watchlist_film_active` (see design deviation below)
+5. All indexes from §7 (B-tree, GIN, partial, unique), including the corrected watchlist partial unique index
 6. HNSW indexes:
    - `idx_film_embeddings_semantic_hnsw` on `film_embeddings` (`WHERE embedding_type = 'semantic'`)
    - `idx_rec_profiles_embedding_hnsw` on `recommendation_profiles` (`WHERE embedding IS NOT NULL`)
 7. `set_updated_at()` function + triggers on tables with `updated_at`:
    - `films`
    - `film_metadata`
-8. View: `v_recommendation_candidates_detail` (§8)
+8. View: `v_recommendation_candidates_detail` (§8) — **must use raw SQL** (see below)
 
 **Downgrade:** Drop in reverse order (view → triggers → function → indexes → tables → enums → extensions).
 
 **Notes:**
 
 - Use `op.execute()` for pgvector `VECTOR(1536)` columns and HNSW indexes where Alembic autogenerate is insufficient.
-- PostgreSQL 16 `UNIQUE NULLS NOT DISTINCT` for `watchlist_entries.uq_watchlist_film_active`.
 - Trigger syntax: `EXECUTE FUNCTION set_updated_at()` per database-design.md (PG 14+).
+
+#### Design deviation — `watchlist_entries` active-entry uniqueness
+
+[`database-design.md`](./database-design.md) specifies:
+
+```sql
+CONSTRAINT uq_watchlist_film_active UNIQUE NULLS NOT DISTINCT (film_id, active)
+```
+
+This has a critical flaw: `active` is `BOOLEAN NOT NULL`, so `NULLS NOT DISTINCT` is redundant, and the constraint incorrectly limits each film to **at most one** `active = false` row. A user who adds, removes, and re-adds/removes the same film will hit a unique violation on the second removal.
+
+**Implement instead** a partial unique index in the migration (do **not** add the table-level unique constraint):
+
+```sql
+CREATE UNIQUE INDEX uq_watchlist_film_active
+    ON watchlist_entries (film_id)
+    WHERE (active = TRUE);
+```
+
+This ensures at most one active watchlist entry per film while allowing unlimited historical inactive entries. Document this deviation in the migration file comment; consider a follow-up PR to update `database-design.md` §4.6.
+
+#### Raw SQL required — `v_recommendation_candidates_detail` view
+
+Alembic does not natively support database views in autogenerate or standard DDL operations. The view **must** be created and dropped via `op.execute()` in both `upgrade()` and `downgrade()`:
+
+```python
+def upgrade() -> None:
+    op.execute("""
+        CREATE OR REPLACE VIEW v_recommendation_candidates_detail AS
+        SELECT
+            rc.session_id,
+            rc.film_id,
+            ...
+        FROM recommendation_candidates rc
+        JOIN films f ON f.id = rc.film_id
+        LEFT JOIN film_metadata fmd ON fmd.film_id = rc.film_id
+        LEFT JOIN film_semantic_profiles fsp ON fsp.film_id = rc.film_id;
+    """)
+
+def downgrade() -> None:
+    op.execute("DROP VIEW IF EXISTS v_recommendation_candidates_detail;")
+```
+
+Use the full `SELECT` from database-design.md §8. Do not rely on `op.create_table()` or autogenerate for views.
 
 **Acceptance:** `alembic upgrade head` on a fresh database completes without errors.
 
@@ -181,6 +224,7 @@ INSERT INTO system_versions (artifact_type, artifact_name, version, active) VALU
 - Map all 7 PostgreSQL enums via `sqlalchemy.Enum` with `native_enum=True` and `create_constraint=False` (enums created in migration).
 - Use `pgvector.sqlalchemy.Vector(1536)` for embedding columns.
 - Match column types, defaults, nullability, and FK `ondelete` behaviour from database-design.md.
+- For `WatchlistEntry`, do **not** map `uq_watchlist_film_active` as a `UniqueConstraint` on `(film_id, active)` — the partial unique index is migration-only and not representable as a standard SQLAlchemy table constraint.
 - Define `relationship()` where useful for Phase 2+ (e.g. `Film.metadata`, `Film.watchlist_entries`).
 
 **Suggested model groups (can be one file or submodules):**
@@ -204,39 +248,90 @@ RecommendationExposure, RssSyncEvent, SystemVersion
 
 **Implement:**
 
-- `SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)`
-- Refactor `init_engine()` to also create/rebind `SessionLocal`
-- `get_db()` generator: `yield session` → `finally: session.close()`
-- Keep existing `check_database()` for health endpoint
+Because the engine is created dynamically inside `init_engine()` during the FastAPI lifespan, **do not** bind `SessionLocal` at module import time — that would bind to `None` or a stale engine.
 
-**Acceptance:** `get_db` can be used as `Depends(get_db)` in a test route or unit test.
+Define `SessionLocal` without a bind at module level and configure it inside `init_engine()`:
+
+```python
+_engine: Engine | None = None
+SessionLocal = sessionmaker(autoflush=False, autocommit=False)
+
+def init_engine(database_url: str) -> None:
+    global _engine
+    if _engine is not None:
+        _engine.dispose()
+    _engine = create_engine(database_url)
+    SessionLocal.configure(bind=_engine)
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+```
+
+- Keep existing `check_database()` for health endpoint
+- `get_db()` must only be called after `init_engine()` has run (true for all FastAPI request handlers via lifespan)
+
+**Acceptance:** `get_db` can be used as `Depends(get_db)` in a test route or unit test after `init_engine()` is called in the test fixture.
 
 ---
 
-### Step 6 — Run migrations on API startup
+### Step 6 — Run migrations before serving traffic (entrypoint, not lifespan)
 
-**Goal:** Fresh deployments self-bootstrap schema before serving traffic.
+**Goal:** Fresh deployments self-bootstrap schema before the API accepts requests.
 
-**Modify:** `api/app/main.py` lifespan
+**Do not** run Alembic synchronously inside the FastAPI lifespan. Blocking `command.upgrade()` in the lifespan stalls the event loop. In containerised deployments it also risks race conditions/lock contention if multiple instances start concurrently, and forces the application process to hold DDL privileges rather than separating migration from serving.
 
-**Implement:**
+**Preferred approach — container entrypoint script:**
+
+Create `api/entrypoint.sh`:
+
+```bash
+#!/bin/sh
+set -e
+alembic upgrade head
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000 "$@"
+```
+
+Update `api/Dockerfile`:
+
+```dockerfile
+COPY alembic.ini alembic/ ./
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
+```
+
+For local `docker compose` dev with `--reload`, pass reload flags via `CMD` or compose `command:` override as needed.
+
+**`api/app/main.py` lifespan** should only call `init_engine()` — no Alembic calls.
+
+**Fallback (if entrypoint is not viable):** run migrations in a background thread to avoid blocking the event loop:
 
 ```python
+import asyncio
 from alembic.config import Config
 from alembic import command
 
-# In lifespan, after init_engine:
-alembic_cfg = Config("alembic.ini")  # adjust path for Docker WORKDIR
-alembic_cfg.set_main_option("sqlalchemy.url", settings.database_url)
-command.upgrade(alembic_cfg, "head")
+async def run_migrations() -> None:
+    alembic_cfg = Config("alembic.ini")
+    alembic_cfg.set_main_option("sqlalchemy.url", settings.database_url)
+    await asyncio.to_thread(command.upgrade, alembic_cfg, "head")
+
+# In lifespan, before init_engine:
+await run_migrations()
 ```
+
+Prefer the entrypoint approach; reserve the `asyncio.to_thread` fallback for environments where a separate init step cannot be configured.
 
 **Docker considerations:**
 
-- Ensure `alembic.ini` and `alembic/` are copied into the API image (update `api/Dockerfile` if Alembic lives at repo root).
-- API `depends_on: postgres` is not sufficient for readiness — add retry loop or wait-for-it if migrations fail on cold start.
+- Ensure `alembic.ini` and `alembic/` are copied into the API image.
+- API `depends_on: postgres` is not sufficient for readiness — add a retry loop in `entrypoint.sh` (e.g. `until alembic upgrade head; do sleep 1; done`) or a Postgres healthcheck before the API container starts.
 
-**Acceptance:** `docker compose up` on a fresh volume runs migrations and `GET /api/v1/health` returns `database: ok`.
+**Acceptance:** `docker compose up` on a fresh volume runs migrations via entrypoint, then serves traffic; `GET /api/v1/health` returns `database: ok`.
 
 ---
 
@@ -295,6 +390,14 @@ docker compose exec postgres psql -U cuebox -d cuebox -c "\dv"
 | Tables | 14: `import_jobs`, `films`, `film_metadata`, `film_semantic_profiles`, `film_embeddings`, `watchlist_entries`, `metadata_match_reviews`, `recommendation_profiles`, `recommendation_sessions`, `recommendation_candidates`, `recommendation_results`, `recommendation_exposure`, `rss_sync_events`, `system_versions` |
 | Enums | 7 types from database-design.md §3 |
 | View | `v_recommendation_candidates_detail` exists |
+| Watchlist uniqueness | Partial unique index `uq_watchlist_film_active ON watchlist_entries (film_id) WHERE active = TRUE` — **not** a table-level `UNIQUE (film_id, active)` constraint |
+
+Verify watchlist index:
+
+```bash
+docker compose exec postgres psql -U cuebox -d cuebox -c \
+  "SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'watchlist_entries' AND indexname = 'uq_watchlist_film_active';"
+```
 
 Optional scripted check:
 
@@ -359,7 +462,7 @@ As each todo completes, change `- [ ]` → `- [x]` in the Phase 1 **Task Checkli
 | Create migration `0002_seed_system_versions` | Gate 3 passes |
 | Implement SQLAlchemy models | All models import; metadata has 14 tables |
 | Implement `get_db` | Session dependency usable in tests |
-| Run `alembic upgrade head` on startup | Gate 5 passes |
+| Run `alembic upgrade head` before serving (entrypoint) | Gate 5 passes |
 | Add repository helpers | Repository modules exist and are tested |
 
 ### Verification gate updates
@@ -392,8 +495,12 @@ Change the **Current state** line at the top of `roadmap.md`:
 | Risk | Mitigation |
 |------|------------|
 | pgvector HNSW DDL not supported by Alembic autogenerate | Hand-write `op.execute()` for vector columns and HNSW indexes |
+| Alembic views not supported in autogenerate | Create/drop `v_recommendation_candidates_detail` via `op.execute()` in upgrade/downgrade |
+| `uq_watchlist_film_active` unique constraint blocks re-add/remove cycles | Use partial unique index `ON watchlist_entries (film_id) WHERE active = TRUE` instead |
+| `SessionLocal` bound at import time before engine exists | Define unbound `sessionmaker`; call `SessionLocal.configure(bind=engine)` in `init_engine()` |
+| Migrations blocking event loop or causing multi-instance lock contention | Run `alembic upgrade head` in container entrypoint before uvicorn; avoid synchronous lifespan calls |
 | Alembic path mismatch between local dev and Docker | Co-locate `alembic.ini` with API package; copy into Docker image |
-| Postgres not ready when API starts migrations | Retry loop in lifespan or `depends_on` + healthcheck |
+| Postgres not ready when API starts migrations | Retry loop in `entrypoint.sh` or `depends_on` + Postgres healthcheck |
 | Enum/type drift between migration and ORM | Generate models from spec; verify with `\dT` and model inspection |
 | `updated_at` triggers missing on `film_metadata` | Explicit checklist item in 0001 migration |
 
@@ -407,8 +514,9 @@ Change the **Current state** line at the top of `roadmap.md`:
 | Schema migration | `alembic/versions/0001_initial_schema.py` |
 | Seed migration | `alembic/versions/0002_seed_system_versions.py` |
 | ORM models | `api/app/database/models.py` (+ `base.py`) |
-| Session DI | `api/app/database/session.py` — `get_db` |
-| Startup hook | `api/app/main.py` — `alembic upgrade head` |
+| Session DI | `api/app/database/session.py` — unbound `SessionLocal` + `get_db` |
+| Migration entrypoint | `api/entrypoint.sh` — `alembic upgrade head && uvicorn ...` |
+| Dockerfile update | `api/Dockerfile` — copy Alembic assets, set `ENTRYPOINT` |
 | Repositories | `api/app/repositories/*.py` |
 | Tests (optional) | `api/tests/test_migrations.py`, `api/tests/test_repositories.py` |
 | Roadmap | `documents/roadmap.md` — Phase 1 checked off |
