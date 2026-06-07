@@ -37,6 +37,8 @@ class ImportService:
             existing = film_repository.get_by_letterboxd_uri(db, row.letterboxd_uri)
             if existing is not None:
                 if existing.enrichment_status == EnrichmentStatus.FAILED:
+                    # Capture the original job to adjust its counters after moving
+                    old_job_id = existing.import_job_id
                     film_repository.reset_failed_for_retry(
                         db,
                         existing,
@@ -44,6 +46,14 @@ class ImportService:
                         title=row.title,
                         year=row.year,
                     )
+                    # If the film belonged to a different (older) job, decrement that job's total
+                    if old_job_id and old_job_id != job.id:
+                        old_job = import_job_repository.get_by_id(db, old_job_id)
+                        if old_job is not None and old_job.total_films is not None:
+                            new_total = max(0, old_job.total_films - 1)
+                            import_job_repository.update_counters(
+                                db, old_job, total_films=new_total
+                            )
                     watchlist_repository.ensure_active_entry(
                         db,
                         film_id=existing.id,
@@ -162,10 +172,23 @@ def _sync_job_progress(db: Session, job_id: uuid.UUID) -> None:
         return
     counts = film_repository.count_by_import_job_status(db, job_id)
     failed_films = film_repository.list_failed_for_job(db, job_id)
-    failure_summary = [
-        {"letterboxd_uri": f.letterboxd_uri, "reason": "Enrichment failed"}
-        for f in failed_films
-    ] if failed_films else None
+    # Preserve any existing, specific failure reasons already recorded on the job.
+    if failed_films:
+        existing_reasons = {}
+        if job.failure_summary:
+            for item in job.failure_summary:
+                uri = item.get("letterboxd_uri")
+                if uri:
+                    existing_reasons[uri] = item.get("reason", "Enrichment failed")
+        failure_summary = [
+            {
+                "letterboxd_uri": f.letterboxd_uri,
+                "reason": existing_reasons.get(f.letterboxd_uri, "Enrichment failed"),
+            }
+            for f in failed_films
+        ]
+    else:
+        failure_summary = None
     import_job_repository.update_counters(
         db,
         job,
