@@ -84,3 +84,56 @@ def test_health_provider_keys_missing(client):
     assert response.status_code == 200
     providers = response.json()["providers"]
     assert all(value == "error" for value in providers.values())
+
+
+LOCAL_PROVIDERS_CONFIG_YAML = """
+developer_mode: false
+
+providers:
+  embedding:
+    provider: voyage
+    model: voyage-3
+  semantic_enrichment:
+    provider: ollama
+    model: llama3
+  ranking:
+    provider: lm_studio
+    model: local-model
+
+recommendation:
+  retrieval_candidate_limit: 100
+
+scoring:
+  theme_fit: 0.25
+  emotional_fit: 0.20
+  pacing_fit: 0.15
+  complexity_fit: 0.10
+  era_fit: 0.10
+  obscurity_fit: 0.05
+  viewing_context_fit: 0.05
+  diversity_adjustment: 0.10
+"""
+
+
+@pytest.fixture
+def local_providers_client(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(LOCAL_PROVIDERS_CONFIG_YAML, encoding="utf-8")
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://test:test@localhost:5432/test")
+    monkeypatch.setenv("CONFIG_PATH", str(config_path))
+    get_settings.cache_clear()
+
+    with TestClient(create_app()) as test_client:
+        yield test_client
+
+    get_settings.cache_clear()
+
+
+def test_health_local_providers_without_env_keys(local_providers_client):
+    with patch("app.routers.v1.health.check_database", return_value=True):
+        response = local_providers_client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    providers = response.json()["providers"]
+    assert all(value == "ok" for value in providers.values())
