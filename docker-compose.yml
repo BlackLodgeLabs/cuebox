@@ -3,9 +3,9 @@ services:
     image: pgvector/pgvector:pg16
     env_file: .env
     environment:
-      POSTGRES_USER: cuebox
-      POSTGRES_PASSWORD: cuebox
-      POSTGRES_DB: cuebox
+      POSTGRES_USER: ${POSTGRES_USER:-cuebox}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cuebox}
+      POSTGRES_DB: ${POSTGRES_DB:-cuebox}
     ports:
       - "5432:5432"
     volumes:
