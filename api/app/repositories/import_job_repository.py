@@ -25,6 +25,15 @@ def create(
     return job
 
 
+def mark_complete(db: Session, job: ImportJob) -> ImportJob:
+    from datetime import UTC, datetime
+
+    job.status = ImportJobStatus.COMPLETE
+    job.completed_at = datetime.now(UTC)
+    db.flush()
+    return job
+
+
 def update_counters(
     db: Session,
     job: ImportJob,
@@ -32,9 +41,12 @@ def update_counters(
     processed_films: int | None = None,
     failed_films: int | None = None,
     duplicate_films: int | None = None,
-    failure_summary: dict[str, Any] | None = None,
+    total_films: int | None = None,
+    failure_summary: dict[str, Any] | list[Any] | None = None,
     status: ImportJobStatus | None = None,
 ) -> ImportJob:
+    if total_films is not None:
+        job.total_films = total_films
     if processed_films is not None:
         job.processed_films = processed_films
     if failed_films is not None:

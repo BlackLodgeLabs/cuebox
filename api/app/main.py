@@ -8,11 +8,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.core.config import get_settings, init_app_config
+from app.core.config import get_app_config, get_settings, init_app_config
 from app.core.exceptions import AppError
 from app.database.session import init_engine
 from app.routers.v1 import router as v1_router
 from app.schemas.errors import ErrorBody, ErrorCode, ErrorDetail, ErrorResponse
+from app.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,11 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     init_app_config(settings.config_path)
     init_engine(settings.database_url)
+    provider_service = ProviderService(settings, get_app_config())
+    await provider_service.startup()
+    app.state.provider_service = provider_service
     yield
+    await provider_service.shutdown()
 
 
 def create_app() -> FastAPI:
