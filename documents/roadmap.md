@@ -1,6 +1,6 @@
 # Film Picker — Implementation Roadmap
 
-Version 1.0
+Version 1.1
 
 ---
 
@@ -8,7 +8,7 @@ Version 1.0
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** No application code exists. Specifications and sample Letterboxd CSV data are in place.
+**Current state:** Repository scaffold is in place (`api/`, `frontend/`, `alembic/`, root config templates, `artifacts/`). Specifications and sample Letterboxd CSV data are in place. Runnable local dev environment (Docker Compose, health endpoint, app factory) is not yet implemented.
 
 ### Reference Documents
 
@@ -60,66 +60,95 @@ Phases 4 and 5 can run in parallel once Phase 3 is complete. Phase 6 requires bo
 **Duration:** 3–5 days  
 **Goal:** Runnable local dev environment with provider configuration and service skeleton.
 
-### Task Checklist
+### API layering
 
-- [ ] Create repository layout:
+```
+Router → Service → Repository → SQLAlchemy (database/)
+```
+
+### Task Checklist — Repository scaffold (complete)
+
+- [x] Create repository layout:
   ```
-  cuebox/
+  Cuebox/
   ├── api/
   │   ├── app/
-  │   │   ├── main.py
-  │   │   ├── config.py
-  │   │   ├── routers/
+  │   │   ├── main.py              # stub
+  │   │   ├── core/
+  │   │   │   └── config.py        # stub; load/validate config.yaml
+  │   │   ├── routers/v1/
   │   │   ├── services/
-  │   │   ├── models/
+  │   │   ├── repositories/
+  │   │   ├── database/
+  │   │   │   ├── base.py
+  │   │   │   ├── session.py
+  │   │   │   └── models.py
   │   │   ├── schemas/
+  │   │   │   └── errors.py        # api-contracts §2
   │   │   └── providers/
   │   ├── tests/
-  │   ├── pyproject.toml
-  │   └── Dockerfile
+  │   └── pyproject.toml           # incl. alembic, psycopg[binary], pgvector
   ├── frontend/
   │   ├── src/
   │   │   ├── app/
+  │   │   ├── features/            # watchlist, recommendations, history, dev-mode
   │   │   ├── components/
   │   │   ├── hooks/
+  │   │   ├── types/               # shared Film, Recommendation, ApiError, etc.
   │   │   └── lib/
+  │   │       └── api-client.ts
   │   ├── package.json
-  │   └── Dockerfile
+  │   └── (Next.js / Tailwind / shadcn config stubs)
   ├── alembic/
-  ├── docker-compose.yml
+  │   └── versions/                # placeholder; env.py in Phase 1
+  ├── artifacts/                   # generated outputs (OpenAPI, ERDs, coverage)
   ├── config.example.yaml
-  └── .env.example
+  ├── .env.example
+  └── .gitignore
   ```
-- [ ] Configure Docker Compose with three services:
-  - `postgres` — pgvector-enabled image (e.g. `pgvector/pgvector:pg16`)
-  - `api` — FastAPI on port 8000
-  - `frontend` — Next.js on port 3000
-- [ ] Create `config.example.yaml` with sections:
+- [x] Create `config.example.yaml` with sections:
   - `providers.embedding`, `providers.semantic_enrichment`, `providers.ranking`
   - `scoring` weights (see [Architecture.md §16](./Architecture.md))
   - `recommendation.retrieval_candidate_limit`
   - `developer_mode: false`
-- [ ] Create `.env.example` documenting:
+- [x] Create `.env.example` documenting:
   - `DATABASE_URL`
   - `CONFIG_PATH` (mounted config.yaml location)
   - `TMDB_API_KEY`, `OMDB_API_KEY`
   - AI provider keys (OpenAI, Anthropic, etc.)
-- [ ] Implement FastAPI app shell:
+- [x] Add `.gitignore` excluding `config.yaml`, `.env`, and node_modules
+- [x] Add `api/app/schemas/errors.py` — error envelope models per [api-contracts.md §2](./api-contracts.md)
+- [x] Declare Phase 1 database dependencies in `api/pyproject.toml`: `alembic`, `psycopg[binary]`, `pgvector`
+
+Dockerfiles are intentionally omitted from the scaffold; they are added with Docker Compose in the runnable pass below.
+
+### Task Checklist — Runnable environment (remaining)
+
+- [ ] Add `api/Dockerfile` and `frontend/Dockerfile`
+- [ ] Add `docker-compose.yml` with three services:
+  - `postgres` — pgvector-enabled image (e.g. `pgvector/pgvector:pg16`)
+  - `api` — FastAPI on port 8000
+  - `frontend` — Next.js on port 3000
+- [ ] Implement FastAPI app shell in `api/app/main.py`:
   - `/api/v1` router prefix
   - Standardized error envelope per [api-contracts.md §2](./api-contracts.md)
   - Exception handlers for `VALIDATION_ERROR`, `NOT_FOUND`, etc.
+- [ ] Implement `api/app/core/config.py` — load and validate `config.yaml` via Pydantic
 - [ ] Implement `GET /health` per [api-contracts.md §10.1](./api-contracts.md)
-- [ ] Scaffold Next.js app with TailwindCSS, shadcn/ui, React Query
-- [ ] Add `.gitignore` excluding `config.yaml`, `.env`, and node_modules
+- [ ] Install frontend dependencies; run `shadcn init`; wire React Query
 
 ### Suggested Modules
 
 | Module | Responsibility |
 |--------|----------------|
 | `api/app/main.py` | App factory, middleware, router registration |
-| `api/app/config.py` | Load and validate `config.yaml` via Pydantic |
+| `api/app/core/config.py` | Load and validate `config.yaml` via Pydantic |
 | `api/app/schemas/errors.py` | Error envelope models |
+| `api/app/repositories/` | Data-access layer (Repository pattern) |
+| `api/app/database/` | SQLAlchemy base, session, ORM models |
 | `frontend/src/lib/api-client.ts` | Base fetch wrapper with error parsing |
+| `frontend/src/features/` | Feature-oriented UI (watchlist, recommendations, history, dev-mode) |
+| `frontend/src/types/` | Shared TypeScript types across features |
 
 ### Verification Gate
 
@@ -160,8 +189,9 @@ None directly — infrastructure prerequisite for all criteria.
 
 | Module | Responsibility |
 |--------|----------------|
-| `api/app/models/` | One module per table group (films, recommendations, sync) |
-| `api/app/db/session.py` | Engine, session factory, dependency injection |
+| `api/app/database/models.py` | SQLAlchemy ORM models (expand per table group as needed) |
+| `api/app/database/session.py` | Engine, session factory, dependency injection |
+| `api/app/repositories/` | Query helpers and data-access for common lookups |
 | `alembic/versions/0001_initial_schema.py` | Full DDL |
 | `alembic/versions/0002_seed_system_versions.py` | Seed data |
 
@@ -767,6 +797,8 @@ Raw questionnaire answers are not stored separately; the structured profile is t
 - `config.yaml` — mounted into API container; excluded from version control
 - `config.example.yaml` — committed template with all keys documented
 - `.env.example` — committed; documents secret env vars
+- `documents/` — authored specifications (PRD, architecture, API contracts)
+- `artifacts/` — implementation-generated outputs (OpenAPI exports, ERDs, coverage reports); contents gitignored, structure committed
 
 ---
 
