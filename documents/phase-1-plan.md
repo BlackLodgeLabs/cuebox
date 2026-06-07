@@ -5,31 +5,31 @@ depends_on: Phase 0 (complete)
 todos:
   - id: alembic-init
     content: Initialise Alembic (env.py, script.py.mako, alembic.ini) with sync SQLAlchemy engine wired to DATABASE_URL and Base.metadata
-    status: pending
+    status: completed
   - id: migration-0001
     content: Create 0001_initial_schema migration — extensions, enums, 14 tables, constraints, indexes, HNSW indexes, view, set_updated_at triggers
-    status: pending
+    status: completed
   - id: migration-0002
     content: Create 0002_seed_system_versions migration — insert 4 active system version records
-    status: pending
+    status: completed
   - id: sqlalchemy-models
     content: Implement SQLAlchemy ORM models for all 14 tables and 7 enums in api/app/database/
-    status: pending
+    status: completed
   - id: session-dependency
     content: Implement get_db session dependency and SessionLocal factory in api/app/database/session.py
-    status: pending
+    status: completed
   - id: startup-migrations
     content: Run alembic upgrade head via container entrypoint script before uvicorn (not blocking FastAPI lifespan)
-    status: pending
+    status: completed
   - id: repository-helpers
     content: Add basic repository/query helpers for common lookups (films, system_versions, import_jobs)
-    status: pending
+    status: completed
   - id: verify-gates
     content: Run all Phase 1 verification gate checks (fresh bootstrap, schema inventory, seed data, HNSW indexes)
-    status: pending
+    status: completed
   - id: update-roadmap
     content: Check off Phase 1 task checklist and verification gate items in documents/roadmap.md; update overview current state
-    status: pending
+    status: completed
 isProject: false
 ---
 

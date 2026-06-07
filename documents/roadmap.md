@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 0 complete. Runnable local dev environment is in place (Docker Compose with `postgres`, `api`, `frontend`; FastAPI app shell with config loading, standardized error handlers, and `GET /api/v1/health`; Next.js frontend with shadcn/ui theme tokens and React Query). Letterboxd CSV fixtures remain local-only (`letterboxd/` is gitignored). Next up: Phase 1 — database schema and Alembic migrations.
+**Current state:** Phase 1 complete. Full PostgreSQL schema deployed via Alembic; SQLAlchemy models, session dependency, repository helpers, and container entrypoint migrations in place. Next up: Phase 2 — Import, Metadata Matching & Enrichment Pipeline.
 
 ### Reference Documents
 
@@ -170,20 +170,21 @@ None directly — infrastructure prerequisite for all criteria.
 
 ### Task Checklist
 
-- [ ] Initialise Alembic in `alembic/` with SQLAlchemy async/sync engine config
-- [ ] Create migration `0001_initial_schema`:
+- [x] Initialise Alembic in `api/alembic/` with SQLAlchemy sync engine config
+- [x] Create migration `0001_initial_schema`:
   - Extensions: `pgcrypto`, `vector`
   - All enums (see [database-design.md §3](./database-design.md))
   - All 14 tables in dependency order (see [database-design.md §4](./database-design.md))
   - All constraints and indexes including HNSW indexes
   - View `v_recommendation_candidates_detail`
   - `set_updated_at()` trigger on tables with `updated_at`
-- [ ] Create migration `0002_seed_system_versions`:
+  - Partial unique index `uq_watchlist_film_active` (see [phase-1-plan.md](./phase-1-plan.md))
+- [x] Create migration `0002_seed_system_versions`:
   - Insert active records for `semantic-v1`, `embedding-v1`, `scoring-v1`, `recommendation-v1`
-- [ ] Implement SQLAlchemy models mirroring all tables
-- [ ] Implement database session dependency (`get_db`)
-- [ ] Run `alembic upgrade head` on API startup before serving traffic
-- [ ] Add basic repository/query helpers for common lookups
+- [x] Implement SQLAlchemy models mirroring all tables
+- [x] Implement database session dependency (`get_db`)
+- [x] Run `alembic upgrade head` via container entrypoint before serving traffic
+- [x] Add basic repository/query helpers for common lookups
 
 ### Suggested Modules
 
@@ -192,8 +193,9 @@ None directly — infrastructure prerequisite for all criteria.
 | `api/app/database/models.py` | SQLAlchemy ORM models (expand per table group as needed) |
 | `api/app/database/session.py` | Engine, session factory, dependency injection |
 | `api/app/repositories/` | Query helpers and data-access for common lookups |
-| `alembic/versions/0001_initial_schema.py` | Full DDL |
-| `alembic/versions/0002_seed_system_versions.py` | Seed data |
+| `api/alembic/versions/0001_initial_schema.py` | Full DDL |
+| `api/alembic/versions/0002_seed_system_versions.py` | Seed data |
+| `api/entrypoint.sh` | Migration entrypoint before uvicorn |
 
 ### Tables Created
 
@@ -201,10 +203,10 @@ None directly — infrastructure prerequisite for all criteria.
 
 ### Verification Gate
 
-- [ ] Fresh database bootstraps via `alembic upgrade head` without errors
-- [ ] All 14 tables, enums, indexes, and view exist
-- [ ] `SELECT * FROM system_versions WHERE active = true` returns 4 rows
-- [ ] HNSW indexes present on `film_embeddings` and `recommendation_profiles`
+- [x] Fresh database bootstraps via `alembic upgrade head` without errors
+- [x] All 14 tables, enums, indexes, and view exist
+- [x] `SELECT * FROM system_versions WHERE active = true` returns 4 rows
+- [x] HNSW indexes present on `film_embeddings` and `recommendation_profiles`
 
 ### PRD Success Criteria Addressed
 
