@@ -1,0 +1,40 @@
+# Secrets and local config
+config.yaml
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Generated artifacts (keep folder structure via README + .gitkeep)
+artifacts/coverage/
+artifacts/openapi/*.json
+artifacts/openapi/*.yaml
+artifacts/openapi/*.yml
+artifacts/erd/*.png
+artifacts/erd/*.svg
+artifacts/erd/*.pdf
+
+# IDE / OS
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,28 @@
+# Copy this file to config.yaml and adjust values for your environment.
+# API keys belong in .env, not in this file.
+
+developer_mode: false
+
+providers:
+  embedding:
+    provider: openai
+    model: text-embedding-3-small
+  semantic_enrichment:
+    provider: openai
+    model: gpt-4o-mini
+  ranking:
+    provider: openai
+    model: gpt-4o
+
+recommendation:
+  retrieval_candidate_limit: 100
+
+scoring:
+  theme_fit: 0.25
+  emotional_fit: 0.20
+  pacing_fit: 0.15
+  complexity_fit: 0.10
+  era_fit: 0.10
+  obscurity_fit: 0.05
+  viewing_context_fit: 0.05
+  diversity_adjustment: 0.10
