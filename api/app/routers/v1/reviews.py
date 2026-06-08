@@ -3,13 +3,15 @@
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_db, get_metadata_service
+from app.dependencies import get_db, get_metadata_service, get_provider_service
 from app.repositories import metadata_review_repository
 from app.schemas.review_schemas import ReviewActionResponse
+from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.services.metadata_service import MetadataService
+from app.services.provider_service import ProviderService
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
@@ -17,11 +19,14 @@ router = APIRouter(prefix="/reviews", tags=["reviews"])
 @router.post("/{review_id}/accept", response_model=ReviewActionResponse)
 async def accept_review(
     review_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     metadata_service: MetadataService = Depends(get_metadata_service),
+    provider_service: ProviderService = Depends(get_provider_service),
 ) -> ReviewActionResponse:
     film = await metadata_service.accept_review(db, review_id)
     db.commit()
+    background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
     review = metadata_review_repository.get_by_id(db, review_id)
     return ReviewActionResponse(
         review_id=review_id,

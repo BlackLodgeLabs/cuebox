@@ -33,6 +33,10 @@ class RecommendationConfig(BaseModel):
     retrieval_candidate_limit: int
 
 
+class EnrichmentConfig(BaseModel):
+    inter_film_delay_seconds: float = 0.25
+
+
 class ScoringConfig(BaseModel):
     theme_fit: float
     emotional_fit: float
@@ -64,6 +68,7 @@ class AppConfig(BaseModel):
     developer_mode: bool
     providers: ProvidersConfig
     recommendation: RecommendationConfig
+    enrichment: EnrichmentConfig = EnrichmentConfig()
     scoring: ScoringConfig
 
 
@@ -76,6 +81,11 @@ class Settings(BaseSettings):
     omdb_api_key: str | None = Field(default=None, alias="OMDB_API_KEY")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
+    ollama_base_url: str = Field(
+        default="http://localhost:11434",
+        alias="OLLAMA_BASE_URL",
+    )
+    voyage_api_key: str | None = Field(default=None, alias="VOYAGE_API_KEY")
 
 
 _app_config: AppConfig | None = None

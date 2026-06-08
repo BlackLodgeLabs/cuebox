@@ -13,7 +13,11 @@ pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1"; exit 1; }
 
 echo "=== Gate 1: Local CI simulation ==="
-if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
+running_pg=$(docker ps --filter publish=5432 --format '{{.Names}}' | head -n1 || true)
+if [[ -n "$running_pg" ]]; then
+  CONTAINER_NAME="$running_pg"
+elif ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
+  docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
   docker run -d --name "$CONTAINER_NAME" \
     -e POSTGRES_USER=cuebox \
     -e POSTGRES_PASSWORD=cuebox \
@@ -54,7 +58,7 @@ pass "Tests pass without provider API keys in environment"
 
 echo "=== Gate 4: Full regression count ==="
 count=$(cd api && pytest tests/ --collect-only -q | tail -n1 | grep -oE '[0-9]+ (tests collected|selected)' | awk '{print $1}')
-[[ "${count:-0}" -ge 30 ]] || fail "Expected at least 30 tests, found ${count:-0}"
+[[ "${count:-0}" -ge 45 ]] || fail "Expected at least 45 tests, found ${count:-0}"
 pass "Collected $count tests"
 
 echo "=== All Phase 2.5 gates passed ==="

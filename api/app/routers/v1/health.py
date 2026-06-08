@@ -15,13 +15,22 @@ API_VERSION = "1.0.0"
 _PROVIDER_KEY_ATTR: dict[str, str] = {
     "openai": "openai_api_key",
     "anthropic": "anthropic_api_key",
+    "voyage": "voyage_api_key",
 }
 
 
-def _provider_status(provider_name: str, settings: Settings) -> Literal["ok", "error"]:
-    attr = _PROVIDER_KEY_ATTR.get(provider_name.lower())
+def _provider_status(
+    provider_name: str,
+    settings: Settings,
+    *,
+    role: Literal["semantic_enrichment", "embedding", "ranking"] | None = None,
+) -> Literal["ok", "error"]:
+    name = provider_name.lower()
+    if name == "ollama" and role == "semantic_enrichment":
+        return "ok" if settings.ollama_base_url else "error"
+
+    attr = _PROVIDER_KEY_ATTR.get(name)
     if attr is None:
-        # Local/config-only providers (Ollama, LM Studio, Voyage, etc.) have no env key to verify.
         return "ok"
 
     api_key = getattr(settings, attr, None)
@@ -30,11 +39,17 @@ def _provider_status(provider_name: str, settings: Settings) -> Literal["ok", "e
 
 def _check_providers(config: AppConfig, settings: Settings) -> HealthProviders:
     return HealthProviders(
-        embedding=_provider_status(config.providers.embedding.provider, settings),
-        semantic_enrichment=_provider_status(
-            config.providers.semantic_enrichment.provider, settings
+        embedding=_provider_status(
+            config.providers.embedding.provider,
+            settings,
+            role="embedding",
         ),
-        ranking=_provider_status(config.providers.ranking.provider, settings),
+        semantic_enrichment=_provider_status(
+            config.providers.semantic_enrichment.provider,
+            settings,
+            role="semantic_enrichment",
+        ),
+        ranking=_provider_status(config.providers.ranking.provider, settings, role="ranking"),
     )
 
 

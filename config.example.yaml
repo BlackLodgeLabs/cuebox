@@ -22,6 +22,9 @@ providers:
 recommendation:
   retrieval_candidate_limit: 100
 
+enrichment:
+  inter_film_delay_seconds: 0.25
+
 scoring:
   theme_fit: 0.25
   emotional_fit: 0.20

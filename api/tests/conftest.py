@@ -46,6 +46,9 @@ providers:
 recommendation:
   retrieval_candidate_limit: 100
 
+enrichment:
+  inter_film_delay_seconds: 0
+
 scoring:
   theme_fit: 0.25
   emotional_fit: 0.20
@@ -78,12 +81,22 @@ def _isolate_db(request):
     with SessionLocal() as session:
         session.execute(
             text(
-                "TRUNCATE metadata_match_reviews, watchlist_entries, film_metadata, "
-                "films, import_jobs RESTART IDENTITY CASCADE"
+                "TRUNCATE metadata_match_reviews, watchlist_entries, film_embeddings, "
+                "film_semantic_profiles, film_metadata, films, import_jobs "
+                "RESTART IDENTITY CASCADE"
             )
         )
         session.commit()
     yield
+
+
+@pytest.fixture
+def db_session():
+    if not TEST_DATABASE_URL:
+        pytest.skip("TEST_DATABASE_URL or DATABASE_URL not set")
+    init_engine(TEST_DATABASE_URL)
+    with SessionLocal() as session:
+        yield session
 
 
 @pytest.fixture
@@ -105,6 +118,7 @@ def integration_env(tmp_path, monkeypatch):
     monkeypatch.setenv("CONFIG_PATH", str(config_path))
     monkeypatch.setenv("TMDB_API_KEY", "test-tmdb-key")
     monkeypatch.setenv("OMDB_API_KEY", "test-omdb-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
     get_settings.cache_clear()
     init_engine(TEST_DATABASE_URL)
     yield config_path

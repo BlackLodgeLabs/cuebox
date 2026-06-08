@@ -117,9 +117,7 @@ def list_films_for_job(db: Session, job_id: uuid.UUID) -> list[Film]:
     return list(db.scalars(stmt).all())
 
 
-_METADATA_PROCESSED_STATUSES = {
-    EnrichmentStatus.ENRICHING,
-    EnrichmentStatus.REVIEW_REQUIRED,
+_TERMINAL_PROCESSED_STATUSES = {
     EnrichmentStatus.READY,
     EnrichmentStatus.FAILED,
 }
@@ -128,7 +126,7 @@ _METADATA_PROCESSED_STATUSES = {
 def count_by_import_job_status(db: Session, job_id: uuid.UUID) -> dict[str, int]:
     films = list_films_for_job(db, job_id)
     failed = sum(1 for f in films if f.enrichment_status == EnrichmentStatus.FAILED)
-    processed = sum(1 for f in films if f.enrichment_status in _METADATA_PROCESSED_STATUSES)
+    processed = sum(1 for f in films if f.enrichment_status in _TERMINAL_PROCESSED_STATUSES)
     return {
         "total": len(films),
         "processed": processed,

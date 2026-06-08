@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 
@@ -13,6 +14,11 @@ from app.database.models import ImportJob
 from app.database.session import SessionLocal
 from app.repositories import film_repository, import_job_repository, watchlist_repository
 from app.services.csv_parser import parse_watchlist_csv
+from app.services.enrichment_pipeline import (
+    inter_film_delay_seconds,
+    run_semantic_pipeline,
+    sync_import_job_progress,
+)
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
 
@@ -60,7 +66,7 @@ class ImportService:
                                 failed_films=counts["failed"],
                             )
                             # Also refresh failure_summary to drop the retried film immediately
-                            _sync_job_progress(db, old_job_id)
+                            sync_import_job_progress(db, old_job_id)
                             # If the previous job now has no remaining work, mark it complete
                             try:
                                 # Recompute counts to reflect any updates made in _sync_job_progress
@@ -185,7 +191,9 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
             except Exception:
                 logger.exception("Pre-film rollback failed for job %s", job_id)
             try:
-                await metadata.enrich_film(db, film.id)
+                outcome = await metadata.enrich_film(db, film.id)
+                if outcome.status == EnrichmentStatus.ENRICHING:
+                    await run_semantic_pipeline(db, film.id, provider_service)
             except Exception as exc:  # isolate per-film failures
                 logger.exception("Enrichment crashed for film %s in job %s", film.id, job_id)
                 # Best-effort mark as failed and record reason
@@ -224,11 +232,14 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
                         )
                 # Never allow progress sync errors to abort the whole job.
                 try:
-                    _sync_job_progress(db, job_id)
+                    sync_import_job_progress(db, job_id)
                     # Ensure progress updates persist before the next pre-film rollback.
                     db.commit()
                 except Exception:
                     logger.exception("Progress sync failed for job %s", job_id)
+                delay = inter_film_delay_seconds()
+                if delay > 0:
+                    await asyncio.sleep(delay)
 
         job = import_job_repository.get_by_id(db, job_id)
         if job is not None:
@@ -253,34 +264,3 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
     finally:
         db.close()
 
-
-def _sync_job_progress(db: Session, job_id: uuid.UUID) -> None:
-    job = import_job_repository.get_by_id(db, job_id)
-    if job is None:
-        return
-    counts = film_repository.count_by_import_job_status(db, job_id)
-    failed_films = film_repository.list_failed_for_job(db, job_id)
-    # Preserve any existing, specific failure reasons already recorded on the job.
-    if failed_films:
-        existing_reasons = {}
-        if job.failure_summary:
-            for item in job.failure_summary:
-                uri = item.get("letterboxd_uri")
-                if uri:
-                    existing_reasons[uri] = item.get("reason", "Enrichment failed")
-        failure_summary = [
-            {
-                "letterboxd_uri": f.letterboxd_uri,
-                "reason": existing_reasons.get(f.letterboxd_uri, "Enrichment failed"),
-            }
-            for f in failed_films
-        ]
-    else:
-        failure_summary = None
-    import_job_repository.update_counters(
-        db,
-        job,
-        processed_films=counts["processed"],
-        failed_films=counts["failed"],
-        failure_summary=failure_summary,
-    )

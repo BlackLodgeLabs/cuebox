@@ -1,8 +1,12 @@
-"""Mock TMDB/OMDb HTTP responses for integration tests."""
+"""Mock TMDB/OMDb/OpenAI HTTP responses for integration tests."""
 
 from __future__ import annotations
 
+import json
+
 import httpx
+
+from app.providers.embedding.base import EMBEDDING_DIMENSION
 
 MATRIX_TMDB_ID = 603
 AMBIGUOUS_TMDB_ID = 11622
@@ -16,8 +20,33 @@ ADVERSARIAL_PROFILES = frozenset(
         "vote_zero",
         "partial_http_failure",
         "duplicate_tmdb_id",
+        "semantic_failure",
+        "embedding_failure",
+        "malformed_semantic_json",
     }
 )
+
+DEFAULT_SEMANTIC_PROFILE = {
+    "subgenres": ["cyberpunk", "martial arts"],
+    "themes": ["reality vs illusion", "free will"],
+    "tones": ["dark", "philosophical"],
+    "visual_descriptors": ["green-tinted digital rain", "slow-motion action"],
+    "emotional_outcomes": ["mind-blown", "contemplative"],
+    "viewing_contexts": ["late night", "with friends"],
+    "complexity": 8.5,
+    "pacing": 7.0,
+    "energy": 8.0,
+    "obscurity": 2.0,
+    "semantic_summary": (
+        "A mind-bending sci-fi action film exploring simulated reality and human agency."
+    ),
+}
+
+
+def mock_embedding_vector(seed: str = "default") -> list[float]:
+    """Deterministic 1536-dimensional vector for pgvector inserts."""
+    base = sum(ord(c) for c in seed) % 97
+    return [round(((base + (i % 17)) * 0.001), 6) for i in range(EMBEDDING_DIMENSION)]
 
 
 def _movie_json(
@@ -121,8 +150,69 @@ def _movie_details_json(tmdb_id: int, profile: str) -> dict:
     return _movie_json(tmdb_id, "The Matrix")
 
 
+def _openai_chat_response(profile: str) -> httpx.Response:
+    if profile == "semantic_failure":
+        return httpx.Response(500, json={"error": {"message": "Semantic provider error"}})
+    if profile == "malformed_semantic_json":
+        content = "not valid json"
+    else:
+        content = json.dumps(DEFAULT_SEMANTIC_PROFILE)
+    return httpx.Response(
+        200,
+        json={
+            "choices": [{"message": {"content": content}}],
+        },
+    )
+
+
+def _openai_embedding_response(profile: str) -> httpx.Response:
+    if profile == "embedding_failure":
+        return httpx.Response(500, json={"error": {"message": "Embedding provider error"}})
+    return httpx.Response(
+        200,
+        json={
+            "data": [{"embedding": mock_embedding_vector(profile)}],
+        },
+    )
+
+
+def _ollama_chat_response(profile: str) -> httpx.Response:
+    if profile == "semantic_failure":
+        return httpx.Response(500, json={"error": "Ollama error"})
+    if profile == "malformed_semantic_json":
+        content = "not valid json"
+    else:
+        content = json.dumps(DEFAULT_SEMANTIC_PROFILE)
+    return httpx.Response(
+        200,
+        json={"message": {"content": content}},
+    )
+
+
+def _voyage_embedding_response(profile: str) -> httpx.Response:
+    if profile == "embedding_failure":
+        return httpx.Response(500, json={"error": {"message": "Voyage provider error"}})
+    return httpx.Response(
+        200,
+        json={
+            "data": [{"embedding": mock_embedding_vector(f"voyage-{profile}")}],
+        },
+    )
+
+
 def mock_provider_handler(request: httpx.Request, profile: str = "default") -> httpx.Response:
     url = str(request.url)
+
+    if "/v1/chat/completions" in url:
+        return _openai_chat_response(profile)
+
+    if "/v1/embeddings" in url:
+        if "voyageai.com" in url:
+            return _voyage_embedding_response(profile)
+        return _openai_embedding_response(profile)
+
+    if "/api/chat" in url:
+        return _ollama_chat_response(profile)
 
     if "/search/movie" in url:
         query = request.url.params.get("query", "")
