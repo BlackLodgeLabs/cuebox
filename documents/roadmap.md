@@ -395,6 +395,8 @@ None directly — quality infrastructure prerequisite for Phase 3+ criteria.
 **Depends on:** Phase 2.5  
 **Goal:** Complete the enrichment pipeline so films become recommendation-eligible.
 
+See [phase-3-plan.md](./phase-3-plan.md) for the full implementation plan.
+
 See [sequence-diagrams.md §3](./sequence-diagrams.md) (semantic + embedding steps).
 
 ### Task Checklist
@@ -974,4 +976,4 @@ Items from [PRD.md §22](./PRD.md) and [Architecture.md §22](./Architecture.md)
 | Database schema & migrations | [database-design.md](./database-design.md) |
 | Sequence diagrams | [sequence-diagrams.md](./sequence-diagrams.md) |
 | Implementation plan | This document |
-| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md) |
+| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md) |
