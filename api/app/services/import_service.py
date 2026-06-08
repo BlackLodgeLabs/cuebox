@@ -186,6 +186,16 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
                 logger.exception("Enrichment crashed for film %s in job %s", film.id, job_id)
                 # Best-effort mark as failed and record reason
                 try:
+                    # Ensure the session is usable after possible IntegrityError during persist
+                    try:
+                        db.rollback()
+                    except Exception:
+                        # If rollback itself fails, continue to attempt failure marking
+                        logger.exception(
+                            "Rollback before failure marking failed for film %s in job %s",
+                            film.id,
+                            job_id,
+                        )
                     metadata._mark_failed(db, film, f"Unexpected error: {exc}")
                 except Exception:
                     logger.exception("Failed to mark film %s as failed after crash", film.id)
