@@ -110,6 +110,7 @@ flowchart TD
 on: [push, pull_request]
 jobs:
   api-tests:
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: pgvector/pgvector:pg16
