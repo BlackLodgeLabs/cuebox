@@ -61,6 +61,30 @@ class ImportService:
                             )
                             # Also refresh failure_summary to drop the retried film immediately
                             _sync_job_progress(db, old_job_id)
+                            # If the previous job now has no remaining work, mark it complete
+                            try:
+                                # Recompute counts to reflect any updates made in _sync_job_progress
+                                post_sync_counts = film_repository.count_by_import_job_status(
+                                    db, old_job_id
+                                )
+                                if (
+                                    old_job.total_films is not None
+                                    and post_sync_counts["processed"] >= old_job.total_films
+                                    and old_job.total_films > 0
+                                    and old_job.status == ImportJobStatus.RUNNING
+                                ):
+                                    import_job_repository.mark_complete(db, old_job)
+                                elif (
+                                    old_job.total_films == 0
+                                    and old_job.status == ImportJobStatus.RUNNING
+                                ):
+                                    import_job_repository.mark_complete(db, old_job)
+                            except Exception:
+                                # Do not fail the new import creation if marking the previous job
+                                # complete encounters an error; the status endpoint can still fix it.
+                                logger.exception(
+                                    "Failed to finalize previous job %s after retry move", old_job_id
+                                )
                     watchlist_repository.ensure_active_entry(
                         db,
                         film_id=existing.id,
