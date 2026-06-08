@@ -9,6 +9,7 @@ from decimal import Decimal
 from typing import Any
 
 import httpx
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import conflict, not_found
@@ -106,9 +107,13 @@ class MetadataService:
             film_repository.update_enrichment_status(db, film, EnrichmentStatus.REVIEW_REQUIRED)
             return EnrichmentOutcome(film_id=film.id, status=EnrichmentStatus.REVIEW_REQUIRED)
 
-        await self._persist_metadata(
-            db, film, best_details, best_keywords, best_score, tmdb
-        )
+        try:
+            await self._persist_metadata(
+                db, film, best_details, best_keywords, best_score, tmdb
+            )
+        except IntegrityError:
+            db.rollback()
+            return self._mark_failed(db, film, "Duplicate TMDB metadata record")
 
         if action == "accept_flag":
             metadata_review_repository.create(

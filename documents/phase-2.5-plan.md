@@ -5,43 +5,43 @@ depends_on: Phase 2 (complete)
 todos:
   - id: ci-workflow
     content: Add GitHub Actions workflow — Postgres service, alembic upgrade head, pytest, ruff on every PR
-    status: pending
+    status: completed
   - id: unit-tmdb-normalization
     content: Add test_tmdb_normalization.py — runtime=0, malformed release_date, vote_average=0.0
-    status: pending
+    status: completed
   - id: unit-http-retry
     content: Add test_http_retry.py — Retry-After delta-seconds, HTTP-date, invalid header
-    status: pending
+    status: completed
   - id: unit-update-counters
     content: Add test_update_counters.py — failure_summary explicit clear via _UNSET sentinel
-    status: pending
+    status: completed
   - id: mock-adversarial
     content: Extend mock_providers.py with adversarial TMDB/HTTP profiles for fault injection
-    status: pending
+    status: completed
   - id: integration-job-invariants
     content: Add test_import_job_invariants.py — retry across jobs, old job complete, processed<=total CHECK
-    status: pending
+    status: completed
   - id: integration-orchestrator-faults
     content: Add test_import_orchestrator_faults.py — per-film crash isolation, MATCHING rollback, IntegrityError recovery
-    status: pending
+    status: completed
   - id: integration-review-guards
     content: Add test_review_guards.py — reject on non-review_required film returns 409
-    status: pending
+    status: completed
   - id: integration-provider-errors
     content: Add test_metadata_provider_errors.py — all candidate HTTP failures report provider error reason
-    status: pending
+    status: completed
   - id: pr-template
     content: Add PR template with regression-test checklist; document bug-fix-requires-test policy in plan/roadmap
-    status: pending
+    status: completed
   - id: verify-gates
     content: Run all Phase 2.5 verification gates locally and confirm CI workflow passes on push
-    status: pending
+    status: completed
   - id: update-roadmap
     content: Check off Phase 2.5 task checklist and verification gate in documents/roadmap.md; update overview
-    status: pending
+    status: completed
   - id: agents-md-review
     content: Review AGENTS.md for structural changes (CI commands, env vars, compose services, bootstrap steps)
-    status: pending
+    status: completed
 isProject: false
 ---
 
