@@ -164,23 +164,50 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
                 except Exception:
                     logger.exception("Failed to mark film %s as failed after crash", film.id)
             finally:
-                db.commit()
-                _sync_job_progress(db, job_id)
+                # Avoid committing a transitional MATCHING state if failure handling also failed.
+                try:
+                    if getattr(film, "enrichment_status", None) == EnrichmentStatus.MATCHING:
+                        db.rollback()
+                    else:
+                        db.commit()
+                except Exception:
+                    logger.exception(
+                        "Transaction finalize failed for film %s in job %s", film.id, job_id
+                    )
+                    try:
+                        db.rollback()
+                    except Exception:
+                        logger.exception(
+                            "Rollback after finalize failure also failed for film %s in job %s",
+                            film.id,
+                            job_id,
+                        )
+                # Never allow progress sync errors to abort the whole job.
+                try:
+                    _sync_job_progress(db, job_id)
+                except Exception:
+                    logger.exception("Progress sync failed for job %s", job_id)
 
         job = import_job_repository.get_by_id(db, job_id)
         if job is not None:
-            counts = film_repository.count_by_import_job_status(db, job_id)
-            if job.total_films is not None and counts["processed"] >= job.total_films:
-                import_job_repository.mark_complete(db, job)
-            db.commit()
+            try:
+                counts = film_repository.count_by_import_job_status(db, job_id)
+                if job.total_films is not None and counts["processed"] >= job.total_films:
+                    import_job_repository.mark_complete(db, job)
+                db.commit()
+            except Exception:
+                logger.exception("Finalization step failed for job %s", job_id)
+                try:
+                    db.rollback()
+                except Exception:
+                    logger.exception("Rollback after finalization failure also failed for job %s", job_id)
     except Exception:
-        logger.exception("Import enrichment failed for job %s", job_id)
-        db.rollback()
-        # Mark the overall job as failed so status does not remain RUNNING
-        job = import_job_repository.get_by_id(db, job_id)
-        if job is not None:
-            import_job_repository.update_counters(db, job, status=ImportJobStatus.FAILED)
-            db.commit()
+        # Do not flip the job to FAILED here; per-film handling already records failures.
+        logger.exception("Import enrichment encountered an error for job %s", job_id)
+        try:
+            db.rollback()
+        except Exception:
+            logger.exception("Rollback failed for job %s", job_id)
     finally:
         db.close()
 
