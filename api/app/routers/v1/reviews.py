@@ -9,7 +9,10 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_metadata_service, get_provider_service
 from app.repositories import metadata_review_repository
 from app.schemas.review_schemas import ReviewActionResponse
-from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
+from app.services.enrichment_pipeline import (
+    run_semantic_pipeline_for_film,
+    sync_import_job_progress,
+)
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
 
@@ -44,6 +47,14 @@ def reject_review(
 ) -> ReviewActionResponse:
     film = metadata_service.reject_review(db, review_id)
     db.commit()
+    # Ensure import job counters reflect this terminal failure immediately.
+    if getattr(film, "import_job_id", None):
+        try:
+            sync_import_job_progress(db, film.import_job_id)
+            db.commit()
+        except Exception:
+            # Do not fail the request if progress sync encounters an error.
+            db.rollback()
     review = metadata_review_repository.get_by_id(db, review_id)
     return ReviewActionResponse(
         review_id=review_id,

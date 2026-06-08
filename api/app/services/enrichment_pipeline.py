@@ -108,11 +108,35 @@ async def run_semantic_pipeline_for_film(
     """Background-task entry point with its own database session."""
     db = SessionLocal()
     try:
+        # First, run the semantic pipeline and persist its outcome (READY/FAILED).
         await run_semantic_pipeline(db, film_id, provider_service)
-        film = film_repository.get_by_id(db, film_id)
-        if film is not None and film.import_job_id:
-            sync_import_job_progress(db, film.import_job_id)
-        db.commit()
+        try:
+            db.commit()
+        except Exception:
+            logger.exception("Commit failed after semantic pipeline for film %s", film_id)
+            try:
+                db.rollback()
+            except Exception:
+                logger.exception(
+                    "Rollback after commit failure also failed for film %s", film_id
+                )
+            # If we cannot persist the pipeline outcome, abort progress sync.
+            return
+
+        # Then, best-effort progress sync that must not undo the persisted outcome.
+        try:
+            film = film_repository.get_by_id(db, film_id)
+            if film is not None and film.import_job_id:
+                sync_import_job_progress(db, film.import_job_id)
+            db.commit()
+        except Exception:
+            logger.exception("Progress sync failed for film %s", film_id)
+            try:
+                db.rollback()
+            except Exception:
+                logger.exception(
+                    "Rollback after progress sync failure also failed for film %s", film_id
+                )
     except Exception:
         logger.exception("Background semantic pipeline failed for film %s", film_id)
         try:
