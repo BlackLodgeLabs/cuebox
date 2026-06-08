@@ -62,11 +62,13 @@ class MetadataService:
         best_score = -1.0
         best_details: TmdbMovieDetails | None = None
         best_keywords: list[str] = []
+        had_http_errors = False
         for candidate in search_results[:5]:
             try:
                 details = await tmdb.get_movie_details(candidate.tmdb_id)
                 keywords = await tmdb.get_movie_keywords(candidate.tmdb_id)
             except httpx.HTTPError:
+                had_http_errors = True
                 continue
             score = compute_confidence(
                 csv_title=film.title,
@@ -83,7 +85,12 @@ class MetadataService:
                 best_keywords = keywords
 
         if best_details is None:
-            return self._mark_failed(db, film, "TMDB match not found")
+            reason = (
+                "TMDB enrichment failed due to provider HTTP errors"
+                if had_http_errors
+                else "TMDB match not found"
+            )
+            return self._mark_failed(db, film, reason)
 
         action = confidence_action(best_score)
         payload = self._candidate_payload(best_details, tmdb)

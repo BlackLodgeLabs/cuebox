@@ -59,6 +59,8 @@ class ImportService:
                                 processed_films=counts["processed"],
                                 failed_films=counts["failed"],
                             )
+                            # Also refresh failure_summary to drop the retried film immediately
+                            _sync_job_progress(db, old_job_id)
                     watchlist_repository.ensure_active_entry(
                         db,
                         film_id=existing.id,
