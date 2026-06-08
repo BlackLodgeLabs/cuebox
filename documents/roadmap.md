@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 2 complete (metadata pipeline). Watchlist CSV import with async TMDB/OMDb enrichment, confidence scoring, match review endpoints, and film listing APIs in place. Next up: Phase 2.5 — CI Pipeline & Regression Test Hardening (required before Phase 3).
+**Current state:** Phase 2.5 complete. CI runs Postgres-backed integration tests on every PR; adversarial unit and integration tests cover Phase 2 bugbot regression categories. Next up: Phase 3 — Semantic Enrichment & Embeddings.
 
 ### Reference Documents
 
@@ -331,28 +331,28 @@ Post-merge review of Phase 2 (PR #5) produced eight reactive fix commits (import
 
 #### CI Pipeline
 
-- [ ] Add `.github/workflows/api-ci.yml` — Postgres 16 + pgvector service, `alembic upgrade head`, `pytest`, `ruff`
-- [ ] Set `DATABASE_URL` / `TEST_DATABASE_URL` in CI so integration tests never skip
-- [ ] Confirm CI runs without live `TMDB_API_KEY` / `OMDB_API_KEY` (mocked providers only)
+- [x] Add `.github/workflows/api-ci.yml` — Postgres 16 + pgvector service, `alembic upgrade head`, `pytest`, `ruff`
+- [x] Set `DATABASE_URL` / `TEST_DATABASE_URL` in CI so integration tests never skip
+- [x] Confirm CI runs without live `TMDB_API_KEY` / `OMDB_API_KEY` (mocked providers only)
 
 #### Unit Tests (no DB required)
 
-- [ ] `test_tmdb_normalization.py` — `runtime=0`, malformed `release_date`, `vote_average=0.0`
-- [ ] `test_http_retry.py` — `Retry-After` delta-seconds, HTTP-date (RFC 7231), invalid header
-- [ ] `test_update_counters.py` — `failure_summary=None` clears JSONB via `_UNSET` sentinel
+- [x] `test_tmdb_normalization.py` — `runtime=0`, malformed `release_date`, `vote_average=0.0`
+- [x] `test_http_retry.py` — `Retry-After` delta-seconds, HTTP-date (RFC 7231), invalid header
+- [x] `test_update_counters.py` — `failure_summary=None` clears JSONB via `_UNSET` sentinel
 
 #### Integration Tests (Postgres required)
 
-- [ ] `test_import_job_invariants.py` — failed-film retry updates old job counters; `processed <= total`; old job `complete`
-- [ ] `test_import_orchestrator_faults.py` — per-film crash isolation; no film stuck in `matching`; `IntegrityError` recovery
-- [ ] `test_review_guards.py` — reject on non-`review_required` film → 409
-- [ ] `test_metadata_provider_errors.py` — all candidate HTTP failures vs empty search error messages
+- [x] `test_import_job_invariants.py` — failed-film retry updates old job counters; `processed <= total`; old job `complete`
+- [x] `test_import_orchestrator_faults.py` — per-film crash isolation; no film stuck in `matching`; `IntegrityError` recovery
+- [x] `test_review_guards.py` — reject on non-`review_required` film → 409
+- [x] `test_metadata_provider_errors.py` — all candidate HTTP failures vs empty search error messages
 
 #### Test Infrastructure
 
-- [ ] Extend `mock_providers.py` with adversarial profiles (runtime zero, malformed dates, partial HTTP failure)
-- [ ] Add `.github/pull_request_template.md` — regression-test checklist
-- [ ] Document policy: bug fixes require a failing-then-passing test
+- [x] Extend `mock_providers.py` with adversarial profiles (runtime zero, malformed dates, partial HTTP failure)
+- [x] Add `.github/pull_request_template.md` — regression-test checklist
+- [x] Document policy: bug fixes require a failing-then-passing test
 
 ### DB Constraint Test Matrix
 
@@ -378,10 +378,10 @@ Provider responses must satisfy these CHECK constraints — each row needs a uni
 
 ### Verification Gate
 
-- [ ] GitHub Actions workflow passes on PR branch push
-- [ ] `pytest tests/ -v` reports 0 skipped integration tests (all ran against CI Postgres)
-- [ ] Regression coverage matrix in [phase-2.5-plan.md](./phase-2.5-plan.md) Gate 2 — all rows have tests
-- [ ] CI passes without TMDB/OMDb API keys
+- [x] GitHub Actions workflow passes on PR branch push
+- [x] `pytest tests/ -v` reports 0 skipped integration tests (all ran against CI Postgres)
+- [x] Regression coverage matrix in [phase-2.5-plan.md](./phase-2.5-plan.md) Gate 2 — all rows have tests
+- [x] CI passes without TMDB/OMDb API keys
 
 ### PRD Success Criteria Addressed
 

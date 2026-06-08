@@ -9,8 +9,10 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from sqlalchemy import text
+
 from app.core.config import get_settings
-from app.database.session import init_engine
+from app.database.session import SessionLocal, init_engine
 from app.main import create_app
 from app.services.provider_service import ProviderService
 from tests.mock_providers import create_mock_http_client
@@ -62,6 +64,28 @@ requires_db = pytest.mark.skipif(
 )
 
 
+@pytest.fixture(autouse=True)
+def _isolate_db(request):
+    """Truncate application tables between DB-backed tests for isolation."""
+    if not TEST_DATABASE_URL:
+        yield
+        return
+    # test_database uses a module-scoped session; isolation is handled per-test there
+    if request.module.__name__ == "tests.test_database":
+        yield
+        return
+    init_engine(TEST_DATABASE_URL)
+    with SessionLocal() as session:
+        session.execute(
+            text(
+                "TRUNCATE metadata_match_reviews, watchlist_entries, film_metadata, "
+                "films, import_jobs RESTART IDENTITY CASCADE"
+            )
+        )
+        session.commit()
+    yield
+
+
 @pytest.fixture
 def watchlist_csv_bytes() -> bytes:
     suffix = uuid.uuid4().hex[:8]
@@ -88,13 +112,18 @@ def integration_env(tmp_path, monkeypatch):
 
 
 @pytest.fixture
-def integration_client(integration_env, monkeypatch):
+def mock_profile() -> str:
+    return "default"
+
+
+@pytest.fixture
+def integration_client(integration_env, monkeypatch, mock_profile):
     original_startup = ProviderService.startup
 
     async def patched_startup(self, http_client=None):
         return await original_startup(
             self,
-            http_client=http_client or create_mock_http_client(),
+            http_client=http_client or create_mock_http_client(mock_profile),
         )
 
     monkeypatch.setattr(ProviderService, "startup", patched_startup)

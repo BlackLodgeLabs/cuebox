@@ -99,7 +99,7 @@ def test_failed_film_retry_on_reimport(integration_client, watchlist_csv_bytes):
     uri = f"https://letterboxd.com/film/retry-only-{suffix}/"
     csv_once = (
         "Date,Title,Year,Letterboxd URI\n"
-        f"2024-01-01,Unknown Film,2099,{uri}\n"
+        f"2024-01-01,Unknown Film,2020,{uri}\n"
     ).encode()
 
     created = _import_csv(integration_client, csv_once)

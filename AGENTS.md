@@ -60,9 +60,11 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 
 | Check | Command |
 |-------|---------|
-| API lint | `cd api && ruff check .` |
-| API unit tests (no DB) | `cd api && pytest tests/test_health.py` |
-| API integration tests | `cd api && DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox CONFIG_PATH=/workspace/config.yaml pytest` |
+| API lint | `cd api && ruff check app tests` |
+| API full test suite | `cd api && DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox TEST_DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox pytest tests/ -v` |
+| API unit tests (no DB) | `cd api && pytest tests/test_health.py tests/test_tmdb_normalization.py tests/test_http_retry.py` |
+| API gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; waits for `pg_isready`) |
+| CI parity | PRs must pass GitHub Actions workflow `.github/workflows/api-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
 
 `npm run lint` in `frontend/` currently prompts for ESLint setup (no config committed yet); use `tsc --noEmit` until ESLint is initialized.

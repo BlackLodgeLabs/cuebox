@@ -181,6 +181,10 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
             if film.enrichment_status != EnrichmentStatus.PENDING:
                 continue
             try:
+                db.rollback()
+            except Exception:
+                logger.exception("Pre-film rollback failed for job %s", job_id)
+            try:
                 await metadata.enrich_film(db, film.id)
             except Exception as exc:  # isolate per-film failures
                 logger.exception("Enrichment crashed for film %s in job %s", film.id, job_id)
@@ -221,6 +225,8 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
                 # Never allow progress sync errors to abort the whole job.
                 try:
                     _sync_job_progress(db, job_id)
+                    # Ensure progress updates persist before the next pre-film rollback.
+                    db.commit()
                 except Exception:
                     logger.exception("Progress sync failed for job %s", job_id)
 
