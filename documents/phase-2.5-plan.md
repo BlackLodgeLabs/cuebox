@@ -132,6 +132,8 @@ Complete work in four PR slices (see [Recommended PR Slicing](#recommended-pr-sl
 # Local CI simulation (from repo root)
 docker run -d --name phase25-pg -e POSTGRES_USER=cuebox -e POSTGRES_PASSWORD=cuebox \
   -e POSTGRES_DB=cuebox -p 5432:5432 pgvector/pgvector:pg16
+# docker run returns before Postgres accepts connections — wait for readiness
+until docker exec phase25-pg pg_isready -U cuebox -d cuebox -q; do sleep 1; done
 export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
 export TEST_DATABASE_URL="$DATABASE_URL"
 cd api && alembic upgrade head && pytest tests/ -v && ruff check app tests
@@ -408,6 +410,8 @@ All four gates must pass before marking Phase 2.5 complete. Run gates locally du
 # Locally simulate:
 docker run -d --name phase25-pg -e POSTGRES_USER=cuebox -e POSTGRES_PASSWORD=cuebox \
   -e POSTGRES_DB=cuebox -p 5432:5432 pgvector/pgvector:pg16
+# docker run returns before Postgres accepts connections — wait for readiness
+until docker exec phase25-pg pg_isready -U cuebox -d cuebox -q; do sleep 1; done
 export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
 export TEST_DATABASE_URL="$DATABASE_URL"
 cd api && alembic upgrade head && pytest tests/ -v && ruff check app tests
@@ -440,7 +444,8 @@ Verify each row with `pytest api/tests/<file>.py -v` or `pytest --collect-only -
 
 ```bash
 # Confirm workflow YAML has no TMDB_API_KEY / OMDB_API_KEY
-grep -E 'TMDB_API_KEY|OMDB_API_KEY' .github/workflows/api-ci.yml && exit 1 || true
+# Use ! grep (not exit 1) — exit 1 in an interactive shell can close the terminal/SSH session
+! grep -qE 'TMDB_API_KEY|OMDB_API_KEY' .github/workflows/api-ci.yml
 unset TMDB_API_KEY OMDB_API_KEY
 export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
 cd api && pytest tests/ -v
@@ -577,6 +582,6 @@ Mark plan todo `agents-md-review` complete after this review.
 |------|------------|
 | Alembic path mismatch in CI | Pin `working-directory` in workflow; verify locally with same paths |
 | Flaky integration timing | Use `TestClient` background task completion (no arbitrary sleep > 0.5s) |
-| Postgres service startup race | Health-check `pg_isready` in workflow services options |
+| Postgres service startup race | Health-check `pg_isready` in workflow services options; local `docker run` blocks must `docker exec … pg_isready` before `alembic` |
 | Over-mocking hides real DB constraints | Job invariant tests use real Postgres, not SQLite |
 | CI duration | Unit tests first in job; parallel jobs optional later |
