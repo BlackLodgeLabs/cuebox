@@ -96,7 +96,8 @@ class TmdbClient:
             title=data.get("title") or "",
             original_title=data.get("original_title") or "",
             year=year,
-            runtime=data.get("runtime"),
+            # TMDB returns 0 when runtime is unknown; normalize to None to satisfy DB constraint
+            runtime=(data.get("runtime") or None),
             overview=data.get("overview"),
             genres=genres,
             original_language=(data.get("original_language") or "")[:2] or None,
