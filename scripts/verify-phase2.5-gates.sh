@@ -53,7 +53,7 @@ unset TMDB_API_KEY OMDB_API_KEY
 pass "Tests pass without provider API keys in environment"
 
 echo "=== Gate 4: Full regression count ==="
-count=$(cd api && pytest tests/ --collect-only -q | tail -n1 | grep -oE '[0-9]+ selected' | awk '{print $1}')
+count=$(cd api && pytest tests/ --collect-only -q | tail -n1 | grep -oE '[0-9]+ (tests collected|selected)' | awk '{print $1}')
 [[ "${count:-0}" -ge 30 ]] || fail "Expected at least 30 tests, found ${count:-0}"
 pass "Collected $count tests"
 
