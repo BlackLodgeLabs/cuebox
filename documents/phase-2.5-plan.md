@@ -128,12 +128,19 @@ jobs:
       DATABASE_URL: postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
       TEST_DATABASE_URL: postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
     steps:
-      - checkout
-      - setup Python 3.12
-      - pip install -e "./api[dev]"
-      - alembic upgrade head   # from api/ or repo root per alembic.ini location
-      - pytest api/tests/ -v
-      - ruff check api/app api/tests
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -e "./api[dev]"
+      - name: Run migrations
+        run: alembic upgrade head
+      - name: Run tests
+        run: pytest api/tests/ -v
+      - name: Lint with ruff
+        run: ruff check api/app api/tests
 ```
 
 **Configuration decisions:**
