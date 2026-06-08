@@ -36,8 +36,12 @@ class VoyageEmbeddingProvider(EmbeddingProvider):
         response.raise_for_status()
         body = response.json()
         vector = body["data"][0]["embedding"]
-        if len(vector) != EMBEDDING_DIMENSION:
-            raise ValueError(
-                f"Voyage embedding dimension {len(vector)} != {EMBEDDING_DIMENSION}"
-            )
-        return vector
+        # Voyage models commonly return 512/1024 dimensions; our schema expects 1536.
+        # To maintain compatibility, pad with zeros or truncate to the configured size.
+        length = len(vector)
+        if length == EMBEDDING_DIMENSION:
+            return vector
+        if length > EMBEDDING_DIMENSION:
+            return vector[:EMBEDDING_DIMENSION]
+        # length < EMBEDDING_DIMENSION
+        return vector + [0.0] * (EMBEDDING_DIMENSION - length)
