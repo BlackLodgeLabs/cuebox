@@ -153,6 +153,8 @@ class MetadataService:
         film = film_repository.get_by_id(db, review.film_id)
         if film is None:
             raise not_found("Film")
+        if film.enrichment_status != EnrichmentStatus.REVIEW_REQUIRED:
+            raise conflict("Film is not awaiting metadata review")
 
         metadata_review_repository.update_status(db, review, ReviewStatus.REJECTED)
         outcome = self._mark_failed(db, film, "Metadata match rejected by user")
@@ -190,7 +192,9 @@ class MetadataService:
             original_language=details.original_language,
             country=details.country,
             director=details.director,
-            tmdb_rating=Decimal(str(details.vote_average)) if details.vote_average else None,
+            tmdb_rating=Decimal(str(details.vote_average))
+            if details.vote_average is not None
+            else None,
             rotten_tomatoes_score=rt_score,
             poster_url=TmdbClient.poster_url(details.poster_path),
             backdrop_url=TmdbClient.backdrop_url(details.backdrop_path),
