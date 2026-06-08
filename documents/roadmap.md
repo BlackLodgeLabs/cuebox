@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 2 complete (metadata pipeline). Watchlist CSV import with async TMDB/OMDb enrichment, confidence scoring, match review endpoints, and film listing APIs in place. Integration tests and gate script added; live gate verification requires Docker + API keys. Next up: Phase 3 — Semantic Enrichment & Embeddings.
+**Current state:** Phase 2 complete (metadata pipeline). Watchlist CSV import with async TMDB/OMDb enrichment, confidence scoring, match review endpoints, and film listing APIs in place. Next up: Phase 2.5 — CI Pipeline & Regression Test Hardening (required before Phase 3).
 
 ### Reference Documents
 
@@ -42,7 +42,8 @@ Sample Letterboxd exports in a local `letterboxd/` folder (gitignored) — prima
 flowchart LR
     P0[Phase0_Foundation] --> P1[Phase1_Database]
     P1 --> P2[Phase2_Import_Metadata]
-    P2 --> P3[Phase3_Semantic_Embeddings]
+    P2 --> P2_5[Phase2_5_CI_Tests]
+    P2_5 --> P3[Phase3_Semantic_Embeddings]
     P3 --> P4[Phase4_Sync]
     P3 --> P5[Phase5_Recommendations]
     P4 --> P6[Phase6_Frontend]
@@ -51,7 +52,7 @@ flowchart LR
     P7 --> P8[Phase8_Polish_NFR]
 ```
 
-Phases 4 and 5 can run in parallel once Phase 3 is complete. Phase 6 requires both Phase 4 and Phase 5 backend endpoints.
+Phases 4 and 5 can run in parallel once Phase 3 is complete. Phase 6 requires both Phase 4 and Phase 5 backend endpoints. Phase 2.5 is required before Phase 3 to prevent regressions in the async import/metadata pipeline.
 
 ---
 
@@ -314,10 +315,84 @@ Phase 2 completes the **metadata stage** only. Keep these conventions when exten
 
 ---
 
+## Phase 2.5 — CI Pipeline & Regression Test Hardening
+
+**Duration:** 2–4 days  
+**Depends on:** Phase 2  
+**Goal:** Automated CI with Postgres-backed integration tests and adversarial unit tests covering Phase 2 bugbot regression categories — establishing quality gates before Phase 3 extends the enrichment pipeline.
+
+See [phase-2.5-plan.md](./phase-2.5-plan.md) for the full implementation plan.
+
+### Background
+
+Post-merge review of Phase 2 (PR #5) produced eight reactive fix commits (import job lifecycle on retry, orchestrator resilience, TMDB→DB normalization, HTTP retry parsing) without accompanying regression tests. Integration tests exist but skip without `DATABASE_URL` and do not cover adversarial provider payloads or multi-job state.
+
+### Task Checklist
+
+#### CI Pipeline
+
+- [ ] Add `.github/workflows/api-ci.yml` — Postgres 16 + pgvector service, `alembic upgrade head`, `pytest`, `ruff`
+- [ ] Set `DATABASE_URL` / `TEST_DATABASE_URL` in CI so integration tests never skip
+- [ ] Confirm CI runs without live `TMDB_API_KEY` / `OMDB_API_KEY` (mocked providers only)
+
+#### Unit Tests (no DB required)
+
+- [ ] `test_tmdb_normalization.py` — `runtime=0`, malformed `release_date`, `vote_average=0.0`
+- [ ] `test_http_retry.py` — `Retry-After` delta-seconds, HTTP-date (RFC 7231), invalid header
+- [ ] `test_update_counters.py` — `failure_summary=None` clears JSONB via `_UNSET` sentinel
+
+#### Integration Tests (Postgres required)
+
+- [ ] `test_import_job_invariants.py` — failed-film retry updates old job counters; `processed <= total`; old job `complete`
+- [ ] `test_import_orchestrator_faults.py` — per-film crash isolation; no film stuck in `matching`; `IntegrityError` recovery
+- [ ] `test_review_guards.py` — reject on non-`review_required` film → 409
+- [ ] `test_metadata_provider_errors.py` — all candidate HTTP failures vs empty search error messages
+
+#### Test Infrastructure
+
+- [ ] Extend `mock_providers.py` with adversarial profiles (runtime zero, malformed dates, partial HTTP failure)
+- [ ] Add `.github/pull_request_template.md` — regression-test checklist
+- [ ] Document policy: bug fixes require a failing-then-passing test
+
+### DB Constraint Test Matrix
+
+Provider responses must satisfy these CHECK constraints — each row needs a unit or integration test:
+
+| Source field | DB constraint | Edge cases to test |
+|--------------|---------------|-------------------|
+| TMDB `runtime` | `runtime > 0` or NULL | `0`, missing |
+| TMDB `vote_average` | `0–10` | `0.0` (valid; not falsy) |
+| TMDB `release_date` | parsed to year | `""`, `"TBD"`, `"199"` |
+| `import_jobs` | `processed_films <= total_films` | film reassigned between jobs on retry |
+
+### Suggested Modules
+
+| Module | Responsibility |
+|--------|----------------|
+| `.github/workflows/api-ci.yml` | CI job definition |
+| `api/tests/test_tmdb_normalization.py` | Provider→DB boundary unit tests |
+| `api/tests/test_http_retry.py` | Retry-After parsing unit tests |
+| `api/tests/test_import_job_invariants.py` | Multi-job retry DB integration tests |
+| `api/tests/test_import_orchestrator_faults.py` | Background task fault injection |
+| `api/tests/mock_providers.py` | Adversarial HTTP mock profiles |
+
+### Verification Gate
+
+- [ ] GitHub Actions workflow passes on PR branch push
+- [ ] `pytest tests/ -v` reports 0 skipped integration tests (all ran against CI Postgres)
+- [ ] Regression coverage matrix in [phase-2.5-plan.md](./phase-2.5-plan.md) Gate 2 — all rows have tests
+- [ ] CI passes without TMDB/OMDb API keys
+
+### PRD Success Criteria Addressed
+
+None directly — quality infrastructure prerequisite for Phase 3+ criteria.
+
+---
+
 ## Phase 3 — Semantic Enrichment & Embeddings
 
 **Duration:** 1 week  
-**Depends on:** Phase 2  
+**Depends on:** Phase 2.5  
 **Goal:** Complete the enrichment pipeline so films become recommendation-eligible.
 
 See [sequence-diagrams.md §3](./sequence-diagrams.md) (semantic + embedding steps).
@@ -816,10 +891,13 @@ Raw questionnaire answers are not stored separately; the structured profile is t
 
 | Layer | Scope |
 |-------|-------|
-| Unit | Canonicalization, scoring, CSV validation, confidence scoring |
-| Integration | Import pipeline, sync diff, recommendation pipeline |
-| Manual | UI walkthrough of all user journeys |
+| Unit | Canonicalization, scoring, CSV validation, confidence scoring, TMDB normalization, HTTP retry |
+| Integration | Import pipeline (CI Postgres), sync diff, recommendation pipeline |
+| CI | GitHub Actions on every PR — `alembic upgrade head`, `pytest`, `ruff` (see Phase 2.5) |
+| Manual | UI walkthrough of all user journeys; `scripts/verify-phase2-gates.sh` smoke test |
 | Performance | Recommendation latency, history load time |
+
+**Regression policy (Phase 2.5+):** Every bug fix includes a failing-then-passing test. Provider→DB field mappings require CHECK-constraint edge-case coverage.
 
 ### Configuration Management
 
@@ -853,6 +931,7 @@ Raw questionnaire answers are not stored separately; the structured profile is t
 | 0 | Project foundation | 3–5 days |
 | 1 | Database & models | 3–5 days |
 | 2 | Import + metadata | 1–2 weeks |
+| 2.5 | CI + regression tests | 2–4 days |
 | 3 | Semantic + embeddings | 1 week |
 | 4 | Watchlist sync | 1 week |
 | 5 | Recommendation engine | 1.5–2 weeks |
@@ -895,3 +974,4 @@ Items from [PRD.md §22](./PRD.md) and [Architecture.md §22](./Architecture.md)
 | Database schema & migrations | [database-design.md](./database-design.md) |
 | Sequence diagrams | [sequence-diagrams.md](./sequence-diagrams.md) |
 | Implementation plan | This document |
+| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md) |
