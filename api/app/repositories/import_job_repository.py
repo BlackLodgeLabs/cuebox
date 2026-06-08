@@ -34,6 +34,9 @@ def mark_complete(db: Session, job: ImportJob) -> ImportJob:
     return job
 
 
+_UNSET = object()
+
+
 def update_counters(
     db: Session,
     job: ImportJob,
@@ -42,7 +45,7 @@ def update_counters(
     failed_films: int | None = None,
     duplicate_films: int | None = None,
     total_films: int | None = None,
-    failure_summary: dict[str, Any] | list[Any] | None = None,
+    failure_summary: dict[str, Any] | list[Any] | None | object = _UNSET,
     status: ImportJobStatus | None = None,
 ) -> ImportJob:
     if total_films is not None:
@@ -53,7 +56,7 @@ def update_counters(
         job.failed_films = failed_films
     if duplicate_films is not None:
         job.duplicate_films = duplicate_films
-    if failure_summary is not None:
+    if failure_summary is not _UNSET:
         job.failure_summary = failure_summary
     if status is not None:
         job.status = status

@@ -154,9 +154,18 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
         for film in films:
             if film.enrichment_status != EnrichmentStatus.PENDING:
                 continue
-            await metadata.enrich_film(db, film.id)
-            db.commit()
-            _sync_job_progress(db, job_id)
+            try:
+                await metadata.enrich_film(db, film.id)
+            except Exception as exc:  # isolate per-film failures
+                logger.exception("Enrichment crashed for film %s in job %s", film.id, job_id)
+                # Best-effort mark as failed and record reason
+                try:
+                    metadata._mark_failed(db, film, f"Unexpected error: {exc}")
+                except Exception:
+                    logger.exception("Failed to mark film %s as failed after crash", film.id)
+            finally:
+                db.commit()
+                _sync_job_progress(db, job_id)
 
         job = import_job_repository.get_by_id(db, job_id)
         if job is not None:
@@ -167,6 +176,11 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
     except Exception:
         logger.exception("Import enrichment failed for job %s", job_id)
         db.rollback()
+        # Mark the overall job as failed so status does not remain RUNNING
+        job = import_job_repository.get_by_id(db, job_id)
+        if job is not None:
+            import_job_repository.update_counters(db, job, status=ImportJobStatus.FAILED)
+            db.commit()
     finally:
         db.close()
 

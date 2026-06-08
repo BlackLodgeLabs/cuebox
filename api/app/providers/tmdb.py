@@ -61,7 +61,8 @@ class TmdbClient:
         parsed: list[TmdbSearchResult] = []
         for item in results:
             release = item.get("release_date") or ""
-            parsed_year = int(release[:4]) if len(release) >= 4 else None
+            year_prefix = release[:4]
+            parsed_year = int(year_prefix) if len(year_prefix) == 4 and year_prefix.isdigit() else None
             parsed.append(
                 TmdbSearchResult(
                     tmdb_id=item["id"],
@@ -85,7 +86,8 @@ class TmdbClient:
         credits = await self.get_movie_credits(tmdb_id)
         genres = [g["name"] for g in data.get("genres", []) if g.get("name")]
         release = data.get("release_date") or ""
-        year = int(release[:4]) if len(release) >= 4 else None
+        year_prefix = release[:4]
+        year = int(year_prefix) if len(year_prefix) == 4 and year_prefix.isdigit() else None
         countries = data.get("production_countries") or []
         country = countries[0].get("iso_3166_1") if countries else None
         return TmdbMovieDetails(
