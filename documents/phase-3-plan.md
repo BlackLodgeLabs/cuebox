@@ -27,6 +27,9 @@ todos:
   - id: repositories
     content: Add semantic_profile_repository and film_embedding_repository with upsert helpers
     status: pending
+  - id: pipeline-shared-helpers
+    content: Extract mark_film_failed + sync_import_job_progress shared helpers; refactor MetadataService._mark_failed to use them
+    status: pending
   - id: pipeline-continuation
     content: Wire semantic + embedding steps after metadata in run_import_enrichment; enriching → ready | failed
     status: pending
@@ -34,7 +37,7 @@ todos:
     content: Update count_by_import_job_status so processed_films counts only ready + failed (api-contracts terminal states)
     status: pending
   - id: review-accept-resume
-    content: Schedule semantic + embedding on POST /reviews/{id}/accept (BackgroundTasks or shared continuation helper)
+    content: Add BackgroundTasks to accept_review router; schedule run_semantic_pipeline_for_film after commit
     status: pending
   - id: rate-limiting
     content: Sequential per-film processing with configurable inter-film delay; respect provider rate limits
@@ -103,13 +106,14 @@ flowchart TD
     A[1. Provider interfaces + ProviderService extension] --> B[2. OpenAI semantic + embedding providers]
     B --> C[3. Ollama semantic + Voyage embedding providers]
     C --> D[4. Repositories + semantic/embedding services]
-    D --> E[5. Pipeline continuation in import orchestrator]
-    E --> F[6. Job counter alignment + review-accept resume]
-    F --> G[7. Rate limiting + mock fixtures]
-    G --> H[8. Unit + integration tests]
-    H --> I[9. Verification gates]
-    I --> J[10. Update roadmap]
-    J --> K[11. AGENTS.md review]
+    D --> E[5. Shared pipeline helpers — mark_film_failed + sync_import_job_progress]
+    E --> F[6. Pipeline continuation in import orchestrator]
+    F --> G[7. Job counters + review-accept BackgroundTasks]
+    G --> H[8. Rate limiting + mock fixtures]
+    H --> I[9. Unit + integration tests]
+    I --> J[10. Verification gates]
+    J --> K[11. Update roadmap]
+    K --> L[12. AGENTS.md review]
 ```
 
 ### Baseline inventory (branch start)
@@ -133,8 +137,8 @@ Complete work in five PR slices (see [Recommended PR Slicing](#recommended-pr-sl
 |------|-------|------|-----------------|------------------------|
 | 1 | 3a | Provider ABCs, OpenAI semantic + embedding, prompt template | Gate 1 partial (unit) | Semantic provider + Embedding provider (OpenAI paths) |
 | 2 | 3b | Ollama semantic, Voyage embedding, ProviderService wiring | Gate 1 partial | Config-driven provider switch (both interfaces) |
-| 3 | 3c | Repositories, semantic_service, embedding_service | Gate 2 partial (unit) | Persist tasks (schema fields) |
-| 4 | 3d | Pipeline continuation, job counters, review-accept resume, rate limit | Gates 3–5 | Wire pipeline + job completion + review accept + rate limit |
+| 3 | 3c | Repositories, semantic_service, embedding_service, shared pipeline helpers | Gate 2 partial (unit) | Persist tasks + refactor `_mark_failed` / `_sync_job_progress` |
+| 4 | 3d | Pipeline continuation, job counters, review-accept resume (BackgroundTasks), rate limit | Gates 3–5 | Wire pipeline + job completion + review accept + rate limit |
 | 5 | 3e | Mocks, unit + integration tests, gate script | All gates | Verification gate (5 checkboxes) |
 | 6 | — | Final gate run + roadmap overview + plan todos | All gates + Phase 2.5 regression | Overview + Phase 3 complete |
 | 7 | — | AGENTS.md structural review | Manual checklist | — |
@@ -147,16 +151,16 @@ Complete work in five PR slices (see [Recommended PR Slicing](#recommended-pr-sl
 bash scripts/verify-phase2.5-gates.sh
 ```
 
-**After Steps 1–3 (providers + services, no full pipeline yet):**
+**After Steps 1–3 (providers, services, shared helpers — no full pipeline yet):**
 
 ```bash
 cd api && ruff check app tests
 cd api && pytest tests/test_health.py tests/test_tmdb_normalization.py tests/test_http_retry.py -v
 # New unit tests (add as implemented):
-cd api && pytest tests/test_semantic_*.py tests/test_embedding_*.py -v
+cd api && pytest tests/test_semantic_*.py tests/test_embedding_*.py tests/test_enrichment_pipeline.py -v
 ```
 
-**After Step 4 (pipeline wired):**
+**After Step 4 (pipeline wired in import orchestrator):**
 
 ```bash
 export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
@@ -164,14 +168,14 @@ export TEST_DATABASE_URL="$DATABASE_URL"
 cd api && alembic upgrade head && pytest tests/ -v
 ```
 
-**After Step 5 (full test suite):**
+**After Steps 5–6 (review accept + integration tests):**
 
 ```bash
 bash scripts/verify-phase3-gates.sh
 bash scripts/verify-phase2.5-gates.sh   # regression — Phase 2.5 gates must still pass
 ```
 
-**Final (Step 6):**
+**Final (roadmap + AGENTS.md):**
 
 ```bash
 git push -u origin cursor/phase-3-plan-9929   # or implementation branch
@@ -188,8 +192,8 @@ Phase 3 introduces **`scripts/verify-phase3-gates.sh`** (add in slice 3e). All g
 
 | Check | Pass criteria |
 |-------|---------------|
-| Semantic provider factory | `openai` and `ollama` resolve from `config.yaml`; missing key → health `error`, tests use mocks |
-| Embedding provider factory | `openai` and `voyage` resolve; 1536-dim vector shape enforced |
+| Semantic provider factory | `openai` requires `OPENAI_API_KEY`; `ollama` requires `OLLAMA_BASE_URL` only — provider-specific init, not a global API-key gate |
+| Embedding provider factory | `openai` requires `OPENAI_API_KEY`; `voyage` requires `VOYAGE_API_KEY`; 1536-dim vector shape enforced |
 | Shared HTTP client | Semantic/embedding providers receive `ProviderService` httpx client (no per-film client creation) |
 | Prompt template | `semantic_enrichment.py` exports versioned template; output schema matches `film_semantic_profiles` columns |
 
@@ -297,6 +301,7 @@ Check off [`documents/roadmap.md`](./roadmap.md) Phase 3 items **incrementally**
 | `openai-embedding` + `voyage-embedding` | Implement Embedding Provider interface (config-driven) — OpenAI default |
 | `semantic-service` | Prompt template; persist `film_semantic_profiles` with version/model/timestamp |
 | `embedding-service` | Input composition; persist `film_embeddings` (`embedding_type: semantic`) |
+| `pipeline-shared-helpers` | Shared `mark_film_failed` + `sync_import_job_progress`; refactor metadata `_mark_failed` |
 | `pipeline-continuation` | Wire `enriching → ready` on success; `enriching → failed` on provider error |
 | `job-counters` | Update import job completion when all films reach terminal states |
 | `review-accept-resume` | Resume pipeline on review accept |
@@ -328,17 +333,36 @@ Also update Phase 2 **Implementation Notes** table row for **Job progress** once
 
 **Extend `ProviderService`:**
 
+Use **provider-specific** initialization conditions — do not gate all providers on `OPENAI_API_KEY`. Mirror the TMDB/OMDb pattern: each provider checks only its own credentials/endpoint.
+
+| Config `provider` | Semantic enrichment | Embedding |
+|-------------------|---------------------|-----------|
+| `openai` | Requires `OPENAI_API_KEY` | Requires `OPENAI_API_KEY` |
+| `ollama` | Requires reachable `OLLAMA_BASE_URL` (default `http://localhost:11434`); no API key | — |
+| `voyage` | — | Requires `VOYAGE_API_KEY` |
+
 ```python
 # Structural requirements (implement in provider_service.py)
 async def startup(...):
-    # existing TMDB/OMDb
-    if config.providers.semantic_enrichment.provider == "openai" and settings.openai_api_key:
-        self._semantic = OpenAISemanticProvider(self._http_client, ...)
-    # embedding similarly
+    # existing TMDB/OMDb ...
+    semantic_name = config.providers.semantic_enrichment.provider
+    if semantic_name == "openai" and settings.openai_api_key:
+        self._semantic = OpenAISemanticProvider(self._http_client, settings.openai_api_key, ...)
+    elif semantic_name == "ollama":
+        # No API key — base URL only (settings.ollama_base_url or default)
+        self._semantic = OllamaSemanticProvider(self._http_client, settings.ollama_base_url, ...)
+
+    embedding_name = config.providers.embedding.provider
+    if embedding_name == "openai" and settings.openai_api_key:
+        self._embedding = OpenAIEmbeddingProvider(self._http_client, settings.openai_api_key, ...)
+    elif embedding_name == "voyage" and settings.voyage_api_key:
+        self._embedding = VoyageEmbeddingProvider(self._http_client, settings.voyage_api_key, ...)
 
 def get_semantic_provider(self) -> SemanticEnrichmentProvider: ...
 def get_embedding_provider(self) -> EmbeddingProvider: ...
 ```
+
+**Health endpoint:** `_provider_status` must use the same per-provider rules (Ollama reports `ok` when base URL is configured, not when `OPENAI_API_KEY` is set).
 
 **Settings:** Reuse `OPENAI_API_KEY` from `.env.example`. Add `OLLAMA_BASE_URL` (optional, default `http://localhost:11434`) and `VOYAGE_API_KEY` to `.env.example` when Ollama/Voyage providers land.
 
@@ -359,15 +383,35 @@ def get_embedding_provider(self) -> EmbeddingProvider: ...
 
 **Embedding record:** `embedding_type = semantic`, `embedding_version = embedding-v1` (from `system_versions` seed), `embedding_model` from config.
 
-### Step 3 — Pipeline continuation
+### Step 3 — Shared pipeline helpers (extract before continuation)
+
+**Goal:** Avoid duplicating failure-marking and job-progress logic across metadata, semantic, and embedding stages.
+
+Today `MetadataService._mark_failed` updates `enrichment_status`, increments `failed_films`, and appends to `failure_summary`. `import_service._sync_job_progress` recomputes `processed_films` / `failure_summary` from film rows. Semantic failures must use the **same** behaviour — do not add a parallel `_mark_semantic_failed` on `MetadataService` or `SemanticService`.
+
+**Create:** `api/app/services/enrichment_pipeline.py` (or `api/app/services/import_job_progress.py` split into two focused modules)
+
+| Function | Responsibility | Replaces |
+|----------|----------------|----------|
+| `mark_film_failed(db, film, reason)` | Set `FAILED`; append to job `failure_summary` if `film.import_job_id` | `MetadataService._mark_failed` body |
+| `sync_import_job_progress(db, job_id)` | Recompute `processed_films`, `failed_films`, `failure_summary` from film counts | `import_service._sync_job_progress` |
+| `run_semantic_pipeline(db, film_id, provider_service)` | Semantic → embedding → `READY`; on error call `mark_film_failed` + `sync_import_job_progress` | New |
+
+**Refactor (slice 3c):**
+
+1. Move logic from `MetadataService._mark_failed` into `mark_film_failed`; have metadata service call the shared helper.
+2. Move `_sync_job_progress` from `import_service.py` into `sync_import_job_progress`; update `import_service` imports.
+3. Add unit test asserting metadata and semantic stages both record failures through the same helper (no duplicate summary entries).
+
+### Step 4 — Pipeline continuation
 
 **Goal:** Extend `run_import_enrichment` without rewriting metadata code.
 
 **Approach:**
 
-1. After `metadata.enrich_film` succeeds (film is `enriching`), call a shared helper e.g. `await run_semantic_pipeline(db, film.id, provider_service)`.
-2. Helper: `semantic_service.enrich` → `embedding_service.embed` → `film_repository.update_enrichment_status(..., READY)`.
-3. On `AppError` / provider failure: `_mark_semantic_failed(db, film, reason)` → `FAILED`; append to job `failure_summary` via existing `_sync_job_progress`.
+1. After `metadata.enrich_film` succeeds (film is `enriching`), call `await run_semantic_pipeline(db, film.id, provider_service)`.
+2. `run_semantic_pipeline`: `semantic_service.enrich` → `embedding_service.embed` → `film_repository.update_enrichment_status(..., READY)`.
+3. On `AppError` / provider failure: `mark_film_failed(db, film, reason)` then `sync_import_job_progress(db, film.import_job_id)` when applicable.
 4. Keep **sequential** per-film processing; add optional `asyncio.sleep(delay)` from config (e.g. `enrichment.inter_film_delay_seconds: 0.25` in `config.example.yaml`) for rate limiting.
 
 **Job completion change** (`film_repository.py`):
@@ -380,17 +424,34 @@ _TERMINAL_PROCESSED_STATUSES = {EnrichmentStatus.READY, EnrichmentStatus.FAILED}
 
 Import job `mark_complete` when `processed >= total_films` where processed = ready + failed only. Films in `review_required` block completion (user must accept/reject first).
 
-### Step 4 — Review accept resume
+### Step 5 — Review accept resume
 
 **Goal:** `POST /reviews/{id}/accept` currently sets `enriching` and returns — semantic work never runs.
 
-**Approach:**
+**Router change required:** `accept_review` in `api/app/routers/v1/reviews.py` does **not** accept `BackgroundTasks` today. Add it to the endpoint signature (same pattern as `POST /import`):
 
-- Extract `run_semantic_pipeline` so both import orchestrator and review router can invoke it.
-- In `accept_review` router (or `MetadataService.accept_review`), after commit, schedule `BackgroundTasks.add_task(run_semantic_pipeline_for_film, film.id, ...)`.
-- Mirror import orchestrator error handling (per-film isolation, progress sync if film belongs to an import job).
+```python
+from fastapi import APIRouter, BackgroundTasks, Depends
 
-### Step 5 — Test infrastructure
+@router.post("/{review_id}/accept", response_model=ReviewActionResponse)
+async def accept_review(
+    review_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    metadata_service: MetadataService = Depends(get_metadata_service),
+    provider_service: ProviderService = Depends(get_provider_service),
+) -> ReviewActionResponse:
+    film = await metadata_service.accept_review(db, review_id)
+    db.commit()
+    background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
+    # ... build ReviewActionResponse
+```
+
+**Background task wrapper:** `run_semantic_pipeline_for_film` opens its own `SessionLocal()` (same lifecycle as `run_import_enrichment`), calls `run_semantic_pipeline`, commits, and invokes `sync_import_job_progress` when `film.import_job_id` is set. Do **not** pass the request-scoped `db` session into the background task.
+
+**Layering:** Keep `MetadataService.accept_review` synchronous re metadata only; schedule semantic work in the **router** (or a thin `ReviewService`) where `BackgroundTasks` is available — `MetadataService` should not take `BackgroundTasks` as a dependency.
+
+### Step 6 — Test infrastructure
 
 **Extend `api/tests/mock_providers.py`:**
 
@@ -406,6 +467,7 @@ Import job `mark_complete` when `processed >= total_films` where processed = rea
 | `test_semantic_service.py` | JSON parse, CHECK constraint edge cases |
 | `test_embedding_service.py` | Input composition, dimension guard |
 | `test_job_counter_semantics.py` | `enriching` excluded from processed count |
+| `test_enrichment_pipeline.py` | Shared `mark_film_failed` used by metadata and semantic paths |
 | `test_integration_semantic_pipeline.py` | Import → `ready`, profiles + embeddings exist |
 | `test_integration_semantic_failures.py` | failure_summary on semantic error |
 | `test_integration_review_accept_semantic.py` | Accept → `ready` with semantic_profile |
@@ -415,7 +477,7 @@ Import job `mark_complete` when `processed >= total_films` where processed = rea
 - `test_integration_import.py` — change assertions from `enriching` to `ready` once mocks return semantic responses.
 - `test_accept_review_transitions_to_enriching` — extend or add sibling test for final `ready` state after background task.
 
-### Step 6 — Health endpoint
+### Step 7 — Health endpoint
 
 `GET /api/v1/health` already reports `semantic_enrichment` and `embedding` provider status. Wire to real key checks once providers exist (same `_provider_status` pattern as TMDB).
 
@@ -464,8 +526,10 @@ Update [`documents/roadmap.md`](./roadmap.md) **incrementally** using the [Roadm
 | Semantic service | `api/app/services/semantic_service.py` |
 | Embedding service | `api/app/services/embedding_service.py` |
 | Repositories | `api/app/repositories/semantic_profile_repository.py`, `film_embedding_repository.py` |
-| Pipeline continuation | `api/app/services/import_service.py` (+ shared helper module if extracted) |
-| Review accept scheduling | `api/app/routers/v1/reviews.py` and/or `metadata_service.py` |
+| Shared pipeline helpers | `api/app/services/enrichment_pipeline.py` — `mark_film_failed`, `sync_import_job_progress`, `run_semantic_pipeline` |
+| Pipeline continuation | `api/app/services/import_service.py` (calls shared helpers) |
+| Review accept scheduling | `api/app/routers/v1/reviews.py` — `BackgroundTasks` + `run_semantic_pipeline_for_film` |
+| Metadata refactor | `api/app/services/metadata_service.py` — delegate `_mark_failed` to shared helper |
 | Job counter fix | `api/app/repositories/film_repository.py` |
 | Config | `config.example.yaml` — optional `enrichment.inter_film_delay_seconds` |
 | Env example | `.env.example` — `OLLAMA_BASE_URL`, `VOYAGE_API_KEY` if needed |
@@ -484,8 +548,8 @@ Update [`documents/roadmap.md`](./roadmap.md) **incrementally** using the [Roadm
 |----------|----------|-------|
 | **3a — Providers (OpenAI)** | ABCs, OpenAI semantic + embedding, prompt template, ProviderService | Gate 1 |
 | **3b — Alt providers** | Ollama semantic, Voyage embedding, `.env.example` | Gate 1 |
-| **3c — Services** | Repositories, semantic_service, embedding_service, unit tests | Gate 2 |
-| **3d — Pipeline** | Orchestrator continuation, job counters, review accept, rate limit | Gates 3–5 |
+| **3c — Services** | Repositories, semantic/embedding services, shared pipeline helpers, metadata refactor | Gate 2 |
+| **3d — Pipeline** | Orchestrator continuation, job counters, review accept (`BackgroundTasks`), rate limit | Gates 3–5 |
 | **3e — Tests + gates** | Mocks, integration tests, `verify-phase3-gates.sh`, roadmap | All gates + Phase 2.5 regression |
 
 ---
@@ -494,7 +558,7 @@ Update [`documents/roadmap.md`](./roadmap.md) **incrementally** using the [Roadm
 
 Phase 3 is **done** when:
 
-1. All 18 todos in this plan frontmatter are `completed`
+1. All 19 todos in this plan frontmatter are `completed`
 2. All 7 verification gates pass (document results in final PR description)
 3. `bash scripts/verify-phase2.5-gates.sh` still passes (regression)
 4. `documents/roadmap.md` Phase 3 checklist and Verification Gate section are fully checked off
@@ -550,6 +614,8 @@ Mark plan todo `agents-md-review` complete after this review.
 | Rate limits (OpenAI 429) | Reuse `http_retry` patterns; inter-film delay; sequential processing |
 | Phase 2 integration tests break | Update mocks first; run `verify-phase2.5-gates.sh` after each slice |
 | Accept-review race | Background task uses dedicated DB session per film (same as import orchestrator) |
+| Duplicate failure_summary entries | Single `mark_film_failed` helper; `sync_import_job_progress` dedupes from film rows |
+| Ollama health false-negative | Health checks `OLLAMA_BASE_URL` config, not `OPENAI_API_KEY` |
 | Token cost on 500-film import | Log token usage; use `gpt-4o-mini` default; batching deferred to future optimization |
 
 ---
