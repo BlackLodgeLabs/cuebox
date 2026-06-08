@@ -4,6 +4,11 @@
 developer_mode: false
 
 providers:
+  metadata:
+    tmdb:
+      enabled: true
+    omdb:
+      enabled: true
   embedding:
     provider: openai
     model: text-embedding-3-small

@@ -13,7 +13,17 @@ class ProviderConfig(BaseModel):
     model: str
 
 
+class MetadataProviderToggle(BaseModel):
+    enabled: bool = True
+
+
+class MetadataProvidersConfig(BaseModel):
+    tmdb: MetadataProviderToggle = MetadataProviderToggle()
+    omdb: MetadataProviderToggle = MetadataProviderToggle()
+
+
 class ProvidersConfig(BaseModel):
+    metadata: MetadataProvidersConfig = MetadataProvidersConfig()
     embedding: ProviderConfig
     semantic_enrichment: ProviderConfig
     ranking: ProviderConfig

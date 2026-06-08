@@ -2,7 +2,13 @@
 
 from fastapi import APIRouter
 
+from app.routers.v1.films import router as films_router
 from app.routers.v1.health import router as health_router
+from app.routers.v1.imports import router as import_router
+from app.routers.v1.reviews import router as reviews_router
 
 router = APIRouter()
 router.include_router(health_router)
+router.include_router(import_router)
+router.include_router(films_router)
+router.include_router(reviews_router)
