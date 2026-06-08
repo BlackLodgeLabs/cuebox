@@ -39,6 +39,9 @@ todos:
   - id: update-roadmap
     content: Check off Phase 2.5 task checklist and verification gate in documents/roadmap.md; update overview
     status: pending
+  - id: agents-md-review
+    content: Review AGENTS.md for structural changes (CI commands, env vars, compose services, bootstrap steps)
+    status: pending
 isProject: false
 ---
 
@@ -93,7 +96,88 @@ flowchart TD
     F --> G[7. PR template + policy]
     G --> H[8. Verification gates]
     H --> I[9. Update roadmap]
+    I --> J[10. AGENTS.md review]
 ```
+
+### Baseline inventory (branch start)
+
+| Item | Count / state |
+|------|----------------|
+| `.github/workflows/` | Missing — no CI today |
+| `api/tests/test_*.py` | 7 files, ~36 tests collected |
+| Integration tests | Skip without `DATABASE_URL` (`conftest.py` `requires_db`) |
+| `mock_providers.py` | Happy-path only (Matrix, Ambiguous, Unknown Film) |
+| `scripts/verify-phase2-gates.sh` | Live-stack smoke gates; not a CI substitute |
+
+---
+
+## Execution Plan
+
+Complete work in four PR slices (see [Recommended PR Slicing](#recommended-pr-slicing)). After **each** slice: run the slice gate, check off matching [roadmap](#roadmap-checkbox-mapping) items, commit with `phase-2.5:` prefix, push, and confirm GitHub Actions is green before starting the next slice.
+
+| Step | Slice | Work | Gate checkpoint | Roadmap items to check |
+|------|-------|------|-----------------|------------------------|
+| 1 | 2.5a | Add `.github/workflows/api-ci.yml` | Gate 1 partial (local simulate) + Gate 3 | CI Pipeline (3 checkboxes) |
+| 2 | 2.5b | Unit tests: TMDB, http_retry, update_counters | Gate 2 unit rows + Gate 4 | Unit Tests (3 checkboxes) |
+| 3 | 2.5c | Adversarial mocks + 4 integration test modules | Gate 2 integration rows + Gate 4 | Test Infrastructure (mock) + Integration Tests (4 checkboxes) |
+| 4 | 2.5d | PR template, policy note in roadmap | All gates | Test Infrastructure (PR template, policy) + Verification Gate (4 checkboxes) |
+| 5 | — | Final gate run + roadmap overview + plan todos | All 4 gates | Overview + Phase 2.5 complete |
+| 6 | — | AGENTS.md structural review | Manual checklist | — |
+
+### Per-step commands
+
+**After Step 1 (CI workflow):**
+
+```bash
+# Local CI simulation (from repo root)
+docker run -d --name phase25-pg -e POSTGRES_USER=cuebox -e POSTGRES_PASSWORD=cuebox \
+  -e POSTGRES_DB=cuebox -p 5432:5432 pgvector/pgvector:pg16
+export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
+export TEST_DATABASE_URL="$DATABASE_URL"
+cd api && alembic upgrade head && pytest tests/ -v && ruff check app tests
+# Confirm: 0 integration skips; no TMDB_API_KEY / OMDB_API_KEY in env
+```
+
+**After Steps 2–4 (tests + template):**
+
+```bash
+cd api && pytest tests/ -v --tb=short   # Gate 4 — all pass, count ≥ 30
+cd api && ruff check app tests
+# Gate 2 — grep test names against matrix below
+```
+
+**Final (Step 5):**
+
+```bash
+# Push branch; confirm GitHub Actions api-ci job green (Gate 1)
+bash scripts/verify-phase2.5-gates.sh   # optional consolidated script (add in Step 5)
+```
+
+---
+
+## Roadmap Checkbox Mapping
+
+Check off [`documents/roadmap.md`](./roadmap.md) Phase 2.5 items **incrementally** as each todo completes — do not batch until the final gate pass unless a slice fully covers a subsection.
+
+| Plan todo ID | Roadmap checklist item |
+|--------------|------------------------|
+| `ci-workflow` | Add `.github/workflows/api-ci.yml` |
+| `ci-workflow` | Set `DATABASE_URL` / `TEST_DATABASE_URL` in CI |
+| `ci-workflow` | Confirm CI runs without live API keys |
+| `unit-tmdb-normalization` | `test_tmdb_normalization.py` |
+| `unit-http-retry` | `test_http_retry.py` |
+| `unit-update-counters` | `test_update_counters.py` |
+| `integration-job-invariants` | `test_import_job_invariants.py` |
+| `integration-orchestrator-faults` | `test_import_orchestrator_faults.py` |
+| `integration-review-guards` | `test_review_guards.py` |
+| `integration-provider-errors` | `test_metadata_provider_errors.py` |
+| `mock-adversarial` | Extend `mock_providers.py` with adversarial profiles |
+| `pr-template` | Add `.github/pull_request_template.md` |
+| `pr-template` | Document bug-fix-requires-test policy (roadmap Testing Strategy) |
+| `verify-gates` | All four Verification Gate checkboxes |
+| `update-roadmap` | Overview: Phase 2.5 complete → Phase 3 next |
+
+**DB Constraint Test Matrix** (roadmap): mark covered when unit/integration tests assert each edge case (`runtime=0`, `vote_average=0.0`, malformed dates, `processed <= total`).
 
 ---
 
@@ -304,7 +388,18 @@ Checklist items:
 
 ## Verification Gates
 
-All must pass before marking Phase 2.5 complete.
+All four gates must pass before marking Phase 2.5 complete. Run gates locally during development; re-run the full set in Step 5 before the final roadmap overview update.
+
+### Gate verification runbook
+
+| Gate | When to run | How to verify pass | On failure |
+|------|-------------|-------------------|------------|
+| **1 — CI green** | After Step 1; again after every push | GitHub Actions `api-ci` job success; local simulate matches workflow | Fix workflow paths (`working-directory`, `alembic.ini`), Postgres health options |
+| **2 — Coverage matrix** | After Steps 2–4 | Every row below has a named test; `pytest --collect-only -q` lists them | Add missing test before checking roadmap row |
+| **3 — No live API keys** | After Step 1 | Workflow `env` has no `TMDB_API_KEY`/`OMDB_API_KEY`; `unset` locally and pytest still passes | Ensure `integration_client` uses `mock_providers` only |
+| **4 — Full regression** | After every slice | `pytest tests/ -v` — 0 failures, 0 skips for DB tests | Fix test or production code before next slice |
+
+**Optional:** Add `scripts/verify-phase2.5-gates.sh` in the final commit — wraps Gate 1 local simulate + Gate 4 + Gate 2 name grep (no live API keys, no docker compose stack required).
 
 ### Gate 1 — CI workflow green
 
@@ -314,61 +409,89 @@ All must pass before marking Phase 2.5 complete.
 docker run -d --name phase25-pg -e POSTGRES_USER=cuebox -e POSTGRES_PASSWORD=cuebox \
   -e POSTGRES_DB=cuebox -p 5432:5432 pgvector/pgvector:pg16
 export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
+export TEST_DATABASE_URL="$DATABASE_URL"
 cd api && alembic upgrade head && pytest tests/ -v && ruff check app tests
 ```
 
 **Pass criteria:** 0 failures; 0 integration tests skipped due to missing `DATABASE_URL`.
 
+**Roadmap:** Check all three CI Pipeline checkboxes + first Verification Gate checkbox when GitHub Actions is green on the feature branch.
+
 ### Gate 2 — Regression coverage matrix
 
-| Bugbot fix area | Test file | Test name present |
-|-----------------|-----------|-------------------|
-| Retry old job counters | `test_import_job_invariants.py` | yes |
-| `processed <= total` CHECK | `test_import_job_invariants.py` | yes |
-| `Retry-After` HTTP-date | `test_http_retry.py` | yes |
-| `runtime=0` | `test_tmdb_normalization.py` | yes |
-| `vote_average=0.0` | `test_tmdb_normalization.py` | yes |
-| Reject guard | `test_review_guards.py` | yes |
-| Orchestrator isolation | `test_import_orchestrator_faults.py` | yes |
-| Provider error message | `test_metadata_provider_errors.py` | yes |
+Verify each row with `pytest api/tests/<file>.py -v` or `pytest --collect-only -q api/tests/ | grep <test_name>`:
+
+| Bugbot fix area | Test file | Required test (name or pattern) |
+|-----------------|-----------|-----------------------------------|
+| Retry old job counters | `test_import_job_invariants.py` | `test_retry_updates_old_job_counters` |
+| `processed <= total` CHECK | `test_import_job_invariants.py` | asserts `processed_films <= total_films` after retry |
+| `Retry-After` HTTP-date | `test_http_retry.py` | HTTP-date future parsing |
+| `runtime=0` | `test_tmdb_normalization.py` | maps to `None` |
+| `vote_average=0.0` | `test_tmdb_normalization.py` | persisted, not skipped |
+| Reject guard | `test_review_guards.py` | `test_reject_non_review_required_returns_409` |
+| Orchestrator isolation | `test_import_orchestrator_faults.py` | per-film crash + IntegrityError cases |
+| Provider error message | `test_metadata_provider_errors.py` | provider HTTP errors vs not-found |
+
+**Pass criteria:** All eight rows satisfied; DB Constraint Test Matrix edge cases covered.
+
+**Roadmap:** Check second Verification Gate checkbox when matrix is complete.
 
 ### Gate 3 — No live API keys in CI
 
-Confirm workflow env has no `TMDB_API_KEY` / `OMDB_API_KEY` and all tests still pass.
+```bash
+# Confirm workflow YAML has no TMDB_API_KEY / OMDB_API_KEY
+grep -E 'TMDB_API_KEY|OMDB_API_KEY' .github/workflows/api-ci.yml && exit 1 || true
+unset TMDB_API_KEY OMDB_API_KEY
+export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
+cd api && pytest tests/ -v
+```
 
-### Gate 4 — Regression
+**Pass criteria:** All tests pass with provider keys unset in shell and absent from CI env.
+
+**Roadmap:** Third CI Pipeline checkbox + third Verification Gate checkbox.
+
+### Gate 4 — Full regression
 
 ```bash
 cd api && pytest tests/ -v
 ```
 
-**Pass criteria:** All tests pass; count ≥ 30 (baseline 17 unit + new tests).
+**Pass criteria:** All tests pass; total count ≥ 30 (baseline ~36 existing + new tests).
+
+**Roadmap:** Fourth Verification Gate checkbox (`pytest` 0 skipped integration tests).
 
 ---
 
 ## Roadmap Update Procedure
 
-Update [`documents/roadmap.md`](./roadmap.md) incrementally, then final pass when all gates pass.
+Update [`documents/roadmap.md`](./roadmap.md) **incrementally** using the [Roadmap Checkbox Mapping](#roadmap-checkbox-mapping), then a final pass when all gates pass.
 
-### Per-task checklist
+### During implementation (per slice)
 
-Mark `- [x]` in Phase 2.5 **Task Checklist** as each todo completes.
+1. Complete slice work and run slice gate(s).
+2. Mark matching Phase 2.5 **Task Checklist** items `- [x]`.
+3. Commit: `phase-2.5: <slice description> — roadmap checkboxes`.
+4. Push; confirm CI green before next slice.
 
-### Overview update
+### Final pass (Step 5 — all gates green)
+
+1. Mark any remaining Task Checklist and Verification Gate checkboxes.
+2. Update **Overview** (line ~11):
 
 ```markdown
 **Current state:** Phase 2.5 complete. CI runs Postgres-backed integration tests on every PR; adversarial unit and integration tests cover Phase 2 bugbot regression categories. Next up: Phase 3 — Semantic Enrichment & Embeddings.
 ```
 
-### Phase dependency graph
-
-Ensure `P2 --> P2_5 --> P3` is reflected.
+3. Confirm Phase 3 **Depends on:** already reads `Phase 2.5` (no change needed if present).
+4. Confirm dependency graph `P2 --> P2_5 --> P3` unchanged.
+5. Mark all plan frontmatter todos `completed`.
+6. Commit: `phase-2.5: complete — roadmap and plan todos updated`.
 
 ### Commit discipline
 
 - Prefix commits with `phase-2.5:`.
 - Each bug-class test suite in its own commit where practical.
-- Include roadmap checkbox updates in the gate-verification commit.
+- Include roadmap checkbox updates in the same commit as the feature they document (or in the gate-verification commit for gates-only items).
 
 ---
 
@@ -386,7 +509,9 @@ Ensure `P2 --> P2_5 --> P3` is reflected.
 | Provider error tests | `api/tests/test_metadata_provider_errors.py` |
 | Adversarial mocks | `api/tests/mock_providers.py` (extended) |
 | PR template | `.github/pull_request_template.md` |
+| Gate script (optional) | `scripts/verify-phase2.5-gates.sh` |
 | Roadmap | `documents/roadmap.md` — Phase 2.5 checked off |
+| Agent guidance | `AGENTS.md` — updated if CI/test commands changed |
 
 ---
 
@@ -405,12 +530,44 @@ Ensure `P2 --> P2_5 --> P3` is reflected.
 
 Phase 2.5 is **done** when:
 
-1. All 12 todos in this plan are `completed`
-2. All 4 verification gates pass
-3. `documents/roadmap.md` Phase 2.5 checklist and gates are checked off
+1. All 13 todos in this plan frontmatter are `completed`
+2. All 4 verification gates pass (document results in final PR description)
+3. `documents/roadmap.md` Phase 2.5 checklist and Verification Gate section are fully checked off
 4. Overview reflects Phase 2.5 complete / Phase 3 next
 5. Phase 3 `Depends on` references Phase 2.5 in roadmap
-6. Changes committed, pushed, and PR ready for review
+6. `AGENTS.md` reviewed and updated if structural changes apply (see below)
+7. Changes committed, pushed, and PR ready for review
+
+---
+
+## AGENTS.md Review (final step)
+
+After all gates pass and the roadmap is updated, review [`AGENTS.md`](../AGENTS.md) for stale or missing guidance. Phase 2.5 is expected to change agent-facing workflows even though runtime architecture (compose services, ports) stays the same.
+
+### When to update AGENTS.md
+
+| Change in Phase 2.5 | AGENTS.md section to update |
+|---------------------|----------------------------|
+| New `.github/workflows/api-ci.yml` | **Lint and test** — add CI parity note: PRs must pass GitHub Actions `api-ci`; link local simulate command |
+| `DATABASE_URL` / `TEST_DATABASE_URL` required for full test suite | **Lint and test** — clarify that `pytest tests/` (not only `test_health.py`) needs Postgres; document `TEST_DATABASE_URL` |
+| Standard test command becomes full `pytest tests/` + `ruff` | **Lint and test** table — add row for full API test suite; align `ruff check` path with CI (`app tests` vs `.`) |
+| New `scripts/verify-phase2.5-gates.sh` | **Lint and test** or **Hello-world verification** — optional gate script reference |
+| PR template regression policy | No AGENTS change unless agents are instructed to use the template |
+
+### Review checklist
+
+Run through each item; update AGENTS.md only where the repo behaviour actually changed:
+
+- [ ] **Compose services / ports** — unchanged (`frontend:3000`, `api:8000`, `postgres:5432`); no update unless CI adds a new local service
+- [ ] **Required env vars** — CI uses `DATABASE_URL` + `TEST_DATABASE_URL` for tests; note if agents should set both for local full-suite runs
+- [ ] **Lint / test commands** — table matches CI: `pytest tests/ -v`, `ruff check app tests`, `alembic upgrade head` before tests
+- [ ] **Docker / bootstrap** — unchanged unless workflow documents a new bootstrap path (e.g. Actions-only Postgres container for tests)
+- [ ] **New standard commands** — e.g. if ESLint is added later, not in Phase 2.5 scope unless added incidentally
+- [ ] **Cursor Cloud instructions** — still accurate for nested Docker / `fuse-overlayfs` gotchas
+
+If no structural changes apply, note in the final PR: "AGENTS.md reviewed — no updates required."
+
+Mark plan todo `agents-md-review` complete after this review.
 
 ---
 
