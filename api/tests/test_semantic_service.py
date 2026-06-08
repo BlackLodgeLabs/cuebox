@@ -36,3 +36,13 @@ def test_score_out_of_range_raises():
         raise AssertionError("expected SemanticParseError")
     except SemanticParseError as exc:
         assert "energy" in str(exc)
+
+
+def test_boolean_score_rejected():
+    payload = dict(DEFAULT_SEMANTIC_PROFILE)
+    payload["complexity"] = True
+    try:
+        _parse_profile_json(json.dumps(payload))
+        raise AssertionError("expected SemanticParseError")
+    except SemanticParseError as exc:
+        assert "complexity" in str(exc)

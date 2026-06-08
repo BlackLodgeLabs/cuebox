@@ -83,7 +83,7 @@ def _parse_profile_json(raw: str) -> SemanticProfileResult:
         value = data.get(key)
         if value is None:
             return None
-        if not isinstance(value, (int, float)):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise SemanticParseError(f"{key} must be a number or null")
         score = float(value)
         if score < 0 or score > 10:

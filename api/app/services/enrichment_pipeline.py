@@ -109,11 +109,10 @@ async def run_semantic_pipeline_for_film(
     db = SessionLocal()
     try:
         await run_semantic_pipeline(db, film_id, provider_service)
-        db.commit()
         film = film_repository.get_by_id(db, film_id)
         if film is not None and film.import_job_id:
             sync_import_job_progress(db, film.import_job_id)
-            db.commit()
+        db.commit()
     except Exception:
         logger.exception("Background semantic pipeline failed for film %s", film_id)
         try:
