@@ -30,6 +30,8 @@ jobs:
           sudo pg_ctlcluster 16 main start
           sudo -u postgres psql -c "CREATE USER cuebox WITH PASSWORD 'cuebox' CREATEDB;"
           sudo -u postgres psql -c "CREATE DATABASE cuebox OWNER cuebox;"
+          sudo -u postgres psql -d cuebox -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          sudo -u postgres psql -d cuebox -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
