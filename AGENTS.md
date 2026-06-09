@@ -92,3 +92,4 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 - `OPENAI_API_KEY` is required for live semantic/embedding/ranking runs when `config.yaml` selects OpenAI providers. CI and gate scripts pass without it (mocked HTTP). Optional: `OLLAMA_BASE_URL` (Ollama semantic), `VOYAGE_API_KEY` (Voyage embeddings).
 - Frontend `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000/api/v1` (set in `docker-compose.yml` for the frontend service).
 - No authentication — single-user, local-first design.
+- After pulling frontend dependency changes, run `cd frontend && npm ci` (non-Docker) or rebuild/restart the frontend container (`docker compose up --build frontend`). The frontend dev container runs `npm ci` on start to keep its `node_modules` volume in sync with `package-lock.json`.
