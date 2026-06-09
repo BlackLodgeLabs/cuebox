@@ -249,8 +249,8 @@ Register router in `routers/v1/__init__.py`.
 
 ### Step 5 — RSS parser (`rss_parser.py`)
 
-- Fetch `https://letterboxd.com/{username}/rss/` (or documented feed URL).
-- Parse Atom/RSS XML; map item types to `RssEventType` enum (`watchlist_add`, `watchlist_remove`, `watched`).
+- Fetch watchlist feed https://letterboxd.com/{username}/watchlist/rss/ and diary feed https://letterboxd.com/{username}/rss/.
+- Parse XML; diff watchlist feed for additions/removals, and map diary entries to watched events.
 - Build stable event fingerprint: SHA-256 hash (e.g., using hashlib) of (event_type + letterboxd_uri + event_timestamp) for idempotency.
 - Defensive parsing — log malformed entries; do not crash poll job.
 
