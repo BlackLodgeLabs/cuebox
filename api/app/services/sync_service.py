@@ -127,8 +127,9 @@ class SyncService:
         for row in diff.added:
             try:
                 existing = film_repository.get_by_letterboxd_uri(db, row.letterboxd_uri)
-                if existing is not None and existing.status == FilmStatus.ARCHIVED:
-                    film_repository.restore_active(db, existing)
+                if existing is not None:
+                    if existing.status != FilmStatus.ACTIVE:
+                        film_repository.restore_active(db, existing)
                     watchlist_repository.ensure_active_entry(
                         db,
                         film_id=existing.id,
@@ -306,6 +307,7 @@ class SyncService:
                 asyncio.create_task(run_import_enrichment(job_id, self._providers))
         except Exception:
             logger.exception("RSS poll failed")
+            processed_count = 0
             try:
                 db.rollback()
                 sync_config_repository.update_poll_status(
@@ -315,6 +317,7 @@ class SyncService:
             except Exception:
                 logger.exception("Failed to record RSS poll error status")
                 db.rollback()
+            raise
         finally:
             if own_session:
                 db.close()
@@ -357,7 +360,7 @@ class SyncService:
         year = payload.get("year")
         job = None
         if existing is not None:
-            if existing.status == FilmStatus.ARCHIVED:
+            if existing.status != FilmStatus.ACTIVE:
                 film_repository.restore_active(db, existing)
             watchlist_repository.ensure_active_entry(
                 db, film_id=existing.id, letterboxd_uri=uri

@@ -246,15 +246,25 @@ class RecommendationService:
                 "most_influential_factors": [],
             }
 
+        winner_result = (
+            _film_result(
+                winner,
+                _explanation_from_payload(winner_payload),
+                is_winner=True,
+            )
+            if winner is not None
+            else FilmResult(
+                film_id=session.winner_film_id or uuid.UUID(int=0),
+                title="Unknown",
+                explanation=_explanation_from_payload(winner_payload),
+            )
+        )
+
         return RecommendationSessionDetail(
             session_id=session.id,
             profile_id=session.profile_id,
             profile_cache_hit=False,
-            winner=_film_result(
-                winner,
-                _explanation_from_payload(winner_payload),
-                is_winner=True,
-            ),
+            winner=winner_result,
             runners_up=runners_up,
             constraint_relaxation=session.constraint_relaxation,
             created_at=session.created_at,
