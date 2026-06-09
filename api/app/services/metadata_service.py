@@ -19,10 +19,10 @@ from app.providers.tmdb import TmdbClient, TmdbMovieDetails
 from app.repositories import (
     film_metadata_repository,
     film_repository,
-    import_job_repository,
     metadata_review_repository,
 )
 from app.services.confidence import compute_confidence, confidence_action
+from app.services.enrichment_pipeline import mark_film_failed
 from app.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
@@ -215,18 +215,7 @@ class MetadataService:
         )
 
     def _mark_failed(self, db: Session, film: Film, reason: str) -> EnrichmentOutcome:
-        film_repository.update_enrichment_status(db, film, EnrichmentStatus.FAILED)
-        if film.import_job_id:
-            job = import_job_repository.get_by_id(db, film.import_job_id)
-            if job is not None:
-                summary = list(job.failure_summary or [])
-                summary.append({"letterboxd_uri": film.letterboxd_uri, "reason": reason})
-                import_job_repository.update_counters(
-                    db,
-                    job,
-                    failed_films=job.failed_films + 1,
-                    failure_summary=summary,
-                )
+        mark_film_failed(db, film, reason)
         return EnrichmentOutcome(
             film_id=film.id,
             status=EnrichmentStatus.FAILED,

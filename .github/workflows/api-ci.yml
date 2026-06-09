@@ -16,25 +16,22 @@ jobs:
     defaults:
       run:
         working-directory: api
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: cuebox
-          POSTGRES_PASSWORD: cuebox
-          POSTGRES_DB: cuebox
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U cuebox -d cuebox"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       DATABASE_URL: postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
       TEST_DATABASE_URL: postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
     steps:
       - uses: actions/checkout@v4
+      # Use apt Postgres + pgvector instead of a Docker Hub service image to avoid
+      # intermittent registry pull timeouts on GitHub-hosted runners.
+      - name: Set up PostgreSQL with pgvector
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-16-pgvector
+          sudo pg_ctlcluster 16 main start
+          sudo -u postgres psql -c "CREATE USER cuebox WITH PASSWORD 'cuebox' CREATEDB;"
+          sudo -u postgres psql -c "CREATE DATABASE cuebox OWNER cuebox;"
+          sudo -u postgres psql -d cuebox -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          sudo -u postgres psql -d cuebox -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:

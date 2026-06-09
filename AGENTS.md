@@ -4,7 +4,7 @@ Guidance for AI agents working in the Cuebox (Film Picker) repository.
 
 ## Project overview
 
-Locally hosted web app for picking films from a Letterboxd watchlist. Phase 1 is implemented: Postgres schema, FastAPI API, minimal Next.js UI with a health dashboard.
+Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 3: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), FastAPI API, minimal Next.js health dashboard.
 
 Specs live under `documents/` (no root README yet).
 
@@ -62,8 +62,9 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 |-------|---------|
 | API lint | `cd api && ruff check app tests` |
 | API full test suite | `cd api && DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox TEST_DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox pytest tests/ -v` |
-| API unit tests (no DB) | `cd api && pytest tests/test_health.py tests/test_tmdb_normalization.py tests/test_http_retry.py` |
-| API gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; waits for `pg_isready`) |
+| API unit tests (no DB) | `cd api && pytest tests/test_health.py tests/test_tmdb_normalization.py tests/test_http_retry.py tests/test_semantic_*.py tests/test_embedding_*.py` |
+| Phase 3 gate script | `bash scripts/verify-phase3-gates.sh` (Postgres required; mocked OpenAI/Ollama/Voyage) |
+| Phase 2.5 gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; regression after Phase 3 changes) |
 | CI parity | PRs must pass GitHub Actions workflow `.github/workflows/api-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
 
@@ -75,6 +76,7 @@ Load http://localhost:3000 — the homepage should show **API: ok**, **Database:
 
 ### Gotchas
 
-- `.env` and `config.yaml` are gitignored; agents must create them from examples.
+- `.env` and `config.yaml` are gitignored; agents must create them from examples. Copy `config.example.yaml` after Phase 3 changes to pick up `enrichment.inter_film_delay_seconds`.
+- `OPENAI_API_KEY` is required for live semantic/embedding runs when `config.yaml` selects OpenAI providers. CI and gate scripts pass without it (mocked HTTP). Optional: `OLLAMA_BASE_URL` (Ollama semantic), `VOYAGE_API_KEY` (Voyage embeddings).
 - Frontend `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000/api/v1` (set in `docker-compose.yml` for the frontend service).
 - No authentication — single-user, local-first design.

@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 2.5 complete. CI runs Postgres-backed integration tests on every PR; adversarial unit and integration tests cover Phase 2 bugbot regression categories. Next up: Phase 3 — Semantic Enrichment & Embeddings.
+**Current state:** Phase 3 complete. Films progress through semantic enrichment and embedding generation to `enrichment_status = ready`; import job counters align with api-contracts terminal semantics. Next up: Phase 4 — Watchlist Synchronisation.
 
 ### Reference Documents
 
@@ -298,7 +298,7 @@ Phase 2 completes the **metadata stage** only. Keep these conventions when exten
 | Topic | Convention |
 |-------|------------|
 | **Pipeline boundary** | Films that pass metadata matching land in `enrichment_status = enriching`. Phase 3 advances `enriching → ready` via semantic enrichment and embeddings. |
-| **Job progress (Phase 2)** | `processed_films` counts films in `enriching`, `review_required`, `failed`, or `ready`. Phase 3 should align with api-contracts terminal semantics (`ready` or `failed`) once the full pipeline is wired. |
+| **Job progress** | `processed_films` counts only api-contracts terminal states: `ready` + `failed`. Films in `enriching` or `review_required` do not count as processed. |
 | **Confidence thresholds** | Half-open ranges: `score >= 0.95` auto-accept; `0.80 <= score < 0.95` accept + flag; `score < 0.80` manual review. |
 | **Failed-film retry** | Re-import of an existing `letterboxd_uri` with `enrichment_status = failed` resets to `pending`, assigns a new `import_job_id`, and re-queues enrichment (per api-contracts Appendix A). |
 | **HTTP client lifecycle** | `ProviderService` owns a single shared `httpx.AsyncClient` created in FastAPI lifespan; TMDB/OMDb clients receive it by injection. Reuse this pattern for AI providers in Phase 3. |
@@ -401,20 +401,20 @@ See [sequence-diagrams.md §3](./sequence-diagrams.md) (semantic + embedding ste
 
 ### Task Checklist
 
-- [ ] Implement Semantic Enrichment Provider interface (config-driven)
+- [x] Implement Semantic Enrichment Provider interface (config-driven)
   - Default: OpenAI or Ollama per `config.yaml`
   - Prompt template for themes, subgenres, tones, emotional outcomes, visual descriptors, viewing contexts, numerical scores, semantic summary
   - Persist to `film_semantic_profiles` with `semantic_version`, `generated_by_model`, `generated_at`
-- [ ] Implement Embedding Provider interface (config-driven)
+- [x] Implement Embedding Provider interface (config-driven)
   - Default: OpenAI `text-embedding-3-small` (1536 dimensions)
   - Input: synopsis, genres, keywords, semantic profile, semantic summary
   - Persist to `film_embeddings` (`embedding_type: semantic`)
-- [ ] Wire pipeline continuation after metadata step:
+- [x] Wire pipeline continuation after metadata step:
   - `enriching → ready` on success
   - `enriching → failed` on provider error
-- [ ] Update import job completion when all films reach terminal states
-- [ ] Resume pipeline on review accept (schedule semantic + embedding generation)
-- [ ] Rate-limit / batch enrichment to respect provider API limits
+- [x] Update import job completion when all films reach terminal states
+- [x] Resume pipeline on review accept (schedule semantic + embedding generation)
+- [x] Rate-limit / batch enrichment to respect provider API limits
 
 ### Implementation Notes (from Phase 2)
 
@@ -440,11 +440,11 @@ Phase 3 must **continue** the pipeline from Phase 2 without rewriting import/met
 
 ### Verification Gate
 
-- [ ] Enriched films have populated `film_semantic_profiles` and `film_embeddings`
-- [ ] `enrichment_status = ready` for successfully enriched films
-- [ ] pgvector HNSW index contains embedding rows
-- [ ] Failed enrichments appear in import job `failure_summary`
-- [ ] Accept-review flow completes enrichment to `ready`
+- [x] Enriched films have populated `film_semantic_profiles` and `film_embeddings`
+- [x] `enrichment_status = ready` for successfully enriched films
+- [x] pgvector HNSW index contains embedding rows
+- [x] Failed enrichments appear in import job `failure_summary`
+- [x] Accept-review flow completes enrichment to `ready`
 
 ### PRD Success Criteria Addressed
 

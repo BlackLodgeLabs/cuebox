@@ -136,4 +136,6 @@ def test_health_local_providers_without_env_keys(local_providers_client):
 
     assert response.status_code == 200
     providers = response.json()["providers"]
-    assert all(value == "ok" for value in providers.values())
+    assert providers["semantic_enrichment"] == "ok"
+    assert providers["embedding"] == "error"
+    assert providers["ranking"] == "ok"

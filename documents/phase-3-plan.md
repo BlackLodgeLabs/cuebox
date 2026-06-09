@@ -5,61 +5,61 @@ depends_on: Phase 2.5 (complete)
 todos:
   - id: provider-interfaces
     content: Define SemanticEnrichmentProvider and EmbeddingProvider ABCs; extend ProviderService with shared httpx client resolution
-    status: pending
+    status: completed
   - id: openai-semantic
     content: Implement OpenAI semantic enrichment provider + versioned prompt template (semantic_enrichment.py)
-    status: pending
+    status: completed
   - id: ollama-semantic
     content: Implement Ollama semantic enrichment provider (config-driven model/base URL)
-    status: pending
+    status: completed
   - id: openai-embedding
     content: Implement OpenAI embedding provider (text-embedding-3-small, 1536-dim)
-    status: pending
+    status: completed
   - id: voyage-embedding
     content: Implement Voyage embedding provider stub (config switch only; same interface)
-    status: pending
+    status: completed
   - id: semantic-service
     content: Add semantic_service.py — build prompt from film_metadata, parse LLM JSON, persist film_semantic_profiles
-    status: pending
+    status: completed
   - id: embedding-service
     content: Add embedding_service.py — compose embedding input, persist film_embeddings (type semantic, version embedding-v1)
-    status: pending
+    status: completed
   - id: repositories
     content: Add semantic_profile_repository and film_embedding_repository with upsert helpers
-    status: pending
+    status: completed
   - id: pipeline-shared-helpers
     content: Extract mark_film_failed + sync_import_job_progress shared helpers; refactor MetadataService._mark_failed to use them
-    status: pending
+    status: completed
   - id: pipeline-continuation
     content: Wire semantic + embedding steps after metadata in run_import_enrichment; enriching → ready | failed
-    status: pending
+    status: completed
   - id: job-counters
     content: Update count_by_import_job_status so processed_films counts only ready + failed (api-contracts terminal states)
-    status: pending
+    status: completed
   - id: review-accept-resume
     content: Add BackgroundTasks to accept_review router; schedule run_semantic_pipeline_for_film after commit
-    status: pending
+    status: completed
   - id: rate-limiting
     content: Sequential per-film processing with configurable inter-film delay; respect provider rate limits
-    status: pending
+    status: completed
   - id: mock-providers
     content: Extend mock_providers / test fixtures with deterministic semantic + embedding responses (no live API keys)
-    status: pending
+    status: completed
   - id: unit-tests
     content: Unit tests — prompt assembly, LLM JSON parsing/validation, embedding input composition, counter semantics
-    status: pending
+    status: completed
   - id: integration-tests
     content: Integration tests — full pipeline to ready, semantic failure in failure_summary, accept-review → ready
-    status: pending
+    status: completed
   - id: verify-gates
     content: Run all Phase 3 verification gates locally; confirm CI green on push
-    status: pending
+    status: completed
   - id: update-roadmap
     content: Check off Phase 3 task checklist and verification gate in documents/roadmap.md; update overview
-    status: pending
+    status: completed
   - id: agents-md-review
     content: Review AGENTS.md for structural changes (env vars, compose, lint/test commands, bootstrap)
-    status: pending
+    status: completed
 isProject: false
 ---
 

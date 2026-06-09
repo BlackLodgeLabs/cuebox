@@ -1,11 +1,13 @@
-"""Review accept/reject integration tests with mocked TMDB/OMDb."""
+"""Review accept/reject integration tests with mocked TMDB/OMDb/OpenAI."""
+
+import time
 
 import pytest
 
 from tests.conftest import requires_db
 from tests.test_integration_import import (
     _import_csv,
-    _wait_for_complete,
+    _wait_for_review_required,
 )
 
 pytestmark = requires_db
@@ -13,17 +15,23 @@ pytestmark = requires_db
 
 @pytest.fixture
 def pending_review(integration_client, watchlist_csv_bytes):
-    created = _import_csv(integration_client, watchlist_csv_bytes)
-    _wait_for_complete(integration_client, created["job_id"])
-
-    response = integration_client.get("/api/v1/films/review-required")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["data"], "Expected at least one pending review"
-    return data["data"][0]
+    _import_csv(integration_client, watchlist_csv_bytes)
+    return _wait_for_review_required(integration_client)[0]
 
 
-def test_accept_review_transitions_to_enriching(integration_client, pending_review):
+def _wait_for_film_status(client, film_id: str, status: str, *, timeout: float = 30.0) -> dict:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        response = client.get(f"/api/v1/films/{film_id}")
+        assert response.status_code == 200
+        payload = response.json()
+        if payload["enrichment_status"] == status:
+            return payload
+        time.sleep(0.2)
+    raise AssertionError(f"Film {film_id} did not reach {status} within {timeout}s")
+
+
+def test_accept_review_transitions_to_ready(integration_client, pending_review):
     response = integration_client.post(
         f"/api/v1/reviews/{pending_review['review_id']}/accept",
     )
@@ -32,10 +40,9 @@ def test_accept_review_transitions_to_enriching(integration_client, pending_revi
     assert body["review_status"] == "accepted"
     assert body["film_id"] == pending_review["film_id"]
 
-    film_response = integration_client.get(f"/api/v1/films/{pending_review['film_id']}")
-    assert film_response.status_code == 200
-    assert film_response.json()["enrichment_status"] == "enriching"
-    assert film_response.json()["metadata"] is not None
+    film = _wait_for_film_status(integration_client, pending_review["film_id"], "ready")
+    assert film["metadata"] is not None
+    assert film["semantic_profile"] is not None
 
 
 def test_reject_review_transitions_to_failed(integration_client):
@@ -46,14 +53,9 @@ def test_reject_review_transitions_to_failed(integration_client):
         "Date,Title,Year,Letterboxd URI\n"
         f"2024-01-02,Ambiguous Title,1981,https://letterboxd.com/film/reject-{suffix}/\n"
     ).encode()
-    created = _import_csv(integration_client, csv_ambiguous)
-    _wait_for_complete(integration_client, created["job_id"])
+    _import_csv(integration_client, csv_ambiguous)
+    review = _wait_for_review_required(integration_client)[0]
 
-    reviews = integration_client.get("/api/v1/films/review-required").json()["data"]
-    review = next(
-        (r for r in reviews if r["letterboxd_uri"].endswith(f"reject-{suffix}/")),
-        reviews[0],
-    )
     response = integration_client.post(f"/api/v1/reviews/{review['review_id']}/reject")
     assert response.status_code == 200
     assert response.json()["review_status"] == "rejected"
@@ -67,6 +69,7 @@ def test_accept_review_conflict_when_already_resolved(integration_client, pendin
         f"/api/v1/reviews/{pending_review['review_id']}/accept",
     )
     assert first.status_code == 200
+    _wait_for_film_status(integration_client, pending_review["film_id"], "ready")
 
     second = integration_client.post(
         f"/api/v1/reviews/{pending_review['review_id']}/accept",
