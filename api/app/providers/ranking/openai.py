@@ -102,13 +102,22 @@ def _parse_ranking_json(
         raise ValueError(f"Invalid ranking JSON: {exc}") from exc
 
     candidate_ids = {str(c.film_id) for c in candidates}
-    winner_id = uuid.UUID(str(data["winner_film_id"]))
+    winner_id = candidates[0].film_id
+    raw_winner = data.get("winner_film_id")
+    if raw_winner is not None:
+        try:
+            winner_id = uuid.UUID(str(raw_winner))
+        except ValueError:
+            pass
     if str(winner_id) not in candidate_ids:
         winner_id = candidates[0].film_id
 
     runners_up: list[uuid.UUID] = []
     for item in data.get("runners_up_film_ids", []):
-        film_id = uuid.UUID(str(item))
+        try:
+            film_id = uuid.UUID(str(item))
+        except ValueError:
+            continue
         if (
             str(film_id) in candidate_ids
             and film_id != winner_id

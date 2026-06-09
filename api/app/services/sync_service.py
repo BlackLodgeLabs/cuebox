@@ -83,9 +83,7 @@ class SyncService:
             film = current_by_uri.get(uri)
             if film is None:
                 existing = film_repository.get_by_letterboxd_uri(db, uri)
-                if existing is not None and existing.status == FilmStatus.ARCHIVED:
-                    result.added.append(row)
-                elif existing is None:
+                if existing is None or existing.status != FilmStatus.ACTIVE:
                     result.added.append(row)
                 else:
                     result.unchanged += 1
@@ -355,6 +353,12 @@ class SyncService:
         payload: dict,
         jobs_to_start: list[uuid.UUID],
     ) -> None:
+        if (
+            watchlist_repository.get_active_by_uri(db, uri) is None
+            and watchlist_repository.count_active(db) >= MAX_ACTIVE_WATCHLIST
+        ):
+            logger.warning("Skipping RSS watchlist add at cap: %s", uri)
+            return
         existing = film_repository.get_by_letterboxd_uri(db, uri)
         title = payload.get("title") or "Unknown"
         year = payload.get("year")
