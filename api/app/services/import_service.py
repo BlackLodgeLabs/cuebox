@@ -184,15 +184,23 @@ async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderSer
             return
 
         for film in films:
-            if film.enrichment_status != EnrichmentStatus.PENDING:
+            # Resume work for films that are either queued (PENDING) or already
+            # transitioned to ENRICHING. This allows recovery if the worker
+            # stops after setting ENRICHING but before semantic/embedding finish.
+            current_status = film.enrichment_status
+            if current_status not in (EnrichmentStatus.PENDING, EnrichmentStatus.ENRICHING):
                 continue
             try:
                 db.rollback()
             except Exception:
                 logger.exception("Pre-film rollback failed for job %s", job_id)
             try:
-                outcome = await metadata.enrich_film(db, film.id)
-                if outcome.status == EnrichmentStatus.ENRICHING:
+                if current_status == EnrichmentStatus.PENDING:
+                    outcome = await metadata.enrich_film(db, film.id)
+                    if outcome.status == EnrichmentStatus.ENRICHING:
+                        await run_semantic_pipeline(db, film.id, provider_service)
+                else:
+                    # Film was already ENRICHING from a prior attempt; resume semantic pipeline.
                     await run_semantic_pipeline(db, film.id, provider_service)
             except Exception as exc:  # isolate per-film failures
                 logger.exception("Enrichment crashed for film %s in job %s", film.id, job_id)
