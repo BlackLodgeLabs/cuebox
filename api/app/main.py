@@ -13,6 +13,7 @@ from app.core.exceptions import AppError
 from app.database.session import init_engine
 from app.routers.v1 import router as v1_router
 from app.schemas.errors import ErrorBody, ErrorCode, ErrorDetail, ErrorResponse
+from app.scheduler import shutdown_scheduler, start_scheduler
 from app.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,9 @@ async def lifespan(app: FastAPI):
     provider_service = ProviderService(settings, get_app_config())
     await provider_service.startup()
     app.state.provider_service = provider_service
+    start_scheduler(provider_service)
     yield
+    shutdown_scheduler()
     await provider_service.shutdown()
 
 

@@ -10,6 +10,8 @@ from app.providers.embedding.base import EmbeddingProvider
 from app.providers.embedding.openai import OpenAIEmbeddingProvider
 from app.providers.embedding.voyage import VoyageEmbeddingProvider
 from app.providers.omdb import OmdbClient
+from app.providers.ranking.base import RankingProvider
+from app.providers.ranking.openai import OpenAIRankingProvider
 from app.providers.semantic.base import SemanticEnrichmentProvider
 from app.providers.semantic.ollama import OllamaSemanticProvider
 from app.providers.semantic.openai import OpenAISemanticProvider
@@ -28,6 +30,7 @@ class ProviderService:
         self._omdb: OmdbClient | None = None
         self._semantic: SemanticEnrichmentProvider | None = None
         self._embedding: EmbeddingProvider | None = None
+        self._ranking: RankingProvider | None = None
 
     async def startup(self, http_client: httpx.AsyncClient | None = None) -> None:
         if self._http_client is not None:
@@ -69,6 +72,14 @@ class ProviderService:
                 model=self._config.providers.embedding.model,
             )
 
+        ranking_name = self._config.providers.ranking.provider.lower()
+        if ranking_name == "openai" and self._settings.openai_api_key:
+            self._ranking = OpenAIRankingProvider(
+                self._http_client,
+                self._settings.openai_api_key,
+                model=self._config.providers.ranking.model,
+            )
+
     async def shutdown(self) -> None:
         if self._http_client is not None:
             await self._http_client.aclose()
@@ -77,6 +88,7 @@ class ProviderService:
         self._omdb = None
         self._semantic = None
         self._embedding = None
+        self._ranking = None
 
     @property
     def http_client(self) -> httpx.AsyncClient | None:
@@ -113,3 +125,13 @@ class ProviderService:
                 status_code=500,
             )
         return self._embedding
+
+    def get_ranking_provider(self) -> RankingProvider:
+        if self._ranking is None:
+            provider = self._config.providers.ranking.provider
+            raise AppError(
+                code=ErrorCode.PROVIDER_ERROR,
+                message=f"Ranking provider '{provider}' is not configured",
+                status_code=500,
+            )
+        return self._ranking

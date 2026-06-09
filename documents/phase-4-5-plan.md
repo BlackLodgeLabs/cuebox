@@ -9,105 +9,105 @@ todos:
   # ── Phase 4 — Watchlist Synchronisation ──────────────────────────────────
   - id: p4-migration-sync-config
     content: "Alembic 0003 — sync_config single-row table (username, poll metadata, configured_at)"
-    status: pending
+    status: completed
   - id: p4-sync-repositories
     content: "sync_config_repository, watchlist_repository extensions (deactivate, list active, count), film_repository lifecycle helpers (archive, watch, restore)"
-    status: pending
+    status: completed
   - id: p4-csv-diff
     content: "sync_service.csv_diff — diff parsed CSV vs active watchlist; classify added/removed/watched/unchanged"
-    status: pending
+    status: completed
   - id: p4-csv-endpoint
     content: "POST /sync/csv — multipart upload, post-sync ≤500 check, apply diff, schedule enrichment for new films"
-    status: pending
+    status: completed
   - id: p4-rss-parser
     content: "rss_parser.py — fetch and parse Letterboxd RSS; map entries to watchlist_add | watchlist_remove | watched"
-    status: pending
+    status: completed
   - id: p4-rss-ledger
     content: "Idempotent rss_sync_events ledger — dedupe by event fingerprint; apply events via sync_service"
-    status: pending
+    status: completed
   - id: p4-rss-endpoints
     content: "PUT /sync/rss and GET /sync/rss/status per api-contracts §6.2–6.3"
-    status: pending
+    status: completed
   - id: p4-scheduler
     content: "APScheduler job — poll RSS every 900s; wire in FastAPI lifespan; update last_polled_at / last_poll_status"
-    status: pending
+    status: completed
   - id: p4-film-lifecycle
     content: "Enforce active | watched | archived transitions; re-add archived → active without re-enrichment when ready"
-    status: pending
+    status: completed
   - id: p4-unit-tests
     content: "Unit tests — CSV diff scenarios, RSS parser fixtures, username validation, lifecycle guards"
-    status: pending
+    status: completed
   - id: p4-integration-tests
     content: "Integration tests — CSV sync add/remove/watch/re-add-archived; RSS idempotency; watched excluded from candidates query"
-    status: pending
+    status: completed
   - id: p4-verify-gates
     content: "Run scripts/verify-phase4-gates.sh; confirm Phase 2.5 + Phase 3 regression scripts still pass"
-    status: pending
+    status: completed
   - id: p4-update-roadmap
     content: "Check off Phase 4 task checklist and verification gate in documents/roadmap.md"
-    status: pending
+    status: completed
   # ── Phase 5 — Recommendation Engine ──────────────────────────────────────
   - id: p5-questionnaire-schemas
     content: "Pydantic schemas — questionnaire enums, NO_PREFERENCE_CONFLICT validation, request/response per api-contracts §7–8"
-    status: pending
+    status: completed
   - id: p5-profile-canonicalization
     content: "Profile canonicalization + SHA-256 hash; structured_profile and narrative_profile builders"
-    status: pending
+    status: completed
   - id: p5-profile-service
     content: "recommendation_profile_service — cache lookup/insert, profile embedding via EmbeddingProvider"
-    status: pending
+    status: completed
   - id: p5-ranking-provider
     content: "RankingProvider ABC + OpenAI implementation; extend ProviderService; ranking prompt template"
-    status: pending
+    status: completed
   - id: p5-constraint-filter
     content: "Stage 1 — hard constraint filtering (watched/archived/not-ready, runtime, subtitle proxy) + relaxation JSONB"
-    status: pending
+    status: completed
   - id: p5-vector-retrieval
     content: "Stage 2 — pgvector cosine similarity retrieval with retrieval_candidate_limit"
-    status: pending
+    status: completed
   - id: p5-scoring-service
     content: "Stage 3 — scoring_service with configurable weights from config.yaml"
-    status: pending
+    status: completed
   - id: p5-diversity-service
     content: "Stage 4 — diversity_service using recommendation_exposure counters"
-    status: pending
+    status: completed
   - id: p5-stochastic-selection
     content: "Stage 5 — weighted stochastic selection among similarly scored candidates"
-    status: pending
+    status: completed
   - id: p5-ranking-service
     content: "Stage 6 — ranking_service LLM call; winner + 4 runners-up with structured explanations"
-    status: pending
+    status: completed
   - id: p5-persistence
     content: "Persist recommendation_sessions, candidates, results, exposure counters with full version metadata"
-    status: pending
+    status: completed
   - id: p5-endpoints
     content: "POST /recommendations, GET /recommendations/{session_id}, GET /recommendations (history list)"
-    status: pending
+    status: completed
   - id: p5-repositories
     content: "recommendation_profile/session/candidate/result/exposure repositories"
-    status: pending
+    status: completed
   - id: p5-unit-tests
     content: "Unit tests — canonicalization/hash, scoring signals, constraint relaxation, questionnaire validation"
-    status: pending
+    status: completed
   - id: p5-integration-tests
     content: "Integration tests — E2E recommend, profile cache hit, INSUFFICIENT_CANDIDATES, history list/detail"
-    status: pending
+    status: completed
   - id: p5-verify-gates
     content: "Run scripts/verify-phase5-gates.sh; confirm Phase 2.5 + Phase 3 regression scripts still pass"
-    status: pending
+    status: completed
   - id: p5-update-roadmap
     content: "Check off Phase 5 task checklist and verification gate in documents/roadmap.md"
-    status: pending
+    status: completed
   # ── Cross-cutting (after both tracks) ──────────────────────────────────────
   - id: combined-regression
     content: "Run verify-phase2.5-gates.sh + verify-phase3-gates.sh + verify-phase4-gates.sh + verify-phase5-gates.sh"
-    status: pending
+    status: completed
   - id: final-roadmap-overview
     content: "Update roadmap overview — Phase 4 & 5 complete; next up Phase 6 Frontend"
-    status: pending
+    status: completed
   - id: agents-md-review
     content: "Review AGENTS.md for structural changes (compose, env vars, lint/test, bootstrap, scheduler)"
-    status: pending
+    status: completed
 isProject: false
 ---
 

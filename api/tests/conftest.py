@@ -81,8 +81,10 @@ def _isolate_db(request):
     with SessionLocal() as session:
         session.execute(
             text(
-                "TRUNCATE metadata_match_reviews, watchlist_entries, film_embeddings, "
-                "film_semantic_profiles, film_metadata, films, import_jobs "
+                "TRUNCATE recommendation_results, recommendation_candidates, "
+                "recommendation_sessions, recommendation_profiles, recommendation_exposure, "
+                "rss_sync_events, sync_config, metadata_match_reviews, watchlist_entries, "
+                "film_embeddings, film_semantic_profiles, film_metadata, films, import_jobs "
                 "RESTART IDENTITY CASCADE"
             )
         )

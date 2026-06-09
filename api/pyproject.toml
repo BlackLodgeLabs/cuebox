@@ -15,6 +15,7 @@ dependencies = [
     "alembic",
     "psycopg[binary]",
     "pgvector",
+    "apscheduler",
 ]
 
 [project.optional-dependencies]

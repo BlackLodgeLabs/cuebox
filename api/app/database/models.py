@@ -385,6 +385,21 @@ class RecommendationExposure(Base):
     film: Mapped[Film] = relationship(back_populates="exposure")
 
 
+class SyncConfig(Base):
+    __tablename__ = "sync_config"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rss_username: Mapped[str | None] = mapped_column(Text)
+    configured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_polled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_poll_status: Mapped[str | None] = mapped_column(Text)
+    events_processed_last_poll: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class RssSyncEvent(Base):
     __tablename__ = "rss_sync_events"
     __table_args__ = (
