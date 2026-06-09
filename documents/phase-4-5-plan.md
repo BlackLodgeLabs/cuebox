@@ -251,7 +251,7 @@ Register router in `routers/v1/__init__.py`.
 
 - Fetch `https://letterboxd.com/{username}/rss/` (or documented feed URL).
 - Parse Atom/RSS XML; map item types to `RssEventType` enum (`watchlist_add`, `watchlist_remove`, `watched`).
-- Build stable event fingerprint: `hash(event_type + letterboxd_uri + event_timestamp)` for idempotency.
+- Build stable event fingerprint: SHA-256 hash (e.g., using hashlib) of (event_type + letterboxd_uri + event_timestamp) for idempotency.
 - Defensive parsing — log malformed entries; do not crash poll job.
 
 Use mocked HTTP fixtures in tests (no live Letterboxd calls in CI).
