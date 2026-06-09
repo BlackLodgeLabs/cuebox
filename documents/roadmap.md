@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 3 complete. Films progress through semantic enrichment and embedding generation to `enrichment_status = ready`; import job counters align with api-contracts terminal semantics. Next up: Phase 4 — Watchlist Synchronisation.
+**Current state:** Phases 4 and 5 complete. Watchlist sync (CSV + RSS) keeps film lifecycle aligned with Letterboxd; the six-stage recommendation engine serves POST/GET recommendations with full audit trail. Next up: Phase 6 — Frontend (MVP UX).
 
 ### Reference Documents
 
@@ -469,7 +469,7 @@ See [sequence-diagrams.md §5–§6](./sequence-diagrams.md).
 
 #### Manual CSV Sync
 
-- [ ] `POST /sync/csv` — [api-contracts.md §6.1](./api-contracts.md)
+- [x] `POST /sync/csv` — [api-contracts.md §6.1](./api-contracts.md)
   - Same CSV validation as import
   - Diff uploaded CSV against active `watchlist_entries`
   - **Added:** insert or restore archived → active; schedule enrichment for new films
@@ -480,23 +480,23 @@ See [sequence-diagrams.md §5–§6](./sequence-diagrams.md).
 
 #### RSS Sync
 
-- [ ] Add `sync_config` table (or persist in dedicated config store) for RSS username and poll metadata
-- [ ] `PUT /sync/rss` — [api-contracts.md §6.2](./api-contracts.md)
-- [ ] `GET /sync/rss/status` — [api-contracts.md §6.3](./api-contracts.md)
-- [ ] Implement Letterboxd RSS feed parser
-- [ ] APScheduler job polling every 900 seconds
-- [ ] Idempotent event processing via `rss_sync_events` ledger:
+- [x] Add `sync_config` table (or persist in dedicated config store) for RSS username and poll metadata
+- [x] `PUT /sync/rss` — [api-contracts.md §6.2](./api-contracts.md)
+- [x] `GET /sync/rss/status` — [api-contracts.md §6.3](./api-contracts.md)
+- [x] Implement Letterboxd RSS feed parser
+- [x] APScheduler job polling every 900 seconds
+- [x] Idempotent event processing via `rss_sync_events` ledger:
   - `watchlist_add` → insert/restore film + schedule enrichment if needed
   - `watchlist_remove` → archive film
   - `watched` → mark film watched, deactivate entry
-- [ ] Record `last_polled_at`, `last_poll_status`, `events_processed_last_poll`
+- [x] Record `last_polled_at`, `last_poll_status`, `events_processed_last_poll`
 
 #### Film Lifecycle
 
-- [ ] `active` — on watchlist, eligible if enriched
-- [ ] `watched` — excluded from recommendations
-- [ ] `archived` — removed from watchlist; retains metadata, semantic profiles, embeddings, history
-- [ ] Re-add archived film → restore to `active` without re-enrichment if already `ready`
+- [x] `active` — on watchlist, eligible if enriched
+- [x] `watched` — excluded from recommendations
+- [x] `archived` — removed from watchlist; retains metadata, semantic profiles, embeddings, history
+- [x] Re-add archived film → restore to `active` without re-enrichment if already `ready`
 
 ### Suggested Modules
 
@@ -513,11 +513,11 @@ Use a dedicated `sync_config` key-value table (single-row) rather than `system_v
 
 ### Verification Gate
 
-- [ ] Re-upload modified CSV produces correct `added`, `removed`, `watched` counts
-- [ ] Archived films retain metadata and semantic profiles
-- [ ] Watched films excluded from recommendation candidate queries
-- [ ] RSS poll applies events without processing duplicates
-- [ ] `GET /sync/rss/status` reflects last poll metadata
+- [x] Re-upload modified CSV produces correct `added`, `removed`, `watched` counts
+- [x] Archived films retain metadata and semantic profiles
+- [x] Watched films excluded from recommendation candidate queries
+- [x] RSS poll applies events without processing duplicates
+- [x] `GET /sync/rss/status` reflects last poll metadata
 
 ### PRD Success Criteria Addressed
 
@@ -541,60 +541,60 @@ See [Architecture.md §15](./Architecture.md), [PRD.md §13](./PRD.md), and [seq
 
 #### Recommendation Profile Service
 
-- [ ] Transform questionnaire responses to `structured_profile`
-- [ ] Generate `narrative_profile` (interpret free-text notes via LLM or template)
-- [ ] Canonicalize profile (sort arrays, normalize case/whitespace, remove nulls, sort object keys)
-- [ ] SHA-256 hash → lookup in `recommendation_profiles`
-- [ ] On cache miss: generate embedding, insert profile record
-- [ ] Return `profile_id`, embedding, `profile_cache_hit` flag
+- [x] Transform questionnaire responses to `structured_profile`
+- [x] Generate `narrative_profile` (interpret free-text notes via LLM or template)
+- [x] Canonicalize profile (sort arrays, normalize case/whitespace, remove nulls, sort object keys)
+- [x] SHA-256 hash → lookup in `recommendation_profiles`
+- [x] On cache miss: generate embedding, insert profile record
+- [x] Return `profile_id`, embedding, `profile_cache_hit` flag
 
 #### Recommendation Service — Six Stages
 
 **Stage 1 — Hard Constraint Filtering**
-- [ ] Exclude watched, archived, non-`ready` films
-- [ ] Apply runtime ceiling from questionnaire (`le_90`, `le_120`, `le_150`, `any`)
-- [ ] Apply subtitle proxy: exclude non-English `original_language` when `subtitle_preference = no`
-- [ ] Relax constraints if too few candidates; record in `constraint_relaxation` JSONB
+- [x] Exclude watched, archived, non-`ready` films
+- [x] Apply runtime ceiling from questionnaire (`le_90`, `le_120`, `le_150`, `any`)
+- [x] Apply subtitle proxy: exclude non-English `original_language` when `subtitle_preference = no`
+- [x] Relax constraints if too few candidates; record in `constraint_relaxation` JSONB
 
 **Stage 2 — Semantic Retrieval**
-- [ ] pgvector cosine similarity search (HNSW index)
-- [ ] Respect `retrieval_candidate_limit` from config
-- [ ] Record `retrieval_rank` and `similarity_score` per candidate
+- [x] pgvector cosine similarity search (HNSW index)
+- [x] Respect `retrieval_candidate_limit` from config
+- [x] Record `retrieval_rank` and `similarity_score` per candidate
 
 **Stage 3 — Structured Scoring**
-- [ ] Score signals: theme fit, emotional fit, pacing fit, complexity fit, era fit, obscurity fit, viewing context fit, recommendation history
-- [ ] Apply configurable weights from `config.yaml`
-- [ ] Compute `raw_score` per candidate; persist `score_breakdown`
+- [x] Score signals: theme fit, emotional fit, pacing fit, complexity fit, era fit, obscurity fit, viewing context fit, recommendation history
+- [x] Apply configurable weights from `config.yaml`
+- [x] Compute `raw_score` per candidate; persist `score_breakdown`
 
 **Stage 4 — Diversity Adjustment**
-- [ ] Load `recommendation_exposure` counters
-- [ ] Apply exposure penalties and freshness bonuses
-- [ ] Compute `final_score`
+- [x] Load `recommendation_exposure` counters
+- [x] Apply exposure penalties and freshness bonuses
+- [x] Compute `final_score`
 
 **Stage 5 — Controlled Stochastic Selection**
-- [ ] Weighted selection among similarly scored candidates
-- [ ] Promote diversity-adjusted candidates to prevent stagnation
+- [x] Weighted selection among similarly scored candidates
+- [x] Promote diversity-adjusted candidates to prevent stagnation
 
 **Stage 6 — LLM Ranking**
-- [ ] Resolve ranking provider from config
-- [ ] Input: profile, candidate metadata, semantic enrichment, scores
-- [ ] Output: winner, 4 runners-up, structured explanations
-- [ ] LLM may reorder candidates when justified
+- [x] Resolve ranking provider from config
+- [x] Input: profile, candidate metadata, semantic enrichment, scores
+- [x] Output: winner, 4 runners-up, structured explanations
+- [x] LLM may reorder candidates when justified
 
 #### Persistence & Endpoints
 
-- [ ] Insert `recommendation_sessions` with all version metadata
-- [ ] Insert `recommendation_candidates` with full observability fields
-- [ ] Insert `recommendation_results` with winner and runner-up explanations
-- [ ] Update `recommendation_exposure` counters
-- [ ] `POST /recommendations` — [api-contracts.md §7.1](./api-contracts.md) (target < 30s)
-- [ ] `GET /recommendations/{session_id}` — [api-contracts.md §7.2](./api-contracts.md)
-- [ ] `GET /recommendations` — [api-contracts.md §8.1](./api-contracts.md)
+- [x] Insert `recommendation_sessions` with all version metadata
+- [x] Insert `recommendation_candidates` with full observability fields
+- [x] Insert `recommendation_results` with winner and runner-up explanations
+- [x] Update `recommendation_exposure` counters
+- [x] `POST /recommendations` — [api-contracts.md §7.1](./api-contracts.md) (target < 30s)
+- [x] `GET /recommendations/{session_id}` — [api-contracts.md §7.2](./api-contracts.md)
+- [x] `GET /recommendations` — [api-contracts.md §8.1](./api-contracts.md)
 
 #### Validation
 
-- [ ] Questionnaire validation including `NO_PREFERENCE_CONFLICT`
-- [ ] Return `INSUFFICIENT_CANDIDATES` (422) when no films survive filtering
+- [x] Questionnaire validation including `NO_PREFERENCE_CONFLICT`
+- [x] Return `INSUFFICIENT_CANDIDATES` (422) when no films survive filtering
 
 ### Suggested Modules
 
@@ -611,12 +611,12 @@ See [Architecture.md §15](./Architecture.md), [PRD.md §13](./PRD.md), and [seq
 
 ### Verification Gate
 
-- [ ] End-to-end recommendation from enriched watchlist completes in < 30 seconds
-- [ ] Winner + up to 4 runners-up returned with structured explanations
-- [ ] Identical questionnaire produces `profile_cache_hit: true` on second run
-- [ ] All candidate observability fields populated in `recommendation_candidates`
-- [ ] Constraint relaxation recorded when applied
-- [ ] History list and detail endpoints return correct data
+- [x] End-to-end recommendation from enriched watchlist completes in < 30 seconds
+- [x] Winner + up to 4 runners-up returned with structured explanations
+- [x] Identical questionnaire produces `profile_cache_hit: true` on second run
+- [x] All candidate observability fields populated in `recommendation_candidates`
+- [x] Constraint relaxation recorded when applied
+- [x] History list and detail endpoints return correct data
 
 ### PRD Success Criteria Addressed
 

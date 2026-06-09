@@ -140,3 +140,69 @@ def list_failed_for_job(db: Session, job_id: uuid.UUID) -> list[Film]:
         Film.enrichment_status == EnrichmentStatus.FAILED,
     )
     return list(db.scalars(stmt).all())
+
+
+def archive_film(db: Session, film: Film) -> Film:
+    film.status = FilmStatus.ARCHIVED
+    db.flush()
+    return film
+
+
+def mark_watched(db: Session, film: Film) -> Film:
+    film.status = FilmStatus.WATCHED
+    db.flush()
+    return film
+
+
+def restore_active(db: Session, film: Film) -> Film:
+    film.status = FilmStatus.ACTIVE
+    db.flush()
+    return film
+
+
+def list_recommendation_candidates(
+    db: Session,
+    *,
+    runtime_max: int | None = None,
+    exclude_non_english: bool = False,
+) -> list[Film]:
+    """Active, ready films eligible for recommendation Stage 1 filtering."""
+    from app.database.models import FilmMetadata
+
+    stmt = (
+        select(Film)
+        .join(FilmMetadata, FilmMetadata.film_id == Film.id)
+        .where(
+            Film.status == FilmStatus.ACTIVE,
+            Film.enrichment_status == EnrichmentStatus.READY,
+        )
+        .options(
+            selectinload(Film.metadata_),
+            selectinload(Film.semantic_profile),
+            selectinload(Film.exposure),
+        )
+    )
+    if runtime_max is not None:
+        stmt = stmt.where(
+            (FilmMetadata.runtime.is_(None)) | (FilmMetadata.runtime <= runtime_max)
+        )
+    if exclude_non_english:
+        stmt = stmt.where(
+            (FilmMetadata.original_language.is_(None))
+            | (FilmMetadata.original_language == "en")
+        )
+    return list(db.scalars(stmt).all())
+
+
+def get_many_by_ids_with_relations(db: Session, film_ids: list[uuid.UUID]) -> list[Film]:
+    if not film_ids:
+        return []
+    stmt = (
+        select(Film)
+        .where(Film.id.in_(film_ids))
+        .options(
+            selectinload(Film.metadata_),
+            selectinload(Film.semantic_profile),
+        )
+    )
+    return list(db.scalars(stmt).all())

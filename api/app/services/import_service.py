@@ -124,7 +124,7 @@ class ImportService:
         db.commit()
         db.refresh(job)
 
-        background_tasks.add_task(run_import_enrichment, job.id, self._providers)
+        schedule_enrichment_for_films(background_tasks, job.id, self._providers)
         return job
 
     def get_job_status(self, db: Session, job_id: uuid.UUID) -> ImportJob:
@@ -172,6 +172,14 @@ def _failure_reason(job: ImportJob, film) -> str:
             if item.get("letterboxd_uri") == film.letterboxd_uri:
                 return item.get("reason", "Enrichment failed")
     return "Enrichment failed"
+
+
+def schedule_enrichment_for_films(
+    background_tasks: BackgroundTasks,
+    job_id: uuid.UUID,
+    provider_service: ProviderService,
+) -> None:
+    background_tasks.add_task(run_import_enrichment, job_id, provider_service)
 
 
 async def run_import_enrichment(job_id: uuid.UUID, provider_service: ProviderService) -> None:

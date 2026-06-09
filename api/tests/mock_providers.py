@@ -150,19 +150,99 @@ def _movie_details_json(tmdb_id: int, profile: str) -> dict:
     return _movie_json(tmdb_id, "The Matrix")
 
 
-def _openai_chat_response(profile: str) -> httpx.Response:
+def _default_ranking_response() -> dict:
+    return {
+        "winner_film_id": "00000000-0000-0000-0000-000000000001",
+        "runners_up_film_ids": [
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005",
+        ],
+        "explanations": {
+            "00000000-0000-0000-0000-000000000001": {
+                "why_it_matches": "Strong thematic and tonal alignment with your profile.",
+                "most_influential_factors": ["theme fit", "pacing"],
+                "why_it_beat_alternatives": "Highest combined semantic and scoring signals.",
+                "caveats": None,
+            },
+            "00000000-0000-0000-0000-000000000002": {
+                "why_it_matches": "Close runner-up with similar mood.",
+                "most_influential_factors": ["emotional fit"],
+                "why_it_beat_alternatives": None,
+                "caveats": None,
+            },
+        },
+    }
+
+
+def _openai_chat_response(profile: str, request: httpx.Request | None = None) -> httpx.Response:
     if profile == "semantic_failure":
         return httpx.Response(500, json={"error": {"message": "Semantic provider error"}})
     if profile == "malformed_semantic_json":
         content = "not valid json"
+    elif request is not None and _is_ranking_request(request):
+        content = json.dumps(_build_ranking_response_from_request(request))
     else:
         content = json.dumps(DEFAULT_SEMANTIC_PROFILE)
     return httpx.Response(
         200,
         json={
             "choices": [{"message": {"content": content}}],
+            "usage": {"prompt_tokens": 120, "completion_tokens": 80},
         },
     )
+
+
+def _is_ranking_request(request: httpx.Request) -> bool:
+    try:
+        body = json.loads(request.content.decode())
+        messages = body.get("messages", [])
+        system = messages[0]["content"] if messages else ""
+        return "film recommendation assistant" in system.lower()
+    except (json.JSONDecodeError, KeyError, IndexError, AttributeError):
+        return False
+
+
+def _build_ranking_response_from_request(request: httpx.Request) -> dict:
+    try:
+        body = json.loads(request.content.decode())
+        user_content = body["messages"][1]["content"]
+    except (json.JSONDecodeError, KeyError, IndexError):
+        return _default_ranking_response()
+
+    candidate_ids: list[str] = []
+    for line in user_content.splitlines():
+        line = line.strip()
+        if line.startswith("- ") and ":" in line:
+            film_id = line.split(":", 1)[0].replace("- ", "").strip()
+            candidate_ids.append(film_id)
+
+    if not candidate_ids:
+        return _default_ranking_response()
+
+    winner = candidate_ids[0]
+    runners = candidate_ids[1:5]
+    explanations = {
+        winner: {
+            "why_it_matches": "Strong thematic and tonal alignment with your profile.",
+            "most_influential_factors": ["theme fit", "pacing"],
+            "why_it_beat_alternatives": "Highest combined semantic and scoring signals.",
+            "caveats": None,
+        }
+    }
+    for film_id in runners:
+        explanations[film_id] = {
+            "why_it_matches": "Solid alternative with overlapping themes.",
+            "most_influential_factors": ["semantic fit"],
+            "why_it_beat_alternatives": None,
+            "caveats": None,
+        }
+    return {
+        "winner_film_id": winner,
+        "runners_up_film_ids": runners,
+        "explanations": explanations,
+    }
 
 
 def _openai_embedding_response(profile: str) -> httpx.Response:
@@ -204,7 +284,7 @@ def mock_provider_handler(request: httpx.Request, profile: str = "default") -> h
     url = str(request.url)
 
     if "/v1/chat/completions" in url:
-        return _openai_chat_response(profile)
+        return _openai_chat_response(profile, request)
 
     if "/v1/embeddings" in url:
         if "voyageai.com" in url:

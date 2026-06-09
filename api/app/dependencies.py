@@ -6,6 +6,8 @@ from app.database.session import get_db
 from app.services.import_service import ImportService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
+from app.services.recommendation_service import RecommendationService
+from app.services.sync_service import SyncService
 
 
 def get_provider_service(request: Request) -> ProviderService:
@@ -20,9 +22,19 @@ def get_metadata_service(request: Request) -> MetadataService:
     return MetadataService(get_provider_service(request))
 
 
+def get_sync_service(request: Request) -> SyncService:
+    return SyncService(get_provider_service(request))
+
+
+def get_recommendation_service(request: Request) -> RecommendationService:
+    return RecommendationService(get_provider_service(request))
+
+
 __all__ = [
     "get_db",
     "get_import_service",
     "get_metadata_service",
     "get_provider_service",
+    "get_recommendation_service",
+    "get_sync_service",
 ]
