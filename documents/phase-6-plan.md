@@ -159,10 +159,10 @@ Add `Toaster` to root layout; configure React Query defaults (`staleTime`, `retr
 | `getImportStatus(jobId)` | `GET /import/{job_id}/status` | Poll target |
 | `getFilms(params?)` | `GET /films` | Watchlist presence / counts |
 | `getReviewRequired(params?)` | `GET /films/review-required` | Paginated |
-| `acceptReview(reviewId)` | `POST /reviews/{id}/accept` | |
-| `rejectReview(reviewId)` | `POST /reviews/{id}/reject` | |
+| `acceptReview(reviewId)` | `POST /reviews/{review_id}/accept` | |
+| `rejectReview(reviewId)` | `POST /reviews/{review_id}/reject` | |
 | `postRecommendation(body)` | `POST /recommendations` | Sync; show loading overlay (≤30s) |
-| `getRecommendation(sessionId)` | `GET /recommendations/{id}` | |
+| `getRecommendation(sessionId)` | `GET /recommendations/{session_id}` | |
 | `listRecommendations(params?)` | `GET /recommendations` | History filters |
 | `postSyncCsv(file)` | `POST /sync/csv` | Multipart |
 | `putSyncRss(username)` | `PUT /sync/rss` | |
@@ -334,7 +334,7 @@ Curate controlled lists aligned with [PRD §11](./PRD.md) and [api-contracts App
 
 - **CSV re-sync:** file upload → `POST /sync/csv`; show diff summary from response (added/removed/watched counts per api-contracts §6.1)
 - **RSS config:** username input → `PUT /sync/rss`; display validation errors
-- **RSS status:** `GET /sync/rss/status` — show configured username, `last_polled_at`, `last_poll_status`, poll error message if any
+- **RSS status:** `GET /sync/rss/status` — show `configured`, `username`, `polling_interval_seconds`, `last_polled_at`, `last_poll_status` (`success` \| `error`), and `events_processed_last_poll` per api-contracts §6.3 (no separate error-message field; surface error state from `last_poll_status === 'error'`)
 - Optional: `refetchInterval` on status while configured
 
 **Roadmap checkbox:** Sync settings (all sub-bullets).
