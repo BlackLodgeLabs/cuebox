@@ -250,6 +250,7 @@ class SyncService:
         assert db is not None
 
         processed_count = 0
+        jobs_to_start: list[uuid.UUID] = []
         try:
             config = sync_config_repository.get_config(db)
             if config is None or not config.rss_username:
@@ -289,16 +290,24 @@ class SyncService:
                     letterboxd_uri=event.letterboxd_uri,
                     payload=event.payload,
                 )
-                if self._apply_rss_event(db, event, row):
+                if self._apply_rss_event(db, event, row, jobs_to_start):
                     processed_count += 1
 
             sync_config_repository.update_poll_status(
                 db, status="success", events_processed=processed_count
             )
             db.commit()
+
+            import asyncio
+
+            from app.services.import_service import run_import_enrichment
+
+            for job_id in jobs_to_start:
+                asyncio.create_task(run_import_enrichment(job_id, self._providers))
         except Exception:
             logger.exception("RSS poll failed")
             try:
+                db.rollback()
                 sync_config_repository.update_poll_status(
                     db, status="error", events_processed=0
                 )
@@ -311,7 +320,13 @@ class SyncService:
                 db.close()
         return processed_count
 
-    def _apply_rss_event(self, db: Session, event: RssEvent, row) -> bool:
+    def _apply_rss_event(
+        self,
+        db: Session,
+        event: RssEvent,
+        row,
+        jobs_to_start: list[uuid.UUID],
+    ) -> bool:
         if row.processed:
             return False
 
@@ -321,7 +336,7 @@ class SyncService:
             return True
 
         if event.event_type == RssEventType.WATCHLIST_ADD:
-            self._apply_watchlist_add(db, uri, event.payload)
+            self._apply_watchlist_add(db, uri, event.payload, jobs_to_start)
         elif event.event_type == RssEventType.WATCHLIST_REMOVE:
             self._apply_watchlist_remove(db, uri)
         elif event.event_type == RssEventType.WATCHED:
@@ -330,11 +345,13 @@ class SyncService:
         rss_sync_repository.mark_processed(db, row)
         return True
 
-    def _apply_watchlist_add(self, db: Session, uri: str, payload: dict) -> None:
-        import asyncio
-
-        from app.services.import_service import run_import_enrichment
-
+    def _apply_watchlist_add(
+        self,
+        db: Session,
+        uri: str,
+        payload: dict,
+        jobs_to_start: list[uuid.UUID],
+    ) -> None:
         existing = film_repository.get_by_letterboxd_uri(db, uri)
         title = payload.get("title") or "Unknown"
         year = payload.get("year")
@@ -367,7 +384,7 @@ class SyncService:
                 db, film_id=film.id, letterboxd_uri=uri
             )
         if job is not None:
-            asyncio.create_task(run_import_enrichment(job.id, self._providers))
+            jobs_to_start.append(job.id)
 
     def _apply_watchlist_remove(self, db: Session, uri: str) -> None:
         entry = watchlist_repository.get_active_by_uri(db, uri)

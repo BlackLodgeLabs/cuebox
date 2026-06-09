@@ -192,3 +192,17 @@ def list_recommendation_candidates(
             | (FilmMetadata.original_language == "en")
         )
     return list(db.scalars(stmt).all())
+
+
+def get_many_by_ids_with_relations(db: Session, film_ids: list[uuid.UUID]) -> list[Film]:
+    if not film_ids:
+        return []
+    stmt = (
+        select(Film)
+        .where(Film.id.in_(film_ids))
+        .options(
+            selectinload(Film.metadata_),
+            selectinload(Film.semantic_profile),
+        )
+    )
+    return list(db.scalars(stmt).all())

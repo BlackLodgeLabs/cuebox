@@ -109,7 +109,11 @@ def _parse_ranking_json(
     runners_up: list[uuid.UUID] = []
     for item in data.get("runners_up_film_ids", []):
         film_id = uuid.UUID(str(item))
-        if str(film_id) in candidate_ids and film_id != winner_id:
+        if (
+            str(film_id) in candidate_ids
+            and film_id != winner_id
+            and film_id not in runners_up
+        ):
             runners_up.append(film_id)
         if len(runners_up) >= 4:
             break

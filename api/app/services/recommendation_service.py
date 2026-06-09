@@ -164,12 +164,16 @@ class RecommendationService:
         db.commit()
         db.refresh(session)
 
-        winner_film = film_repository.get_by_id_with_relations(
-            db, ranking_result.winner_film_id
-        )
+        recommended_ids = [ranking_result.winner_film_id, *ranking_result.runners_up_film_ids]
+        films_map = {
+            film.id: film
+            for film in film_repository.get_many_by_ids_with_relations(db, recommended_ids)
+        }
+        winner_film = films_map.get(ranking_result.winner_film_id)
         runners_up_films = [
-            film_repository.get_by_id_with_relations(db, film_id)
+            films_map[film_id]
             for film_id in ranking_result.runners_up_film_ids
+            if film_id in films_map
         ]
 
         return CreateRecommendationResponse(
@@ -203,20 +207,30 @@ class RecommendationService:
 
             raise not_found("Recommendation session")
 
-        winner = film_repository.get_by_id_with_relations(db, session.winner_film_id)
         result = session.result
-        runner_ids = []
+        runner_ids: list[uuid.UUID] = []
         runner_explanations = {}
         if result and result.runner_up_explanations:
-            runner_ids = list(result.runner_up_explanations.keys())
+            runner_ids = [uuid.UUID(fid) for fid in list(result.runner_up_explanations.keys())[:4]]
             runner_explanations = result.runner_up_explanations
 
+        all_ids = (
+            [session.winner_film_id, *runner_ids]
+            if session.winner_film_id
+            else runner_ids
+        )
+        films_map = {
+            film.id: film
+            for film in film_repository.get_many_by_ids_with_relations(db, all_ids)
+        }
+        winner = films_map.get(session.winner_film_id) if session.winner_film_id else None
+
         runners_up = []
-        for film_id_str in runner_ids[:4]:
-            film = film_repository.get_by_id_with_relations(db, uuid.UUID(film_id_str))
+        for film_id in runner_ids:
+            film = films_map.get(film_id)
             if film is None:
                 continue
-            payload = runner_explanations.get(film_id_str, {})
+            payload = runner_explanations.get(str(film_id), {})
             runners_up.append(
                 _film_result(
                     film,
@@ -357,19 +371,15 @@ class RecommendationService:
         config = get_app_config()
         limit = min(config.recommendation.retrieval_candidate_limit, len(films))
         film_ids = [film.id for film in films]
-        embedding_version = (
-            system_version_repository.get_active_version(db, "film-embedding").version
-            if system_version_repository.get_active_version(db, "film-embedding")
-            else "embedding-v1"
-        )
+        active_version = system_version_repository.get_active_version(db, "film-embedding")
+        embedding_version = active_version.version if active_version else "embedding-v1"
         vector_literal = "[" + ",".join(str(v) for v in profile_embedding) + "]"
-        id_list = ", ".join(f"'{fid}'::uuid" for fid in film_ids)
         stmt = text(
-            f"""
+            """
             SELECT fe.film_id,
                    (1 - (fe.embedding <=> CAST(:profile_embedding AS vector))) AS similarity
             FROM film_embeddings fe
-            WHERE fe.film_id IN ({id_list})
+            WHERE fe.film_id = ANY(:film_ids)
               AND fe.embedding_type = :embedding_type
               AND fe.embedding_version = :embedding_version
             ORDER BY fe.embedding <=> CAST(:profile_embedding AS vector)
@@ -380,6 +390,7 @@ class RecommendationService:
             stmt,
             {
                 "profile_embedding": vector_literal,
+                "film_ids": film_ids,
                 "embedding_type": EmbeddingType.SEMANTIC.value,
                 "embedding_version": embedding_version,
                 "limit": limit,
