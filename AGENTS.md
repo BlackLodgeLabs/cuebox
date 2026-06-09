@@ -93,3 +93,4 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 - Frontend `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000/api/v1` (set in `docker-compose.yml` for the frontend service).
 - No authentication — single-user, local-first design.
 - After pulling frontend dependency changes, run `cd frontend && npm ci` (non-Docker) or rebuild/restart the frontend container (`docker compose up --build frontend`). The frontend dev container runs `npm ci` on start to keep its `node_modules` volume in sync with `package-lock.json`.
+- On **Windows**, shell scripts must use LF line endings (enforced via `.gitattributes`). If you see `exec ./entrypoint.sh: no such file or directory`, re-checkout scripts (`git checkout -- api/entrypoint.sh`) or run `git add --renormalize .` after pulling the `.gitattributes` fix.
