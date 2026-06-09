@@ -200,7 +200,7 @@ CREATE TABLE sync_config (
 
 Single-row pattern: application always reads/writes the row with fixed id or `LIMIT 1`. Add `set_updated_at` trigger. Add SQLAlchemy model + `sync_config_repository`.
 
-`rss_sync_events` already exists (Phase 1) — no schema change needed for the ledger.
+rss_sync_events already exists (Phase 1) — no schema change needed if using deterministic UUIDs (e.g., UUIDv5) for the id primary key as the event fingerprint.
 
 ### Step 2 — Repository extensions
 
