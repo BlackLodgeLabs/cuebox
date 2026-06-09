@@ -6,66 +6,66 @@ todos:
   # ── Baseline & infrastructure ─────────────────────────────────────────────
   - id: p6-baseline-gates
     content: "Confirm Phases 2.5–5 gate scripts and API CI still pass before frontend work begins"
-    status: pending
+    status: completed
   - id: p6-shadcn-setup
     content: "Install shadcn/ui primitives (button, card, input, progress, toast, dialog, sheet, badge, skeleton, select, checkbox, radio-group, textarea, separator)"
-    status: pending
+    status: completed
   - id: p6-api-types
     content: "Extend frontend/src/types/api.ts with import, film, review, sync, recommendation, and history types per api-contracts"
-    status: pending
+    status: completed
   - id: p6-api-client
     content: "Extend api-client.ts — multipart upload helper, all v1 endpoints, user-friendly error message map for every ErrorCode"
-    status: pending
+    status: completed
   - id: p6-react-query-hooks
     content: "React Query hooks — use-import, use-films, use-reviews, use-recommendations, use-sync; polling for import status (2–5s refetchInterval)"
-    status: pending
+    status: completed
   - id: p6-layout-nav
     content: "App shell — shared layout, top/side navigation, loading skeletons, error boundaries, toast provider"
-    status: pending
+    status: completed
   # ── Pages & flows ─────────────────────────────────────────────────────────
   - id: p6-home-empty-state
     content: "Home / routing hub — detect empty watchlist (GET /films or import history); prompt CSV upload vs returning-user CTAs"
-    status: pending
+    status: completed
   - id: p6-import-flow
     content: "Import flow — file upload, POST /import, redirect to /import/[jobId], poll status, progress bar, failure summary, link to review"
-    status: pending
+    status: completed
   - id: p6-match-review
     content: "Match review page — GET /films/review-required, candidate display, accept/reject via review endpoints"
-    status: pending
+    status: completed
   - id: p6-questionnaire-vocab
     content: "Controlled vocabulary module — genres (hierarchy), emotional outcomes, visual/tonal vibes per PRD §11 + api-contracts Appendix C"
-    status: pending
+    status: completed
   - id: p6-questionnaire-wizard
     content: "Questionnaire wizard — 10 steps one-at-a-time, No Preference validation, notes max 1000 chars, POST /recommendations"
-    status: pending
+    status: completed
   - id: p6-results-screen
     content: "Results screen — winner + 4 runners-up, structured explanations, constraint relaxation banner, answer summary drawer"
-    status: pending
+    status: completed
   - id: p6-history
     content: "History list + detail — GET /recommendations with search/date/watch_status filters; card grid; session detail view"
-    status: pending
+    status: completed
   - id: p6-sync-settings
     content: "Sync settings — POST /sync/csv re-upload, PUT /sync/rss username, GET /sync/rss/status display"
-    status: pending
+    status: completed
   # ── Verification & docs ───────────────────────────────────────────────────
   - id: p6-frontend-lint
     content: "Frontend quality gate — npx tsc --noEmit (and npm run lint if ESLint initialized during Phase 6)"
-    status: pending
+    status: completed
   - id: p6-gate-script
     content: "Add scripts/verify-phase6-gates.sh — tsc, optional Playwright E2E against docker compose stack, manual journey checklist"
-    status: pending
+    status: completed
   - id: p6-verify-gates
     content: "Run verify-phase6-gates.sh plus Phases 2.5–5 regression gate scripts; confirm API CI green"
-    status: pending
+    status: completed
   - id: p6-update-roadmap
     content: "Check off Phase 6 task checklist and verification gate in documents/roadmap.md; update overview to Phase 6 complete / Phase 7 next"
-    status: pending
+    status: completed
   - id: p6-document-index
     content: "Add phase-6-plan.md to roadmap Document Index Phase plans row"
-    status: pending
+    status: completed
   - id: agents-md-review
     content: "Review AGENTS.md for structural changes (compose, env vars, lint/test, bootstrap, hello-world, project overview)"
-    status: pending
+    status: completed
 isProject: false
 ---
 
