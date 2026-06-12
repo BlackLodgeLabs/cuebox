@@ -59,6 +59,8 @@ export default function SyncSettingsPage() {
             details: error.details,
           }),
         );
+      } else {
+        setCsvError("Sync failed. Please try again.");
       }
     }
   };
@@ -76,6 +78,8 @@ export default function SyncSettingsPage() {
             details: error.details,
           }),
         );
+      } else {
+        setRssError("Failed to save RSS config. Please try again.");
       }
     }
   };

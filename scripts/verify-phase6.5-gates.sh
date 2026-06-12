@@ -35,8 +35,12 @@ pass "Phase 6 regression"
 
 echo "=== Gate 5: Playwright visual smoke (optional) ==="
 if [[ "${PLAYWRIGHT_E2E_STACK:-}" == "1" ]]; then
-  (cd frontend && npx playwright test e2e/design-smoke.spec.ts 2>/dev/null) || \
+  if ! test -f frontend/e2e/design-smoke.spec.ts; then
     skip "design-smoke.spec.ts not present yet"
+  else
+    (cd frontend && npx playwright test e2e/design-smoke.spec.ts)
+    pass "Playwright design smoke"
+  fi
 else
   skip "Set PLAYWRIGHT_E2E_STACK=1 to enable E2E"
 fi
