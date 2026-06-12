@@ -8,7 +8,6 @@ from tests.test_integration_import import (
     _import_csv,
     _single_film_csv,
     _wait_for_complete,
-    _wait_for_review_required,
 )
 
 pytestmark = requires_db
