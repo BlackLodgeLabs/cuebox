@@ -30,7 +30,7 @@ export default function SyncSettingsPage() {
   const [syncResult, setSyncResult] = useState<SyncCsvResponse | null>(null);
   const [username, setUsername] = useState("");
   const [rssError, setRssError] = useState<string | null>(null);
-  const usernameInitialized = useRef(false);
+  const usernameEdited = useRef(false);
 
   const syncCsv = useSyncCsv();
   const syncRss = useSyncRssConfig();
@@ -42,10 +42,8 @@ export default function SyncSettingsPage() {
   } = useSyncRssStatus();
 
   useEffect(() => {
-    if (!usernameInitialized.current && rssStatus?.username) {
-      setUsername(rssStatus.username);
-      usernameInitialized.current = true;
-    }
+    if (usernameEdited.current || !rssStatus?.username) return;
+    setUsername(rssStatus.username);
   }, [rssStatus?.username]);
 
   const handleCsvSync = async () => {
@@ -157,7 +155,10 @@ export default function SyncSettingsPage() {
               id="username"
               placeholder="johndoe"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                usernameEdited.current = true;
+                setUsername(e.target.value);
+              }}
             />
           </div>
           {rssError && <p className="text-sm text-destructive">{rssError}</p>}
