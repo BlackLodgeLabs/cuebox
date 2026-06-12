@@ -176,7 +176,7 @@ GET /dev/system/versions
 ```python
 def require_developer_mode() -> None:
     if not get_app_config().developer_mode:
-        raise not_found("Not found")  # 404, not 403 — per api-contracts
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")  # 404, not 403 — per api-contracts
 ```
 
 Apply to **all** `/dev/*` routes (including `/dev/films/{film_id}/match` for consistency with roadmap, even though §9.4 only documents film-not-found).
