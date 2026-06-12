@@ -57,7 +57,7 @@ todos:
     status: completed
   - id: p8-verify-gates
     content: "Run verify-phase8-gates.sh plus full regression chain; confirm API CI and frontend CI green"
-    status: in_progress
+    status: completed
   - id: p8-update-roadmap
     content: "Check off Phase 8 task checklist and verification gate in documents/roadmap.md; update overview to Phase 8 complete / MVP shipped"
     status: completed

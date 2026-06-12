@@ -12,6 +12,10 @@ manual() { echo "MANUAL: $1"; }
 echo "=== PRD Success Criteria Audit (§23) ==="
 echo ""
 
+COLLECT_FILE="$(mktemp)"
+trap 'rm -f "$COLLECT_FILE"' EXIT
+(cd api && pytest tests/ --collect-only -q 2>/dev/null > "$COLLECT_FILE" || true)
+
 # criterion_number|description|verification_type|reference
 CRITERIA=(
   "1|Watchlists import successfully and return immediately with a job ID|test|test_import_returns_job_immediately"
@@ -53,7 +57,7 @@ for entry in "${CRITERIA[@]}"; do
     continue
   fi
 
-  if (cd api && pytest tests/ --collect-only -q 2>/dev/null | grep -q "$ref"); then
+  if grep -q "$ref" "$COLLECT_FILE"; then
     auto_count=$((auto_count + 1))
     printf "  #%-2s %-8s %s\n" "$num" "[test]" "$desc"
     printf "       → %s\n" "$ref"
