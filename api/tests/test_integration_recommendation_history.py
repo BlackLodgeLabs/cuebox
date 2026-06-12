@@ -1,5 +1,7 @@
 """Integration tests for recommendation history endpoints."""
 
+import time
+
 from tests.conftest import requires_db
 from tests.helpers.seed_ready_films import DEFAULT_QUESTIONNAIRE, seed_ready_films
 
@@ -14,7 +16,10 @@ def test_history_list_and_detail(integration_client, db_session):
     ).json()
     session_id = created["session_id"]
 
+    started = time.monotonic()
     history = integration_client.get("/api/v1/recommendations?limit=10").json()
+    elapsed = time.monotonic() - started
+    assert elapsed < 2.0, f"GET /recommendations took {elapsed:.2f}s (target < 2s)"
     assert history["pagination"]["total"] >= 1
     assert any(item["session_id"] == session_id for item in history["data"])
 

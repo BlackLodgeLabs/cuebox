@@ -39,3 +39,6 @@ target-version = "py312"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "slow: large-watchlist performance benchmarks (set RUN_SLOW_PERF=1 to run)",
+]
