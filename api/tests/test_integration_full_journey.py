@@ -7,7 +7,6 @@ from tests.helpers.seed_ready_films import DEFAULT_QUESTIONNAIRE
 from tests.test_integration_import import (
     _import_csv,
     _single_film_csv,
-    _wait_for_complete,
 )
 
 pytestmark = requires_db
@@ -31,12 +30,24 @@ def _accept_pending_reviews(client) -> None:
             raise AssertionError(f"Film {film_id} did not reach ready after review accept")
 
 
+def _wait_for_complete_accepting_reviews(client, job_id: str, *, timeout: float = 30.0) -> dict:
+    """Wait for import completion, accepting review-required films along the way."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        _accept_pending_reviews(client)
+        response = client.get(f"/api/v1/import/{job_id}/status")
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        if payload["status"] == "complete":
+            return payload
+        time.sleep(0.2)
+    raise AssertionError(f"Import job {job_id} did not complete within {timeout}s")
+
+
 def test_import_enrich_recommend_history_journey(integration_client):
     created = _import_csv(integration_client, _single_film_csv())
-    status = _wait_for_complete(integration_client, created["job_id"])
+    status = _wait_for_complete_accepting_reviews(integration_client, created["job_id"])
     assert status["processed_films"] >= 1
-
-    _accept_pending_reviews(integration_client)
 
     recommend = integration_client.post(
         "/api/v1/recommendations",
