@@ -11,10 +11,14 @@ export function useFilms(params?: FilmsQueryParams) {
   });
 }
 
-export function useReviewRequired(params?: ReviewRequiredQueryParams) {
+export function useReviewRequired(
+  params?: ReviewRequiredQueryParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ["films", "review-required", params],
     queryFn: () => getReviewRequired(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

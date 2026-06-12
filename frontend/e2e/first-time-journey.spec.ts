@@ -69,11 +69,19 @@ test.describe("First-time user journey", () => {
     await expect(page).toHaveURL(/\/recommend\/results\/[a-f0-9-]+$/i, {
       timeout: 60_000,
     });
-    await expect(page.getByText(/your pick|top pick/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /your pick/i })).toBeVisible();
+    const winnerHeading = page
+      .locator('[class*="border-primary"]')
+      .getByRole("heading")
+      .first();
+    await expect(winnerHeading).toBeVisible();
+    const winnerTitle =
+      (await winnerHeading.textContent())?.replace(/\s*\(\d{4}\)\s*$/, "").trim() ??
+      "";
 
     await page.goto("/history");
-    await expect(page.getByText(/the matrix|ambiguous/i).first()).toBeVisible({
-      timeout: 15_000,
-    });
+    await expect(
+      page.getByRole("link", { name: new RegExp(winnerTitle, "i") }),
+    ).toBeVisible({ timeout: 15_000 });
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +30,7 @@ export default function SyncSettingsPage() {
   const [syncResult, setSyncResult] = useState<SyncCsvResponse | null>(null);
   const [username, setUsername] = useState("");
   const [rssError, setRssError] = useState<string | null>(null);
+  const usernameInitialized = useRef(false);
 
   const syncCsv = useSyncCsv();
   const syncRss = useSyncRssConfig();
@@ -39,6 +40,13 @@ export default function SyncSettingsPage() {
     isError: rssStatusError,
     refetch: refetchRss,
   } = useSyncRssStatus();
+
+  useEffect(() => {
+    if (!usernameInitialized.current && rssStatus?.username) {
+      setUsername(rssStatus.username);
+      usernameInitialized.current = true;
+    }
+  }, [rssStatus?.username]);
 
   const handleCsvSync = async () => {
     if (!csvFile) {

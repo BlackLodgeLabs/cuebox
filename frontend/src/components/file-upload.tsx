@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
@@ -21,17 +22,23 @@ export function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [selectedName, setSelectedName] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleFile = useCallback(
     (file: File | undefined) => {
       if (!file) return;
       if (!file.name.toLowerCase().endsWith(".csv")) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file type",
+          description: "Please select a CSV file.",
+        });
         return;
       }
       setSelectedName(file.name);
       onFileSelect(file);
     },
-    [onFileSelect],
+    [onFileSelect, toast],
   );
 
   return (

@@ -22,7 +22,11 @@ export default function ImportStatusPage() {
   const jobId = params.jobId;
   const [failuresOpen, setFailuresOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useImportStatus(jobId);
-  const { data: reviewData } = useReviewRequired({ limit: 1 });
+  const isImportComplete = data?.status === "complete";
+  const {
+    data: reviewData,
+    isLoading: reviewLoading,
+  } = useReviewRequired({ limit: 1 }, { enabled: isImportComplete });
 
   if (isLoading) {
     return <LoadingState message="Loading import status…" />;
@@ -128,7 +132,12 @@ export default function ImportStatusPage() {
             </div>
           )}
 
-          {isComplete && (
+          {isComplete && reviewLoading && (
+            <p className="text-sm text-muted-foreground">
+              Checking for matches to review…
+            </p>
+          )}
+          {isComplete && !reviewLoading && (
             <div className="flex flex-wrap gap-3">
               {reviewCount > 0 ? (
                 <Button asChild>
