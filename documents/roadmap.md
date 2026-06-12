@@ -726,8 +726,8 @@ See [phase-6.5-plan.md](./phase-6.5-plan.md) for the full implementation plan an
 
 #### Token & layout foundation
 
-- [ ] Resolve open design decisions (token source, texture, warning colors, chips, etc.) — see plan §Decisions required before executing
-- [ ] Canonical CSS/Tailwind design tokens from DESIGN.md
+- [x] Resolve open design decisions — see [phase-6.5-plan.md §Resolved design decisions](./phase-6.5-plan.md#resolved-design-decisions) (`#121411`, dark-only, scanlines, Cuebox branding)
+- [ ] Canonical CSS/Tailwind design tokens from DESIGN.md + resolved decisions
 - [ ] Google fonts: Cabin, Libre Franklin, Space Mono
 - [ ] Dark-only theme + main viewport texture overlay
 - [ ] Layout margins (16px mobile / 48px desktop) and `max-w-7xl`
