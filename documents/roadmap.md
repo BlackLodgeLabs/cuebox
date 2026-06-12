@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phases 4 and 5 complete. Watchlist sync (CSV + RSS) keeps film lifecycle aligned with Letterboxd; the six-stage recommendation engine serves POST/GET recommendations with full audit trail. Next up: Phase 6 — Frontend (MVP UX).
+**Current state:** Phase 6.5 complete. Cuebox frontend matches the Modern Neo-Noir Cinema design system ([DESIGN.md](./DESIGN.md)). Next up: Phase 7 — Developer Mode.
 
 ### Reference Documents
 
@@ -650,38 +650,38 @@ See [sequence-diagrams.md §11](./sequence-diagrams.md) for the first-time user 
 
 #### Shared Infrastructure
 
-- [ ] API client with base URL config and error envelope parsing
-- [ ] React Query hooks for all endpoints
-- [ ] Shared layout, navigation, loading/error states
-- [ ] Toast notifications for API errors
+- [x] API client with base URL config and error envelope parsing
+- [x] React Query hooks for all endpoints
+- [x] Shared layout, navigation, loading/error states
+- [x] Toast notifications for API errors
 
 #### Pages & Flows
 
-- [ ] **Home / empty state** — detect no watchlist; prompt CSV upload
-- [ ] **Import flow**
+- [x] **Home / empty state** — detect no watchlist; prompt CSV upload
+- [x] **Import flow**
   - File upload component
   - `POST /import` → redirect to status page
   - Poll `GET /import/{job_id}/status` every 2–5 seconds
   - Progress bar, failure summary, link to match review if needed
-- [ ] **Match review**
+- [x] **Match review**
   - List films from `GET /films/review-required`
   - Display candidate poster, title, year, director, confidence score
   - Accept/reject actions calling review endpoints
-- [ ] **Questionnaire**
+- [x] **Questionnaire**
   - 10 questions presented one at a time
   - Controlled vocabulary for genres, emotional outcomes, visual/tonal vibes
   - `No Preference` validation (cannot combine with other selections)
   - Optional free-text notes (max 1000 chars)
-- [ ] **Results screen**
+- [x] **Results screen**
   - Winner: poster, title, year, runtime, director, ratings
   - Structured explanation sections (why it matches, influential factors, trade-offs)
   - Four runners-up with poster and explanations
   - Answer summary drawer/modal
-- [ ] **History**
+- [x] **History**
   - Card grid from `GET /recommendations`
   - Search by winner title; filter by date and watch status
   - Click card → `GET /recommendations/{session_id}` detail view
-- [ ] **Sync settings**
+- [x] **Sync settings**
   - Manual CSV re-upload via `POST /sync/csv`
   - RSS username configuration via `PUT /sync/rss`
   - RSS status display via `GET /sync/rss/status`
@@ -703,10 +703,10 @@ See [sequence-diagrams.md §11](./sequence-diagrams.md) for the first-time user 
 
 ### Verification Gate
 
-- [ ] First-time user journey completable end-to-end through UI
-- [ ] Import → poll → review (if needed) → questionnaire → results → history
-- [ ] Sync settings update watchlist state correctly
-- [ ] Error states display user-friendly messages for all API error codes
+- [x] First-time user journey completable end-to-end through UI
+- [x] Import → poll → review (if needed) → questionnaire → results → history
+- [x] Sync settings update watchlist state correctly
+- [x] Error states display user-friendly messages for all API error codes
 
 ### PRD Success Criteria Addressed
 
@@ -714,10 +714,50 @@ All user-facing criteria validated through UI walkthrough.
 
 ---
 
-## Phase 7 — Developer Mode
+## Phase 6.5 — Design System Alignment (Modern Neo-Noir Cinema)
 
 **Duration:** 3–5 days  
 **Depends on:** Phase 6  
+**Goal:** Restyle the Phase 6 MVP frontend to match [DESIGN.md](./DESIGN.md) — tokens, typography, hardware borders, interactive states, environmental texture, and Material Symbols — without changing user journeys or API contracts.
+
+See [phase-6.5-plan.md](./phase-6.5-plan.md) for the full implementation plan.
+
+### Task Checklist
+
+#### Token & layout foundation
+
+- [x] Resolve open design decisions — see [phase-6.5-plan.md §Resolved design decisions](./phase-6.5-plan.md#resolved-design-decisions) (`#121411`, dark-only, scanlines, Cuebox branding)
+- [x] Canonical CSS/Tailwind design tokens from DESIGN.md + resolved decisions
+- [x] Google fonts: Cabin, Libre Franklin, Space Mono
+- [x] Dark-only theme + CRT scanline overlay on main
+- [x] Layout margins (16px mobile / 48px desktop) and `max-w-7xl`
+
+#### Primitives & iconography
+
+- [x] Button — chamfered primary only (mint fill); lime focus/secondary; hover glow, active flicker, disabled greyscale
+- [x] Card, input, dialog, sheet, badge, progress, toast — 4px corners, surface elevation, outline borders
+- [x] Material Symbols Outlined; remove lucide-react
+
+#### Components & pages
+
+- [x] Cuebox branding in frontend chrome (retire “Film Picker”)
+- [x] App shell navigation restyle (Cuebox wordmark, active icon fill, mono labels, lime badges)
+- [x] Shared components aligned (poster, upload, chips, loading, error, results)
+- [x] Visual pass on all Phase 6 routes (home, import, review, recommend, results, history, sync)
+
+### Verification Gate
+
+- [x] All 9 routes match DESIGN.md at mobile and desktop breakpoints
+- [x] `scripts/verify-phase6.5-gates.sh` passes
+- [x] `scripts/verify-phase6-gates.sh` still passes (no functional regression)
+- [x] No light-theme ad-hoc colors, lucide imports, or “Film Picker” strings in frontend remain
+
+---
+
+## Phase 7 — Developer Mode
+
+**Duration:** 3–5 days  
+**Depends on:** Phase 6.5  
 **Goal:** Internal observability for recommendation debugging.
 
 See [sequence-diagrams.md §10](./sequence-diagrams.md) and [PRD.md §20](./PRD.md).
@@ -976,4 +1016,5 @@ Items from [PRD.md §22](./PRD.md) and [Architecture.md §22](./Architecture.md)
 | Database schema & migrations | [database-design.md](./database-design.md) |
 | Sequence diagrams | [sequence-diagrams.md](./sequence-diagrams.md) |
 | Implementation plan | This document |
-| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md) |
+| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md), [phase-6-plan.md](./phase-6-plan.md), [phase-6.5-plan.md](./phase-6.5-plan.md) |
+| Design system | [DESIGN.md](./DESIGN.md) |

@@ -1,0 +1,40 @@
+/**
+ * Cuebox design tokens — canonical values from documents/DESIGN.md (YAML frontmatter)
+ * and phase-6.5 resolved decisions.
+ */
+:root {
+  --background: #121411;
+  --foreground: #e3e3de;
+
+  --card: #1a1c19;
+  --card-foreground: #e3e3de;
+
+  --popover: #292b27;
+  --popover-foreground: #e3e3de;
+
+  --primary: #aed0a3;
+  --primary-foreground: #1b3717;
+
+  --secondary: #cccc5c;
+  --secondary-foreground: #323200;
+
+  --muted: #1e201d;
+  --muted-foreground: #c3c8bd;
+
+  --accent: #292b27;
+  --accent-foreground: #e3e3de;
+
+  --destructive: #ffb4ab;
+  --destructive-foreground: #690005;
+
+  --border: #434840;
+  --input: #434840;
+  --ring: #cccc5c;
+
+  --surface-container-high: #292b27;
+  --surface-container-highest: #333532;
+  --outline: #8d9288;
+  --accent-tertiary: #aed0a3;
+
+  --radius: 0.25rem;
+}
