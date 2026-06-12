@@ -61,7 +61,9 @@ export default function ReviewPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         {films.map((film) => {
           const confidence = Math.round(film.confidence_score * 100);
-          const isPending = accept.isPending || reject.isPending;
+          const isPending =
+            (accept.isPending && accept.variables === film.review_id) ||
+            (reject.isPending && reject.variables === film.review_id);
 
           return (
             <Card key={film.review_id} className="bg-surface-high hover-glow">
