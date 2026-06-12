@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MultiSelectChips } from "@/components/multi-select-chips";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ export default function RecommendPage() {
   const [notes, setNotes] = useState("");
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const submittingRef = useRef(false);
   const create = useCreateRecommendation();
 
   const step = STEPS[stepIndex];
@@ -102,6 +103,7 @@ export default function RecommendPage() {
   const handleNext = () => {
     if (!validateStep()) return;
     if (isLastStep) {
+      if (submittingRef.current || create.isPending) return;
       void handleSubmit();
       return;
     }
@@ -109,6 +111,8 @@ export default function RecommendPage() {
   };
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitError(null);
     try {
       const result = await create.mutateAsync({
@@ -117,6 +121,7 @@ export default function RecommendPage() {
       });
       router.push(`/recommend/results/${result.session_id}`);
     } catch (error) {
+      submittingRef.current = false;
       if (error instanceof ApiClientError) {
         setSubmitError(
           getErrorMessage({
