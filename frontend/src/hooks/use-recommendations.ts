@@ -7,14 +7,10 @@ import {
   postRecommendation,
 } from "@/lib/api-client";
 import type { CreateRecommendationRequest, HistoryQueryParams } from "@/types/api";
-import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useCreateRecommendation() {
-  const onError = useToastOnError();
-
   return useMutation({
     mutationFn: (body: CreateRecommendationRequest) => postRecommendation(body),
-    onError,
   });
 }
 

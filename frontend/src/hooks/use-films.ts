@@ -21,7 +21,7 @@ export function useReviewRequired(params?: ReviewRequiredQueryParams) {
 export function useHasWatchlist() {
   return useQuery({
     queryKey: ["films", "watchlist-presence"],
-    queryFn: () => getFilms({ status: "active", limit: 1 }),
+    queryFn: () => getFilms({ limit: 1 }),
     select: (data) => data.pagination.total > 0,
   });
 }
