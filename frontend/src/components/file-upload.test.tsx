@@ -26,4 +26,17 @@ describe("FileUpload", () => {
     );
     expect(onFileSelect).not.toHaveBeenCalled();
   });
+
+  it("clears the displayed filename when selectedFile becomes null", () => {
+    const file = new File(["csv"], "watchlist.csv", { type: "text/csv" });
+    const { rerender } = render(
+      <FileUpload onFileSelect={vi.fn()} selectedFile={file} />,
+    );
+
+    expect(screen.getByText(/selected: watchlist\.csv/i)).toBeInTheDocument();
+
+    rerender(<FileUpload onFileSelect={vi.fn()} selectedFile={null} />);
+
+    expect(screen.queryByText(/selected:/i)).not.toBeInTheDocument();
+  });
 });

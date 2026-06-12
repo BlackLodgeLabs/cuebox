@@ -110,6 +110,7 @@ export default function SyncSettingsPage() {
         <CardContent className="space-y-4">
           <FileUpload
             label="Re-sync watchlist"
+            selectedFile={csvFile}
             onFileSelect={(f) => {
               setCsvFile(f);
               setCsvError(null);

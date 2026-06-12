@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
+  /** When provided, keeps the displayed selection in sync with parent state. */
+  selectedFile?: File | null;
   accept?: string;
   disabled?: boolean;
   label?: string;
@@ -15,6 +17,7 @@ interface FileUploadProps {
 
 export function FileUpload({
   onFileSelect,
+  selectedFile,
   accept = ".csv",
   disabled = false,
   label = "Upload CSV",
@@ -23,6 +26,14 @@ export function FileUpload({
   const [dragOver, setDragOver] = useState(false);
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (selectedFile === undefined) return;
+    setSelectedName(selectedFile?.name ?? null);
+    if (!selectedFile && inputRef.current) {
+      inputRef.current.value = "";
+    }
+  }, [selectedFile]);
 
   const handleFile = useCallback(
     (file: File | undefined) => {
