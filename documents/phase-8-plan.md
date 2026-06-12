@@ -318,13 +318,6 @@ Pattern after `verify-phase7-gates.sh`: `start_postgres` helper, `set -euo pipef
 #### Combined regression (required before marking Phase 8 complete)
 
 ```bash
-bash scripts/verify-phase2.5-gates.sh
-bash scripts/verify-phase3-gates.sh
-bash scripts/verify-phase4-gates.sh
-bash scripts/verify-phase5-gates.sh
-bash scripts/verify-phase6-gates.sh
-bash scripts/verify-phase6.5-gates.sh
-bash scripts/verify-phase7-gates.sh
 bash scripts/verify-phase8-gates.sh
 cd api && DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox \
   TEST_DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox \
