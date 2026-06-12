@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_app_config
-from app.core.exceptions import not_found
 from app.dependencies import get_db, get_developer_service
 from app.schemas.developer import (
     DevAIDetailResponse,
@@ -24,7 +23,7 @@ router = APIRouter(prefix="/dev", tags=["developer"])
 
 def require_developer_mode() -> None:
     if not get_app_config().developer_mode:
-        raise not_found("Not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 
 @router.get(

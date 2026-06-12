@@ -66,6 +66,7 @@ def test_dev_endpoints_return_404_when_disabled(integration_client, db_session):
     for path in disabled_paths:
         response = integration_client.get(path)
         assert response.status_code == 404, path
+        assert response.json()["error"]["message"] == "Not found"
 
 
 def test_dev_endpoints_return_trace_when_enabled(dev_mode_client, db_session):
