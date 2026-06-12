@@ -15,16 +15,15 @@ pytestmark = requires_db
 
 
 def _accept_pending_reviews(client) -> None:
-    try:
-        reviews = _wait_for_review_required(client, min_count=1, timeout=5.0)
-    except AssertionError:
-        return
+    response = client.get("/api/v1/films/review-required")
+    assert response.status_code == 200, response.text
+    reviews = response.json().get("data", [])
     for review in reviews:
         response = client.post(f"/api/v1/reviews/{review['review_id']}/accept")
         assert response.status_code == 200, response.text
         film_id = review["film_id"]
-        deadline = time.time() + 30.0
-        while time.time() < deadline:
+        deadline = time.monotonic() + 30.0
+        while time.monotonic() < deadline:
             film = client.get(f"/api/v1/films/{film_id}").json()
             if film["enrichment_status"] == "ready":
                 break
