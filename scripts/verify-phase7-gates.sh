@@ -50,8 +50,26 @@ echo "=== Gate 4: Frontend production build ==="
 (cd frontend && npm run build)
 pass "Production build"
 
-echo "=== Gate 5: Phase 6.5 regression ==="
+echo "=== Gate 5: Playwright Developer Mode (mocked API) ==="
+(
+  cd frontend
+  npx playwright test e2e/dev-mode.spec.ts --grep "mocked API"
+)
+pass "Playwright Developer Mode (mocked API)"
+
+echo "=== Gate 6: Phase 6.5 regression ==="
 bash scripts/verify-phase6.5-gates.sh
 pass "Phase 6.5 regression"
+
+echo "=== Gate 7: Playwright Developer Mode (full stack, optional) ==="
+if [[ "${PLAYWRIGHT_E2E_STACK:-}" == "1" ]]; then
+  (
+    cd frontend
+    PLAYWRIGHT_E2E_STACK=1 npx playwright test e2e/dev-mode.spec.ts --grep "full stack"
+  )
+  pass "Playwright Developer Mode (full stack)"
+else
+  echo "SKIP: Set PLAYWRIGHT_E2E_STACK=1 with docker compose up to enable full-stack dev mode E2E"
+fi
 
 echo "=== All Phase 7 gates passed ==="

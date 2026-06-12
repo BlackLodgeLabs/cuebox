@@ -75,6 +75,8 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | Frontend build | `cd frontend && npm run build` |
 | Frontend unit tests | `cd frontend && npm run test:unit` (PR review regression coverage for hooks/components) |
 | Frontend E2E | `cd frontend && PLAYWRIGHT_E2E_STACK=1 npm run test:e2e` (requires full stack running) |
+| Developer Mode E2E (mocked) | `cd frontend && npx playwright test e2e/dev-mode.spec.ts --grep "mocked API"` (starts `next dev` automatically) |
+| Developer Mode E2E (full stack) | `cd frontend && PLAYWRIGHT_E2E_STACK=1 npx playwright test e2e/dev-mode.spec.ts --grep "full stack"` (requires `developer_mode: true` in `config.yaml`) |
 
 `npm run lint` in `frontend/` currently prompts for ESLint setup (no config committed yet); use `tsc --noEmit` until ESLint is initialized.
 
