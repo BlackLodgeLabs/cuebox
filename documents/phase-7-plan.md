@@ -6,61 +6,61 @@ todos:
   # ── Baseline ──────────────────────────────────────────────────────────────
   - id: p7-baseline-gates
     content: "Confirm verify-phase6.5-gates.sh (and Phases 2.5–6 regression) pass before Phase 7 work begins"
-    status: pending
+    status: completed
   - id: p7-gap-analysis
     content: "Confirm persistence gaps — tokens_input/tokens_output and profile_cache_hit not yet stored on recommendation_sessions"
-    status: pending
+    status: completed
   # ── Backend — persistence & schemas ─────────────────────────────────────────
   - id: p7-migration-session-observability
     content: "Alembic migration — add tokens_input, tokens_output, profile_cache_hit to recommendation_sessions; persist in recommendation_service.create"
-    status: pending
+    status: completed
   - id: p7-dev-schemas
     content: "Pydantic response schemas for api-contracts §9.1–9.5 in api/app/schemas/developer.py"
-    status: pending
+    status: completed
   - id: p7-developer-service
     content: "developer_service.py — aggregate retrieval, scoring, AI, film match, and system versions from existing tables"
-    status: pending
+    status: completed
   - id: p7-dev-router
     content: "api/app/routers/v1/dev.py — five GET endpoints; config gate returns 404 when developer_mode false; mount on v1 router"
-    status: pending
+    status: completed
   - id: p7-backend-tests
     content: "Unit + integration tests — dev endpoints 200 when enabled, 404 when disabled; full trace payload for completed session"
-    status: pending
+    status: completed
   # ── Frontend — types, hooks, UI ───────────────────────────────────────────
   - id: p7-api-types
     content: "Extend frontend/src/types/api.ts with DevRetrieval, DevScoring, DevAI, DevFilmMatch, DevSystemVersions types"
-    status: pending
+    status: completed
   - id: p7-api-client
     content: "Extend api-client.ts with getDevRetrieval, getDevScoring, getDevAI, getDevFilmMatch, getDevSystemVersions"
-    status: pending
+    status: completed
   - id: p7-dev-hooks
     content: "React Query hooks — use-dev-mode.ts with lazy fetch per tab; probe enabled state via GET /dev/system/versions"
-    status: pending
+    status: completed
   - id: p7-dev-entry
     content: "Hidden entry — keyboard shortcut (e.g. Ctrl+Shift+D) or ?dev=1 URL param; only activates when backend returns 200 on versions probe"
-    status: pending
+    status: completed
   - id: p7-dev-panel
     content: "frontend/src/components/dev-mode/ — tabbed panel (Retrieval, Scoring, AI, Versions) embedded in results + history detail pages"
-    status: pending
+    status: completed
   - id: p7-dev-styling
     content: "Style dev panel with design system — mono readouts, elevated surface, terminal-like tables; no new routes"
-    status: pending
+    status: completed
   # ── Verification & docs ───────────────────────────────────────────────────
   - id: p7-gate-script
     content: "Add scripts/verify-phase7-gates.sh — dev API tests, 404 gate, frontend tsc/build, Phase 6.5 regression"
-    status: pending
+    status: completed
   - id: p7-verify-gates
     content: "Run verify-phase7-gates.sh plus full regression chain; confirm API CI and frontend CI green"
-    status: pending
+    status: completed
   - id: p7-update-roadmap
     content: "Check off Phase 7 task checklist and verification gate in documents/roadmap.md; update overview to Phase 7 complete / Phase 8 next"
-    status: pending
+    status: completed
   - id: p7-document-index
     content: "Add phase-7-plan.md to roadmap Document Index Phase plans row"
-    status: pending
+    status: completed
   - id: p7-agents-md
     content: "Review AGENTS.md for structural changes (developer_mode config, gate script, hello-world dev panel note)"
-    status: pending
+    status: completed
 isProject: false
 ---
 

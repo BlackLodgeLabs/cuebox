@@ -267,3 +267,87 @@ export interface HistoryQueryParams {
   limit?: number;
   offset?: number;
 }
+
+export interface DevProfileTrace {
+  profile_id: string;
+  profile_hash: string;
+  structured_profile: Record<string, unknown>;
+  narrative_profile: string | null;
+  embedding_model: string | null;
+  embedding_version: string | null;
+  profile_cache_hit: boolean;
+}
+
+export interface DevRetrievalCandidate {
+  film_id: string;
+  title: string;
+  retrieval_rank: number | null;
+  similarity_score: number | null;
+}
+
+export interface DevRetrievalTrace {
+  session_id: string;
+  profile: DevProfileTrace;
+  candidates: DevRetrievalCandidate[];
+  retrieval_candidate_limit: number;
+  candidates_returned: number;
+}
+
+export interface DevScoringCandidate {
+  film_id: string;
+  title: string;
+  raw_score: number | null;
+  final_score: number | null;
+  llm_rank: number | null;
+  score_breakdown: Record<string, number>;
+}
+
+export interface DevScoringDetail {
+  session_id: string;
+  scoring_version: string | null;
+  weight_set: string | null;
+  weights: Record<string, number>;
+  candidates: DevScoringCandidate[];
+}
+
+export interface DevAIDetail {
+  session_id: string;
+  semantic_enrichment: {
+    provider: string;
+    model: string;
+    semantic_version: string | null;
+  };
+  embedding: {
+    provider: string;
+    model: string;
+    embedding_version: string | null;
+  };
+  ranking: {
+    provider: string;
+    model: string;
+    prompt_version: string | null;
+    tokens_input: number | null;
+    tokens_output: number | null;
+  };
+}
+
+export interface DevFilmMatch {
+  film_id: string;
+  tmdb_id: number | null;
+  imdb_id: string | null;
+  match_confidence: number | null;
+  metadata_source: string | null;
+  enrichment_status: string;
+}
+
+export interface DevSystemVersionEntry {
+  artifact_type: string;
+  artifact_name: string;
+  version: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface DevSystemVersions {
+  versions: DevSystemVersionEntry[];
+}

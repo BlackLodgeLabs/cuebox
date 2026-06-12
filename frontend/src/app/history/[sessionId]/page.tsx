@@ -1,6 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { DevModePanel } from "@/components/dev-mode/dev-mode-panel";
+import { DevModeProvider } from "@/components/dev-mode/dev-mode-provider";
 import { ResultsView } from "@/components/results-view";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
@@ -26,14 +28,17 @@ export default function HistoryDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-h1">{data.winner.title}</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Recommended on {new Date(data.created_at).toLocaleString()}
-        </p>
+    <DevModeProvider>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-h1">{data.winner.title}</h1>
+          <p className="mt-1 text-body-md text-muted-foreground">
+            Recommended on {new Date(data.created_at).toLocaleString()}
+          </p>
+        </div>
+        <ResultsView data={data} showActions />
+        <DevModePanel sessionId={params.sessionId} />
       </div>
-      <ResultsView data={data} showActions />
-    </div>
+    </DevModeProvider>
   );
 }
