@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getRecommendation,
   listRecommendations,
@@ -9,8 +9,13 @@ import {
 import type { CreateRecommendationRequest, HistoryQueryParams } from "@/types/api";
 
 export function useCreateRecommendation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (body: CreateRecommendationRequest) => postRecommendation(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["recommendations", "history"] });
+    },
   });
 }
 
