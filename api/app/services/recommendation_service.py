@@ -115,6 +115,9 @@ class RecommendationService:
             weight_set="default",
             prompt_version=versions.get("prompt"),
             constraint_relaxation=relaxation or None,
+            tokens_input=ranking_result.tokens_input,
+            tokens_output=ranking_result.tokens_output,
+            profile_cache_hit=profile.profile_cache_hit,
         )
 
         recommendation_candidate_repository.create_many(
@@ -263,7 +266,7 @@ class RecommendationService:
         return RecommendationSessionDetail(
             session_id=session.id,
             profile_id=session.profile_id,
-            profile_cache_hit=False,
+            profile_cache_hit=session.profile_cache_hit,
             winner=winner_result,
             runners_up=runners_up,
             constraint_relaxation=session.constraint_relaxation,

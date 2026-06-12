@@ -1,6 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { DevModePanel } from "@/components/dev-mode/dev-mode-panel";
+import { DevModeProvider } from "@/components/dev-mode/dev-mode-provider";
 import { ResultsView } from "@/components/results-view";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
@@ -26,15 +28,18 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-h1">Your pick</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Based on your preferences from{" "}
-          {new Date(data.created_at).toLocaleString()}
-        </p>
+    <DevModeProvider>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-h1">Your pick</h1>
+          <p className="mt-1 text-body-md text-muted-foreground">
+            Based on your preferences from{" "}
+            {new Date(data.created_at).toLocaleString()}
+          </p>
+        </div>
+        <ResultsView data={data} />
+        <DevModePanel sessionId={params.sessionId} />
       </div>
-      <ResultsView data={data} />
-    </div>
+    </DevModeProvider>
   );
 }

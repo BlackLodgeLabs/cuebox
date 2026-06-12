@@ -4,6 +4,11 @@
 
 import type {
   CreateRecommendationRequest,
+  DevAIDetail,
+  DevFilmMatch,
+  DevRetrievalTrace,
+  DevScoringDetail,
+  DevSystemVersions,
   ErrorResponse,
   FilmsQueryParams,
   HealthResponse,
@@ -190,4 +195,37 @@ export function putSyncRss(username: string): Promise<SyncRssConfigResponse> {
 
 export function getSyncRssStatus(): Promise<SyncRssStatusResponse> {
   return fetchApi<SyncRssStatusResponse>("/sync/rss/status");
+}
+
+export async function probeDevModeEnabled(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/dev/system/versions`);
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+export function getDevRetrieval(sessionId: string): Promise<DevRetrievalTrace> {
+  return fetchApi<DevRetrievalTrace>(
+    `/dev/recommendations/${sessionId}/retrieval`,
+  );
+}
+
+export function getDevScoring(sessionId: string): Promise<DevScoringDetail> {
+  return fetchApi<DevScoringDetail>(
+    `/dev/recommendations/${sessionId}/scoring`,
+  );
+}
+
+export function getDevAI(sessionId: string): Promise<DevAIDetail> {
+  return fetchApi<DevAIDetail>(`/dev/recommendations/${sessionId}/ai`);
+}
+
+export function getDevFilmMatch(filmId: string): Promise<DevFilmMatch> {
+  return fetchApi<DevFilmMatch>(`/dev/films/${filmId}/match`);
+}
+
+export function getDevSystemVersions(): Promise<DevSystemVersions> {
+  return fetchApi<DevSystemVersions>("/dev/system/versions");
 }

@@ -10,6 +10,14 @@ export default defineConfig({
   timeout: 180_000,
   expect: { timeout: 30_000 },
   reporter: "list",
+  webServer: process.env.PLAYWRIGHT_E2E_STACK
+    ? undefined
+    : {
+        command: "npm run dev",
+        url: baseURL,
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
   use: {
     baseURL,
     trace: "on-first-retry",

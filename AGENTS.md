@@ -4,7 +4,7 @@ Guidance for AI agents working in the Cuebox repository.
 
 ## Project overview
 
-Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 6.5: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API, and full Next.js MVP UX styled with the Modern Neo-Noir Cinema design system ([documents/DESIGN.md](documents/DESIGN.md)).
+Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 7: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API with gated Developer Mode (`/dev/*`), and full Next.js MVP UX styled with the Modern Neo-Noir Cinema design system ([documents/DESIGN.md](documents/DESIGN.md)).
 
 Specs live under `documents/` (no root README yet).
 
@@ -68,12 +68,15 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | Phase 5 gate script | `bash scripts/verify-phase5-gates.sh` (Postgres required; recommendation pipeline) |
 | Phase 6 gate script | `bash scripts/verify-phase6-gates.sh` (frontend tsc/build + backend regression; optional Playwright E2E with `PLAYWRIGHT_E2E_STACK=1` and `docker compose up`) |
 | Phase 6.5 gate script | `bash scripts/verify-phase6.5-gates.sh` (design token audit + Phase 6 regression) |
+| Phase 7 gate script | `bash scripts/verify-phase7-gates.sh` (Developer Mode API tests + Phase 6.5 regression) |
 | Phase 2.5 gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; regression after Phase 3+ changes) |
 | CI parity | PRs must pass GitHub Actions workflows `.github/workflows/api-ci.yml` and `.github/workflows/frontend-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
 | Frontend build | `cd frontend && npm run build` |
 | Frontend unit tests | `cd frontend && npm run test:unit` (PR review regression coverage for hooks/components) |
 | Frontend E2E | `cd frontend && PLAYWRIGHT_E2E_STACK=1 npm run test:e2e` (requires full stack running) |
+| Developer Mode E2E (mocked) | `cd frontend && npx playwright test e2e/dev-mode.spec.ts --grep "mocked API"` (starts `next dev` automatically) |
+| Developer Mode E2E (full stack) | `cd frontend && PLAYWRIGHT_E2E_STACK=1 npx playwright test e2e/dev-mode.spec.ts --grep "full stack"` (requires `developer_mode: true` in `config.yaml`) |
 
 `npm run lint` in `frontend/` currently prompts for ESLint setup (no config committed yet); use `tsc --noEmit` until ESLint is initialized.
 
@@ -85,12 +88,13 @@ With `docker compose up`:
 2. Complete the first-time journey: import CSV → poll status → review matches (if any) → questionnaire → results → history.
 3. Sync settings at http://localhost:3000/settings/sync show RSS status.
 4. Collapsed **System status** on the home page still exposes API/database health for debugging.
+5. Optional: set `developer_mode: true` in `config.yaml`, restart the API, then open a results or history detail page with `?dev=1` (or press `Ctrl+Shift+D` / `Cmd+Shift+D`) to view the Developer Mode trace panel.
 
 Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set in `.env`; live recommendations require `OPENAI_API_KEY` when OpenAI providers are selected in `config.yaml`.
 
 ### Gotchas
 
-- `.env` and `config.yaml` are gitignored; agents must create them from examples. Copy `config.example.yaml` after Phase 3 changes to pick up `enrichment.inter_film_delay_seconds`.
+- `.env` and `config.yaml` are gitignored; agents must create them from examples. Copy `config.example.yaml` after Phase 3 changes to pick up `enrichment.inter_film_delay_seconds`. Set `developer_mode: true` in `config.yaml` to enable `/dev/*` endpoints and the hidden frontend dev panel; default is `false`.
 - `OPENAI_API_KEY` is required for live semantic/embedding/ranking runs when `config.yaml` selects OpenAI providers. CI and gate scripts pass without it (mocked HTTP). Optional: `OLLAMA_BASE_URL` (Ollama semantic), `VOYAGE_API_KEY` (Voyage embeddings).
 - Frontend `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000/api/v1` (set in `docker-compose.yml` for the frontend service).
 - No authentication — single-user, local-first design.

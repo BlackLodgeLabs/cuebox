@@ -25,6 +25,9 @@ def create(
     weight_set: str | None,
     prompt_version: str | None,
     constraint_relaxation: dict | None,
+    tokens_input: int | None = None,
+    tokens_output: int | None = None,
+    profile_cache_hit: bool = False,
 ) -> RecommendationSession:
     session = RecommendationSession(
         profile_id=profile_id,
@@ -37,6 +40,9 @@ def create(
         weight_set=weight_set,
         prompt_version=prompt_version,
         constraint_relaxation=constraint_relaxation,
+        tokens_input=tokens_input,
+        tokens_output=tokens_output,
+        profile_cache_hit=profile_cache_hit,
     )
     db.add(session)
     db.flush()

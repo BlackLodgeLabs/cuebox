@@ -307,6 +307,9 @@ class RecommendationSession(Base):
     weight_set: Mapped[str | None] = mapped_column(Text)
     prompt_version: Mapped[str | None] = mapped_column(Text)
     constraint_relaxation: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    tokens_input: Mapped[int | None] = mapped_column(Integer)
+    tokens_output: Mapped[int | None] = mapped_column(Integer)
+    profile_cache_hit: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     profile: Mapped[RecommendationProfile] = relationship(back_populates="sessions")

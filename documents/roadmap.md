@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 6.5 complete. Cuebox frontend matches the Modern Neo-Noir Cinema design system ([DESIGN.md](./DESIGN.md)). Next up: Phase 7 — Developer Mode.
+**Current state:** Phase 7 complete. Developer Mode exposes recommendation internals via gated `/dev` API and a hidden frontend dev panel. Next up: Phase 8 — Integration, NFR Validation & Polish.
 
 ### Reference Documents
 
@@ -766,17 +766,17 @@ See [sequence-diagrams.md §10](./sequence-diagrams.md) and [PRD.md §20](./PRD.
 
 #### Backend
 
-- [ ] Gate all `/dev/*` routes on `developer_mode: true` in config; return `404` when disabled
-- [ ] `GET /dev/recommendations/{session_id}/retrieval` — [api-contracts.md §9.1](./api-contracts.md)
-- [ ] `GET /dev/recommendations/{session_id}/scoring` — [api-contracts.md §9.2](./api-contracts.md)
-- [ ] `GET /dev/recommendations/{session_id}/ai` — [api-contracts.md §9.3](./api-contracts.md)
-- [ ] `GET /dev/films/{film_id}/match` — [api-contracts.md §9.4](./api-contracts.md)
-- [ ] `GET /dev/system/versions` — [api-contracts.md §9.5](./api-contracts.md)
+- [x] Gate all `/dev/*` routes on `developer_mode: true` in config; return `404` when disabled
+- [x] `GET /dev/recommendations/{session_id}/retrieval` — [api-contracts.md §9.1](./api-contracts.md)
+- [x] `GET /dev/recommendations/{session_id}/scoring` — [api-contracts.md §9.2](./api-contracts.md)
+- [x] `GET /dev/recommendations/{session_id}/ai` — [api-contracts.md §9.3](./api-contracts.md)
+- [x] `GET /dev/films/{film_id}/match` — [api-contracts.md §9.4](./api-contracts.md)
+- [x] `GET /dev/system/versions` — [api-contracts.md §9.5](./api-contracts.md)
 
 #### Frontend
 
-- [ ] Hidden Dev Mode entry (e.g. keyboard shortcut or URL param when config enabled)
-- [ ] Tabs on results/history detail:
+- [x] Hidden Dev Mode entry (e.g. keyboard shortcut or URL param when config enabled)
+- [x] Tabs on results/history detail:
   - **Retrieval** — profile, embedding metadata, candidate similarity scores
   - **Scoring** — weight set, per-candidate score breakdowns
   - **AI** — providers, models, prompt version, token usage
@@ -792,9 +792,9 @@ See [sequence-diagrams.md §10](./sequence-diagrams.md) and [PRD.md §20](./PRD.
 
 ### Verification Gate
 
-- [ ] Dev endpoints return full trace data for a completed recommendation session
-- [ ] Dev endpoints return `404` when `developer_mode: false`
-- [ ] Frontend dev panel renders retrieval, scoring, and AI data
+- [x] Dev endpoints return full trace data for a completed recommendation session
+- [x] Dev endpoints return `404` when `developer_mode: false`
+- [x] Frontend dev panel renders retrieval, scoring, and AI data
 
 ### PRD Success Criteria Addressed
 
@@ -1016,5 +1016,5 @@ Items from [PRD.md §22](./PRD.md) and [Architecture.md §22](./Architecture.md)
 | Database schema & migrations | [database-design.md](./database-design.md) |
 | Sequence diagrams | [sequence-diagrams.md](./sequence-diagrams.md) |
 | Implementation plan | This document |
-| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md), [phase-6-plan.md](./phase-6-plan.md), [phase-6.5-plan.md](./phase-6.5-plan.md) |
+| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md), [phase-6-plan.md](./phase-6-plan.md), [phase-6.5-plan.md](./phase-6.5-plan.md), [phase-7-plan.md](./phase-7-plan.md) |
 | Design system | [DESIGN.md](./DESIGN.md) |
