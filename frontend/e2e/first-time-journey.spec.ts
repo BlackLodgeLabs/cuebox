@@ -70,13 +70,12 @@ test.describe("First-time user journey", () => {
       timeout: 60_000,
     });
     await expect(page.getByRole("heading", { name: /your pick/i })).toBeVisible();
-    const winnerHeading = page
-      .locator('[class*="border-primary"]')
-      .getByRole("heading")
+    const winnerTitleEl = page
+      .locator('[class*="border-primary"] .font-heading')
       .first();
-    await expect(winnerHeading).toBeVisible();
+    await expect(winnerTitleEl).toBeVisible();
     const winnerTitle =
-      (await winnerHeading.textContent())?.replace(/\s*\(\d{4}\)\s*$/, "").trim() ??
+      (await winnerTitleEl.textContent())?.replace(/\s*\(\d{4}\)\s*$/, "").trim() ??
       "";
 
     await page.goto("/history");
