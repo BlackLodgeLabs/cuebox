@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 6 complete. Full MVP UX covers import, match review, questionnaire, results, history, and sync settings. Next up: Phase 7 — Developer Mode.
+**Current state:** Phase 6 complete. Full MVP UX covers import, match review, questionnaire, results, history, and sync settings. Next up: Phase 6.5 — Design System Alignment ([DESIGN.md](./DESIGN.md)).
 
 ### Reference Documents
 
@@ -714,10 +714,49 @@ All user-facing criteria validated through UI walkthrough.
 
 ---
 
-## Phase 7 — Developer Mode
+## Phase 6.5 — Design System Alignment (Modern Neo-Noir Cinema)
 
 **Duration:** 3–5 days  
 **Depends on:** Phase 6  
+**Goal:** Restyle the Phase 6 MVP frontend to match [DESIGN.md](./DESIGN.md) — tokens, typography, hardware borders, interactive states, environmental texture, and Material Symbols — without changing user journeys or API contracts.
+
+See [phase-6.5-plan.md](./phase-6.5-plan.md) for the full implementation plan and **Decisions required before executing**.
+
+### Task Checklist
+
+#### Token & layout foundation
+
+- [ ] Resolve open design decisions (token source, texture, warning colors, chips, etc.) — see plan §Decisions required before executing
+- [ ] Canonical CSS/Tailwind design tokens from DESIGN.md
+- [ ] Google fonts: Cabin, Libre Franklin, Space Mono
+- [ ] Dark-only theme + main viewport texture overlay
+- [ ] Layout margins (16px mobile / 48px desktop) and `max-w-7xl`
+
+#### Primitives & iconography
+
+- [ ] Button — chamfered primary, hover glow, active flicker, disabled greyscale
+- [ ] Card, input, dialog, sheet, badge, progress, toast — 4px corners, surface elevation, outline borders
+- [ ] Material Symbols Outlined; remove lucide-react
+
+#### Components & pages
+
+- [ ] App shell navigation restyle (active icon fill, mono labels)
+- [ ] Shared components aligned (poster, upload, chips, loading, error, results)
+- [ ] Visual pass on all Phase 6 routes (home, import, review, recommend, results, history, sync)
+
+### Verification Gate
+
+- [ ] All 9 routes match DESIGN.md at mobile and desktop breakpoints
+- [ ] `scripts/verify-phase6.5-gates.sh` passes
+- [ ] `scripts/verify-phase6-gates.sh` still passes (no functional regression)
+- [ ] No light-theme ad-hoc colors or lucide imports remain
+
+---
+
+## Phase 7 — Developer Mode
+
+**Duration:** 3–5 days  
+**Depends on:** Phase 6.5  
 **Goal:** Internal observability for recommendation debugging.
 
 See [sequence-diagrams.md §10](./sequence-diagrams.md) and [PRD.md §20](./PRD.md).
@@ -976,4 +1015,5 @@ Items from [PRD.md §22](./PRD.md) and [Architecture.md §22](./Architecture.md)
 | Database schema & migrations | [database-design.md](./database-design.md) |
 | Sequence diagrams | [sequence-diagrams.md](./sequence-diagrams.md) |
 | Implementation plan | This document |
-| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md), [phase-6-plan.md](./phase-6-plan.md) |
+| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md), [phase-6-plan.md](./phase-6-plan.md), [phase-6.5-plan.md](./phase-6.5-plan.md) |
+| Design system | [DESIGN.md](./DESIGN.md) |
