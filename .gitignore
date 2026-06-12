@@ -23,6 +23,8 @@ node_modules/
 .next/
 out/
 *.tsbuildinfo
+frontend/test-results/
+frontend/playwright-report/
 
 # Generated artifacts (keep folder structure via README + .gitkeep)
 artifacts/coverage/

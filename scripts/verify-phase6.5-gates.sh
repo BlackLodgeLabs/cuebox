@@ -27,6 +27,9 @@ fi
 if ! test -f frontend/src/components/icon.tsx; then
   fail "Missing frontend/src/components/icon.tsx"
 fi
+if ! test -f frontend/e2e/pr-review-regression.spec.ts; then
+  fail "Missing frontend/e2e/pr-review-regression.spec.ts"
+fi
 pass "Design audit"
 
 echo "=== Gate 4: Phase 6 regression ==="

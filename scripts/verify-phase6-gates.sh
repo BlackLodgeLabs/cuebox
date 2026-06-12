@@ -63,4 +63,17 @@ for code in "${required_codes[@]}"; do
 done
 pass "Error UX audit (all ErrorCode values mapped)"
 
+echo "=== Gate 7: Frontend unit tests (PR review regressions) ==="
+(cd frontend && npm run test:unit)
+pass "Frontend unit tests"
+
+echo "=== Gate 8: PR review static audit ==="
+if grep -q "useToastOnError" frontend/src/hooks/use-recommendations.ts; then
+  fail "useCreateRecommendation must not register duplicate toast errors"
+fi
+if grep -A6 "main-scanlines::after" frontend/src/app/globals.css | grep -q "position: fixed"; then
+  fail "Scanlines overlay must use position: absolute on main, not fixed viewport"
+fi
+pass "PR review static audit"
+
 echo "=== All Phase 6 gates passed ==="

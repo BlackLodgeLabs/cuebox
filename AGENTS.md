@@ -72,6 +72,7 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | CI parity | PRs must pass GitHub Actions workflows `.github/workflows/api-ci.yml` and `.github/workflows/frontend-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
 | Frontend build | `cd frontend && npm run build` |
+| Frontend unit tests | `cd frontend && npm run test:unit` (PR review regression coverage for hooks/components) |
 | Frontend E2E | `cd frontend && PLAYWRIGHT_E2E_STACK=1 npm run test:e2e` (requires full stack running) |
 
 `npm run lint` in `frontend/` currently prompts for ESLint setup (no config committed yet); use `tsc --noEmit` until ESLint is initialized.
