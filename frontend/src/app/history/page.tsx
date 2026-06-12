@@ -57,8 +57,8 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Recommendation history</h1>
-        <p className="mt-1 text-muted-foreground">
+        <h1 className="text-h1">Recommendation history</h1>
+        <p className="mt-1 text-body-md text-muted-foreground">
           Browse past picks and revisit your preferences.
         </p>
       </div>
@@ -122,7 +122,7 @@ export default function HistoryPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.data.map((item) => (
               <Link key={item.session_id} href={`/history/${item.session_id}`}>
-                <Card className="h-full transition-colors hover:bg-accent/50">
+                <Card className="h-full hover-glow">
                   <CardHeader className="flex flex-row gap-3">
                     <FilmPoster
                       src={item.winner_poster_url}

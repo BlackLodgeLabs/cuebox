@@ -6,71 +6,71 @@ todos:
   # ── Baseline & token foundation ───────────────────────────────────────────
   - id: p65-baseline-gates
     content: "Confirm verify-phase6-gates.sh and frontend-ci still pass before visual refactor"
-    status: pending
+    status: completed
   - id: p65-decisions
     content: "Resolved — see §Resolved design decisions (tokens #121411, dark-only, accent hierarchy, scanlines, Cuebox branding)"
     status: completed
   - id: p65-branding
     content: "Rename Film Picker → Cuebox in frontend chrome (layout metadata, app-shell, home page copy)"
-    status: pending
+    status: completed
   - id: p65-design-tokens
     content: "Create frontend design token layer — CSS variables + tailwind.config from DESIGN.md; map shadcn semantic tokens"
-    status: pending
+    status: completed
   - id: p65-fonts
     content: "Load Cabin, Libre Franklin, Space Mono via next/font; add typography utility classes (h1, h2, body-lg/md, title-lg, label-md)"
-    status: pending
+    status: completed
   - id: p65-environment
     content: "Apply dark-only theme (#121411), CRT scanline overlay on main, layout margins and max-width"
-    status: pending
+    status: completed
   # ── Primitives & shadcn overrides ─────────────────────────────────────────
   - id: p65-button
     content: "Restyle Button — chamfered clip-path on default/primary only; mint fill; lime focus ring; hover glow, active flicker, disabled greyscale"
-    status: pending
+    status: completed
   - id: p65-card-surfaces
     content: "Restyle Card, Sheet, Dialog, Input, Select, Textarea, Progress, Badge — 4px corners, surface elevation, outline borders"
-    status: pending
+    status: completed
   - id: p65-icons
     content: "Replace lucide-react with Material Symbols Outlined; Icon wrapper with fill rules for nav active states"
-    status: pending
+    status: completed
   - id: p65-toast
     content: "Restyle toast — top terminal-style stack, elevated surface, error tokens; update Toaster viewport"
-    status: pending
+    status: completed
   # ── Shared components ─────────────────────────────────────────────────────
   - id: p65-app-shell
     content: "Restyle app-shell — Cuebox wordmark (Cabin h2), mono nav labels, active icon fill, lime secondary badges"
-    status: pending
+    status: completed
   - id: p65-shared-components
     content: "Update film-poster, file-upload, multi-select-chips, loading-state, error-state, results-view to design system"
-    status: pending
+    status: completed
   # ── Page pass ─────────────────────────────────────────────────────────────
   - id: p65-pages-home-import
     content: "Visual pass — home, import, import status (remove light-theme amber; use design warning tokens)"
-    status: pending
+    status: completed
   - id: p65-pages-review-recommend
     content: "Visual pass — review, questionnaire wizard (chip shapes, step typography, loading overlay)"
-    status: pending
+    status: completed
   - id: p65-pages-results-history
     content: "Visual pass — results, history list/detail (Space Mono metadata, body-lg explanations)"
-    status: pending
+    status: completed
   - id: p65-pages-sync
     content: "Visual pass — sync settings (definition lists as mono readouts)"
-    status: pending
+    status: completed
   # ── Verification & docs ─────────────────────────────────────────────────
   - id: p65-visual-regression
     content: "Add Playwright visual smoke or screenshot checklist for key routes at mobile + desktop breakpoints"
-    status: pending
+    status: completed
   - id: p65-gate-script
     content: "Add scripts/verify-phase6.5-gates.sh — tsc, build, phase 6 regression, design token audit"
-    status: pending
+    status: completed
   - id: p65-update-roadmap
     content: "Add Phase 6.5 section to roadmap.md; check off on completion; update overview to Phase 6.5 complete / Phase 7 next"
-    status: pending
+    status: completed
   - id: p65-document-index
     content: "Add phase-6.5-plan.md and DESIGN.md to roadmap Document Index"
-    status: pending
+    status: completed
   - id: p65-agents-md
     content: "Review AGENTS.md — note dark-only UI, font loading, optional visual test command"
-    status: pending
+    status: completed
 isProject: false
 ---
 

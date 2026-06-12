@@ -24,9 +24,9 @@ export function FilmPoster({
   if (!src) {
     return (
       <div
-        className={`flex items-center justify-center rounded-md bg-muted text-xs text-muted-foreground ${dims.className} ${className}`}
+        className={`flex items-center justify-center rounded bg-surface-high text-label-md text-muted-foreground ${dims.className} ${className}`}
       >
-        No poster
+        NO POSTER
       </div>
     );
   }
@@ -37,7 +37,7 @@ export function FilmPoster({
       alt={alt}
       width={dims.width}
       height={dims.height}
-      className={`rounded-md object-cover ${dims.className} ${className}`}
+      className={`rounded object-cover ${dims.className} ${className}`}
     />
   );
 }

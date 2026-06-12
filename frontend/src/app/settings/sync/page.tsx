@@ -83,8 +83,8 @@ export default function SyncSettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Sync settings</h1>
-        <p className="mt-1 text-muted-foreground">
+        <h1 className="text-h1">Sync settings</h1>
+        <p className="mt-1 text-body-md text-muted-foreground">
           Keep your local watchlist aligned with Letterboxd.
         </p>
       </div>
@@ -167,8 +167,8 @@ export default function SyncSettingsPage() {
             )}
             {rssStatus && (
               <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <dt className="text-muted-foreground">Configured</dt>
-                <dd>{rssStatus.configured ? "Yes" : "No"}</dd>
+                <dt className="text-label-md normal-case tracking-normal text-muted-foreground">Configured</dt>
+                <dd className="font-mono text-sm">{rssStatus.configured ? "Yes" : "No"}</dd>
                 {rssStatus.username && (
                   <>
                     <dt className="text-muted-foreground">Username</dt>

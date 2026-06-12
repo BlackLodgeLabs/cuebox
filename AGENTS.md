@@ -1,10 +1,10 @@
 # AGENTS.md
 
-Guidance for AI agents working in the Cuebox (Film Picker) repository.
+Guidance for AI agents working in the Cuebox repository.
 
 ## Project overview
 
-Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 6: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API, and full Next.js MVP UX (import, match review, questionnaire, results, history, sync settings).
+Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 6.5: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API, and full Next.js MVP UX styled with the Modern Neo-Noir Cinema design system ([documents/DESIGN.md](documents/DESIGN.md)).
 
 Specs live under `documents/` (no root README yet).
 
@@ -67,6 +67,7 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | Phase 4 gate script | `bash scripts/verify-phase4-gates.sh` (Postgres required; CSV/RSS sync) |
 | Phase 5 gate script | `bash scripts/verify-phase5-gates.sh` (Postgres required; recommendation pipeline) |
 | Phase 6 gate script | `bash scripts/verify-phase6-gates.sh` (frontend tsc/build + backend regression; optional Playwright E2E with `PLAYWRIGHT_E2E_STACK=1` and `docker compose up`) |
+| Phase 6.5 gate script | `bash scripts/verify-phase6.5-gates.sh` (design token audit + Phase 6 regression) |
 | Phase 2.5 gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; regression after Phase 3+ changes) |
 | CI parity | PRs must pass GitHub Actions workflows `.github/workflows/api-ci.yml` and `.github/workflows/frontend-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
@@ -79,7 +80,7 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 
 With `docker compose up`:
 
-1. http://localhost:3000 — empty watchlist shows **Import watchlist** CTA; returning users see **New recommendation** and **History** links.
+1. http://localhost:3000 — **Cuebox** dark UI; empty watchlist shows **Import watchlist** CTA; returning users see **New recommendation** and **History** links.
 2. Complete the first-time journey: import CSV → poll status → review matches (if any) → questionnaire → results → history.
 3. Sync settings at http://localhost:3000/settings/sync show RSS status.
 4. Collapsed **System status** on the home page still exposes API/database health for debugging.

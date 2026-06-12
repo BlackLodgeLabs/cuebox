@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CardGridSkeleton, LoadingState } from "@/components/loading-state";
+import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import {
   useHasWatchlist,
@@ -53,8 +53,8 @@ export default function HomePage() {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
         <div>
-          <h1 className="text-3xl font-bold">Welcome to Film Picker</h1>
-          <p className="mt-2 text-muted-foreground">
+          <h1 className="text-h1">Welcome to Cuebox</h1>
+          <p className="mt-2 text-body-md text-muted-foreground">
             Import your Letterboxd watchlist to get personalized film
             recommendations based on your mood and preferences.
           </p>
@@ -80,14 +80,14 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">What do you want to watch?</h1>
-        <p className="mt-2 text-muted-foreground">
+        <h1 className="text-h1">What do you want to watch?</h1>
+        <p className="mt-2 text-body-md text-muted-foreground">
           Start a new recommendation or browse your past picks.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
+        <Card className="hover-glow">
           <CardHeader>
             <CardTitle>New recommendation</CardTitle>
             <CardDescription>
@@ -102,7 +102,7 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-glow">
           <CardHeader>
             <CardTitle>History</CardTitle>
             <CardDescription>
@@ -118,13 +118,13 @@ export default function HomePage() {
       </div>
 
       {reviewCount > 0 && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="warning-banner">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Films need review
-              <Badge variant="destructive">{reviewCount}</Badge>
+              <Badge variant="secondary">{reviewCount}</Badge>
             </CardTitle>
-            <CardDescription className="text-amber-900/80">
+            <CardDescription>
               Some imported films need you to confirm their metadata match before
               they can be recommended.
             </CardDescription>
@@ -158,21 +158,20 @@ function HealthPanel({
       <button
         type="button"
         onClick={() => onToggle(!open)}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        className="flex items-center gap-1 text-label-md normal-case tracking-normal text-muted-foreground hover:text-foreground"
       >
         System status
-        {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        <Icon name={open ? "expand_less" : "expand_more"} size={16} />
       </button>
       {open && (
-        <div className="mt-2 rounded-md border px-3 py-2 text-xs text-muted-foreground">
+        <div className="mt-2 rounded border border-border bg-surface-high px-3 py-2 font-mono text-xs text-muted-foreground">
           <p>
-            API: <span className="font-medium text-foreground">{health.status}</span>
+            API: <span className="text-foreground">{health.status}</span>
           </p>
           <p>
-            Database:{" "}
-            <span className="font-medium text-foreground">{health.database}</span>
+            DB: <span className="text-foreground">{health.database}</span>
           </p>
-          <p>Version {health.version}</p>
+          <p>VER {health.version}</p>
         </div>
       )}
     </div>

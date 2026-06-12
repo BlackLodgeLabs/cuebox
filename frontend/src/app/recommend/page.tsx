@@ -134,8 +134,8 @@ export default function RecommendPage() {
   if (create.isPending) {
     return (
       <div className="mx-auto max-w-lg space-y-4 py-16 text-center">
-        <h1 className="text-2xl font-bold">Finding your film…</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-h1">Finding your film…</h1>
+        <p className="text-body-md text-muted-foreground">
           This can take up to 30 seconds while we search and rank your
           watchlist.
         </p>
@@ -147,11 +147,11 @@ export default function RecommendPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-label-md normal-case tracking-normal text-secondary">
           Step {stepIndex + 1} of {STEPS.length}
         </p>
-        <h1 className="text-2xl font-bold">{step.title}</h1>
-        <p className="mt-1 text-muted-foreground">{step.description}</p>
+        <h1 className="text-h1">{step.title}</h1>
+        <p className="mt-1 text-body-md text-muted-foreground">{step.description}</p>
       </div>
 
       <Card>

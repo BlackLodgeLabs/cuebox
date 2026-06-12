@@ -28,8 +28,8 @@ export default function ResultsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Your pick</h1>
-        <p className="mt-1 text-muted-foreground">
+        <h1 className="text-h1">Your pick</h1>
+        <p className="mt-1 text-body-md text-muted-foreground">
           Based on your preferences from{" "}
           {new Date(data.created_at).toLocaleString()}
         </p>

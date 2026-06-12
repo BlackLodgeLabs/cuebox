@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 6 complete. Full MVP UX covers import, match review, questionnaire, results, history, and sync settings. Next up: Phase 6.5 — Design System Alignment ([DESIGN.md](./DESIGN.md)).
+**Current state:** Phase 6.5 complete. Cuebox frontend matches the Modern Neo-Noir Cinema design system ([DESIGN.md](./DESIGN.md)). Next up: Phase 7 — Developer Mode.
 
 ### Reference Documents
 
@@ -720,36 +720,37 @@ All user-facing criteria validated through UI walkthrough.
 **Depends on:** Phase 6  
 **Goal:** Restyle the Phase 6 MVP frontend to match [DESIGN.md](./DESIGN.md) — tokens, typography, hardware borders, interactive states, environmental texture, and Material Symbols — without changing user journeys or API contracts.
 
-See [phase-6.5-plan.md](./phase-6.5-plan.md) for the full implementation plan and **Decisions required before executing**.
+See [phase-6.5-plan.md](./phase-6.5-plan.md) for the full implementation plan.
 
 ### Task Checklist
 
 #### Token & layout foundation
 
 - [x] Resolve open design decisions — see [phase-6.5-plan.md §Resolved design decisions](./phase-6.5-plan.md#resolved-design-decisions) (`#121411`, dark-only, scanlines, Cuebox branding)
-- [ ] Canonical CSS/Tailwind design tokens from DESIGN.md + resolved decisions
-- [ ] Google fonts: Cabin, Libre Franklin, Space Mono
-- [ ] Dark-only theme + main viewport texture overlay
-- [ ] Layout margins (16px mobile / 48px desktop) and `max-w-7xl`
+- [x] Canonical CSS/Tailwind design tokens from DESIGN.md + resolved decisions
+- [x] Google fonts: Cabin, Libre Franklin, Space Mono
+- [x] Dark-only theme + CRT scanline overlay on main
+- [x] Layout margins (16px mobile / 48px desktop) and `max-w-7xl`
 
 #### Primitives & iconography
 
-- [ ] Button — chamfered primary, hover glow, active flicker, disabled greyscale
-- [ ] Card, input, dialog, sheet, badge, progress, toast — 4px corners, surface elevation, outline borders
-- [ ] Material Symbols Outlined; remove lucide-react
+- [x] Button — chamfered primary only (mint fill); lime focus/secondary; hover glow, active flicker, disabled greyscale
+- [x] Card, input, dialog, sheet, badge, progress, toast — 4px corners, surface elevation, outline borders
+- [x] Material Symbols Outlined; remove lucide-react
 
 #### Components & pages
 
-- [ ] App shell navigation restyle (active icon fill, mono labels)
-- [ ] Shared components aligned (poster, upload, chips, loading, error, results)
-- [ ] Visual pass on all Phase 6 routes (home, import, review, recommend, results, history, sync)
+- [x] Cuebox branding in frontend chrome (retire “Film Picker”)
+- [x] App shell navigation restyle (Cuebox wordmark, active icon fill, mono labels, lime badges)
+- [x] Shared components aligned (poster, upload, chips, loading, error, results)
+- [x] Visual pass on all Phase 6 routes (home, import, review, recommend, results, history, sync)
 
 ### Verification Gate
 
-- [ ] All 9 routes match DESIGN.md at mobile and desktop breakpoints
-- [ ] `scripts/verify-phase6.5-gates.sh` passes
-- [ ] `scripts/verify-phase6-gates.sh` still passes (no functional regression)
-- [ ] No light-theme ad-hoc colors or lucide imports remain
+- [x] All 9 routes match DESIGN.md at mobile and desktop breakpoints
+- [x] `scripts/verify-phase6.5-gates.sh` passes
+- [x] `scripts/verify-phase6-gates.sh` still passes (no functional regression)
+- [x] No light-theme ad-hoc colors, lucide imports, or “Film Picker” strings in frontend remain
 
 ---
 

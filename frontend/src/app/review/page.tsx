@@ -38,7 +38,7 @@ export default function ReviewPage() {
   if (films.length === 0) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <h1 className="text-2xl font-bold">All matches resolved</h1>
+        <h1 className="text-h1">All matches resolved</h1>
         <p className="text-muted-foreground">
           There are no films waiting for metadata review.
         </p>
@@ -52,8 +52,8 @@ export default function ReviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Review matches</h1>
-        <p className="mt-1 text-muted-foreground">
+        <h1 className="text-h1">Review matches</h1>
+        <p className="mt-1 text-body-md text-muted-foreground">
           Confirm or reject proposed TMDB matches for imported films.
         </p>
       </div>
@@ -64,7 +64,7 @@ export default function ReviewPage() {
           const isPending = accept.isPending || reject.isPending;
 
           return (
-            <Card key={film.review_id}>
+            <Card key={film.review_id} className="bg-surface-high hover-glow">
               <CardHeader className="flex flex-row gap-4">
                 <FilmPoster
                   src={film.candidate_payload.poster_url}
@@ -87,9 +87,8 @@ export default function ReviewPage() {
                       {film.candidate_payload.director}
                     </p>
                   )}
-                  <p className="mt-1 text-sm">
-                    Confidence:{" "}
-                    <span className="font-medium">{confidence}%</span>
+                  <p className="mt-1 text-label-md normal-case tracking-normal text-secondary">
+                    Confidence: {confidence}%
                   </p>
                 </div>
               </CardHeader>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Upload } from "lucide-react";
+import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +37,9 @@ export function FileUpload({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-8 transition-colors",
-        dragOver && "border-primary bg-accent/50",
-        disabled && "pointer-events-none opacity-50",
+        "flex flex-col items-center justify-center gap-4 rounded border-2 border-dashed border-border bg-card p-8 transition-all",
+        dragOver && "border-secondary shadow-glow",
+        disabled && "pointer-events-none opacity-50 grayscale",
       )}
       onDragOver={(e) => {
         e.preventDefault();
@@ -52,14 +52,16 @@ export function FileUpload({
         handleFile(e.dataTransfer.files[0]);
       }}
     >
-      <Upload className="h-10 w-10 text-muted-foreground" />
+      <Icon name="upload" size={40} className="text-muted-foreground" />
       <div className="text-center">
-        <p className="font-medium">{label}</p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body-lg font-medium">{label}</p>
+        <p className="text-body-md text-muted-foreground">
           Drag and drop a Letterboxd watchlist CSV, or click to browse
         </p>
         {selectedName && (
-          <p className="mt-2 text-sm text-primary">Selected: {selectedName}</p>
+          <p className="mt-2 text-label-md normal-case tracking-normal text-primary">
+            Selected: {selectedName}
+          </p>
         )}
       </div>
       <input

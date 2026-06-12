@@ -13,8 +13,8 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div className="flex flex-col items-center gap-4 py-12 text-center">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="max-w-md text-sm text-muted-foreground">{message}</p>
+      <h2 className="text-h2">{title}</h2>
+      <p className="max-w-md text-body-md text-muted-foreground">{message}</p>
       {onRetry && (
         <Button variant="outline" onClick={onRetry}>
           Try again

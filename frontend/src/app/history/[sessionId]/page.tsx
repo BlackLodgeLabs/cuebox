@@ -28,8 +28,8 @@ export default function HistoryDetailPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{data.winner.title}</h1>
-        <p className="mt-1 text-muted-foreground">
+        <h1 className="text-h1">{data.winner.title}</h1>
+        <p className="mt-1 text-body-md text-muted-foreground">
           Recommended on {new Date(data.created_at).toLocaleString()}
         </p>
       </div>

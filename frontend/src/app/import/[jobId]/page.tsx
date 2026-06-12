@@ -50,8 +50,8 @@ export default function ImportStatusPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Import progress</h1>
-        <p className="mt-1 text-muted-foreground">
+        <h1 className="text-h1">Import progress</h1>
+        <p className="mt-1 text-body-md text-muted-foreground">
           Job {data.job_id.slice(0, 8)}…
         </p>
       </div>
@@ -92,7 +92,7 @@ export default function ImportStatusPage() {
           )}
 
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="text-muted-foreground">Processed</dt>
+            <dt className="text-label-md normal-case tracking-normal text-muted-foreground">Processed</dt>
             <dd>{data.processed_films}</dd>
             <dt className="text-muted-foreground">Failed</dt>
             <dd>{data.failed_films}</dd>
@@ -119,7 +119,7 @@ export default function ImportStatusPage() {
                 <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto text-sm">
                   {data.failure_summary.map((item) => (
                     <li key={item.letterboxd_uri} className="rounded border p-2">
-                      <p className="font-mono text-xs">{item.letterboxd_uri}</p>
+                      <p className="font-mono text-xs text-secondary">{item.letterboxd_uri}</p>
                       <p className="text-muted-foreground">{item.reason}</p>
                     </li>
                   ))}
