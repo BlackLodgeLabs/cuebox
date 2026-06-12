@@ -4,9 +4,9 @@ Guidance for AI agents working in the Cuebox repository.
 
 ## Project overview
 
-Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 7: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API with gated Developer Mode (`/dev/*`), and full Next.js MVP UX styled with the Modern Neo-Noir Cinema design system ([documents/DESIGN.md](documents/DESIGN.md)).
+Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 8: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API with gated Developer Mode (`/dev/*`), full Next.js MVP UX styled with the Modern Neo-Noir Cinema design system ([documents/DESIGN.md](documents/DESIGN.md)), integration/NFR validation, and root [README.md](README.md).
 
-Specs live under `documents/` (no root README yet).
+Specifications live under `documents/`; see [README.md](README.md) for human setup and quick start.
 
 ## Cursor Cloud specific instructions
 
@@ -69,6 +69,9 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | Phase 6 gate script | `bash scripts/verify-phase6-gates.sh` (frontend tsc/build + backend regression; optional Playwright E2E with `PLAYWRIGHT_E2E_STACK=1` and `docker compose up`) |
 | Phase 6.5 gate script | `bash scripts/verify-phase6.5-gates.sh` (design token audit + Phase 6 regression) |
 | Phase 7 gate script | `bash scripts/verify-phase7-gates.sh` (Developer Mode API tests + Phase 6.5 regression) |
+| Phase 8 gate script | `bash scripts/verify-phase8-gates.sh` (integration suite, NFR timing, PRD audit, Phase 7 regression) |
+| PRD success criteria audit | `bash scripts/verify-prd-success-criteria.sh` |
+| Live stack smoke test | `bash scripts/smoke-test.sh` (requires `docker compose up` and `letterboxd/watchlist.csv`) |
 | Phase 2.5 gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; regression after Phase 3+ changes) |
 | CI parity | PRs must pass GitHub Actions workflows `.github/workflows/api-ci.yml` and `.github/workflows/frontend-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
@@ -99,4 +102,5 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 - Frontend `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000/api/v1` (set in `docker-compose.yml` for the frontend service).
 - No authentication — single-user, local-first design.
 - After pulling frontend dependency changes, run `cd frontend && npm ci` (non-Docker) or rebuild/restart the frontend container (`docker compose up --build frontend`). The frontend dev container runs `npm ci` on start to keep its `node_modules` volume in sync with `package-lock.json`.
+- Optional: `RUN_SLOW_PERF=1` with `pytest tests/test_integration_recommendation.py::test_recommendation_large_watchlist_under_30_seconds` for a 100-film recommendation benchmark (mocked providers).
 - On **Windows**, shell scripts must use LF line endings (enforced via `.gitattributes`). If you see `exec ./entrypoint.sh: no such file or directory`, re-checkout scripts (`git checkout -- api/entrypoint.sh`) or run `git add --renormalize .` after pulling the `.gitattributes` fix.

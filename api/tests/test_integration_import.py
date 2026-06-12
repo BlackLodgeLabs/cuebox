@@ -50,15 +50,18 @@ def _single_film_csv() -> bytes:
 
 
 def test_import_returns_job_immediately(integration_client, watchlist_csv_bytes):
+    started = time.monotonic()
     response = integration_client.post(
         "/api/v1/import",
         files={"file": ("watchlist.csv", watchlist_csv_bytes, "text/csv")},
     )
+    elapsed = time.monotonic() - started
     assert response.status_code == 202
     data = response.json()
     assert data["status"] == "running"
     assert "job_id" in data
     assert "created_at" in data
+    assert elapsed < 1.5, f"POST /import took {elapsed:.2f}s (target < 1s)"
 
 
 def test_import_pipeline_completes_with_accurate_counts(integration_client):

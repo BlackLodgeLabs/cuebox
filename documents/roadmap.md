@@ -8,7 +8,7 @@ Version 1.1
 
 Film Picker (repository: **Cuebox**) is a locally hosted, single-user application that helps users choose what to watch from their Letterboxd watchlist. This roadmap describes the phased build from greenfield to MVP, aligned with the existing specification documents.
 
-**Current state:** Phase 7 complete. Developer Mode exposes recommendation internals via gated `/dev` API and a hidden frontend dev panel. Next up: Phase 8 — Integration, NFR Validation & Polish.
+**Current state:** Phase 8 complete. MVP shipped — integration suite, NFR validation, PRD success criteria verified, and root README published. See [Future Expansion Backlog](#future-expansion-backlog) for post-MVP work.
 
 ### Reference Documents
 
@@ -814,39 +814,39 @@ See [sequence-diagrams.md §10](./sequence-diagrams.md) and [PRD.md §20](./PRD.
 
 #### Integration Tests
 
-- [ ] Import → enrich → recommend → history (API-level, using test fixtures)
-- [ ] Profile cache hit on duplicate questionnaire
-- [ ] CSV sync diff scenarios (add, remove, watch, re-add archived)
-- [ ] Review accept/reject flows
-- [ ] Error cases: `INSUFFICIENT_CANDIDATES`, `NO_PREFERENCE_CONFLICT`, `WATCHLIST_SIZE_EXCEEDED`
+- [x] Import → enrich → recommend → history (API-level, using test fixtures)
+- [x] Profile cache hit on duplicate questionnaire
+- [x] CSV sync diff scenarios (add, remove, watch, re-add archived)
+- [x] Review accept/reject flows
+- [x] Error cases: `INSUFFICIENT_CANDIDATES`, `NO_PREFERENCE_CONFLICT`, `WATCHLIST_SIZE_EXCEEDED`
 
 #### Unit Tests
 
-- [ ] Profile canonicalization and hashing
-- [ ] Scoring signal calculations
-- [ ] Confidence score computation
-- [ ] CSV validation logic
-- [ ] Constraint relaxation logic
+- [x] Profile canonicalization and hashing
+- [x] Scoring signal calculations
+- [x] Confidence score computation
+- [x] CSV validation logic
+- [x] Constraint relaxation logic
 
 #### Performance Validation
 
-- [ ] Recommendation generation < 30 seconds (500-film watchlist, typical questionnaire)
-- [ ] History list load < 2 seconds
-- [ ] Import returns immediately (< 1 second for job creation)
+- [x] Recommendation generation < 30 seconds (500-film watchlist, typical questionnaire)
+- [x] History list load < 2 seconds
+- [x] Import returns immediately (< 1 second for job creation)
 
 #### Documentation & Tooling
 
-- [ ] Root `README.md` with:
+- [x] Root `README.md` with:
   - Prerequisites (Docker, API keys)
   - Setup steps (`config.yaml`, `.env`, `docker compose up`)
   - Link to specification documents
-- [ ] Optional smoke test script using `letterboxd/watchlist.csv`
+- [x] Optional smoke test script using `letterboxd/watchlist.csv`
 
 ### Verification Gate
 
-- [ ] All 24 PRD success criteria verified (see checklist below)
-- [ ] Integration test suite passes
-- [ ] Performance targets met on representative hardware
+- [x] All 24 PRD success criteria verified (see checklist below)
+- [x] Integration test suite passes
+- [x] Performance targets met on representative hardware
 
 ---
 
@@ -1016,5 +1016,5 @@ Items from [PRD.md §22](./PRD.md) and [Architecture.md §22](./Architecture.md)
 | Database schema & migrations | [database-design.md](./database-design.md) |
 | Sequence diagrams | [sequence-diagrams.md](./sequence-diagrams.md) |
 | Implementation plan | This document |
-| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md), [phase-6-plan.md](./phase-6-plan.md), [phase-6.5-plan.md](./phase-6.5-plan.md), [phase-7-plan.md](./phase-7-plan.md) |
+| Phase plans | [phase-1-plan.md](./phase-1-plan.md), [phase-2-plan.md](./phase-2-plan.md), [phase-2.5-plan.md](./phase-2.5-plan.md), [phase-3-plan.md](./phase-3-plan.md), [phase-4-5-plan.md](./phase-4-5-plan.md), [phase-6-plan.md](./phase-6-plan.md), [phase-6.5-plan.md](./phase-6.5-plan.md), [phase-7-plan.md](./phase-7-plan.md), [phase-8-plan.md](./phase-8-plan.md) |
 | Design system | [DESIGN.md](./DESIGN.md) |

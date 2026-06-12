@@ -6,67 +6,67 @@ todos:
   # ── Baseline ──────────────────────────────────────────────────────────────
   - id: p8-baseline-gates
     content: "Confirm verify-phase7-gates.sh and full regression chain (Phases 2.5–7) pass before Phase 8 work begins"
-    status: pending
+    status: completed
   - id: p8-gap-analysis
     content: "Audit existing tests vs roadmap Phase 8 checklist; document gaps (consolidated journey, NO_PREFERENCE_CONFLICT API test, history <2s, import <1s assertion, 500-film perf)"
-    status: pending
+    status: completed
   # ── Integration tests ─────────────────────────────────────────────────────
   - id: p8-e2e-journey
     content: "Add api/tests/test_integration_full_journey.py — import → enrich (mocked providers) → recommend → history list/detail in one test module"
-    status: pending
+    status: completed
   - id: p8-profile-cache
     content: "Confirm profile cache hit integration test covers roadmap item; extend if session persistence (profile_cache_hit column) should be asserted on GET /recommendations/{id}"
-    status: pending
+    status: completed
   - id: p8-csv-sync-scenarios
     content: "Confirm CSV sync diff integration tests (add, remove, watch, re-add archived) are collected in Phase 8 gate; add missing scenario if any"
-    status: pending
+    status: completed
   - id: p8-review-flows
     content: "Confirm review accept/reject integration tests cover roadmap; ensure accept path reaches ready + recommendable state"
-    status: pending
+    status: completed
   - id: p8-error-cases
     content: "Add integration test for NO_PREFERENCE_CONFLICT on POST /recommendations; confirm INSUFFICIENT_CANDIDATES and WATCHLIST_SIZE_EXCEEDED already gated"
-    status: pending
+    status: completed
   # ── Unit tests (regression confirmation) ──────────────────────────────────
   - id: p8-unit-regression
     content: "Wire unit test files into verify-phase8-gates.sh — profile canonicalization, scoring, confidence, CSV validation, constraint relaxation"
-    status: pending
+    status: completed
   # ── Performance validation ────────────────────────────────────────────────
   - id: p8-perf-recommendation
     content: "Recommendation <30s — retain mocked 5-film smoke in gate; add optional @pytest.mark.slow 500-film benchmark or document representative-hardware manual step"
-    status: pending
+    status: completed
   - id: p8-perf-history
     content: "Add timing assertion to history list test — GET /recommendations completes <2s with seeded sessions"
-    status: pending
+    status: completed
   - id: p8-perf-import
     content: "Add <1s assertion to test_import_returns_job_immediately (monotonic timer; allow CI slack if needed)"
-    status: pending
+    status: completed
   # ── PRD success criteria ──────────────────────────────────────────────────
   - id: p8-prd-audit
     content: "Create scripts/verify-prd-success-criteria.sh or gate section mapping criteria 1–24 to existing tests + manual checks; document any manual-only criteria"
-    status: pending
+    status: completed
   # ── Documentation & tooling ─────────────────────────────────────────────
   - id: p8-readme
     content: "Add root README.md — prerequisites, config.yaml/.env setup, docker compose up, links to documents/, optional letterboxd fixture note"
-    status: pending
+    status: completed
   - id: p8-smoke-script
     content: "Optional scripts/smoke-test.sh — thin wrapper over verify-phase2-gates.sh or curl-based journey using letterboxd/watchlist.csv against live stack"
-    status: pending
+    status: completed
   # ── Verification & docs ─────────────────────────────────────────────────
   - id: p8-gate-script
     content: "Add scripts/verify-phase8-gates.sh — integration suite subset, unit regression, perf assertions, Phase 7 regression, optional full-stack smoke"
-    status: pending
+    status: completed
   - id: p8-verify-gates
     content: "Run verify-phase8-gates.sh plus full regression chain; confirm API CI and frontend CI green"
-    status: pending
+    status: in_progress
   - id: p8-update-roadmap
     content: "Check off Phase 8 task checklist and verification gate in documents/roadmap.md; update overview to Phase 8 complete / MVP shipped"
-    status: pending
+    status: completed
   - id: p8-document-index
     content: "Add phase-8-plan.md to roadmap Document Index Phase plans row"
-    status: pending
+    status: completed
   - id: p8-agents-md
     content: "Review AGENTS.md for structural changes (README replaces 'no root README', verify-phase8-gates.sh, smoke script, project overview Phase 8)"
-    status: pending
+    status: completed
 isProject: false
 ---
 
