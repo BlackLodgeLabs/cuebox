@@ -12,10 +12,6 @@ vi.mock("@/lib/api-client", () => ({
   postImport: vi.fn(),
 }));
 
-vi.mock("@/hooks/use-toast-on-error", () => ({
-  useToastOnError: () => vi.fn(),
-}));
-
 describe("useImportStatus", () => {
   it("invalidates films cache when import completes", async () => {
     getImportStatusMock.mockResolvedValue({

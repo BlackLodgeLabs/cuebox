@@ -3,14 +3,10 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getImportStatus, postImport } from "@/lib/api-client";
-import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useImportUpload() {
-  const onError = useToastOnError();
-
   return useMutation({
     mutationFn: postImport,
-    onError,
   });
 }
 
