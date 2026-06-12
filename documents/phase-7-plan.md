@@ -131,7 +131,7 @@ Prefix commits: `phase-7:`.
 ### Slice 7a — Session observability persistence (`p7-migration-session-observability`)
 
 1. Alembic migration `0004_session_observability.py` (or next sequential number).
-2. Extend `RecommendationSession` model + `recommendation_session_repository.create`.
+2. Extend RecommendationSession model + recommendation_session_repository.create. Also add the missing film relationship on RecommendationCandidate (and optionally the corresponding back-reference on Film) to simplify loading film titles.
 3. In `recommendation_service.create`, pass `ranking_result.tokens_*` and `profile.profile_cache_hit`.
 4. Optionally fix `get_session` to return stored `profile_cache_hit` instead of hardcoded `false`.
 
