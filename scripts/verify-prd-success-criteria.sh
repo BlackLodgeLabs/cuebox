@@ -14,7 +14,7 @@ echo ""
 
 COLLECT_FILE="$(mktemp)"
 trap 'rm -f "$COLLECT_FILE"' EXIT
-(cd api && pytest tests/ --collect-only -q 2>/dev/null > "$COLLECT_FILE" || true)
+(cd api && pytest tests/ --collect-only -q > "$COLLECT_FILE")
 
 # criterion_number|description|verification_type|reference
 CRITERIA=(
