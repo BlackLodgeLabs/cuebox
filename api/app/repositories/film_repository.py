@@ -149,11 +149,11 @@ def list_films(
         stmt = stmt.where(Film.year <= year_to)
         count_stmt = count_stmt.where(Film.year <= year_to)
     if created_from is not None:
-        start = datetime.combine(created_from, datetime.min.time())
+        start = datetime.combine(created_from, datetime.min.time(), tzinfo=timezone.utc)
         stmt = stmt.where(Film.created_at >= start)
         count_stmt = count_stmt.where(Film.created_at >= start)
     if created_to is not None:
-        end = datetime.combine(created_to, datetime.max.time())
+        end = datetime.combine(created_to, datetime.max.time(), tzinfo=timezone.utc)
         stmt = stmt.where(Film.created_at <= end)
         count_stmt = count_stmt.where(Film.created_at <= end)
 
