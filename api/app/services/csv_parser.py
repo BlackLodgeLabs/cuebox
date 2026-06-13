@@ -96,7 +96,7 @@ def parse_watchlist_csv(content: bytes) -> ParsedWatchlist:
             continue
         seen_uris.add(uri)
 
-        title = (row.get("Title") or row.get("Name") or "").strip()
+        title = (row.get("Title") or "").strip() or (row.get("Name") or "").strip()
         if not title:
             raise _invalid_csv(f"Empty title on row {line_number}")
 
