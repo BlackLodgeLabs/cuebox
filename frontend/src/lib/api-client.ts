@@ -22,6 +22,7 @@ import type {
   ReviewRequiredFilm,
   ReviewRequiredQueryParams,
   FilmSummary,
+  FilmDetail,
   HistoryCard,
   SyncCsvResponse,
   SyncRssConfigResponse,
@@ -135,6 +136,10 @@ export function getFilms(
   return fetchApi<PaginatedResponse<FilmSummary>>(
     `/films${buildQuery(params)}`,
   );
+}
+
+export function getFilm(filmId: string): Promise<FilmDetail> {
+  return fetchApi<FilmDetail>(`/films/${filmId}`);
 }
 
 export function getReviewRequired(

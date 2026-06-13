@@ -249,12 +249,21 @@ GET /films
 
 #### Query Parameters
 
-|Parameter          |Type   |Default|Description                                               |
-|-------------------|-------|-------|----------------------------------------------------------|
-|`status`           |string |—      |Filter by `film_status`: `active` | `watched` | `archived`|
-|`enrichment_status`|string |—      |Filter by `enrichment_status` (see enum in §3.2)          |
-|`limit`            |integer|20     |Page size                                                 |
-|`offset`           |integer|0      |Page offset                                               |
+|Parameter          |Type   |Default     |Description                                               |
+|-------------------|-------|------------|----------------------------------------------------------|
+|`status`           |string |—           |Filter by `film_status`: `active` | `watched` | `archived`|
+|`enrichment_status`|string |—           |Filter by `enrichment_status` (see enum in §3.2)          |
+|`on_watchlist`     |boolean|`false`     |When `true`, only films with an active watchlist entry    |
+|`search`           |string |—           |Case-insensitive substring match on title                 |
+|`year`             |integer|—           |Exact release year                                        |
+|`year_from`        |integer|—           |Minimum release year (inclusive)                          |
+|`year_to`          |integer|—           |Maximum release year (inclusive)                          |
+|`created_from`     |date   |—           |Minimum `created_at` date (inclusive)                     |
+|`created_to`       |date   |—           |Maximum `created_at` date (inclusive)                     |
+|`sort`             |string |`created_at`|Sort field: `title` | `year` | `created_at` | `enrichment_status`|
+|`sort_dir`         |string |`desc`      |Sort direction: `asc` | `desc`                          |
+|`limit`            |integer|20          |Page size                                                 |
+|`offset`           |integer|0           |Page offset                                               |
 
 #### Response `200 OK`
 
@@ -306,7 +315,7 @@ GET /films
 
 |Code              |HTTP|Trigger                                      |
 |------------------|----|---------------------------------------------|
-|`VALIDATION_ERROR`|400 |Invalid `status` or `enrichment_status` value|
+|`VALIDATION_ERROR`|400 |Invalid `status`, `enrichment_status`, `sort`, or `sort_dir` value|
 
 -----
 

@@ -5,7 +5,7 @@ const fixturePath = path.join(__dirname, "fixtures", "watchlist-small.csv");
 const sampleJobId = "00000000-0000-4000-8000-000000000001";
 const sampleSessionId = "00000000-0000-4000-8000-000000000002";
 
-test.describe("All 9 frontend routes", () => {
+test.describe("All 11 frontend routes", () => {
   test.skip(
     !process.env.PLAYWRIGHT_E2E_STACK,
     "Set PLAYWRIGHT_E2E_STACK=1 with docker compose stack running",
@@ -65,5 +65,18 @@ test.describe("All 9 frontend routes", () => {
   test("route 9: sync settings /settings/sync", async ({ page }) => {
     await page.goto("/settings/sync");
     await expect(page.getByRole("heading", { name: /sync/i })).toBeVisible();
+  });
+
+  test("route 10: watchlist /watchlist", async ({ page }) => {
+    await page.goto("/watchlist");
+    await expect(page.getByRole("heading", { name: /watchlist/i })).toBeVisible();
+  });
+
+  test("route 11: watchlist detail /watchlist/[filmId]", async ({ page }) => {
+    const sampleFilmId = "00000000-0000-4000-8000-000000000003";
+    await page.goto(`/watchlist/${sampleFilmId}`);
+    await expect(
+      page.getByText(/loading|could not|not found|watchlist/i).first(),
+    ).toBeVisible();
   });
 });

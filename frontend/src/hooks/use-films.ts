@@ -1,13 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getFilms, getReviewRequired } from "@/lib/api-client";
+import { getFilm, getFilms, getReviewRequired } from "@/lib/api-client";
 import type { FilmsQueryParams, ReviewRequiredQueryParams } from "@/types/api";
 
 export function useFilms(params?: FilmsQueryParams) {
   return useQuery({
     queryKey: ["films", params],
     queryFn: () => getFilms(params),
+  });
+}
+
+export function useFilm(filmId: string) {
+  return useQuery({
+    queryKey: ["films", filmId],
+    queryFn: () => getFilm(filmId),
+    enabled: Boolean(filmId),
   });
 }
 

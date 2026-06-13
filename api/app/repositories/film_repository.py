@@ -1,12 +1,26 @@
 """Film data-access helpers."""
 
+from __future__ import annotations
+
 import uuid
+from datetime import date, datetime, timezone
+from typing import Literal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.database.enums import EnrichmentStatus, FilmStatus
-from app.database.models import Film
+from app.database.models import Film, WatchlistEntry
+
+FilmSortField = Literal["title", "year", "created_at", "enrichment_status"]
+SortDirection = Literal["asc", "desc"]
+
+_SORT_COLUMNS: dict[FilmSortField, object] = {
+    "title": Film.title,
+    "year": Film.year,
+    "created_at": Film.created_at,
+    "enrichment_status": Film.enrichment_status,
+}
 
 
 def get_by_id(db: Session, film_id: uuid.UUID) -> Film | None:
@@ -92,11 +106,28 @@ def list_films(
     *,
     status: FilmStatus | None = None,
     enrichment_status: EnrichmentStatus | None = None,
+    on_watchlist: bool = False,
+    search: str | None = None,
+    year: int | None = None,
+    year_from: int | None = None,
+    year_to: int | None = None,
+    created_from: date | None = None,
+    created_to: date | None = None,
+    sort: FilmSortField = "created_at",
+    sort_dir: SortDirection = "desc",
     limit: int = 20,
     offset: int = 0,
 ) -> tuple[list[Film], int]:
     stmt = select(Film).options(selectinload(Film.metadata_))
     count_stmt = select(func.count()).select_from(Film)
+
+    if on_watchlist:
+        watchlist_join = (
+            WatchlistEntry,
+            (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
+        )
+        stmt = stmt.join(*watchlist_join)
+        count_stmt = count_stmt.join(*watchlist_join)
 
     if status is not None:
         stmt = stmt.where(Film.status == status)
@@ -104,11 +135,33 @@ def list_films(
     if enrichment_status is not None:
         stmt = stmt.where(Film.enrichment_status == enrichment_status)
         count_stmt = count_stmt.where(Film.enrichment_status == enrichment_status)
+    if search:
+        pattern = f"%{search.lower()}%"
+        stmt = stmt.where(func.lower(Film.title).like(pattern))
+        count_stmt = count_stmt.where(func.lower(Film.title).like(pattern))
+    if year is not None:
+        stmt = stmt.where(Film.year == year)
+        count_stmt = count_stmt.where(Film.year == year)
+    if year_from is not None:
+        stmt = stmt.where(Film.year >= year_from)
+        count_stmt = count_stmt.where(Film.year >= year_from)
+    if year_to is not None:
+        stmt = stmt.where(Film.year <= year_to)
+        count_stmt = count_stmt.where(Film.year <= year_to)
+    if created_from is not None:
+        start = datetime.combine(created_from, datetime.min.time(), tzinfo=timezone.utc)
+        stmt = stmt.where(Film.created_at >= start)
+        count_stmt = count_stmt.where(Film.created_at >= start)
+    if created_to is not None:
+        end = datetime.combine(created_to, datetime.max.time(), tzinfo=timezone.utc)
+        stmt = stmt.where(Film.created_at <= end)
+        count_stmt = count_stmt.where(Film.created_at <= end)
+
+    sort_column = _SORT_COLUMNS[sort]
+    order = sort_column.asc() if sort_dir == "asc" else sort_column.desc()
 
     total = db.scalar(count_stmt) or 0
-    films = list(
-        db.scalars(stmt.order_by(Film.created_at).limit(limit).offset(offset)).all()
-    )
+    films = list(db.scalars(stmt.order_by(order).limit(limit).offset(offset)).all())
     return films, total
 
 
