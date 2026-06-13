@@ -18,8 +18,7 @@ async def test_rss_poll_idempotent(integration_client, db_session):
     integration_client.put("/api/v1/sync/rss", json={"username": username})
 
     async def fake_fetch(client, url):
-        assert "/rss/" in url
-        assert "/watchlist/" not in url
+        assert url == f"https://letterboxd.com/{username}/rss/"
         return DIARY_XML
 
     with patch("app.services.sync_service.fetch_feed", new=AsyncMock(side_effect=fake_fetch)):
