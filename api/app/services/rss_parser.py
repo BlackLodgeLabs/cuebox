@@ -16,7 +16,8 @@ from app.database.enums import RssEventType
 
 logger = logging.getLogger(__name__)
 
-WATCHLIST_FEED_URL = "https://letterboxd.com/{username}/watchlist/rss/"
+# Letterboxd exposes a single public activity feed at /rss/ (diary / watched films).
+# /watchlist/rss/ returns 403 and is not a supported endpoint.
 DIARY_FEED_URL = "https://letterboxd.com/{username}/rss/"
 
 _NS = {

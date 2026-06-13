@@ -25,12 +25,9 @@ from app.services.import_service import schedule_enrichment_for_films
 from app.services.provider_service import ProviderService
 from app.services.rss_parser import (
     DIARY_FEED_URL,
-    WATCHLIST_FEED_URL,
     RssEvent,
-    diff_watchlist_events,
     fetch_feed,
     parse_diary_feed,
-    parse_watchlist_feed,
 )
 
 logger = logging.getLogger(__name__)
@@ -260,23 +257,10 @@ class SyncService:
             if client is None:
                 raise RuntimeError("HTTP client not available for RSS poll")
 
-            watchlist_xml = await fetch_feed(
-                client, WATCHLIST_FEED_URL.format(username=username)
+            diary_xml = await fetch_feed(
+                client, DIARY_FEED_URL.format(username=username)
             )
-            diary_xml = await fetch_feed(client, DIARY_FEED_URL.format(username=username))
-
-            watchlist_events = parse_watchlist_feed(watchlist_xml)
-            diary_events = parse_diary_feed(diary_xml)
-
-            feed_uris = {e.letterboxd_uri for e in watchlist_events if e.letterboxd_uri}
-            active_entries = watchlist_repository.list_active_entries(db)
-            active_uris = {e.letterboxd_uri for e in active_entries}
-            watched_uris = {e.letterboxd_uri for e in diary_events if e.letterboxd_uri}
-
-            diff_events = diff_watchlist_events(
-                feed_uris, active_uris, watched_uris=watched_uris
-            )
-            all_events = diff_events + diary_events
+            all_events = parse_diary_feed(diary_xml)
 
             for event in all_events:
                 if rss_sync_repository.event_exists(db, event.event_id):
