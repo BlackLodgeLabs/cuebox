@@ -16,6 +16,7 @@ import {
 import { ErrorState } from "@/components/error-state";
 import { CardGridSkeleton } from "@/components/loading-state";
 import { useFilms } from "@/hooks/use-films";
+import { formatEnrichmentStatus } from "@/lib/enrichment-status";
 import type { FilmSortField, SortDirection } from "@/types/api";
 
 const LIMIT = 20;
@@ -51,17 +52,22 @@ export function WatchlistPageContent() {
   const sort = parseSort(searchParams.get("sort"));
   const sortDir = parseSortDir(searchParams.get("sort_dir"));
   const offset = Number(searchParams.get("offset") ?? "0") || 0;
-  const year = searchParams.get("year") ?? "";
+  const yearFromUrl = searchParams.get("year") ?? "";
   const createdFrom = searchParams.get("created_from") ?? "";
   const createdTo = searchParams.get("created_to") ?? "";
   const enrichmentStatus = searchParams.get("enrichment_status") ?? "all";
   const searchFromUrl = searchParams.get("search") ?? "";
 
   const [search, setSearch] = useState(searchFromUrl);
+  const [yearInput, setYearInput] = useState(yearFromUrl);
 
   useEffect(() => {
     setSearch(searchFromUrl);
   }, [searchFromUrl]);
+
+  useEffect(() => {
+    setYearInput(yearFromUrl);
+  }, [yearFromUrl]);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -87,11 +93,19 @@ export function WatchlistPageContent() {
     return () => clearTimeout(timer);
   }, [search, searchFromUrl, updateParams]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (yearInput === yearFromUrl) return;
+      updateParams({ year: yearInput || null, offset: null });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [yearInput, yearFromUrl, updateParams]);
+
   const queryParams = useMemo(
     () => ({
       on_watchlist: true,
       search: searchFromUrl || undefined,
-      year: year ? Number(year) : undefined,
+      year: yearFromUrl ? Number(yearFromUrl) : undefined,
       created_from: createdFrom || undefined,
       created_to: createdTo || undefined,
       enrichment_status:
@@ -109,7 +123,7 @@ export function WatchlistPageContent() {
       searchFromUrl,
       sort,
       sortDir,
-      year,
+      yearFromUrl,
     ],
   );
 
@@ -146,10 +160,8 @@ export function WatchlistPageContent() {
         <Input
           type="number"
           placeholder="Year"
-          value={year}
-          onChange={(e) =>
-            updateParams({ year: e.target.value || null, offset: null })
-          }
+          value={yearInput}
+          onChange={(e) => setYearInput(e.target.value)}
           className="max-w-[120px]"
         />
         <Input
