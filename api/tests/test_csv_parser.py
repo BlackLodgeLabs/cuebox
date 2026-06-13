@@ -58,3 +58,25 @@ def test_in_file_duplicate_uris():
     result = parse_watchlist_csv(content)
     assert len(result.rows) == 1
     assert result.in_file_duplicates == 1
+
+
+def test_parse_csv_with_name_column():
+    header = "Date,Name,Year,Letterboxd URI\n"
+    content = (
+        header
+        + "2026-04-12,Exit 8,2025,https://boxd.it/S9Kk\n"
+        + "2026-04-28,The Day the Earth Stood Still,1951,https://boxd.it/29w4\n"
+    ).encode()
+    result = parse_watchlist_csv(content)
+    assert len(result.rows) == 2
+    assert result.rows[0].title == "Exit 8"
+    assert result.rows[1].year == 1951
+
+
+def test_title_column_preferred_over_name():
+    header = "Date,Title,Name,Year,Letterboxd URI\n"
+    content = (
+        header + "2024-01-01,Canonical Title,Alternate Name,2000,https://boxd.it/abc\n"
+    ).encode()
+    result = parse_watchlist_csv(content)
+    assert result.rows[0].title == "Canonical Title"

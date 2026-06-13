@@ -148,7 +148,7 @@ Content-Type: multipart/form-data
 
 - File must be `text/csv` or have a `.csv` extension.
 - File must not be empty.
-- CSV must contain the columns: `Date`, `Title`, `Year`, `Letterboxd URI`.
+- CSV must contain the columns: `Date`, `Year`, `Letterboxd URI`, and either `Title` or `Name` (Letterboxd exports use `Title`; some list exports use `Name`).
 - Column names are case-sensitive.
 - `Letterboxd URI` must be a non-empty string per row.
 - `Year` must be a 4-digit integer between 1880 and current year + 2, or blank.

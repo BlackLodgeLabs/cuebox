@@ -10,7 +10,8 @@ from datetime import UTC, datetime
 from app.core.exceptions import AppError
 from app.schemas.errors import ErrorCode
 
-REQUIRED_COLUMNS = ("Date", "Title", "Year", "Letterboxd URI")
+REQUIRED_COLUMNS = ("Date", "Year", "Letterboxd URI")
+TITLE_COLUMNS = ("Title", "Name")
 MAX_FILMS = 500
 
 
@@ -78,6 +79,9 @@ def parse_watchlist_csv(content: bytes) -> ParsedWatchlist:
     if missing:
         raise _invalid_csv(f"Missing required columns: {', '.join(missing)}")
 
+    if not any(col in reader.fieldnames for col in TITLE_COLUMNS):
+        raise _invalid_csv("Missing required columns: Title or Name")
+
     seen_uris: set[str] = set()
     rows: list[ParsedWatchlistRow] = []
     in_file_duplicates = 0
@@ -92,9 +96,9 @@ def parse_watchlist_csv(content: bytes) -> ParsedWatchlist:
             continue
         seen_uris.add(uri)
 
-        title = (row.get("Title") or "").strip()
+        title = (row.get("Title") or "").strip() or (row.get("Name") or "").strip()
         if not title:
-            raise _invalid_csv(f"Empty Title on row {line_number}")
+            raise _invalid_csv(f"Empty title on row {line_number}")
 
         year = _parse_year(row.get("Year") or "")
         rows.append(
