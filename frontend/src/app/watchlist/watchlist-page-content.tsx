@@ -184,7 +184,7 @@ export function WatchlistPageContent() {
             <SelectItem value="all">All statuses</SelectItem>
             {ENRICHMENT_OPTIONS.map((status) => (
               <SelectItem key={status} value={status}>
-                {status.replaceAll("_", " ")}
+                {formatEnrichmentStatus(status)}
               </SelectItem>
             ))}
           </SelectContent>
