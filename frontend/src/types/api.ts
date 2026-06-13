@@ -94,6 +94,56 @@ export interface FilmSummary {
   updated_at: string;
 }
 
+export interface FilmMetadataBlock {
+  tmdb_id: number | null;
+  imdb_id: string | null;
+  original_title: string | null;
+  runtime: number | null;
+  synopsis: string | null;
+  genres: string[];
+  keywords: string[];
+  original_language: string | null;
+  country: string | null;
+  director: string | null;
+  tmdb_rating: number | null;
+  rotten_tomatoes_score: number | null;
+  letterboxd_rating: number | null;
+  poster_url: string | null;
+  backdrop_url: string | null;
+  match_confidence: number | null;
+  metadata_source: string | null;
+}
+
+export interface SemanticProfileBlock {
+  subgenres: string[];
+  themes: string[];
+  tones: string[];
+  visual_descriptors: string[];
+  emotional_outcomes: string[];
+  viewing_contexts: string[];
+  complexity: number | null;
+  pacing: number | null;
+  energy: number | null;
+  obscurity: number | null;
+  semantic_summary: string | null;
+  semantic_version: string;
+  generated_by_model: string;
+  generated_at: string;
+}
+
+export interface FilmDetail {
+  id: string;
+  title: string;
+  year: number | null;
+  letterboxd_uri: string;
+  status: FilmStatus;
+  enrichment_status: string;
+  metadata: FilmMetadataBlock | null;
+  semantic_profile: SemanticProfileBlock | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CandidatePayload {
   tmdb_id: number;
   title: string;
@@ -247,9 +297,21 @@ export interface HistoryCard {
   created_at: string;
 }
 
+export type FilmSortField = "title" | "year" | "created_at" | "enrichment_status";
+export type SortDirection = "asc" | "desc";
+
 export interface FilmsQueryParams {
   status?: FilmStatus;
   enrichment_status?: string;
+  on_watchlist?: boolean;
+  search?: string;
+  year?: number;
+  year_from?: number;
+  year_to?: number;
+  created_from?: string;
+  created_to?: string;
+  sort?: FilmSortField;
+  sort_dir?: SortDirection;
   limit?: number;
   offset?: number;
 }

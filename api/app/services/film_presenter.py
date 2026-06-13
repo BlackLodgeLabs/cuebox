@@ -81,7 +81,7 @@ def film_to_detail(film: Film) -> FilmDetail:
         metadata_block = metadata_to_block(film.metadata_)
 
     semantic_block = None
-    if film.enrichment_status.value == "ready" and film.semantic_profile is not None:
+    if film.semantic_profile is not None:
         semantic_block = semantic_to_block(film.semantic_profile)
 
     return FilmDetail(
