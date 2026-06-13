@@ -125,7 +125,7 @@ export function WatchlistTable({
                 {film.year ?? "—"}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {new Date(film.created_at).toLocaleDateString()}
+                {new Date(film.created_at).toISOString().split("T")[0]}
               </td>
               <td className="px-4 py-3">
                 <Badge variant="secondary">
