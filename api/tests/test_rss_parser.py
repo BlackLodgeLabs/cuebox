@@ -2,6 +2,7 @@
 
 from app.database.enums import RssEventType
 from app.services.rss_parser import (
+    DIARY_FEED_URL,
     diff_watchlist_events,
     event_fingerprint,
     parse_diary_feed,
@@ -33,6 +34,10 @@ DIARY_XML = """<?xml version="1.0" encoding="UTF-8"?>
   </channel>
 </rss>
 """
+
+
+def test_diary_feed_url_is_letterboxd_activity_feed():
+    assert DIARY_FEED_URL == "https://letterboxd.com/{username}/rss/"
 
 
 def test_parse_watchlist_feed():

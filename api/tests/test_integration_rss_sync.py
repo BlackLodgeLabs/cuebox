@@ -7,7 +7,7 @@ import pytest
 
 from app.database.session import SessionLocal
 from tests.conftest import requires_db
-from tests.test_rss_parser import DIARY_XML, WATCHLIST_XML
+from tests.test_rss_parser import DIARY_XML
 
 pytestmark = requires_db
 
@@ -18,8 +18,7 @@ async def test_rss_poll_idempotent(integration_client, db_session):
     integration_client.put("/api/v1/sync/rss", json={"username": username})
 
     async def fake_fetch(client, url):
-        if "watchlist" in url:
-            return WATCHLIST_XML
+        assert url == f"https://letterboxd.com/{username}/rss/"
         return DIARY_XML
 
     with patch("app.services.sync_service.fetch_feed", new=AsyncMock(side_effect=fake_fetch)):
