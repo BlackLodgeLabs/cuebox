@@ -61,6 +61,73 @@ An AI reads the catalog facts and writes a **taste profile** — a structured de
 | Obscurity | How well-known vs. niche the film is (0–10 scale) |
 | Summary | A short paragraph capturing the film’s overall character |
 
+**Example of what is sent to the AI**
+
+Cuebox sends two messages to the semantic enrichment AI: a fixed instruction (the *system* message) and a film-specific prompt (the *user* message) built from the catalog facts saved in Layer 1. Placeholders in `{curly_braces}` show where Cuebox fills in real values for each film.
+
+*System message* (same for every film):
+
+```
+You are a film analysis assistant. Given film metadata, produce a JSON object with exactly these keys:
+- subgenres: array of strings (specific subgenre labels)
+- themes: array of strings (thematic elements)
+- tones: array of strings (overall tonal qualities)
+- visual_descriptors: array of strings (visual/cinematic style)
+- emotional_outcomes: array of strings (how viewers may feel after watching)
+- viewing_contexts: array of strings (ideal viewing situations)
+- complexity: number 0-10 or null (narrative/thematic complexity)
+- pacing: number 0-10 or null (narrative pacing)
+- energy: number 0-10 or null (intensity/energy level)
+- obscurity: number 0-10 or null (how well-known vs niche)
+- semantic_summary: string (2-4 sentence summary of the film's semantic identity)
+
+Respond with valid JSON only.
+```
+
+*User message* (populated per film):
+
+```
+Title: {film.title}
+Year: {film.year}
+Director: {film_metadata.director}
+Genres: {film_metadata.genres joined by comma}
+Keywords: {film_metadata.keywords joined by comma}
+Synopsis: {film_metadata.synopsis}
+
+Produce the semantic profile JSON object.
+```
+
+*Illustrative user message* (with sample values filled in):
+
+```
+Title: The Wicker Man
+Year: 1973
+Director: Robin Hardy
+Genres: Horror, Mystery
+Keywords: cult, island, paganism, police investigation
+Synopsis: A police sergeant investigates the disappearance of a young girl on a remote Scottish island, where the locals behave strangely and resist his questions.
+
+Produce the semantic profile JSON object.
+```
+
+The AI responds with JSON only. Cuebox validates the shape and saves the result to `film_semantic_profiles`. An illustrative response:
+
+```json
+{
+  "subgenres": ["Folk Horror", "Mystery Thriller"],
+  "themes": ["Faith", "Community", "Sacrifice", "Colonialism"],
+  "tones": ["Unsettling", "Eerie", "Satirical"],
+  "visual_descriptors": ["Pastoral", "Sun-drenched", "Ritualistic"],
+  "emotional_outcomes": ["Disturbed", "Unsettled", "Reflective"],
+  "viewing_contexts": ["Solo viewing", "Late night"],
+  "complexity": 7.5,
+  "pacing": 6.0,
+  "energy": 5.5,
+  "obscurity": 4.0,
+  "semantic_summary": "A methodical investigation on an isolated island slowly reveals a tightly knit pagan community with disturbing traditions. Folk horror atmosphere builds through contrast between modern rationality and ancient ritual."
+}
+```
+
 #### Layer 3 — Search fingerprint (embedding)
 
 Cuebox also creates a **numeric fingerprint** of each film — a mathematical representation of its meaning based on the synopsis, genres, keywords, themes, and summary. You never see this directly, but it lets the app quickly find films that are semantically similar to what you asked for in the questionnaire.
@@ -202,18 +269,54 @@ Among films with very similar scores, Cuebox introduces a small amount of random
 
 The final step asks an AI language model to pick a **winner** and up to **four runners-up**, and to explain why.
 
-### What is sent to the AI
+**Example of what is sent to the AI**
 
-The ranking AI receives:
+Like semantic enrichment, ranking uses a fixed *system* message plus a session-specific *user* message. Placeholders in `{curly_braces}` show where Cuebox fills in values from your questionnaire profile and the Stage 5 shortlist.
 
-**Your profile:**
-- The narrative summary (plain-English description of your mood)
-- Your structured preferences (the organized list of choices)
+*System message* (same for every recommendation):
 
-**The shortlist:**
-- For each candidate film: its ID, title, release year, and computed score
+```
+You are a film recommendation assistant. Given a viewer profile and scored candidates,
+select one winner and up to four runners-up. Return JSON with:
+{
+  "winner_film_id": "uuid",
+  "runners_up_film_ids": ["uuid", ...],
+  "explanations": {
+    "<film_id>": {
+      "why_it_matches": "string",
+      "most_influential_factors": ["factor1", "factor2"],
+      "why_it_beat_alternatives": "string or null",
+      "caveats": "string or null"
+    }
+  }
+}
+Only use film IDs from the candidate list. Winner must include why_it_beat_alternatives.
+```
 
-The AI does not receive your full watchlist, raw questionnaire JSON, or the entire semantic profile of every film. It works from your stated preferences plus a scored shortlist of titles.
+*User message* (populated per recommendation session):
+
+```
+Profile: {recommendation_profile.narrative_profile}
+Structured preferences: {recommendation_profile.structured_profile}
+Candidates:
+- {candidate.film_id}: {candidate.title} ({candidate.year}) final_score={candidate.final_score}
+- {candidate.film_id}: {candidate.title} ({candidate.year}) final_score={candidate.final_score}
+...
+```
+
+*Illustrative user message* (with sample values filled in):
+
+```
+Profile: Horror, folk horror slow burn pacing seeking disturbed outcomes atmospheric, gritty vibes I've been enjoying slow-burn atmospheric horror lately.
+Structured preferences: {'genres': ['Horror', 'Folk Horror'], 'runtime': 'le_120', 'viewing_context': 'solo', 'thinking_effort': 'decent_plot', 'pacing': 'slow_burn', 'desired_emotions': ['Disturbed', 'Unsettled'], 'visual_tonal_vibes': ['Atmospheric', 'Gritty'], 'era': 'modern_classics', 'subtitle_preference': 'no_preference', 'obscurity_preference': 'hidden_gems'}
+Candidates:
+- a1b2c3d4-...: The Wicker Man (1973) final_score=0.847
+- e5f6g7h8-...: Midsommar (2019) final_score=0.831
+- i9j0k1l2-...: Kill List (2011) final_score=0.819
+- m3n4o5p6-...: The Witch (2015) final_score=0.806
+```
+
+The ranking AI does **not** receive your full watchlist, raw questionnaire form data, or each film’s full semantic taste profile. It works from your profile text plus a scored shortlist of up to 20 titles (ID, title, year, and final score only).
 
 ### What the AI is expected to return
 
@@ -259,6 +362,67 @@ Enrichment and recommendation serve different moments in time:
 | **Recommendation** | Every time you ask | Match today’s mood against that stored understanding |
 
 This separation keeps recommendations fast. The heavy lifting — catalog lookups, AI taste profiles, and film fingerprints — happens during import. When you answer the questionnaire, Cuebox mostly reads what it already knows and applies your current preferences on top.
+
+### Database schema overview
+
+All application data lives in a single PostgreSQL database. The diagram below shows every table and how they connect. Tables on the left support **import and enrichment**; tables on the right support **recommendations**; the `films` table sits in the center as the shared anchor for every film on your watchlist.
+
+```mermaid
+erDiagram
+    import_jobs ||--o{ films : "tracks import of"
+    films ||--o| film_metadata : "has catalog facts"
+    films ||--o| film_semantic_profiles : "has taste profile"
+    films ||--o{ film_embeddings : "has fingerprints"
+    films ||--o{ watchlist_entries : "appears on"
+    films ||--o{ metadata_match_reviews : "may need review"
+    films ||--o| recommendation_exposure : "tracks history for"
+
+    recommendation_profiles ||--o{ recommendation_sessions : "drives"
+    recommendation_sessions ||--o{ recommendation_candidates : "shortlists"
+    recommendation_sessions ||--o| recommendation_results : "stores explanations"
+    recommendation_sessions }o--o| films : "winner"
+    films ||--o{ recommendation_candidates : "scored in"
+
+    sync_config {
+        uuid id PK
+        text rss_username
+        timestamptz last_polled_at
+    }
+
+    rss_sync_events {
+        uuid id PK
+        text letterboxd_uri
+        jsonb payload
+        boolean processed
+    }
+
+    system_versions {
+        uuid id PK
+        text artifact_name
+        text version
+        boolean active
+    }
+```
+
+**Table reference**
+
+| Table | Role |
+|-------|------|
+| `import_jobs` | Tracks a CSV import run (progress, failures, completion) |
+| `films` | Core watchlist record — title, year, Letterboxd link, watch status, enrichment status |
+| `film_metadata` | Catalog facts from TMDB/OMDb (synopsis, runtime, genres, ratings, artwork) |
+| `film_semantic_profiles` | AI-generated taste profile (themes, pacing, complexity, summary) |
+| `film_embeddings` | Vector fingerprint for semantic similarity search |
+| `watchlist_entries` | Active/removed watchlist membership history per film |
+| `metadata_match_reviews` | Low-confidence TMDB matches awaiting your accept/reject |
+| `recommendation_profiles` | Cached questionnaire profile (structured + narrative + embedding) |
+| `recommendation_sessions` | One recommendation run — links profile to winner and pipeline versions |
+| `recommendation_candidates` | Films scored and shortlisted in a session (retrieval rank, scores, LLM rank) |
+| `recommendation_results` | Winner and runner-up explanations returned by the ranking AI |
+| `recommendation_exposure` | How often each film has been recommended (feeds variety adjustment) |
+| `sync_config` | Letterboxd RSS username and last poll status (standalone) |
+| `rss_sync_events` | Incoming RSS events from Letterboxd sync (standalone) |
+| `system_versions` | Version registry for semantic, embedding, scoring, and prompt artifacts (standalone) |
 
 ---
 
