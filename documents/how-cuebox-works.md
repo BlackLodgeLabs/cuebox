@@ -254,6 +254,7 @@ Each remaining film receives a score based on how well its stored taste profile 
 | Era | Film’s release year | 10% |
 | Obscurity preference | Film’s obscurity score | 5% |
 | Viewing context | Film’s ideal viewing situations | 5% |
+| (Stage 4 adjustment) | Variety / recommendation history penalty/bonus | 10% |
 
 Visual and tonal vibes are not scored separately here, but they still matter through semantic search (Stage 2) and the final AI step (Stage 6).
 
