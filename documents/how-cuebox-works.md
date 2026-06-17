@@ -153,7 +153,7 @@ Because many films share similar titles, Cuebox does not blindly trust the first
 | Confidence | What happens |
 |------------|--------------|
 | Very high (95%+) | Match is accepted automatically and enrichment continues |
-| High (80–94%) | Match is accepted, but flagged for your review if you want to double-check |
+| High (80–95%) | Match is accepted, but flagged for your review if you want to double-check |
 | Low (below 80%) | Enrichment pauses until you accept or reject the suggested match |
 
 If you reject a match, that film is marked as failed. You can try again by re-importing your watchlist.
