@@ -673,9 +673,10 @@ See [sequence-diagrams.md §11](./sequence-diagrams.md) for the first-time user 
   - `No Preference` validation (cannot combine with other selections)
   - Optional free-text notes (max 1000 chars)
 - [x] **Results screen**
-  - Winner: poster, title, year, runtime, director, ratings
-  - Structured explanation sections (why it matches, influential factors, trade-offs)
-  - Four runners-up with poster and explanations
+  - Winner: poster, title, year, runtime, director, synopsis, TMDB + RT ratings
+  - Structured explanation sections (why it matches, key factors, why it beat alternatives, caveats)
+  - Four runners-up with poster, TMDB/RT ratings, and explanations
+  - Result cards link to `/watchlist/[filmId]` film detail
   - Answer summary drawer/modal
 - [x] **History**
   - Card grid from `GET /recommendations`

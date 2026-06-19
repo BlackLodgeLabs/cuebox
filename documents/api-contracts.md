@@ -798,6 +798,8 @@ POST /recommendations
 |`why_it_beat_alternatives`|string, nullable|Only present on the winner  |
 |`caveats`                 |string, nullable|Trade-offs or mismatches    |
 
+`GET /recommendations/{session_id}` returns the same `Film Result Object` and `Explanation Object` shapes as `POST /recommendations`, including full winner explanation fields, `synopsis`, and `tmdb_rating`. The API persists the structured winner explanation so results remain complete after the UI navigates to the results page and refetches the session.
+
 **Constraint Relaxation Object**
 
 ```json
@@ -836,7 +838,7 @@ GET /recommendations/{session_id}
 
 #### Response `200 OK`
 
-Returns the same schema as `POST /recommendations` response, plus:
+Returns the same schema as `POST /recommendations` response (including full winner `explanation`, `synopsis`, and `tmdb_rating` on each film result), plus:
 
 ```json
 {

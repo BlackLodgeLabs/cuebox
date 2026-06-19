@@ -614,8 +614,9 @@ PK: `(session_id, film_id)`
 | Column | Notes |
 |---|---|
 | `session_id` | FK → recommendation_sessions |
-| `winner_explanation` | text |
-| `runner_up_explanations` | JSONB |
+| `winner_explanation` | text — winner `why_it_matches` (legacy excerpt) |
+| `winner_explanation_detail` | JSONB — full structured winner explanation |
+| `runner_up_explanations` | JSONB — map of film_id → explanation object |
 
 ---
 

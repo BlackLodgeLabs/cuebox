@@ -406,12 +406,14 @@ sequenceDiagram
 
     Rec->>DB: INSERT recommendation_sessions (profile_id, versions, constraint_relaxation)
     Rec->>DB: INSERT recommendation_candidates (scores, breakdowns, llm_rank)
-    Rec->>DB: INSERT recommendation_results (explanations)
+    Rec->>DB: INSERT recommendation_results (winner_explanation_detail + runner_up_explanations)
     Rec->>DB: UPDATE recommendation_exposure counters
 
     Rec-->>API: Session result payload
     API-->>UI: 200 OK { session_id, winner, runners_up, profile_cache_hit }
-    UI-->>User: Display winner, runners-up, explanations
+    UI->>API: GET /recommendations/{session_id}
+    API-->>UI: 200 OK (full winner explanation + metadata round-trip)
+    UI-->>User: Display results (synopsis, TMDB/RT scores, clickable cards → watchlist detail)
 ```
 
 ---
@@ -537,7 +539,9 @@ sequenceDiagram
     UI->>API: POST /recommendations
     API-->>UI: 200 { winner, runners_up, explanations }
 
-    UI-->>User: Display results (auto-saved to history)
+    UI->>API: GET /recommendations/{session_id}
+    API-->>UI: 200 OK (persisted session detail)
+    UI-->>User: Display results (auto-saved to history; cards link to watchlist detail)
     Note over User: Session persisted with full audit trail
 ```
 
