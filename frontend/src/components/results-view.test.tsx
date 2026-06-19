@@ -7,10 +7,16 @@ vi.mock("next/link", () => ({
   default: ({
     children,
     href,
+    "aria-label": ariaLabel,
   }: {
-    children: React.ReactNode;
+    children?: React.ReactNode;
     href: string;
-  }) => <a href={href}>{children}</a>,
+    "aria-label"?: string;
+  }) => (
+    <a href={href} aria-label={ariaLabel}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/components/film-poster", () => ({
@@ -77,11 +83,11 @@ describe("ResultsView", () => {
     expect(screen.getByText("RT: 80%")).toBeInTheDocument();
     expect(screen.queryByText(/LBX:/i)).not.toBeInTheDocument();
 
-    expect(screen.getByRole("link", { name: /winner film/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /view winner film \(1999\) in watchlist/i })).toHaveAttribute(
       "href",
       "/watchlist/winner-1",
     );
-    expect(screen.getByRole("link", { name: /runner film/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /view runner film \(2001\) in watchlist/i })).toHaveAttribute(
       "href",
       "/watchlist/runner-1",
     );
@@ -90,14 +96,19 @@ describe("ResultsView", () => {
   it("shows synopsis and winner-only explanation sections on the top pick card", () => {
     render(<ResultsView data={recommendation} showActions={false} />);
 
-    const winnerLink = screen.getByRole("link", { name: /winner film/i });
-    expect(winnerLink).toHaveTextContent("Synopsis");
-    expect(winnerLink).toHaveTextContent("A haunting tale of isolation.");
-    expect(winnerLink).toHaveTextContent("Why it beat alternatives");
-    expect(winnerLink).toHaveTextContent("Caveats");
+    expect(screen.getByText("Synopsis")).toBeInTheDocument();
+    expect(screen.getByText("A haunting tale of isolation.")).toBeInTheDocument();
+    expect(screen.getByText("Why it beat alternatives")).toBeInTheDocument();
+    expect(screen.getByText("Caveats")).toBeInTheDocument();
 
-    const runnerLink = screen.getByRole("link", { name: /runner film/i });
-    expect(runnerLink).not.toHaveTextContent("Should not appear on runner-up card.");
-    expect(runnerLink).not.toHaveTextContent("Synopsis");
+    const winnerLink = screen.getByRole("link", {
+      name: /view winner film \(1999\) in watchlist/i,
+    });
+    expect(winnerLink).not.toHaveTextContent("Synopsis");
+    expect(winnerLink).not.toHaveTextContent("A haunting tale of isolation.");
+
+    expect(
+      screen.queryByText("Should not appear on runner-up card."),
+    ).not.toBeInTheDocument();
   });
 });

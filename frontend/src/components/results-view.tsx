@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import type {
   ConstraintRelaxation,
   FilmResult,
@@ -48,83 +49,83 @@ function FilmResultCard({
   film: FilmResult;
   isWinner?: boolean;
 }) {
+  const filmTitle = `${film.title}${film.year ? ` (${film.year})` : ""}`;
+
   return (
-    <Link
-      href={`/watchlist/${film.film_id}`}
-      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    <Card
+      className={cn(
+        "relative",
+        isWinner
+          ? "border-primary bg-surface-high shadow-glow hover-glow"
+          : "hover-glow",
+      )}
     >
-      <Card
-        className={
-          isWinner
-            ? "cursor-pointer border-primary bg-surface-high shadow-glow hover-glow"
-            : "cursor-pointer hover-glow"
-        }
-      >
-        <CardHeader className="flex flex-row gap-4">
-          <FilmPoster src={film.poster_url} alt={film.title} size={isWinner ? "lg" : "md"} />
-          <div className="flex-1 space-y-1">
-            {isWinner && <Badge variant="secondary">Top pick</Badge>}
-            <CardTitle>
-              {film.title}
-              {film.year ? ` (${film.year})` : ""}
-            </CardTitle>
-            <CardDescription>
-              {[film.director, film.runtime ? `${film.runtime} min` : null]
-                .filter(Boolean)
-                .join(" · ")}
-            </CardDescription>
-            <div className="flex gap-3 font-mono text-label-md normal-case tracking-normal text-muted-foreground">
-              <span>TMDB: {formatRating(film.tmdb_rating)}</span>
-              <span>RT: {formatRottenTomatoesScore(film.rotten_tomatoes_score)}</span>
+      <CardHeader className="flex flex-row gap-4">
+        <FilmPoster src={film.poster_url} alt={film.title} size={isWinner ? "lg" : "md"} />
+        <div className="flex-1 space-y-1">
+          {isWinner && <Badge variant="secondary">Top pick</Badge>}
+          <CardTitle>{filmTitle}</CardTitle>
+          <CardDescription>
+            {[film.director, film.runtime ? `${film.runtime} min` : null]
+              .filter(Boolean)
+              .join(" · ")}
+          </CardDescription>
+          <div className="flex gap-3 font-mono text-label-md normal-case tracking-normal text-muted-foreground">
+            <span>TMDB: {formatRating(film.tmdb_rating)}</span>
+            <span>RT: {formatRottenTomatoesScore(film.rotten_tomatoes_score)}</span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isWinner && film.synopsis && (
+          <div>
+            <p className="text-label-md normal-case tracking-normal">Synopsis</p>
+            <p className="text-body-lg text-muted-foreground">{film.synopsis}</p>
+          </div>
+        )}
+        <div>
+          <p className="text-label-md normal-case tracking-normal">Why it matches</p>
+          <p className="text-body-lg text-muted-foreground">
+            {film.explanation.why_it_matches}
+          </p>
+        </div>
+        {film.explanation.most_influential_factors.length > 0 && (
+          <div>
+            <p className="text-label-md normal-case tracking-normal">Key factors</p>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {film.explanation.most_influential_factors.map((factor) => (
+                <Badge key={factor} variant="secondary">
+                  {factor}
+                </Badge>
+              ))}
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {isWinner && film.synopsis && (
-            <div>
-              <p className="text-label-md normal-case tracking-normal">Synopsis</p>
-              <p className="text-body-lg text-muted-foreground">{film.synopsis}</p>
-            </div>
-          )}
+        )}
+        {film.explanation.why_it_beat_alternatives && (
           <div>
-            <p className="text-label-md normal-case tracking-normal">Why it matches</p>
+            <p className="text-label-md normal-case tracking-normal">
+              Why it beat alternatives
+            </p>
             <p className="text-body-lg text-muted-foreground">
-              {film.explanation.why_it_matches}
+              {film.explanation.why_it_beat_alternatives}
             </p>
           </div>
-          {film.explanation.most_influential_factors.length > 0 && (
-            <div>
-              <p className="text-label-md normal-case tracking-normal">Key factors</p>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {film.explanation.most_influential_factors.map((factor) => (
-                  <Badge key={factor} variant="secondary">
-                    {factor}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          {film.explanation.why_it_beat_alternatives && (
-            <div>
-              <p className="text-label-md normal-case tracking-normal">
-                Why it beat alternatives
-              </p>
-              <p className="text-body-lg text-muted-foreground">
-                {film.explanation.why_it_beat_alternatives}
-              </p>
-            </div>
-          )}
-          {film.explanation.caveats && (
-            <div>
-              <p className="text-label-md normal-case tracking-normal">Caveats</p>
-              <p className="text-body-lg text-muted-foreground">
-                {film.explanation.caveats}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
+        )}
+        {film.explanation.caveats && (
+          <div>
+            <p className="text-label-md normal-case tracking-normal">Caveats</p>
+            <p className="text-body-lg text-muted-foreground">
+              {film.explanation.caveats}
+            </p>
+          </div>
+        )}
+      </CardContent>
+      <Link
+        href={`/watchlist/${film.film_id}`}
+        aria-label={`View ${filmTitle} in watchlist`}
+        className="absolute inset-0 z-10 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+    </Card>
   );
 }
 

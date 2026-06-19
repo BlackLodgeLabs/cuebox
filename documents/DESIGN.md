@@ -154,7 +154,7 @@ spacing:
 - **Ratings row:** `Space Mono` (`font-mono`); display **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on results cards (film detail still shows all ratings).
 - **Key factor tags:** `Badge variant="secondary"` (lime secondary tokens).
 - **Runners-up grid:** standard cards with `hover-glow`; same ratings row as winner.
-- **Card navigation:** entire result card is a single `Link` to `/watchlist/[filmId]` with focus ring; page-level actions (answer summary, new recommendation) remain separate controls.
+- **Card navigation:** full-card hit target via a positioned overlay `Link` with a concise `aria-label` (e.g. “View {title} in watchlist”); explanation text stays outside the link’s accessible name. Page-level actions (answer summary, new recommendation) remain separate controls.
 
 ## Iconography
 - **Library:** Material Symbols Outlined.
