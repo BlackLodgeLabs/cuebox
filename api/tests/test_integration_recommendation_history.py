@@ -27,6 +27,10 @@ def test_history_list_and_detail(integration_client, db_session):
     assert detail["profile_summary"] is not None
     assert detail["profile_summary"]["structured_profile"]
     assert detail["winner"]["title"]
+    assert detail["winner"]["explanation"]["most_influential_factors"]
+    assert detail["winner"]["explanation"]["why_it_beat_alternatives"]
+    assert detail["winner"]["synopsis"]
+    assert detail["winner"]["tmdb_rating"] is not None
 
 
 def test_insufficient_candidates(integration_client, db_session):

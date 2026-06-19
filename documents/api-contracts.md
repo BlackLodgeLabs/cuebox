@@ -724,7 +724,9 @@ POST /recommendations
     "year": 1973,
     "runtime": 88,
     "director": "Robin Hardy",
+    "synopsis": "A devoutly Christian police officer...",
     "letterboxd_rating": 3.9,
+    "tmdb_rating": 7.6,
     "rotten_tomatoes_score": 88,
     "poster_url": "https://image.tmdb.org/...",
     "explanation": {
@@ -741,7 +743,9 @@ POST /recommendations
       "year": 2019,
       "runtime": 148,
       "director": "Ari Aster",
+      "synopsis": "A couple travels to Sweden for a midsummer festival.",
       "letterboxd_rating": 3.7,
+      "tmdb_rating": 7.1,
       "rotten_tomatoes_score": 83,
       "poster_url": "https://image.tmdb.org/...",
       "explanation": {
@@ -778,7 +782,9 @@ POST /recommendations
 |`year`                 |integer, nullable|                                    |
 |`runtime`              |integer, nullable|Minutes                             |
 |`director`             |string, nullable |                                    |
-|`letterboxd_rating`    |number, nullable |0–5                                 |
+|`synopsis`             |string, nullable |Film overview from metadata         |
+|`letterboxd_rating`    |number, nullable |0–5 (retained for API compatibility; not shown on results UI) |
+|`tmdb_rating`          |number, nullable |TMDB vote average (0–10)            |
 |`rotten_tomatoes_score`|integer, nullable|0–100                               |
 |`poster_url`           |string, nullable |                                    |
 |`explanation`          |object           |LLM-generated structured explanation|

@@ -254,7 +254,9 @@ export interface FilmResult {
   year: number | null;
   runtime: number | null;
   director: string | null;
+  synopsis: string | null;
   letterboxd_rating: number | null;
+  tmdb_rating: number | null;
   rotten_tomatoes_score: number | null;
   poster_url: string | null;
   explanation: FilmExplanation;

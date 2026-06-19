@@ -17,7 +17,9 @@ const recommendationDetail = {
     year: 1973,
     runtime: 88,
     director: "Robin Hardy",
+    synopsis: "A devoutly Christian police officer investigates a missing girl on a remote island.",
     letterboxd_rating: 4.2,
+    tmdb_rating: 7.6,
     rotten_tomatoes_score: 91,
     poster_url: null,
     explanation: {

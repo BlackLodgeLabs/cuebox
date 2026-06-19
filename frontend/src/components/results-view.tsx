@@ -36,6 +36,11 @@ function formatRating(rating: number | null): string {
   return rating.toFixed(1);
 }
 
+function formatRottenTomatoesScore(score: number | null): string {
+  if (score === null) return "—";
+  return `${score}%`;
+}
+
 function FilmResultCard({
   film,
   isWinner = false,
@@ -44,73 +49,82 @@ function FilmResultCard({
   isWinner?: boolean;
 }) {
   return (
-    <Card
-      className={
-        isWinner
-          ? "border-primary bg-surface-high shadow-glow hover-glow"
-          : "hover-glow"
-      }
+    <Link
+      href={`/watchlist/${film.film_id}`}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <CardHeader className="flex flex-row gap-4">
-        <FilmPoster src={film.poster_url} alt={film.title} size={isWinner ? "lg" : "md"} />
-        <div className="flex-1 space-y-1">
-          {isWinner && <Badge variant="secondary">Top pick</Badge>}
-          <CardTitle>
-            {film.title}
-            {film.year ? ` (${film.year})` : ""}
-          </CardTitle>
-          <CardDescription>
-            {[film.director, film.runtime ? `${film.runtime} min` : null]
-              .filter(Boolean)
-              .join(" · ")}
-          </CardDescription>
-          <div className="flex gap-3 text-label-md normal-case tracking-normal text-muted-foreground">
-            <span>LBX: {formatRating(film.letterboxd_rating)}</span>
-            {film.rotten_tomatoes_score !== null && (
-              <span>RT: {film.rotten_tomatoes_score}%</span>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div>
-          <p className="text-label-md normal-case tracking-normal">Why it matches</p>
-          <p className="text-body-lg text-muted-foreground">
-            {film.explanation.why_it_matches}
-          </p>
-        </div>
-        {film.explanation.most_influential_factors.length > 0 && (
-          <div>
-            <p className="text-label-md normal-case tracking-normal">Key factors</p>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {film.explanation.most_influential_factors.map((factor) => (
-                <Badge key={factor} variant="secondary">
-                  {factor}
-                </Badge>
-              ))}
+      <Card
+        className={
+          isWinner
+            ? "cursor-pointer border-primary bg-surface-high shadow-glow hover-glow"
+            : "cursor-pointer hover-glow"
+        }
+      >
+        <CardHeader className="flex flex-row gap-4">
+          <FilmPoster src={film.poster_url} alt={film.title} size={isWinner ? "lg" : "md"} />
+          <div className="flex-1 space-y-1">
+            {isWinner && <Badge variant="secondary">Top pick</Badge>}
+            <CardTitle>
+              {film.title}
+              {film.year ? ` (${film.year})` : ""}
+            </CardTitle>
+            <CardDescription>
+              {[film.director, film.runtime ? `${film.runtime} min` : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </CardDescription>
+            <div className="flex gap-3 font-mono text-label-md normal-case tracking-normal text-muted-foreground">
+              <span>TMDB: {formatRating(film.tmdb_rating)}</span>
+              <span>RT: {formatRottenTomatoesScore(film.rotten_tomatoes_score)}</span>
             </div>
           </div>
-        )}
-        {film.explanation.why_it_beat_alternatives && (
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {isWinner && film.synopsis && (
+            <div>
+              <p className="text-label-md normal-case tracking-normal">Synopsis</p>
+              <p className="text-body-lg text-muted-foreground">{film.synopsis}</p>
+            </div>
+          )}
           <div>
-            <p className="text-label-md normal-case tracking-normal">
-              Why it beat alternatives
-            </p>
+            <p className="text-label-md normal-case tracking-normal">Why it matches</p>
             <p className="text-body-lg text-muted-foreground">
-              {film.explanation.why_it_beat_alternatives}
+              {film.explanation.why_it_matches}
             </p>
           </div>
-        )}
-        {film.explanation.caveats && (
-          <div>
-            <p className="text-label-md normal-case tracking-normal">Caveats</p>
-            <p className="text-body-lg text-muted-foreground">
-              {film.explanation.caveats}
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {film.explanation.most_influential_factors.length > 0 && (
+            <div>
+              <p className="text-label-md normal-case tracking-normal">Key factors</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {film.explanation.most_influential_factors.map((factor) => (
+                  <Badge key={factor} variant="secondary">
+                    {factor}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {film.explanation.why_it_beat_alternatives && (
+            <div>
+              <p className="text-label-md normal-case tracking-normal">
+                Why it beat alternatives
+              </p>
+              <p className="text-body-lg text-muted-foreground">
+                {film.explanation.why_it_beat_alternatives}
+              </p>
+            </div>
+          )}
+          {film.explanation.caveats && (
+            <div>
+              <p className="text-label-md normal-case tracking-normal">Caveats</p>
+              <p className="text-body-lg text-muted-foreground">
+                {film.explanation.caveats}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 

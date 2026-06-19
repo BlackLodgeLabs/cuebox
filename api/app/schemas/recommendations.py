@@ -124,7 +124,9 @@ class FilmResult(BaseModel):
     year: int | None = None
     runtime: int | None = None
     director: str | None = None
+    synopsis: str | None = None
     letterboxd_rating: float | None = None
+    tmdb_rating: float | None = None
     rotten_tomatoes_score: int | None = None
     poster_url: str | None = None
     explanation: Explanation

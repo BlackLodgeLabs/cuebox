@@ -9,7 +9,7 @@ target_files:
 
 # Results screen UX — implementation plan
 
-Plan for the GitHub issue **bug/ux: Update recommendation results screen cards with missing AI explanations, adjusted ratings, and navigation links**. This document covers gap analysis, file inventory, step-by-step implementation, testing, and verification. **No code changes are included here** — use this as the execution guide for a follow-up implementation PR.
+Plan for the GitHub issue **bug/ux: Update recommendation results screen cards with missing AI explanations, adjusted ratings, and navigation links**. This document covers gap analysis, file inventory, step-by-step implementation, testing, and verification. **Implemented in PR #31** — see git history on branch `cursor/results-screen-ux-plan-f83c`.
 
 ---
 

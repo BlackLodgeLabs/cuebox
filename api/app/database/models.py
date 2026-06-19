@@ -360,6 +360,7 @@ class RecommendationResult(Base):
         primary_key=True,
     )
     winner_explanation: Mapped[str | None] = mapped_column(Text)
+    winner_explanation_detail: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     runner_up_explanations: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     session: Mapped[RecommendationSession] = relationship(back_populates="result")
