@@ -533,6 +533,16 @@ def _film_result(film, explanation, *, is_winner: bool) -> FilmResult:
     )
 
 
+def _factors_from_payload(payload: dict[str, Any]) -> list[str]:
+    for key in ("most_influential_factors", "key_factors", "influential_factors"):
+        raw = payload.get(key)
+        if isinstance(raw, list):
+            factors = [str(item).strip() for item in raw if str(item).strip()]
+            if factors:
+                return factors[:5]
+    return []
+
+
 def _explanation_to_payload(explanation: Explanation | Any) -> dict[str, Any]:
     if isinstance(explanation, Explanation):
         return {
@@ -551,7 +561,7 @@ def _explanation_to_payload(explanation: Explanation | Any) -> dict[str, Any]:
     if isinstance(explanation, dict):
         return {
             "why_it_matches": str(explanation.get("why_it_matches", "")),
-            "most_influential_factors": list(explanation.get("most_influential_factors", []))[:5],
+            "most_influential_factors": _factors_from_payload(explanation),
             "why_it_beat_alternatives": explanation.get("why_it_beat_alternatives"),
             "caveats": explanation.get("caveats"),
         }
@@ -572,9 +582,10 @@ def _explanation_from_payload(payload: dict | Any) -> Explanation:
             caveats=payload.caveats,
         )
     if isinstance(payload, dict):
+        factors = _factors_from_payload(payload)
         return Explanation(
             why_it_matches=str(payload.get("why_it_matches", "")),
-            most_influential_factors=list(payload.get("most_influential_factors", []))[:5],
+            most_influential_factors=factors,
             why_it_beat_alternatives=payload.get("why_it_beat_alternatives"),
             caveats=payload.get("caveats"),
         )

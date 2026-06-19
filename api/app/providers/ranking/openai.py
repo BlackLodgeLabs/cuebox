@@ -89,6 +89,16 @@ class OpenAIRankingProvider(RankingProvider):
         )
 
 
+def _factors_from_ranking_payload(payload: dict[str, Any]) -> list[str]:
+    for key in ("most_influential_factors", "key_factors", "influential_factors"):
+        raw = payload.get(key)
+        if isinstance(raw, list):
+            factors = [str(item).strip() for item in raw if str(item).strip()]
+            if factors:
+                return factors[:5]
+    return ["semantic fit", "score alignment"]
+
+
 def _parse_ranking_json(
     raw: str,
     candidates: list[RankingCandidateInput],
@@ -142,7 +152,7 @@ def _parse_ranking_json(
             continue
         explanations[film_id_str] = RankingExplanation(
             why_it_matches=str(payload.get("why_it_matches", "")),
-            most_influential_factors=list(payload.get("most_influential_factors", []))[:5],
+            most_influential_factors=_factors_from_ranking_payload(payload),
             why_it_beat_alternatives=payload.get("why_it_beat_alternatives"),
             caveats=payload.get("caveats"),
         )

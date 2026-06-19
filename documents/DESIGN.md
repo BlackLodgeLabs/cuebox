@@ -150,7 +150,7 @@ spacing:
 - **Environmental Texture (The Used Future):** The main application viewport (`<main>`) applies a fixed, subtle CSS film grain or horizontal CRT scanline overlay. This breaks up perfect pixels, establishing a gritty, analog, and deeply cinematic atmosphere.
 
 ### Results screen (`results-view.tsx`)
-- **Winner card:** elevated surface (`border-primary`, `shadow-glow`); **Top pick** secondary badge; synopsis and explanation blocks use `body-lg` / `text-muted-foreground`.
+- **Winner card:** two-column layout — full-height poster column flush to the left edge; text column with TOP PICK badge, title, director/runtime, TMDB/RT scores, synopsis, key factors, then why it matches (plus why it beat alternatives and caveats when present).
 - **Ratings row:** `Space Mono` (`font-mono`); display **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on results cards (film detail still shows all ratings).
 - **Key factor tags:** `Badge variant="secondary"` (lime secondary tokens).
 - **Runners-up grid:** standard cards with `hover-glow`; same ratings row as winner.

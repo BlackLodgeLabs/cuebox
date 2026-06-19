@@ -19,6 +19,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/image", () => ({
+  default: ({ alt }: { alt: string }) => <div>{alt}</div>,
+}));
+
 vi.mock("@/components/film-poster", () => ({
   FilmPoster: ({ alt }: { alt: string }) => <div>{alt}</div>,
 }));
@@ -93,19 +97,32 @@ describe("ResultsView", () => {
     );
   });
 
-  it("shows synopsis and winner-only explanation sections on the top pick card", () => {
+  it("shows winner synopsis, key factors before why it matches, and extra winner sections", () => {
     render(<ResultsView data={recommendation} showActions={false} />);
 
+    expect(screen.getByText("TOP PICK")).toBeInTheDocument();
     expect(screen.getByText("Synopsis")).toBeInTheDocument();
     expect(screen.getByText("A haunting tale of isolation.")).toBeInTheDocument();
+    expect(screen.getByText("theme fit")).toBeInTheDocument();
+    expect(screen.getByText("pacing")).toBeInTheDocument();
     expect(screen.getByText("Why it beat alternatives")).toBeInTheDocument();
     expect(screen.getByText("Caveats")).toBeInTheDocument();
+
+    const synopsis = screen.getByText("A haunting tale of isolation.");
+    const keyFactors = screen.getAllByText("Key factors")[0];
+    const whyItMatches = screen.getAllByText("Why it matches")[0];
+
+    expect(
+      synopsis.compareDocumentPosition(keyFactors) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      keyFactors.compareDocumentPosition(whyItMatches) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     const winnerLink = screen.getByRole("link", {
       name: /view winner film \(1999\) in watchlist/i,
     });
     expect(winnerLink).not.toHaveTextContent("Synopsis");
-    expect(winnerLink).not.toHaveTextContent("A haunting tale of isolation.");
 
     expect(
       screen.queryByText("Should not appear on runner-up card."),
