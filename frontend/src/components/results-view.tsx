@@ -194,6 +194,14 @@ function RunnerResultCard({ film }: { film: FilmResult }) {
       <CardContent className="space-y-3">
         <KeyFactorsSection factors={film.explanation.most_influential_factors} />
         <WhyItMatchesSection text={film.explanation.why_it_matches} />
+        {film.explanation.caveats && (
+          <div>
+            <p className="text-label-md normal-case tracking-normal">Caveats</p>
+            <p className="text-body-lg text-muted-foreground">
+              {film.explanation.caveats}
+            </p>
+          </div>
+        )}
       </CardContent>
       <CardWatchlistLink film={film} />
     </Card>
