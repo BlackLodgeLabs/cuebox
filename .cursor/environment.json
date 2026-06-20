@@ -1,0 +1,11 @@
+{
+  "install": "bash scripts/cloud-bootstrap-env.sh && cd api && pip install -e \".[dev]\" && cd ../frontend && npm ci",
+  "start": "sudo dockerd > /tmp/dockerd.log 2>&1 & sleep 3; sudo chmod 666 /var/run/docker.sock 2>/dev/null || true",
+  "terminals": [
+    {
+      "name": "stack",
+      "command": "docker compose up",
+      "description": "Cuebox full stack (frontend :3000, API :8000, Postgres :5433 on host)"
+    }
+  ]
+}

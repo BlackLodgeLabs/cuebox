@@ -31,7 +31,9 @@ For **Docker Compose**, set in `.env`:
 DATABASE_URL=postgresql+psycopg://cuebox:cuebox@postgres:5432/cuebox
 ```
 
-For **local API/tests against the compose Postgres**, use `@localhost:5432` instead of `@postgres:5432`.
+Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment.
+
+For **local API/tests against the compose Postgres**, use `@localhost:5433` on the host (`5433:5432` in `docker-compose.yml`). Gate scripts use a separate ephemeral Postgres container on `localhost:5432`.
 
 ### Running the stack
 
@@ -46,7 +48,7 @@ docker compose up
 | Frontend | http://localhost:3000 |
 | API health | http://localhost:8000/api/v1/health |
 | OpenAPI docs | http://localhost:8000/docs |
-| Postgres | localhost:5432 (user/pass/db: `cuebox`) |
+| Postgres | localhost:5433 on host (`5433:5432` in compose; user/pass/db: `cuebox`) |
 
 The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint.sh`. The API process also starts an APScheduler RSS poll job (every 900s) when the app boots; it no-ops until `PUT /sync/rss` configures a username.
 
