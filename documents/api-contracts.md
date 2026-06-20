@@ -23,9 +23,25 @@ Version 1.0
 
 ### Base URL
 
+**Direct API access** (OpenAPI docs at `/docs`, curl, health checks, integration tests):
+
 ```
 http://localhost:8000/api/v1
 ```
+
+**Browser UI** (Next.js app at `http://localhost:3000`):
+
+The frontend calls same-origin paths under `/api/v1`. Next.js rewrites those requests to the FastAPI backend. The rewrite target is `API_UPSTREAM_URL` (default `http://localhost:8000` for local `npm run dev`; Docker Compose sets `http://api:8000` on the frontend service).
+
+Example: a UI fetch to `/api/v1/health` is proxied to `http://localhost:8000/api/v1/health`.
+
+**Optional overrides:**
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `API_UPSTREAM_URL` | Next.js (build/runtime) | Backend origin for `/api/v1` rewrites |
+| `NEXT_PUBLIC_API_URL` | Frontend (build time) | Legacy direct API base URL; bypasses the rewrite when set |
+| `LAN_HOST` | API (`.env`) | Adds `http://{LAN_HOST}:3000` to CORS allowlist for direct API access without the Next.js proxy |
 
 ### Content Type
 
