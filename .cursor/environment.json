@@ -1,0 +1,12 @@
+{
+  "snapshot": "snapshot-20260609-64093354-21eb-45d0-9e9a-e4b1c9141aa7",
+  "install": "bash scripts/cloud-bootstrap-env.sh && cd api && pip install -e \".[dev]\" && cd ../frontend && npm ci",
+  "start": "bash scripts/cloud-ensure-docker.sh",
+  "terminals": [
+    {
+      "name": "stack",
+      "command": "bash scripts/cloud-start-stack.sh",
+      "description": "Cuebox full stack (frontend :3000, API :8000, Postgres :5433 on host)"
+    }
+  ]
+}
