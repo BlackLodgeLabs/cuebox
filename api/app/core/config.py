@@ -99,6 +99,9 @@ def get_settings() -> Settings:
 
 def get_cors_allow_origins() -> list[str]:
     """Build CORS origins without loading full Settings (safe at import time)."""
+    from dotenv import load_dotenv
+
+    load_dotenv()
     origins = ["http://localhost:3000"]
     lan_host = os.environ.get("LAN_HOST")
     if lan_host:
