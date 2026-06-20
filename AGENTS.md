@@ -31,7 +31,7 @@ For **Docker Compose**, set in `.env`:
 DATABASE_URL=postgresql+psycopg://cuebox:cuebox@postgres:5432/cuebox
 ```
 
-Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment. `scripts/cloud-ensure-docker.sh` starts `dockerd` if needed and `chmod`s `/var/run/docker.sock` before waiting on `docker info` (the VM user is not in the `docker` group). The stack terminal runs `scripts/cloud-start-stack.sh`, which calls `cloud-ensure-docker.sh` then `docker compose up --build`.
+Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment. `scripts/cloud-ensure-docker.sh` starts `dockerd` if needed and `chmod`s `/var/run/docker.sock` before waiting on `docker info` (the VM user is not in the `docker` group). The stack terminal runs `scripts/cloud-start-stack.sh`, which calls `cloud-ensure-docker.sh`, starts Compose in detached mode, runs `scripts/agent-bootstrap.sh` to seed the database when empty, then follows container logs in the foreground.
 
 For **local API/tests against the compose Postgres**, use `@localhost:5433` on the host (`5433:5432` in `docker-compose.yml`). Gate scripts use a separate ephemeral Postgres container on `localhost:5432`.
 
@@ -51,6 +51,26 @@ Pass criteria: all three containers `Up`; both health URLs return `"status":"ok"
 Optional: add your dashboard snapshot ID as a top-level `"snapshot"` field in `.cursor/environment.json` (not inside `terminals`).
 
 **Part 2 (persistent test data):** see [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md).
+
+### Cloud environment verification (Part 2 gate)
+
+After Part 1 passes, confirm seeded watchlist data is present (no API keys required):
+
+```bash
+docker compose ps
+
+curl -sf "http://localhost:3000/api/v1/films?limit=5" | python3 -m json.tool
+
+curl -sf http://localhost:3000/api/v1/films?limit=1 | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['pagination']['total'] >= 10
+assert d['data'][0]['enrichment_status'] == 'ready'
+print('PASS: ready films present')
+"
+```
+
+Pass criteria: at least 10 films with `enrichment_status` of `ready`; the home page at http://localhost:3000 shows **New recommendation** (not the empty-watchlist import CTA). To re-seed manually on an empty volume: `python3 scripts/seed-dev-db.py`. To reset and re-seed: `docker compose down -v` then restart the stack.
 
 ### Running the stack
 
@@ -106,7 +126,7 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 
 With `docker compose up`:
 
-1. http://localhost:3000 — **Cuebox** dark UI; empty watchlist shows **Import watchlist** CTA; returning users see **New recommendation** and **History** links.
+1. http://localhost:3000 — **Cuebox** dark UI; empty watchlist shows **Import watchlist** CTA; returning users (or cloud agents after Part 2 bootstrap) see **New recommendation** and **History** links.
 2. Complete the first-time journey: import CSV → poll status → review matches (if any) → questionnaire → results → history.
 3. Sync settings at http://localhost:3000/settings/sync show RSS status.
 4. Collapsed **System status** on the home page still exposes API/database health for debugging.
