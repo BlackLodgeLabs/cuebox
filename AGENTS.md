@@ -31,9 +31,24 @@ For **Docker Compose**, set in `.env`:
 DATABASE_URL=postgresql+psycopg://cuebox:cuebox@postgres:5432/cuebox
 ```
 
-Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment.
+Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment. The stack terminal runs `scripts/cloud-start-stack.sh`, which waits for `dockerd` then `docker compose up --build`.
 
 For **local API/tests against the compose Postgres**, use `@localhost:5433` on the host (`5433:5432` in `docker-compose.yml`). Gate scripts use a separate ephemeral Postgres container on `localhost:5432`.
+
+### Cloud environment verification (Part 1 gate)
+
+After boot, confirm without manual fixes:
+
+```bash
+docker compose ps
+curl -sf http://localhost:8000/api/v1/health | python3 -m json.tool
+curl -sf http://localhost:3000/api/v1/health | python3 -m json.tool
+curl -sf -o /dev/null -w "frontend HTTP %{http_code}\n" http://localhost:3000
+```
+
+Pass criteria: all three containers `Up`; both health URLs return `"status":"ok"` and `"database":"ok"`; frontend HTTP 200. Provider keys may show `"error"` until dashboard secrets are set — that is expected for Part 1.
+
+Optional: add your dashboard snapshot ID as a top-level `"snapshot"` field in `.cursor/environment.json` (not inside `terminals`).
 
 ### Running the stack
 
