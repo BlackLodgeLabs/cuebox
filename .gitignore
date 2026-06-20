@@ -40,9 +40,11 @@ artifacts/erd/*.pdf
 .vscode/
 Thumbs.db
 .DS_Store
+
 # Cursor — ignore local IDE state; commit shared cloud-agent config
 .cursor/*
 !.cursor/environment.json
+!.cursor/Dockerfile
 
 # Letterboxd
 letterboxd/

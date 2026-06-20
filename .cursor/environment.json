@@ -1,4 +1,5 @@
 {
+  "snapshot": "snapshot-20260609-64093354-21eb-45d0-9e9a-e4b1c9141aa7",
   "install": "bash scripts/cloud-bootstrap-env.sh && cd api && pip install -e \".[dev]\" && cd ../frontend && npm ci",
   "start": "sudo dockerd > /tmp/dockerd.log 2>&1 & sleep 3; sudo chmod 666 /var/run/docker.sock 2>/dev/null || true",
   "terminals": [
