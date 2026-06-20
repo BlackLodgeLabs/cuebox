@@ -52,6 +52,8 @@ Optional: add your dashboard snapshot ID as a top-level `"snapshot"` field in `.
 
 **Part 2 (persistent test data):** see [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md).
 
+**Tier 3 (2-film CSV import snapshot):** see [documents/cloud-agent-tier3-fixture-import-plan.md](documents/cloud-agent-tier3-fixture-import-plan.md).
+
 ### Running the stack
 
 Preferred path (all three services):
