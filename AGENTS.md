@@ -50,6 +50,8 @@ Pass criteria: all three containers `Up`; both health URLs return `"status":"ok"
 
 Optional: add your dashboard snapshot ID as a top-level `"snapshot"` field in `.cursor/environment.json` (not inside `terminals`).
 
+**Part 2 (persistent test data):** see [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md).
+
 ### Running the stack
 
 Preferred path (all three services):
