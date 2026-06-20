@@ -46,7 +46,7 @@ def seed_ready_films(db: Session, count: int = 5) -> list:
             director=f"Director {index}",
             tmdb_rating=Decimal("7.5"),
             rotten_tomatoes_score=88,
-            poster_url=f"https://example.com/poster-{index}.jpg",
+            poster_url=f"https://image.tmdb.org/t/p/w500/seed-poster-{index}.jpg",
             match_confidence=Decimal("0.9800"),
             metadata_source="tmdb",
         )
