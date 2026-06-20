@@ -99,7 +99,7 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 
 - `.env` and `config.yaml` are gitignored; agents must create them from examples. Copy `config.example.yaml` after Phase 3 changes to pick up `enrichment.inter_film_delay_seconds`. Set `developer_mode: true` in `config.yaml` to enable `/dev/*` endpoints and the hidden frontend dev panel; default is `false`.
 - `OPENAI_API_KEY` is required for live semantic/embedding/ranking runs when `config.yaml` selects OpenAI providers. CI and gate scripts pass without it (mocked HTTP). Optional: `OLLAMA_BASE_URL` (Ollama semantic), `VOYAGE_API_KEY` (Voyage embeddings).
-- Frontend `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000/api/v1` (set in `docker-compose.yml` for the frontend service).
+- Frontend API calls use same-origin `/api/v1` (Next.js rewrites proxy to the API). Docker Compose sets `API_UPSTREAM_URL=http://api:8000` on the frontend service.
 - No authentication — single-user, local-first design.
 - After pulling frontend dependency changes, run `cd frontend && npm ci` (non-Docker) or rebuild/restart the frontend container (`docker compose up --build frontend`). The frontend dev container runs `npm ci` on start to keep its `node_modules` volume in sync with `package-lock.json`.
 - After pulling **API schema/migration** changes, restart the API container so `entrypoint.sh` runs `alembic upgrade head` (`docker compose restart api`). Compose mounts `api/alembic` into the container; if you still see missing-column errors, run `docker compose up --build api`.

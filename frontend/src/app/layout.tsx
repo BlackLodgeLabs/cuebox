@@ -38,6 +38,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${cabin.variable} ${libreFranklin.variable} ${spaceMono.variable}`}
+      suppressHydrationWarning
     >
       <head>
         <link

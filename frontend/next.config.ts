@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const apiUpstream = process.env.API_UPSTREAM_URL ?? "http://localhost:8000";
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
@@ -9,6 +11,14 @@ const nextConfig: NextConfig = {
         hostname: "image.tmdb.org",
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${apiUpstream}/api/v1/:path*`,
+      },
+    ];
   },
 };
 
