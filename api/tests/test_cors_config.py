@@ -3,7 +3,9 @@
 from app.core.config import get_cors_allow_origins
 
 
-def test_cors_allow_origins_default():
+def test_cors_allow_origins_default(monkeypatch):
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *_args, **_kwargs: None)
+    monkeypatch.delenv("LAN_HOST", raising=False)
     assert get_cors_allow_origins() == ["http://localhost:3000"]
 
 
