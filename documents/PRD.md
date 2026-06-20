@@ -757,6 +757,8 @@ Developer Mode is optional and hidden from normal users.
 
 **Hosting:** local deployment only, Docker Compose supported.
 
+**Frontend API integration:** the browser calls same-origin `/api/v1` paths; Next.js rewrites proxy to FastAPI (`API_UPSTREAM_URL`). Optional `LAN_HOST` in `.env` extends API CORS for LAN clients that bypass the proxy.
+
 **Database:** PostgreSQL with pgvector extension.
 
 **Watchlist Size:** up to 500 active films.

@@ -17,6 +17,11 @@ export default defineConfig({
         url: baseURL,
         reuseExistingServer: true,
         timeout: 120_000,
+        env: {
+          ...process.env,
+          API_UPSTREAM_URL:
+            process.env.API_UPSTREAM_URL ?? "http://localhost:8000",
+        },
       },
   use: {
     baseURL,

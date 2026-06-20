@@ -6,6 +6,10 @@ Sequence diagrams for the major flows described in [Architecture.md](./Architect
 
 All diagrams use [Mermaid](https://mermaid.js.org/) syntax and can be rendered in GitHub, VS Code, and most Markdown viewers.
 
+### API routing (browser)
+
+In normal use, the Next.js UI calls `/api/v1/...` on the same origin (`http://localhost:3000`). Next.js rewrites proxy those requests to the FastAPI backend (see [Architecture.md §5](./Architecture.md#frontendbackend-integration)). Diagrams label the backend participant **FastAPI API**; the browser does not call port 8000 directly unless `NEXT_PUBLIC_API_URL` is set for legacy direct-API access.
+
 ---
 
 ## Table of Contents

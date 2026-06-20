@@ -89,6 +89,7 @@ Letterboxd remains authoritative for watchlist state and watched status. Local s
 ┌──────────────────────────────────────────────┐
 │                 Browser UI                   │
 │            Next.js + TypeScript              │
+│      same-origin /api/v1 (rewrite proxy)     │
 └─────────────────────┬────────────────────────┘
                       │
                       ▼
@@ -147,6 +148,14 @@ Letterboxd remains authoritative for watchlist state and watched status. Local s
 **Deployment:** Docker Compose
 
 Services: `frontend`, `api`, `postgres`
+
+### Frontend–Backend Integration
+
+The browser never calls the API on port 8000 directly in the default configuration. The Next.js frontend issues same-origin requests to `/api/v1/...`; `next.config.ts` rewrites those to the FastAPI backend using `API_UPSTREAM_URL` (default `http://localhost:8000`; Docker Compose sets `http://api:8000` on the frontend service).
+
+FastAPI enables CORS for `http://localhost:3000` via `get_cors_allow_origins()` in `api/app/core/config.py`. Set optional `LAN_HOST` in `.env` (documented in `.env.example`) to also allow `http://{LAN_HOST}:3000` when the UI or tools call the API directly without the Next.js proxy.
+
+Setting `NEXT_PUBLIC_API_URL` at frontend build time remains supported as a legacy escape hatch for direct API calls; those callers rely on CORS rather than the rewrite proxy.
 
 ---
 

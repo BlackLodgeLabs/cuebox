@@ -1,5 +1,6 @@
 """Configuration loading and validation."""
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -94,6 +95,18 @@ _app_config: AppConfig | None = None
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def get_cors_allow_origins() -> list[str]:
+    """Build CORS origins without loading full Settings (safe at import time)."""
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    origins = ["http://localhost:3000"]
+    lan_host = os.environ.get("LAN_HOST")
+    if lan_host:
+        origins.append(f"http://{lan_host}:3000")
+    return origins
 
 
 def load_app_config(path: Path) -> AppConfig:

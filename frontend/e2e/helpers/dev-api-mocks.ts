@@ -1,7 +1,6 @@
 import type { Page } from "@playwright/test";
 
-const API_BASE =
-  process.env.PLAYWRIGHT_API_URL ?? "http://localhost:8000/api/v1";
+const API_PATH_PREFIX = "/api/v1";
 
 export const DEV_SESSION_ID = "11111111-1111-4111-8111-111111111111";
 export const DEV_FILM_ID = "22222222-2222-4222-8222-222222222222";
@@ -120,9 +119,8 @@ const systemVersions = {
   ],
 };
 
-function apiPattern(path: string): RegExp {
-  const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`${API_BASE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${escaped}$`);
+function apiPattern(path: string): string {
+  return `**${API_PATH_PREFIX}${path}`;
 }
 
 export async function mockRecommendationSession(page: Page): Promise<void> {
