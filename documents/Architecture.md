@@ -149,6 +149,8 @@ Letterboxd remains authoritative for watchlist state and watched status. Local s
 
 Services: `frontend`, `api`, `postgres`
 
+**Cloud agent test data (Tier 2):** Cursor Cloud agents run `scripts/agent-bootstrap.sh` after the stack is healthy. On an empty Postgres volume, `scripts/seed-dev-db.py` inserts 10 films with metadata, semantic profiles, and embeddings (`enrichment_status = ready`) via `api/tests/helpers/seed_ready_films.py`, so UI flows and recommendations work without live provider keys. See [cloud-agent-part2-test-data.md](cloud-agent-part2-test-data.md).
+
 ### Frontend–Backend Integration
 
 The browser never calls the API on port 8000 directly in the default configuration. The Next.js frontend issues same-origin requests to `/api/v1/...`; `next.config.ts` rewrites those to the FastAPI backend using `API_UPSTREAM_URL` (default `http://localhost:8000`; Docker Compose sets `http://api:8000` on the frontend service).

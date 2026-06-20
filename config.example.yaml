@@ -1,7 +1,7 @@
 # Copy this file to config.yaml and adjust values for your environment.
 # API keys belong in .env, not in this file.
 
-developer_mode: false
+developer_mode: true
 
 providers:
   metadata:
