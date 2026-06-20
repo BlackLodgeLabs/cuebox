@@ -5,8 +5,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-until docker info >/dev/null 2>&1; do
-  sleep 1
-done
+bash scripts/cloud-ensure-docker.sh
 
 exec docker compose up --build

@@ -31,7 +31,7 @@ For **Docker Compose**, set in `.env`:
 DATABASE_URL=postgresql+psycopg://cuebox:cuebox@postgres:5432/cuebox
 ```
 
-Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment. The stack terminal runs `scripts/cloud-start-stack.sh`, which waits for `dockerd` then `docker compose up --build`.
+Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment. `scripts/cloud-ensure-docker.sh` starts `dockerd` if needed and `chmod`s `/var/run/docker.sock` before waiting on `docker info` (the VM user is not in the `docker` group). The stack terminal runs `scripts/cloud-start-stack.sh`, which calls `cloud-ensure-docker.sh` then `docker compose up --build`.
 
 For **local API/tests against the compose Postgres**, use `@localhost:5433` on the host (`5433:5432` in `docker-compose.yml`). Gate scripts use a separate ephemeral Postgres container on `localhost:5432`.
 
