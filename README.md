@@ -42,6 +42,14 @@ docker compose up
 
 5. Import your Letterboxd watchlist CSV, complete any metadata match review, run the questionnaire, and view results and history.
 
+After pulling updates that include database migrations, restart the API so migrations apply:
+
+```bash
+docker compose restart api
+```
+
+If you still see missing-column errors, rebuild the API image: `docker compose up --build api`.
+
 ## Documentation
 
 | Document | Purpose |

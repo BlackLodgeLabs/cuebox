@@ -724,7 +724,9 @@ POST /recommendations
     "year": 1973,
     "runtime": 88,
     "director": "Robin Hardy",
+    "synopsis": "A devoutly Christian police officer...",
     "letterboxd_rating": 3.9,
+    "tmdb_rating": 7.6,
     "rotten_tomatoes_score": 88,
     "poster_url": "https://image.tmdb.org/...",
     "explanation": {
@@ -741,7 +743,9 @@ POST /recommendations
       "year": 2019,
       "runtime": 148,
       "director": "Ari Aster",
+      "synopsis": "A couple travels to Sweden for a midsummer festival.",
       "letterboxd_rating": 3.7,
+      "tmdb_rating": 7.1,
       "rotten_tomatoes_score": 83,
       "poster_url": "https://image.tmdb.org/...",
       "explanation": {
@@ -778,7 +782,9 @@ POST /recommendations
 |`year`                 |integer, nullable|                                    |
 |`runtime`              |integer, nullable|Minutes                             |
 |`director`             |string, nullable |                                    |
-|`letterboxd_rating`    |number, nullable |0–5                                 |
+|`synopsis`             |string, nullable |Film overview from metadata         |
+|`letterboxd_rating`    |number, nullable |0–5 (retained for API compatibility; not shown on results UI) |
+|`tmdb_rating`          |number, nullable |TMDB vote average (0–10)            |
 |`rotten_tomatoes_score`|integer, nullable|0–100                               |
 |`poster_url`           |string, nullable |                                    |
 |`explanation`          |object           |LLM-generated structured explanation|
@@ -791,6 +797,8 @@ POST /recommendations
 |`most_influential_factors`|array of string |Up to 5 key factors         |
 |`why_it_beat_alternatives`|string, nullable|Only present on the winner  |
 |`caveats`                 |string, nullable|Trade-offs or mismatches    |
+
+`GET /recommendations/{session_id}` returns the same `Film Result Object` and `Explanation Object` shapes as `POST /recommendations`, including full winner explanation fields, `synopsis`, and `tmdb_rating`. The API persists the structured winner explanation so results remain complete after the UI navigates to the results page and refetches the session.
 
 **Constraint Relaxation Object**
 
@@ -830,7 +838,7 @@ GET /recommendations/{session_id}
 
 #### Response `200 OK`
 
-Returns the same schema as `POST /recommendations` response, plus:
+Returns the same schema as `POST /recommendations` response (including full winner `explanation`, `synopsis`, and `tmdb_rating` on each film result), plus:
 
 ```json
 {

@@ -207,19 +207,21 @@ Follow tests **in order**. Each step builds on the previous one. None of the req
 1. Confirm the page heading is **Your pick** with a timestamp.
 2. **Winner card:**
    - **Top pick** badge, poster, title, year, director, runtime
-   - Letterboxd and Rotten Tomatoes ratings where available
+   - **Synopsis** (film overview text)
+   - **TMDB** and **Rotten Tomatoes** scores (show `—` when unavailable; Letterboxd is not shown on this screen)
    - **Why it matches** prose (readable, specific to your questionnaire — not generic placeholder text)
-   - **Key factors** badges (if shown)
-   - For the winner only: **Why it beat alternatives** (if present)
-   - **Caveats** (if present)
-3. **Runners-up section:** Confirm exactly **four** runner-up cards (or fewer only if your watchlist is very small — note if so). Each should have title, poster, and **Why it matches** text.
-4. If a yellow **Some constraints were relaxed** banner appears, read it — the listed relaxations should make sense for your answers.
-5. Click **View answer summary**. Confirm a narrative profile and structured JSON reflect your questionnaire (including notes if provided). Close the sheet.
-6. Click **View history** and confirm you see the session you just created (continue to Test 8 for detail).
+   - **Key factors** badges
+   - **Why it beat alternatives** (winner only, when present)
+   - **Caveats** (when present)
+3. **Runners-up section:** Confirm exactly **four** runner-up cards (or fewer only if your watchlist is very small — note if so). Each should have title, poster, TMDB/RT scores, and **Why it matches** text.
+4. Click the **Top pick** card and confirm navigation to `/watchlist/[filmId]` for that film. Return to results and click a runner-up card — same behavior.
+5. If a yellow **Some constraints were relaxed** banner appears, read it — the listed relaxations should make sense for your answers.
+6. Click **View answer summary**. Confirm a narrative profile and structured JSON reflect your questionnaire (including notes if provided). Close the sheet.
+7. Click **View history** and confirm you see the session you just created (continue to Test 8 for detail).
 
-**Pass if:** One clear winner, up to four runners-up with explanations, and the answer summary matches your inputs. Explanations feel coherent and watchlist-specific.
+**Pass if:** One clear winner, up to four runners-up with explanations, TMDB/RT ratings (no Letterboxd on results cards), clickable cards to watchlist detail, and the answer summary matches your inputs. Explanations feel coherent and watchlist-specific — including key factors and why-it-beat-alternatives on the winner after the page reloads (GET round-trip).
 
-**Fail if:** Missing winner, empty explanations, obvious hallucinated titles not in your watchlist, or broken layout.
+**Fail if:** Missing winner, empty or truncated winner explanations after reload, obvious hallucinated titles not in your watchlist, ratings show Letterboxd instead of TMDB, cards are not clickable, or broken layout.
 
 ---
 

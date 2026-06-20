@@ -651,7 +651,8 @@ API keys must not be committed to version control. The `config.yaml` path should
 - Year
 - Runtime
 - Director
-- Letterboxd Rating
+- Synopsis (film overview from metadata)
+- TMDB Rating
 - Rotten Tomatoes Score
 
 ### Structured Explanation
@@ -663,7 +664,11 @@ API keys must not be committed to version control. The `config.yaml` path should
 
 ### Runners-Up
 
-Four alternatives, each with poster, metadata, and explanation.
+Four alternatives, each with poster, metadata (including TMDB and Rotten Tomatoes scores), and explanation.
+
+### Navigation
+
+Each result card (winner and runners-up) links to the corresponding watchlist film detail view (`/watchlist/[filmId]`).
 
 ### Answer Summary
 
@@ -700,7 +705,7 @@ Card-based interface displaying:
 - Recommendation date
 - Preference summary
 
-Selecting a card reopens the original recommendation results.
+Selecting a card reopens the original recommendation results. On the results and history detail views, each recommended film card (winner and runners-up) links to that film’s watchlist detail page.
 
 ### Search & Filtering
 

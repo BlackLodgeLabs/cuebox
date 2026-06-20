@@ -139,21 +139,20 @@ class RecommendationService:
 
         winner_key = str(ranking_result.winner_film_id)
         winner_expl = ranking_result.explanations.get(winner_key)
+        winner_payload = _explanation_to_payload(winner_expl) if winner_expl else None
         runner_payload: dict[str, Any] = {}
         for film_id in ranking_result.runners_up_film_ids:
             expl = ranking_result.explanations.get(str(film_id))
             if expl is None:
                 continue
-            runner_payload[str(film_id)] = {
-                "why_it_matches": expl.why_it_matches,
-                "most_influential_factors": expl.most_influential_factors,
-                "why_it_beat_alternatives": expl.why_it_beat_alternatives,
-                "caveats": expl.caveats,
-            }
+            runner_payload[str(film_id)] = _explanation_to_payload(expl)
         recommendation_result_repository.create(
             db,
             session_id=session.id,
-            winner_explanation=winner_expl.why_it_matches if winner_expl else None,
+            winner_explanation=(
+                winner_payload["why_it_matches"] if winner_payload else None
+            ),
+            winner_explanation_detail=winner_payload,
             runner_up_explanations=runner_payload,
         )
 
@@ -242,12 +241,15 @@ class RecommendationService:
                 )
             )
 
-        winner_payload = {}
-        if result and result.winner_explanation:
-            winner_payload = {
-                "why_it_matches": result.winner_explanation,
-                "most_influential_factors": [],
-            }
+        winner_payload: dict[str, Any] = {}
+        if result:
+            if result.winner_explanation_detail:
+                winner_payload = result.winner_explanation_detail
+            elif result.winner_explanation:
+                winner_payload = {
+                    "why_it_matches": result.winner_explanation,
+                    "most_influential_factors": [],
+                }
 
         winner_result = (
             _film_result(
@@ -522,11 +524,53 @@ def _film_result(film, explanation, *, is_winner: bool) -> FilmResult:
         year=film.year,
         runtime=metadata.runtime if metadata else None,
         director=metadata.director if metadata else None,
+        synopsis=metadata.synopsis if metadata else None,
         letterboxd_rating=float(metadata.letterboxd_rating) if metadata and metadata.letterboxd_rating else None,
+        tmdb_rating=float(metadata.tmdb_rating) if metadata and metadata.tmdb_rating is not None else None,
         rotten_tomatoes_score=metadata.rotten_tomatoes_score if metadata else None,
         poster_url=metadata.poster_url if metadata else None,
         explanation=expl,
     )
+
+
+def _factors_from_payload(payload: dict[str, Any]) -> list[str]:
+    for key in ("most_influential_factors", "key_factors", "influential_factors"):
+        raw = payload.get(key)
+        if isinstance(raw, list):
+            factors = [str(item).strip() for item in raw if str(item).strip()]
+            if factors:
+                return factors[:5]
+    return []
+
+
+def _explanation_to_payload(explanation: Explanation | Any) -> dict[str, Any]:
+    if isinstance(explanation, Explanation):
+        return {
+            "why_it_matches": explanation.why_it_matches,
+            "most_influential_factors": list(explanation.most_influential_factors or [])[:5],
+            "why_it_beat_alternatives": explanation.why_it_beat_alternatives,
+            "caveats": explanation.caveats,
+        }
+    if hasattr(explanation, "why_it_matches"):
+        return {
+            "why_it_matches": explanation.why_it_matches,
+            "most_influential_factors": list(explanation.most_influential_factors or [])[:5],
+            "why_it_beat_alternatives": explanation.why_it_beat_alternatives,
+            "caveats": explanation.caveats,
+        }
+    if isinstance(explanation, dict):
+        return {
+            "why_it_matches": str(explanation.get("why_it_matches", "")),
+            "most_influential_factors": _factors_from_payload(explanation),
+            "why_it_beat_alternatives": explanation.get("why_it_beat_alternatives"),
+            "caveats": explanation.get("caveats"),
+        }
+    return {
+        "why_it_matches": "Matches your stated preferences.",
+        "most_influential_factors": ["semantic fit"],
+        "why_it_beat_alternatives": None,
+        "caveats": None,
+    }
 
 
 def _explanation_from_payload(payload: dict | Any) -> Explanation:
@@ -538,9 +582,10 @@ def _explanation_from_payload(payload: dict | Any) -> Explanation:
             caveats=payload.caveats,
         )
     if isinstance(payload, dict):
+        factors = _factors_from_payload(payload)
         return Explanation(
             why_it_matches=str(payload.get("why_it_matches", "")),
-            most_influential_factors=list(payload.get("most_influential_factors", []))[:5],
+            most_influential_factors=factors,
             why_it_beat_alternatives=payload.get("why_it_beat_alternatives"),
             caveats=payload.get("caveats"),
         )

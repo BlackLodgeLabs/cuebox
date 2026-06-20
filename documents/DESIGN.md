@@ -149,6 +149,13 @@ spacing:
 - **Disabled States:** Elements shift to `50%` opacity, desaturate to greyscale, and apply a `cursor-not-allowed` property, visually communicating an offline or disconnected terminal state.
 - **Environmental Texture (The Used Future):** The main application viewport (`<main>`) applies a fixed, subtle CSS film grain or horizontal CRT scanline overlay. This breaks up perfect pixels, establishing a gritty, analog, and deeply cinematic atmosphere.
 
+### Results screen (`results-view.tsx`)
+- **Winner card:** two-column layout — full-height poster column flush to the left edge; text column with TOP PICK badge, title, director/runtime, TMDB/RT scores, synopsis, key factors, then why it matches (plus why it beat alternatives and caveats when present).
+- **Ratings row:** `Space Mono` (`font-mono`); display **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on results cards (film detail still shows all ratings).
+- **Key factor tags:** `Badge variant="secondary"` (lime secondary tokens).
+- **Runners-up grid:** standard cards with `hover-glow`; same ratings row as winner.
+- **Card navigation:** full-card hit target via a positioned overlay `Link` with a concise `aria-label` (e.g. “View {title} in watchlist”); explanation text stays outside the link’s accessible name. Page-level actions (answer summary, new recommendation) remain separate controls.
+
 ## Iconography
 - **Library:** Material Symbols Outlined.
 - **Base Rules:** Outlined by default (`font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24`), switching to filled (`'FILL' 1`) strictly for active/selected navigation states or pressed toggles.

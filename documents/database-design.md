@@ -490,11 +490,14 @@ Stores winner and runner-up explanations produced by the LLM ranker.
 
 ```sql
 CREATE TABLE recommendation_results (
-    session_id              UUID PRIMARY KEY REFERENCES recommendation_sessions (id) ON DELETE CASCADE,
-    winner_explanation      TEXT,
-    runner_up_explanations  JSONB
+    session_id                  UUID PRIMARY KEY REFERENCES recommendation_sessions (id) ON DELETE CASCADE,
+    winner_explanation          TEXT,
+    winner_explanation_detail   JSONB,
+    runner_up_explanations      JSONB
 );
 ```
+
+`winner_explanation` retains the winner’s `why_it_matches` prose for backward compatibility and history excerpts. `winner_explanation_detail` stores the full structured winner explanation (key factors, why it beat alternatives, caveats) so `GET /recommendations/{session_id}` round-trips the same explanation object as `POST /recommendations`. `runner_up_explanations` is a map of `film_id` → explanation object for each runner-up.
 
 -----
 
