@@ -25,7 +25,10 @@ def is_compose_dev_database_url(url: str) -> bool:
         return False
     parsed = urlparse(url)
     host = (parsed.hostname or "").lower()
-    port = parsed.port
+    try:
+        port = parsed.port
+    except ValueError:
+        port = None
     if host in _COMPOSE_DEV_HOSTS and port in (None, 5432):
         return True
     return (host, port) in _COMPOSE_DEV_HOST_PORTS
