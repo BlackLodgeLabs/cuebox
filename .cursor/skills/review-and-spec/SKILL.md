@@ -29,17 +29,20 @@ Before writing the spec, the issue must clearly cover:
 - **User-visible behavior** — screens, flows, or API changes
 - **Data / integration impact** — DB, sync, external APIs if relevant
 
-If any item is missing or ambiguous, **do not** create the branch or spec yet.
+If any item is missing or ambiguous, **do not** write the spec document yet.
 
 ## If detail is insufficient
 
 1. Post a numbered comment on the issue with specific questions (one topic per number).
-2. Update or create `demos/issue-{NNN}/workflow-state.json`:
+2. Create branch `cursor/issue-{NNN}-{slug}` from `main` (same slug rules as below).
+3. Update or create `demos/issue-{NNN}/workflow-state.json`:
    - `stage`: `spec-needs-info`
    - `issue`: NNN
+   - `branch`: `cursor/issue-{NNN}-{slug}`
    - increment `loops.total_runs`
-3. Add label `cursor:spec-needs-info`; remove `cursor:spec-ready` if present.
-4. **Stop.** Do not hand off to planning. User will reply and comment `@cursoragent continue spec`.
+4. Commit and push **only** `demos/issue-{NNN}/workflow-state.json` on that branch (no spec file yet).
+5. Add label `cursor:spec-needs-info`; remove `cursor:spec-ready` if present.
+6. **Stop.** Do not hand off to planning. User will reply and comment `@cursoragent continue spec`.
 
 ## If detail is sufficient
 

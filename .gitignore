@@ -50,8 +50,3 @@ Thumbs.db
 
 # Letterboxd
 letterboxd/
-
-# Demo recordings (commit demo-spec + notes; attach large videos to PR if needed)
-demos/**/*.mp4
-demos/**/*.webm
-!demos/_template/**

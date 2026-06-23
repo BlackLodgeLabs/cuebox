@@ -71,8 +71,8 @@ jobs:
                 PROMPT="Use the babysit-pr skill for GitHub issue #${issue}. Branch: ${branch}. Loop limits: bugbot 3, ci_autofix 2, total 10. Mark PR ready for review when clean."
                 ;;
               *)
-                echo "No handoff for stage: ${stage}"
-                return 0
+                echo "::error::Unknown handoff stage '${stage}' for issue #${issue}"
+                exit 1
                 ;;
             esac
 
@@ -108,26 +108,62 @@ jobs:
             exit 1
           }
 
+          is_handoff_stage() {
+            case "$1" in
+              spec-ready|plan-ready|execute-ready|demo-ready) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
+          is_skip_stage() {
+            case "$1" in
+              blocked|complete|spec-in-progress|spec-needs-info) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
           for file in "${files[@]}"; do
             [ -f "$file" ] || continue
-            issue=$(jq -r '.issue // empty' "$file")
-            branch=$(jq -r '.branch // empty' "$file")
-            stage=$(jq -r '.stage // empty' "$file")
-            if [ -z "$issue" ] || [ -z "$branch" ]; then
-              echo "Skipping $file — missing issue or branch"
-              continue
+
+            mapfile -t commits < <(
+              if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+                git rev-list --reverse "$AFTER_SHA" -- "$file" 2>/dev/null || true
+              else
+                git rev-list --reverse "${BEFORE_SHA}..${AFTER_SHA}" -- "$file" 2>/dev/null || true
+              fi
+            )
+            if [ ${#commits[@]} -eq 0 ]; then
+              commits=("$AFTER_SHA")
             fi
+
             prev_stage=""
             if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}:${file}" 2>/dev/null; then
               prev_stage=$(git show "${BEFORE_SHA}:${file}" | jq -r '.stage // empty')
             fi
-            if [ "$stage" = "$prev_stage" ]; then
-              echo "Skipping $file — stage unchanged (${stage})"
-              continue
-            fi
-            if [ "$stage" = "blocked" ] || [ "$stage" = "complete" ] || [ "$stage" = "spec-in-progress" ] || [ "$stage" = "spec-needs-info" ]; then
-              echo "Skipping $file — stage ${stage} does not hand off"
-              continue
-            fi
-            handoff "$stage" "$issue" "$branch"
+
+            for commit in "${commits[@]}"; do
+              git cat-file -e "${commit}:${file}" 2>/dev/null || continue
+              issue=$(git show "${commit}:${file}" | jq -r '.issue // empty')
+              branch=$(git show "${commit}:${file}" | jq -r '.branch // empty')
+              stage=$(git show "${commit}:${file}" | jq -r '.stage // empty')
+              if [ -z "$issue" ] || [ -z "$branch" ]; then
+                echo "Skipping $file at ${commit} — missing issue or branch"
+                continue
+              fi
+              if [ "$stage" = "$prev_stage" ]; then
+                continue
+              fi
+              if is_skip_stage "$stage"; then
+                echo "Skipping $file at ${commit} — stage ${stage} does not hand off"
+                prev_stage="$stage"
+                continue
+              fi
+              if is_handoff_stage "$stage"; then
+                handoff "$stage" "$issue" "$branch"
+                prev_stage="$stage"
+              else
+                echo "::error::Unknown stage '${stage}' in ${file} at ${commit}"
+                exit 1
+              fi
+            done
           done

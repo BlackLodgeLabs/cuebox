@@ -49,6 +49,8 @@ Follow **every** scenario in `demo-spec.md`:
 
 ## Git and state
 
+### If all scenarios pass
+
 1. Commit artifacts + `demo-notes.md` + updated state
 2. Set `stage: demo-ready`; increment `loops.total_runs`
 3. Push to issue branch
@@ -56,6 +58,16 @@ Follow **every** scenario in `demo-spec.md`:
 5. Issue labels: `cursor:demo-ready`; remove `cursor:execute-ready`
 
 Handoff Action triggers babysit. No bot `@cursoragent` comment.
+
+### If any scenario cannot pass
+
+1. Commit artifacts + `demo-notes.md` + updated state (document failures in notes)
+2. Set `stage: blocked`; increment `loops.total_runs`
+3. Push to issue branch
+4. Post summary on issue and PR explaining the failure
+5. Issue labels: `cursor:blocked`; remove `cursor:execute-ready`
+
+Do **not** set `demo-ready` or hand off to babysit.
 
 ## Do not
 
