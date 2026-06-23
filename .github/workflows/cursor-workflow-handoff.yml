@@ -42,6 +42,17 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update -qq && sudo apt-get install -y jq gh
 
+      - name: Load workflow scripts from main
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          mkdir -p /tmp/cursor-workflow-scripts
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh; do
+            git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+            chmod +x "/tmp/cursor-workflow-scripts/${script}"
+          done
+          echo "SCRIPTS_DIR=/tmp/cursor-workflow-scripts" >> "$GITHUB_ENV"
+
       - name: Sync status, ensure PR, dispatch agents
         env:
           GH_TOKEN: ${{ github.token }}
@@ -53,15 +64,13 @@ jobs:
         run: |
           set -euo pipefail
           REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
-          chmod +x scripts/cursor-workflow-sync-github-status.sh
-          chmod +x scripts/cursor-workflow-ensure-draft-pr.sh
-          chmod +x scripts/cursor-workflow-record-pr-on-branch.sh
+          WF="${SCRIPTS_DIR:-/tmp/cursor-workflow-scripts}"
 
           ensure_pr_on_branch() {
             local issue="$1" branch="$2" state_file="$3"
             local pr
-            pr=$(scripts/cursor-workflow-ensure-draft-pr.sh "$issue" "$branch")
-            scripts/cursor-workflow-record-pr-on-branch.sh "$state_file" "$pr" "$branch"
+            pr=$("$WF/cursor-workflow-ensure-draft-pr.sh" "$issue" "$branch")
+            "$WF/cursor-workflow-record-pr-on-branch.sh" "$state_file" "$pr" "$branch"
             jq --argjson pr "$pr" '.pr = $pr' "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
             echo "Draft PR #${pr} linked for issue #${issue}"
           }
@@ -86,7 +95,7 @@ jobs:
             case "$stage" in
               spec-ready)
                 ensure_pr_on_branch "$issue" "$branch" "$state_file"
-                scripts/cursor-workflow-sync-github-status.sh "$state_file"
+                "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
                 prompt="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — do not create a PR. Read documents/cursor-workflow/WORKFLOW.md and demos/issue-${issue}/workflow-state.json."
                 skill="planning"
                 progress_stage="plan-in-progress"
@@ -134,7 +143,7 @@ jobs:
                 HANDOFF_PROGRESS_STAGE="$progress_stage" \
                 HANDOFF_ACTIVE_SKILL="$skill" \
                 HANDOFF_ACTIVE_AGENT="$agent_id" \
-                  scripts/cursor-workflow-sync-github-status.sh "$state_file"
+                  "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
                 return 0
               fi
               echo "Cursor API returned ${http_code}: $(cat /tmp/cursor-agent.json)"
@@ -147,7 +156,7 @@ jobs:
               echo "Posted handoff comment on issue #${issue} (PAT fallback)"
               HANDOFF_PROGRESS_STAGE="$progress_stage" \
               HANDOFF_ACTIVE_SKILL="$skill" \
-                scripts/cursor-workflow-sync-github-status.sh "$state_file"
+                "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
               return 0
             fi
 
@@ -188,7 +197,7 @@ jobs:
             fi
 
             # Always sync labels + status comment from committed state
-            scripts/cursor-workflow-sync-github-status.sh /tmp/workflow-state.json
+            "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow-state.json
 
             if [ "$stage" = "$prev_stage" ]; then
               echo "Stage unchanged ($stage) — no handoff"
@@ -216,6 +225,17 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update -qq && sudo apt-get install -y jq gh
 
+      - name: Load workflow scripts from main
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          mkdir -p /tmp/cursor-workflow-scripts
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh; do
+            git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+            chmod +x "/tmp/cursor-workflow-scripts/${script}"
+          done
+          echo "SCRIPTS_DIR=/tmp/cursor-workflow-scripts" >> "$GITHUB_ENV"
+
       - name: Resync issue status and ensure draft PR
         env:
           GH_TOKEN: ${{ github.token }}
@@ -223,9 +243,7 @@ jobs:
           ENSURE_PR: ${{ github.event.inputs.ensure_draft_pr }}
         run: |
           set -euo pipefail
-          chmod +x scripts/cursor-workflow-sync-github-status.sh
-          chmod +x scripts/cursor-workflow-ensure-draft-pr.sh
-          chmod +x scripts/cursor-workflow-record-pr-on-branch.sh
+          WF="${SCRIPTS_DIR:-/tmp/cursor-workflow-scripts}"
           STATE="demos/issue-${ISSUE}/workflow-state.json"
           mapfile -t BRANCHES < <(git branch -r | grep -E "origin/cursor/issue-${ISSUE}-" | sed 's|^[[:space:]]*origin/||' || true)
           BRANCH="${BRANCHES[0]:-}"
@@ -234,12 +252,12 @@ jobs:
             exit 1
           fi
           git fetch origin "$BRANCH"
-          git checkout "$BRANCH"
-          git show "HEAD:${STATE}" > /tmp/workflow-state.json
+          git show "origin/${BRANCH}:${STATE}" > /tmp/workflow-state.json
           if [ "${ENSURE_PR}" = "true" ]; then
-            PR=$(scripts/cursor-workflow-ensure-draft-pr.sh "$ISSUE" "$BRANCH")
-            scripts/cursor-workflow-record-pr-on-branch.sh /tmp/workflow-state.json "$PR" "$BRANCH"
-            git show "HEAD:${STATE}" > /tmp/workflow-state.json
+            PR=$("$WF/cursor-workflow-ensure-draft-pr.sh" "$ISSUE" "$BRANCH")
+            "$WF/cursor-workflow-record-pr-on-branch.sh" /tmp/workflow-state.json "$PR" "$BRANCH"
+            git fetch origin "$BRANCH"
+            git show "origin/${BRANCH}:${STATE}" > /tmp/workflow-state.json
           fi
-          scripts/cursor-workflow-sync-github-status.sh /tmp/workflow-state.json
+          "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow-state.json
           echo "Done for issue #${ISSUE} on ${BRANCH}"
