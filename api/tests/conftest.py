@@ -15,6 +15,7 @@ from app.core.config import get_settings
 from app.database.session import SessionLocal, init_engine
 from app.main import create_app
 from app.services.provider_service import ProviderService
+from tests.db_safety import assert_safe_test_database_url
 from tests.mock_providers import create_mock_http_client
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -74,9 +75,10 @@ def _isolate_db(request):
         yield
         return
     # test_database uses a module-scoped session; isolation is handled per-test there
-    if request.module.__name__ == "tests.test_database":
+    if request.module.__name__ in ("tests.test_database", "tests.test_db_safety"):
         yield
         return
+    assert_safe_test_database_url(TEST_DATABASE_URL)
     init_engine(TEST_DATABASE_URL)
     with SessionLocal() as session:
         session.execute(
@@ -96,6 +98,7 @@ def _isolate_db(request):
 def db_session():
     if not TEST_DATABASE_URL:
         pytest.skip("TEST_DATABASE_URL or DATABASE_URL not set")
+    assert_safe_test_database_url(TEST_DATABASE_URL)
     init_engine(TEST_DATABASE_URL)
     with SessionLocal() as session:
         yield session
@@ -121,6 +124,7 @@ def integration_env(tmp_path, monkeypatch):
     monkeypatch.setenv("TMDB_API_KEY", "test-tmdb-key")
     monkeypatch.setenv("OMDB_API_KEY", "test-omdb-key")
     monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+    assert_safe_test_database_url(TEST_DATABASE_URL)
     get_settings.cache_clear()
     init_engine(TEST_DATABASE_URL)
     yield config_path
