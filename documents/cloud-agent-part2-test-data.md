@@ -208,6 +208,8 @@ Live import smoke test (Tier 3):
 CSV_PATH=api/tests/fixtures/watchlist.csv bash scripts/smoke-test.sh
 ```
 
+Full Tier 3 snapshot workflow (2-film fixture → cloud snapshot): [cloud-agent-tier3-fixture-import-plan.md](cloud-agent-tier3-fixture-import-plan.md).
+
 ---
 
 ## Step 5 — Enable developer mode (optional, recommended for demos)
