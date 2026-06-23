@@ -25,6 +25,14 @@ Implement `documents/plans/issue-{NNN}.md`, verify with tests, update docs, push
 - Handoff when `stage: plan-ready`
 - Prompt: "use execute skill for issue {NNN}"
 
+## Start — update state
+
+Commit and push early:
+
+```json
+{ "stage": "execute-in-progress", "active_skill": "execute", "updated_at": "<ISO8601>" }
+```
+
 ## Read first
 
 1. `documents/plans/issue-{NNN}.md`
@@ -75,7 +83,7 @@ After code is green, check the plan's **Documentation updates** section:
 
 Preserve `pr` from workflow-state (set by GitHub Actions). Do not reset `loops.bugbot` / `loops.ci_autofix`.
 
-Issue labels: add `cursor:execute-ready`; remove `cursor:plan-ready`. Push state file; handoff Action triggers demo.
+Issue labels: synced by GitHub Actions on push. Push state file; handoff Action triggers demo.
 
 ## Do not
 

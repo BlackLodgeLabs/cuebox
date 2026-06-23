@@ -78,6 +78,15 @@ Create labels (Settings → Labels):
 
 Agents add/remove these; labels help you see state at a glance.
 
+**Important:** Cloud agents often **cannot** set labels or post comments (token limits). After merging workflow visibility updates, labels and a **status comment** on the issue are set automatically by GitHub Actions when `workflow-state.json` is pushed. Create all labels in the table in [WORKFLOW.md](WORKFLOW.md) (including `cursor:*-in-progress`).
+
+### Visibility checklist
+
+- [ ] All `cursor:*` labels created (see WORKFLOW.md)
+- [ ] Handoff workflow has `permissions: issues: write` (in repo after merge)
+- [ ] On issue #N, look for comment **"Cursor workflow — issue #N"** after the next state push
+- [ ] To backfill issue #45 now: Actions → **Cursor workflow handoff** → Run workflow → issue `45`
+
 ## 5. Cloud agent environment
 
 In [cursor.com/dashboard](https://cursor.com/dashboard) → **Cloud Agents** → environment for this repo:

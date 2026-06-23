@@ -97,11 +97,15 @@ cursor/issue-{NNN}-{slug}
 
 Preserve existing `loops` when resuming from `spec-needs-info` (do not reset `total_runs`).
 
-### Git and labels
+### Git and GitHub visibility
 
-1. Commit spec + state on the feature branch; push.
-2. On the **issue**: remove `cursor:spec-needs-info`; add `cursor:spec-ready`.
-3. Post issue comment summarizing the spec and branch name. **Do not** `@cursoragent` for handoff — push triggers `.github/workflows/cursor-workflow-handoff.yml`.
+Cloud agents often **cannot** post issue comments or set labels (integration token limits). **Do not fail the task** for that — commit and push are what matter.
+
+1. Commit spec + `demos/issue-{NNN}/workflow-state.json` on the feature branch; push.
+2. **Labels and a status comment** are applied by `.github/workflows/cursor-workflow-handoff.yml` using `GITHUB_TOKEN` (not your job).
+3. Optionally try labels/comments via `gh`; if permission denied, note in commit message only.
+
+**Do not** ask the human to add labels manually unless the GitHub Action also failed.
 
 ## Resume (`continue spec`)
 

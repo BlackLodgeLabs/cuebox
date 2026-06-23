@@ -187,6 +187,7 @@ jobs:
               continue
             fi
 
+            # Always sync labels + status comment from committed state
             scripts/cursor-workflow-sync-github-status.sh /tmp/workflow-state.json
 
             if [ "$stage" = "$prev_stage" ]; then

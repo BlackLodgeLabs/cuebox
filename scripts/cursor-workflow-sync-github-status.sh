@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# Sync GitHub issue labels and a single updatable status comment from workflow-state.json.
+# Sync GitHub issue labels and a single updatable status comment from
+# demos/issue-NNN/workflow-state.json. Intended for GitHub Actions (GITHUB_TOKEN
+# or PAT with issues:write). Cloud agents cannot rely on this — they push state;
+# this script runs on the subsequent workflow trigger.
 set -euo pipefail
+
+MARKER="<!-- cursor-workflow-status:v1 -->"
 
 STATE_FILE="${1:?usage: cursor-workflow-sync-github-status.sh <path-to-workflow-state.json>}"
 
@@ -27,25 +32,12 @@ if [ -z "$ISSUE" ] || [ -z "$STAGE" ]; then
   exit 1
 fi
 
-if [ -z "${GH_TOKEN:-}" ]; then
-  echo "GH_TOKEN not set"
+GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+if [ -z "$GH_TOKEN" ]; then
+  echo "GH_TOKEN or GITHUB_TOKEN not set"
   exit 1
 fi
-
-HANDOFF_PROGRESS_STAGE="${HANDOFF_PROGRESS_STAGE:-}"
-HANDOFF_ACTIVE_SKILL="${HANDOFF_ACTIVE_SKILL:-}"
-HANDOFF_ACTIVE_AGENT="${HANDOFF_ACTIVE_AGENT:-}"
-
-DISPLAY_STAGE="$STAGE"
-if [ -n "$HANDOFF_PROGRESS_STAGE" ]; then
-  DISPLAY_STAGE="$HANDOFF_PROGRESS_STAGE"
-fi
-if [ -n "$HANDOFF_ACTIVE_SKILL" ]; then
-  ACTIVE_SKILL="$HANDOFF_ACTIVE_SKILL"
-fi
-if [ -n "$HANDOFF_ACTIVE_AGENT" ]; then
-  ACTIVE_AGENT="$HANDOFF_ACTIVE_AGENT"
-fi
+export GH_TOKEN
 
 stage_label() {
   case "$1" in
@@ -84,11 +76,34 @@ stage_title() {
 }
 
 CURSOR_LABELS=(
-  "cursor:spec-needs-info" "cursor:spec-in-progress" "cursor:spec-ready"
-  "cursor:plan-in-progress" "cursor:plan-ready" "cursor:execute-in-progress"
-  "cursor:execute-ready" "cursor:demo-in-progress" "cursor:demo-ready"
-  "cursor:babysit-in-progress" "cursor:complete" "cursor:blocked"
+  "cursor:spec-needs-info"
+  "cursor:spec-in-progress"
+  "cursor:spec-ready"
+  "cursor:plan-in-progress"
+  "cursor:plan-ready"
+  "cursor:execute-in-progress"
+  "cursor:execute-ready"
+  "cursor:demo-in-progress"
+  "cursor:demo-ready"
+  "cursor:babysit-in-progress"
+  "cursor:complete"
+  "cursor:blocked"
 )
+
+HANDOFF_PROGRESS_STAGE="${HANDOFF_PROGRESS_STAGE:-}"
+HANDOFF_ACTIVE_SKILL="${HANDOFF_ACTIVE_SKILL:-}"
+HANDOFF_ACTIVE_AGENT="${HANDOFF_ACTIVE_AGENT:-}"
+
+DISPLAY_STAGE="$STAGE"
+if [ -n "$HANDOFF_PROGRESS_STAGE" ]; then
+  DISPLAY_STAGE="$HANDOFF_PROGRESS_STAGE"
+fi
+if [ -n "$HANDOFF_ACTIVE_SKILL" ]; then
+  ACTIVE_SKILL="$HANDOFF_ACTIVE_SKILL"
+fi
+if [ -n "$HANDOFF_ACTIVE_AGENT" ]; then
+  ACTIVE_AGENT="$HANDOFF_ACTIVE_AGENT"
+fi
 
 NEW_LABEL=$(stage_label "$DISPLAY_STAGE")
 TITLE=$(stage_title "$DISPLAY_STAGE")
@@ -99,10 +114,10 @@ for label in "${CURSOR_LABELS[@]}"; do
 done
 
 if [ -n "$NEW_LABEL" ]; then
-  gh issue edit "$ISSUE" --repo "$REPO" "${REMOVE_ARGS[@]}" --add-label "$NEW_LABEL" 2>/dev/null || \
+  gh issue edit "$ISSUE" --repo "$REPO" "${REMOVE_ARGS[@]}" --add-label "$NEW_LABEL" || \
     gh issue edit "$ISSUE" --repo "$REPO" --add-label "$NEW_LABEL"
 else
-  gh issue edit "$ISSUE" --repo "$REPO" "${REMOVE_ARGS[@]}" 2>/dev/null || true
+  gh issue edit "$ISSUE" --repo "$REPO" "${REMOVE_ARGS[@]}" || true
 fi
 
 PR_LINE="—"
@@ -116,7 +131,6 @@ if [ -n "$ACTIVE_AGENT" ]; then
 fi
 
 SKILL_LINE="${ACTIVE_SKILL:-—}"
-MARKER="<!-- cursor-workflow-status:v1 -->"
 
 BODY="${MARKER}
 ## Cursor workflow — issue #${ISSUE}
@@ -135,14 +149,14 @@ BODY="${MARKER}
 
 [Open Cursor agents](https://cursor.com/agents) · [Workflow docs](https://github.com/${REPO}/blob/main/documents/cursor-workflow/WORKFLOW.md)
 
-_Updated when \`demos/issue-${ISSUE}/workflow-state.json\` changes._"
+_This comment is updated automatically when \`demos/issue-${ISSUE}/workflow-state.json\` changes on the branch._"
 
 COMMENT_ID=$(gh api "repos/${REPO}/issues/${ISSUE}/comments" --paginate \
-  | jq -r --arg m "$MARKER" '.[] | select(.body | contains($m)) | .id' | head -n1)
+  | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id' | head -n1)
 
 if [ -n "$COMMENT_ID" ]; then
   gh api -X PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" -f body="$BODY" >/dev/null
-  echo "Updated status comment on issue #${ISSUE} (label: ${NEW_LABEL:-none})"
+  echo "Updated status comment ${COMMENT_ID} on issue #${ISSUE} (label: ${NEW_LABEL:-none})"
 else
   gh issue comment "$ISSUE" --repo "$REPO" --body "$BODY" >/dev/null
   echo "Created status comment on issue #${ISSUE} (label: ${NEW_LABEL:-none})"

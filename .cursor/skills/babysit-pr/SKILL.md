@@ -16,6 +16,12 @@ Keep the issue PR merge-ready: respond to Bugbot, CI failures, and review thread
 - Handoff when `stage: demo-ready`
 - Prompt: "use babysit-pr skill for issue {NNN}"
 
+## Start — update state
+
+```json
+{ "stage": "babysit-in-progress", "active_skill": "babysit-pr", "updated_at": "<ISO8601>" }
+```
+
 ## Read first
 
 1. `demos/issue-{NNN}/workflow-state.json` — **check limits before acting**
@@ -73,7 +79,7 @@ Then:
 
 1. `stage`: `complete`
 2. **Convert draft PR → ready for review** (not merged)
-3. Labels: `cursor:complete`; remove `cursor:demo-ready`
+3. Labels: `cursor:complete` applied by GitHub Actions on push.
 4. PR comment: summary for human reviewer — link `demo-notes.md`, list gates run, note loop counts
 5. Issue comment: "@{issue-author} PR is ready for your final review" (use issue author; do not @cursoragent)
 
