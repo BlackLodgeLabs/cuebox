@@ -2,7 +2,7 @@ FROM postgres:16-alpine
 
 ARG SUPERCRONIC_VERSION=0.2.33
 
-RUN apk add --no-cache curl \
+RUN apk add --no-cache bash curl \
     && curl -fsSLO "https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-amd64" \
     && chmod +x supercronic-linux-amd64 \
     && mv supercronic-linux-amd64 /usr/local/bin/supercronic

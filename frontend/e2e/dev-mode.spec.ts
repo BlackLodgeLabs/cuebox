@@ -84,7 +84,7 @@ test.describe("Developer Mode UI (mocked API)", () => {
         response.url().includes("/dev/system/versions") && response.ok(),
     );
 
-    await expect(page.getByRole("heading", { name: "The Wicker Man" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "The Wicker Man" })).toBeVisible();
     await expect(page.getByText("Developer Mode", { exact: true })).toBeVisible();
     await expect(page.getByText("Profile hash")).toBeVisible();
   });
