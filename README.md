@@ -59,6 +59,7 @@ If you still see missing-column errors, rebuild the API image: `docker compose u
 | [documents/DESIGN.md](documents/DESIGN.md) | Modern Neo-Noir Cinema design system |
 | [documents/api-contracts.md](documents/api-contracts.md) | REST API v1 reference |
 | [documents/Architecture.md](documents/Architecture.md) | Technical architecture |
+| [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md) | Cursor Cloud agent test data (Tier 2 seeding) |
 | [AGENTS.md](AGENTS.md) | Agent and CI development guide |
 
 ## Testing
