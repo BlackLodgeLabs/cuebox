@@ -66,21 +66,25 @@ def find_for_rss_watched(
 
     slug = extract_film_slug(letterboxd_uri)
     if slug is not None:
-        slug_pattern = f"%/film/{slug}/%"
-        stmt = select(Film).where(Film.letterboxd_uri.ilike(slug_pattern))
+        stmt = select(Film).where(
+            Film.letterboxd_uri.ilike(f"%/film/{slug}")
+            | Film.letterboxd_uri.ilike(f"%/film/{slug}/%")
+        )
         matches = list(db.scalars(stmt).all())
         if len(matches) == 1:
             return matches[0], "slug"
 
-    if title and year is not None:
+    if title:
         stmt = (
             select(Film)
             .join(
                 WatchlistEntry,
                 (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
             )
-            .where(func.lower(Film.title) == title.strip().lower(), Film.year == year)
+            .where(func.lower(Film.title) == title.strip().lower())
         )
+        if year is not None:
+            stmt = stmt.where(Film.year == year)
         matches = list(db.scalars(stmt).all())
         if len(matches) == 1:
             return matches[0], "title_year"
