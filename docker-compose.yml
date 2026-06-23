@@ -46,6 +46,7 @@ services:
       - postgres
     env_file: .env
     environment:
+      CUEBOX_IN_BACKUP_CONTAINER: "1"
       PGHOST: postgres
       BACKUP_DIR: /backups
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-2}
