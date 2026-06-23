@@ -14,6 +14,14 @@ Execute `demos/issue-{NNN}/demo-spec.md` on the running stack and commit evidenc
 - Handoff when `stage: execute-ready`
 - Prompt: "use demo skill for issue {NNN}"
 
+## Start — update state
+
+```json
+{ "stage": "demo-in-progress", "active_skill": "demo", "updated_at": "<ISO8601>" }
+```
+
+Push before running scenarios.
+
 ## Read first
 
 1. `demos/issue-{NNN}/demo-spec.md`
@@ -55,7 +63,7 @@ Follow **every** scenario in `demo-spec.md`:
 2. Set `stage: demo-ready`; increment `loops.total_runs`
 3. Push to issue branch
 4. PR comment: summary + thumbnail/list of artifacts (paths in repo)
-5. Issue labels: `cursor:demo-ready`; remove `cursor:execute-ready`
+5. Issue labels synced by GitHub Actions on push.
 
 Handoff Action triggers babysit. No bot `@cursoragent` comment.
 

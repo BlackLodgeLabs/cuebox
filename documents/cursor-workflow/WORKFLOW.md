@@ -44,17 +44,34 @@ When any limit is exceeded: set `stage` to `blocked`, add label `cursor:blocked`
 
 ## GitHub labels
 
-Create these on the repository (colors are suggestions):
+Create these on the repository. **Agents do not set them reliably** — `.github/workflows/cursor-workflow-handoff.yml` syncs labels from `workflow-state.json` on each push (using `GITHUB_TOKEN`).
 
 | Label | Purpose |
 |-------|---------|
 | `cursor:spec-needs-info` | Spec agent waiting on your answers |
+| `cursor:spec-in-progress` | Spec agent running |
 | `cursor:spec-ready` | Spec committed; planning queued |
+| `cursor:plan-in-progress` | Planning agent running |
 | `cursor:plan-ready` | Plan committed; execute queued |
+| `cursor:execute-in-progress` | Execute agent running |
 | `cursor:execute-ready` | Code/tests done; demo queued |
+| `cursor:demo-in-progress` | Demo agent running |
 | `cursor:demo-ready` | Demo artifacts committed; babysit queued |
+| `cursor:babysit-in-progress` | Babysit agent running |
 | `cursor:complete` | Babysit finished; ready for your review |
 | `cursor:blocked` | Loop limit or unrecoverable failure |
+
+## Visibility (where to see the current stage)
+
+1. **GitHub issue** — pinned-style **status comment** (updated automatically; look for `Cursor workflow — issue #NNN`)
+2. **GitHub issue labels** — `cursor:*` label matches stage
+3. **Branch** — `demos/issue-NNN/workflow-state.json` → `"stage"` field
+4. **Actions** — workflow run **Cursor workflow handoff** on each state push
+5. **cursor.com/agents** — latest cloud agent run (usage dashboard)
+
+**Manual resync** (e.g. issue already mid-flight): Actions → Cursor workflow handoff → **Run workflow** → enter issue number `45`.
+
+Cloud agents cannot post labels/comments; **do not rely on them for status**. Push `workflow-state.json` instead.
 
 ## Human triggers (only you)
 

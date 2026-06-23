@@ -25,6 +25,20 @@ Produce an implementation plan and demo spec on the existing feature branch.
 - Spec has no open questions in **Open questions** section
 - `workflow-state.json` shows `stage: spec-ready` (or you are explicitly resuming planning)
 
+## Start — update state (first commit)
+
+Before planning work, commit an early state update so GitHub shows progress:
+
+```json
+{
+  "stage": "plan-in-progress",
+  "active_skill": "planning",
+  "updated_at": "<ISO8601>"
+}
+```
+
+Push (triggers status sync on the issue).
+
 ## Outputs
 
 ### 1. Implementation plan — `documents/plans/issue-{NNN}.md`
@@ -67,8 +81,7 @@ Preserve `issue`, `branch`, `pr` fields.
 ## Git and labels
 
 1. Commit plan + demo-spec + updated state; push branch.
-2. Issue labels: add `cursor:plan-ready`; remove `cursor:spec-ready`.
-3. Comment on issue with plan summary and test strategy. No `@cursoragent` handoff comment.
+2. Set `stage: plan-ready`, `active_skill: null` (or omit). Issue labels/comments are synced by GitHub Actions on push.
 
 ## Do not
 
