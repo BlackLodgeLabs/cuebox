@@ -14,6 +14,7 @@ from app.database.enums import ArtifactType, EnrichmentStatus
 from app.database.models import Film
 from app.database.session import SessionLocal, init_engine
 from app.repositories import film_repository, import_job_repository, system_version_repository
+from tests.db_safety import assert_safe_test_database_url
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
@@ -29,6 +30,7 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def db_session():
+    assert_safe_test_database_url(TEST_DATABASE_URL)
     init_engine(TEST_DATABASE_URL)
     session = SessionLocal()
     yield session

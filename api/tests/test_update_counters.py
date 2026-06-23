@@ -9,6 +9,7 @@ import pytest
 
 from app.database.session import SessionLocal, init_engine
 from app.repositories import import_job_repository
+from tests.db_safety import assert_safe_test_database_url
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
@@ -23,6 +24,7 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture
 def db_session():
+    assert_safe_test_database_url(TEST_DATABASE_URL)
     init_engine(TEST_DATABASE_URL)
     session = SessionLocal()
     yield session
