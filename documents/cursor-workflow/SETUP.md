@@ -50,7 +50,7 @@ Create the API key: [Cursor Dashboard → Integrations](https://cursor.com/dashb
 
 | Secret | Optional | Purpose |
 |--------|----------|---------|
-| `CURSOR_HANDOFF_GITHUB_TOKEN` | Fallback | GitHub PAT (classic) with `repo` scope; Action posts `@cursoragent …` **as you** when API is unavailable |
+| `CURSOR_HANDOFF_GITHUB_TOKEN` | Fallback | Fine-grained GitHub PAT limited to **this repository** with minimum permissions (Issues and Pull requests: Read and write); Action posts `@cursoragent …` **as you** when API is unavailable |
 
 Use API key path in production — PAT fallback exists because Cursor filters bot-authored `@cursoragent` comments.
 

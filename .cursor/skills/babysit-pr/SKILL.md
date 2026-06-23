@@ -55,9 +55,10 @@ Prioritize: CI blocking → Bugbot high severity → other comments.
 
 If limits exceeded or unrecoverable failure:
 
-1. `stage`: `blocked`
-2. Labels: `cursor:blocked` on issue; comment on issue + PR with counters and last errors
-3. **Stop** — no further automated handoffs
+1. Update `demos/issue-{NNN}/workflow-state.json`: `stage`: `blocked`, increment `loops.total_runs`, set `updated_at` to current ISO8601
+2. **Commit and push** the state file to the issue branch (required so remote automation sees the terminal state and stops handoffs)
+3. Labels: `cursor:blocked` on issue; comment on issue + PR with counters and last errors
+4. **Stop** — no further automated handoffs
 
 ## Success — ready for review
 

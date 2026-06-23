@@ -72,10 +72,16 @@ If PR already exists, push new commits to the same branch.
 {
   "stage": "execute-ready",
   "pr": <number>,
-  "loops": { "total_runs": <increment>, ... },
+  "loops": {
+    "bugbot": <preserve>,
+    "ci_autofix": <preserve>,
+    "total_runs": <increment>
+  },
   "updated_at": "<ISO8601>"
 }
 ```
+
+Preserve existing `loops.bugbot` and `loops.ci_autofix` from the current state file — do not reset them.
 
 Issue labels: add `cursor:execute-ready`; remove `cursor:plan-ready`. Push state file; handoff Action triggers demo.
 
