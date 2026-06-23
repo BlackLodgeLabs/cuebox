@@ -90,10 +90,12 @@ cursor/issue-{NNN}-{slug}
   "branch": "cursor/issue-{NNN}-{slug}",
   "pr": null,
   "stage": "spec-ready",
-  "loops": { "bugbot": 0, "ci_autofix": 0, "total_runs": 1 },
+  "loops": { "bugbot": 0, "ci_autofix": 0, "total_runs": <1 if new, else preserve from existing> },
   "updated_at": "<ISO8601>"
 }
 ```
+
+Preserve existing `loops` when resuming from `spec-needs-info` (do not reset `total_runs`).
 
 ### Git and labels
 
@@ -105,7 +107,7 @@ cursor/issue-{NNN}-{slug}
 
 1. Re-read issue comments for answers to your numbered questions.
 2. If still ambiguous → ask follow-ups and stay on `spec-needs-info`.
-3. If clear → update spec, set `stage` to `spec-ready`, push, update labels.
+3. If clear → update spec, set `stage` to `spec-ready`, preserve `loops` from existing `workflow-state.json`, push, update labels.
 
 ## Do not
 
