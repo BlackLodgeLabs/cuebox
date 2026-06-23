@@ -148,3 +148,19 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 - **Running host pytest / `verify-*-gates.sh` while `docker compose up` is live:** the Compose `.env` sets `DATABASE_URL=...@postgres:5432` (a Compose-internal hostname), and importing `app.main` calls `load_dotenv()`, so a host `pytest` inherits the unresolvable `postgres` host. Export `DATABASE_URL`/`TEST_DATABASE_URL` to a reachable URL first, e.g. `export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox; export TEST_DATABASE_URL=$DATABASE_URL`. The gate's Gate 2 ("no DB" unit tests) runs *before* the gate starts its own Postgres, so it also needs a Postgres already listening on `localhost:5432`; the gate reuses any container already publishing 5432 (use a separate ephemeral `pgvector/pgvector:pg16` on 5432 — not the seeded Compose DB on 5433, which the autouse fixture would truncate).
 - **Host frontend production build vs the running dev container:** the Compose `frontend` dev container writes root-owned files into the bind-mounted host `frontend/.next`, so a host `npm run build` (and Phase 8 Gate 7 / Phase 7 regression) fails with `EACCES`. Before building on the host, `docker compose stop frontend` and `sudo rm -rf frontend/.next`, then `docker compose up -d frontend` afterward. Playwright E2E gates need the chromium browser binary (`npx playwright install chromium` plus its apt system deps) which the snapshot is expected to carry.
 - The mocked Playwright test `e2e/dev-mode.spec.ts` "history detail shows dev panel" currently fails on a pre-existing strict-mode selector clash (heading `The Wicker Man` matches both the `h1` title and the `h3` card `The Wicker Man (1973)`); this is unrelated to environment setup.
+
+## Cursor issue workflow (multi-agent)
+
+GitHub issue → spec → plan → execute → demo → babysit → human review. **Setup:** [documents/cursor-workflow/SETUP.md](documents/cursor-workflow/SETUP.md). **Stages:** [documents/cursor-workflow/WORKFLOW.md](documents/cursor-workflow/WORKFLOW.md).
+
+| You do | Skill |
+|--------|-------|
+| `@cursoragent spec` on issue | `review-and-spec` |
+| `@cursoragent continue spec` | `review-and-spec` |
+| Handoff (automated) | `planning` → `execute` → `demo` → `babysit-pr` |
+
+- Specs: `documents/specs/issue-NNN.md`
+- Plans: `documents/plans/issue-NNN.md`
+- Demo spec + artifacts: `demos/issue-NNN/`
+- State / handoffs: `demos/issue-NNN/workflow-state.json` + `.github/workflows/cursor-workflow-handoff.yml`
+- Pre-PR gates: `run-gate-scripts` skill

@@ -1,0 +1,12 @@
+{
+  "issue": 0,
+  "branch": "cursor/issue-0-placeholder",
+  "pr": null,
+  "stage": "spec-in-progress",
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 0
+  },
+  "updated_at": "1970-01-01T00:00:00Z"
+}

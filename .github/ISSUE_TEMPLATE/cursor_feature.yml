@@ -1,0 +1,59 @@
+name: Cursor feature
+description: New feature or enhancement for the Cursor agent workflow
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        After creating this issue, comment **`@cursoragent spec`** to start the spec agent.
+        If it asks questions, reply then comment **`@cursoragent continue spec`**.
+
+        See [documents/cursor-workflow/WORKFLOW.md](../blob/main/documents/cursor-workflow/WORKFLOW.md).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / goal
+      description: What problem does this solve? Why now?
+      placeholder: As a user, I want...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Testable outcomes (checkboxes welcome)
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: In scope and explicitly out of scope
+      placeholder: |
+        In scope:
+        -
+        Out of scope:
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: User-visible behavior
+      description: Screens, flows, or API changes
+    validations:
+      required: true
+
+  - type: textarea
+    id: data
+    attributes:
+      label: Data / integration impact
+      description: DB, sync, external APIs — or "none"
+    validations:
+      required: false

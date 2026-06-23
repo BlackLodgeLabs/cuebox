@@ -45,6 +45,8 @@ Thumbs.db
 .cursor/*
 !.cursor/environment.json
 !.cursor/Dockerfile
+!.cursor/skills/
+!.cursor/skills/**
 
 # Letterboxd
 letterboxd/
