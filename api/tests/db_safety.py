@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 # Compose service hostname (api/.env DATABASE_URL) and host-published port (5433:5432).
 _COMPOSE_DEV_HOSTS = frozenset({"postgres"})
-_COMPOSE_DEV_HOST_PORTS = frozenset({("localhost", 5433), ("127.0.0.1", 5433)})
+_COMPOSE_DEV_HOST_PORTS = frozenset({("localhost", 5433), ("127.0.0.1", 5433), ("::1", 5433)})
 
 ALLOW_COMPOSE_DB_ENV = "CUEBOX_TEST_ALLOW_COMPOSE_DB"
 
