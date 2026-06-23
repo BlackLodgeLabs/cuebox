@@ -5,6 +5,8 @@
 # this script runs on the subsequent workflow trigger.
 set -euo pipefail
 
+MARKER="<!-- cursor-workflow-status:v1 -->"
+
 STATE_FILE="${1:?usage: cursor-workflow-sync-github-status.sh <path-to-workflow-state.json>}"
 
 if [ ! -f "$STATE_FILE" ]; then
@@ -30,10 +32,12 @@ if [ -z "$ISSUE" ] || [ -z "$STAGE" ]; then
   exit 1
 fi
 
-if [ -z "${GH_TOKEN:-}" ]; then
-  echo "GH_TOKEN not set"
+GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+if [ -z "$GH_TOKEN" ]; then
+  echo "GH_TOKEN or GITHUB_TOKEN not set"
   exit 1
 fi
+export GH_TOKEN
 
 stage_label() {
   case "$1" in
@@ -147,7 +151,7 @@ BODY="${MARKER}
 _This comment is updated automatically when \`demos/issue-${ISSUE}/workflow-state.json\` changes on the branch._"
 
 COMMENT_ID=$(gh api "repos/${REPO}/issues/${ISSUE}/comments" --paginate \
-  | jq -r --arg m "$MARKER" '.[] | select(.body | contains($m)) | .id' | head -n1)
+  | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id' | head -n1)
 
 if [ -n "$COMMENT_ID" ]; then
   gh api -X PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" -f body="$BODY" >/dev/null
