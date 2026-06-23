@@ -18,6 +18,7 @@ from tests.db_safety import (
         "postgresql://cuebox:cuebox@postgres/cuebox",
         "postgresql+psycopg://cuebox:cuebox@localhost:5433/cuebox",
         "postgresql+psycopg://cuebox:cuebox@127.0.0.1:5433/cuebox",
+        "postgresql+psycopg://cuebox:cuebox@[::1]:5433/cuebox",
     ],
 )
 def test_is_compose_dev_database_url_detects_compose_targets(url: str) -> None:
@@ -31,6 +32,7 @@ def test_is_compose_dev_database_url_detects_compose_targets(url: str) -> None:
         "postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox",
         "postgresql+psycopg://cuebox:cuebox@127.0.0.1:5432/cuebox",
         "postgresql+psycopg://cuebox:cuebox@testhost:5432/cuebox",
+        "postgresql+psycopg://cuebox:cuebox@localhost:invalid_port/cuebox",
     ],
 )
 def test_is_compose_dev_database_url_allows_test_databases(url: str) -> None:

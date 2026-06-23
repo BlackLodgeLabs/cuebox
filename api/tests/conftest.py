@@ -75,7 +75,7 @@ def _isolate_db(request):
         yield
         return
     # test_database uses a module-scoped session; isolation is handled per-test there
-    if request.module.__name__ == "tests.test_database":
+    if request.module.__name__ in ("tests.test_database", "tests.test_db_safety"):
         yield
         return
     assert_safe_test_database_url(TEST_DATABASE_URL)
