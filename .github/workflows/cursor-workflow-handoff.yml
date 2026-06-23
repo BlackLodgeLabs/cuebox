@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Install dependencies
         run: |
@@ -115,6 +115,14 @@ jobs:
             stage=$(jq -r '.stage // empty' "$file")
             if [ -z "$issue" ] || [ -z "$branch" ]; then
               echo "Skipping $file — missing issue or branch"
+              continue
+            fi
+            prev_stage=""
+            if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}:${file}" 2>/dev/null; then
+              prev_stage=$(git show "${BEFORE_SHA}:${file}" | jq -r '.stage // empty')
+            fi
+            if [ "$stage" = "$prev_stage" ]; then
+              echo "Skipping $file — stage unchanged (${stage})"
               continue
             fi
             if [ "$stage" = "blocked" ] || [ "$stage" = "complete" ] || [ "$stage" = "spec-in-progress" ] || [ "$stage" = "spec-needs-info" ]; then
