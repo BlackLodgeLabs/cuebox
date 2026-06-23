@@ -2,11 +2,11 @@
   "issue": 45,
   "branch": "cursor/issue-45-set-auto-database-back-up-daily",
   "pr": null,
-  "stage": "spec-ready",
+  "stage": "plan-ready",
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
-  "updated_at": "2026-06-23T15:30:00Z"
+  "updated_at": "2026-06-23T16:00:00Z"
 }
