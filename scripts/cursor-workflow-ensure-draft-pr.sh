@@ -7,13 +7,14 @@ ISSUE="${1:?usage: cursor-workflow-ensure-draft-pr.sh <issue> <branch>}"
 BRANCH="${2:?}"
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 
-if [ -z "${GH_TOKEN:-}" ]; then
-  echo "GH_TOKEN not set" >&2
+GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+if [ -z "$GH_TOKEN" ]; then
+  echo "GH_TOKEN or GITHUB_TOKEN not set" >&2
   exit 1
 fi
+export GH_TOKEN
 
-EXISTING=$(gh pr list --repo "$REPO" --head "$BRANCH" --state all --json number,state -q \
-  '[.[] | select(.state == "OPEN" or .state == "DRAFT")][0].number // empty')
+EXISTING=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number -q '.[0].number // empty')
 
 if [ -n "$EXISTING" ]; then
   echo "Found existing PR #${EXISTING} for ${BRANCH}" >&2
@@ -54,7 +55,7 @@ PR_NUM=$(gh pr create --repo "$REPO" \
 
 if [ -z "$PR_NUM" ]; then
   # gh sometimes prints only the URL on stdout
-  PR_NUM=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number -q '.[0].number')
+  PR_NUM=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number -q '.[0].number')
 fi
 
 if [ -z "$PR_NUM" ]; then

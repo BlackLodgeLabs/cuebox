@@ -29,7 +29,7 @@ git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
 
 git fetch origin "$BRANCH"
-git checkout "$BRANCH"
+git checkout -B "$BRANCH" "origin/$BRANCH"
 
 jq --argjson pr "$PR_NUM" \
   --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \

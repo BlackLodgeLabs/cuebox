@@ -227,7 +227,8 @@ jobs:
           chmod +x scripts/cursor-workflow-ensure-draft-pr.sh
           chmod +x scripts/cursor-workflow-record-pr-on-branch.sh
           STATE="demos/issue-${ISSUE}/workflow-state.json"
-          BRANCH=$(git branch -r | grep -E "origin/cursor/issue-${ISSUE}-" | head -n1 | sed 's|^[[:space:]]*origin/||' || true)
+          mapfile -t BRANCHES < <(git branch -r | grep -E "origin/cursor/issue-${ISSUE}-" | sed 's|^[[:space:]]*origin/||' || true)
+          BRANCH="${BRANCHES[0]:-}"
           if [ -z "$BRANCH" ]; then
             echo "No cursor/issue-${ISSUE}-* branch found on origin"
             exit 1
