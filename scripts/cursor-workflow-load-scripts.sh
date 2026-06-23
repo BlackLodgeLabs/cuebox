@@ -7,7 +7,11 @@ set -euo pipefail
 DEST="${1:-/tmp/cursor-workflow-scripts}"
 REF="${WORKFLOW_SCRIPTS_REF:-origin/main}"
 
-git fetch origin main
+FETCH_BRANCH="main"
+if [[ "$REF" == origin/* ]]; then
+  FETCH_BRANCH="${REF#origin/}"
+fi
+git fetch origin "$FETCH_BRANCH"
 
 mkdir -p "$DEST"
 for script in \
