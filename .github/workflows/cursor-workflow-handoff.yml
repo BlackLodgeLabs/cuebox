@@ -1,7 +1,7 @@
 name: Cursor workflow handoff
 
-# On workflow-state.json push: sync GitHub issue labels + status comment, then spawn next agent.
-# Requires: CURSOR_API_KEY (repo secret). Optional: CURSOR_HANDOFF_GITHUB_TOKEN (PAT fallback).
+# On workflow-state.json push: sync issue status, ensure draft PR, spawn next cloud agent.
+# Requires: CURSOR_API_KEY. Uses GITHUB_TOKEN for labels, comments, and draft PRs.
 
 on:
   push:
@@ -12,13 +12,19 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: Issue number to resync status comment and labels for
+        description: Issue number to resync (and optionally create draft PR)
         required: true
         type: string
+      ensure_draft_pr:
+        description: Create draft PR if missing
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   issues: write
-  contents: read
+  pull-requests: write
+  contents: write
 
 concurrency:
   group: cursor-handoff-${{ github.ref }}
@@ -34,11 +40,9 @@ jobs:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y jq gh
+        run: sudo apt-get update -qq && sudo apt-get install -y jq gh
 
-      - name: Sync status and dispatch agents
+      - name: Sync status, ensure PR, dispatch agents
         env:
           GH_TOKEN: ${{ github.token }}
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
@@ -50,6 +54,17 @@ jobs:
           set -euo pipefail
           REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
           chmod +x scripts/cursor-workflow-sync-github-status.sh
+          chmod +x scripts/cursor-workflow-ensure-draft-pr.sh
+          chmod +x scripts/cursor-workflow-record-pr-on-branch.sh
+
+          ensure_pr_on_branch() {
+            local issue="$1" branch="$2" state_file="$3"
+            local pr
+            pr=$(scripts/cursor-workflow-ensure-draft-pr.sh "$issue" "$branch")
+            scripts/cursor-workflow-record-pr-on-branch.sh "$state_file" "$pr" "$branch"
+            jq --argjson pr "$pr" '.pr = $pr' "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
+            echo "Draft PR #${pr} linked for issue #${issue}"
+          }
 
           mapfile -t files < <(
             if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
@@ -70,12 +85,17 @@ jobs:
 
             case "$stage" in
               spec-ready)
-                prompt="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Read documents/cursor-workflow/WORKFLOW.md and demos/issue-${issue}/workflow-state.json."
+                ensure_pr_on_branch "$issue" "$branch" "$state_file"
+                scripts/cursor-workflow-sync-github-status.sh "$state_file"
+                prompt="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — do not create a PR. Read documents/cursor-workflow/WORKFLOW.md and demos/issue-${issue}/workflow-state.json."
                 skill="planning"
                 progress_stage="plan-in-progress"
                 ;;
               plan-ready)
-                prompt="Use the execute skill for GitHub issue #${issue}. Branch: ${branch}. Run all tests and gate scripts before pushing. Open draft PR to main if not already open."
+                if [ "$(jq -r '.pr // empty' "$state_file")" = "" ] || [ "$(jq -r '.pr' "$state_file")" = "null" ]; then
+                  ensure_pr_on_branch "$issue" "$branch" "$state_file"
+                fi
+                prompt="Use the execute skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — push commits only; do not create a PR. Run all tests and gate scripts before pushing."
                 skill="execute"
                 progress_stage="execute-in-progress"
                 ;;
@@ -196,20 +216,30 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update -qq && sudo apt-get install -y jq gh
 
-      - name: Resync issue status from branch
+      - name: Resync issue status and ensure draft PR
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE: ${{ github.event.inputs.issue_number }}
+          ENSURE_PR: ${{ github.event.inputs.ensure_draft_pr }}
         run: |
           set -euo pipefail
           chmod +x scripts/cursor-workflow-sync-github-status.sh
+          chmod +x scripts/cursor-workflow-ensure-draft-pr.sh
+          chmod +x scripts/cursor-workflow-record-pr-on-branch.sh
           STATE="demos/issue-${ISSUE}/workflow-state.json"
-          BRANCH=$(git branch -r | grep -E "origin/cursor/issue-${ISSUE}-" | head -n1 | sed 's|^[[:space:]]*origin/||' || true)
+          mapfile -t BRANCHES < <(git branch -r | grep -E "origin/cursor/issue-${ISSUE}-" | sed 's|^[[:space:]]*origin/||' || true)
+          BRANCH="${BRANCHES[0]:-}"
           if [ -z "$BRANCH" ]; then
             echo "No cursor/issue-${ISSUE}-* branch found on origin"
             exit 1
           fi
           git fetch origin "$BRANCH"
-          git show "origin/${BRANCH}:${STATE}" > /tmp/workflow-state.json
+          git checkout "$BRANCH"
+          git show "HEAD:${STATE}" > /tmp/workflow-state.json
+          if [ "${ENSURE_PR}" = "true" ]; then
+            PR=$(scripts/cursor-workflow-ensure-draft-pr.sh "$ISSUE" "$BRANCH")
+            scripts/cursor-workflow-record-pr-on-branch.sh /tmp/workflow-state.json "$PR" "$BRANCH"
+            git show "HEAD:${STATE}" > /tmp/workflow-state.json
+          fi
           scripts/cursor-workflow-sync-github-status.sh /tmp/workflow-state.json
-          echo "Resynced issue #${ISSUE} from branch ${BRANCH}"
+          echo "Done for issue #${ISSUE} on ${BRANCH}"

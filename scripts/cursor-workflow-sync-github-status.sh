@@ -107,16 +107,21 @@ fi
 
 NEW_LABEL=$(stage_label "$DISPLAY_STAGE")
 TITLE=$(stage_title "$DISPLAY_STAGE")
+
+CURRENT_LABELS=$(gh issue view "$ISSUE" --repo "$REPO" --json labels -q '.labels[].name' 2>/dev/null || echo "")
 REMOVE_ARGS=()
 for label in "${CURSOR_LABELS[@]}"; do
-  REMOVE_ARGS+=(--remove-label "$label")
+  if echo "$CURRENT_LABELS" | grep -qxF "$label"; then
+    REMOVE_ARGS+=(--remove-label "$label")
+  fi
 done
 
-if [ -n "$NEW_LABEL" ]; then
-  gh issue edit "$ISSUE" --repo "$REPO" "${REMOVE_ARGS[@]}" --add-label "$NEW_LABEL" || \
-    gh issue edit "$ISSUE" --repo "$REPO" --add-label "$NEW_LABEL"
-else
-  gh issue edit "$ISSUE" --repo "$REPO" "${REMOVE_ARGS[@]}" || true
+if [ ${#REMOVE_ARGS[@]} -gt 0 ] || [ -n "$NEW_LABEL" ]; then
+  EDIT_ARGS=("${REMOVE_ARGS[@]}")
+  if [ -n "$NEW_LABEL" ]; then
+    EDIT_ARGS+=(--add-label "$NEW_LABEL")
+  fi
+  gh issue edit "$ISSUE" --repo "$REPO" "${EDIT_ARGS[@]}"
 fi
 
 PR_LINE="—"
@@ -151,7 +156,8 @@ BODY="${MARKER}
 _This comment is updated automatically when \`demos/issue-${ISSUE}/workflow-state.json\` changes on the branch._"
 
 COMMENT_ID=$(gh api "repos/${REPO}/issues/${ISSUE}/comments" --paginate \
-  | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id' | head -n1)
+  | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id')
+COMMENT_ID="${COMMENT_ID%%$'\n'*}"
 
 if [ -n "$COMMENT_ID" ]; then
   gh api -X PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" -f body="$BODY" >/dev/null

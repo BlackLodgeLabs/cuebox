@@ -1,6 +1,6 @@
 ---
 name: execute
-description: Implement the plan for a GitHub issue, run all required tests and gate scripts before pushing, update documentation, and open a draft PR to main. Use when workflow stage is plan-ready or when asked to execute issue NNN.
+description: Implement the plan for a GitHub issue, run all required tests and gate scripts before pushing, and push commits to the existing draft PR branch. Use when workflow stage is plan-ready or when asked to execute issue NNN.
 paths:
   - "api/**"
   - "frontend/**"
@@ -10,7 +10,15 @@ paths:
 
 # Execute
 
-Implement `documents/plans/issue-{NNN}.md`, verify with tests, update docs, open **draft PR** to `main`.
+Implement `documents/plans/issue-{NNN}.md`, verify with tests, update docs, push to the **existing draft PR** branch.
+
+## Draft PR
+
+**Cloud agents cannot create PRs** (integration token). The handoff GitHub Action creates a draft PR at `spec-ready` and records `"pr"` in `workflow-state.json`.
+
+- Check `workflow-state.json` → `"pr"` for the PR number
+- If `pr` is null, **do not** use `gh pr create` — push your commits and note in the issue that the human should run **Actions → Cursor workflow handoff → Run workflow** with **ensure draft PR** enabled
+- Push commits to the branch; the open draft PR updates automatically
 
 ## When to use
 
@@ -62,39 +70,24 @@ After code is green, check the plan's **Documentation updates** section:
 - Update `documents/`, `README.md`, or `AGENTS.md` only when behavior or setup changed
 - Commit doc changes on the same branch
 
-## Open draft PR
-
-**First time only** on this issue branch:
-
-1. Push all commits to `cursor/issue-{NNN}-*`
-2. Open a **draft** PR targeting `main`
-3. PR title: `Issue #{NNN}: {short title}`
-4. PR body: link issue, link spec + plan, checklist from plan's definition of done
-5. Record PR number in `workflow-state.json` → `"pr": <number>`
-
-If PR already exists, push new commits to the same branch.
-
 ## Finalize state
 
 ```json
 {
   "stage": "execute-ready",
-  "pr": <number>,
-  "loops": {
-    "bugbot": <preserve>,
-    "ci_autofix": <preserve>,
-    "total_runs": <increment>
-  },
+  "pr": <number from workflow-state — preserve>,
+  "loops": { "bugbot": <preserve>, "ci_autofix": <preserve>, "total_runs": <increment> },
   "updated_at": "<ISO8601>"
 }
 ```
 
-Preserve existing `loops.bugbot` and `loops.ci_autofix` from the current state file — do not reset them.
+Preserve `pr` from workflow-state (set by GitHub Actions). Do not reset `loops.bugbot` / `loops.ci_autofix`.
 
 Issue labels: synced by GitHub Actions on push. Push state file; handoff Action triggers demo.
 
 ## Do not
 
+- Create or open pull requests (`gh pr create` will fail in cloud VMs)
 - Mark PR ready for review (babysit does that)
 - Record demo artifacts (demo skill does that)
 - Push failing code
