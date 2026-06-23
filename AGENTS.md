@@ -46,7 +46,7 @@ curl -sf http://localhost:3000/api/v1/health | python3 -m json.tool
 curl -sf -o /dev/null -w "frontend HTTP %{http_code}\n" http://localhost:3000
 ```
 
-Pass criteria: all three containers `Up`; both health URLs return `"status":"ok"` and `"database":"ok"`; frontend HTTP 200. Provider keys may show `"error"` until dashboard secrets are set — that is expected for Part 1.
+Pass criteria: all four containers (`postgres`, `api`, `frontend`, `backup`) `Up`; both health URLs return `"status":"ok"` and `"database":"ok"`; frontend HTTP 200. Provider keys may show `"error"` until dashboard secrets are set — that is expected for Part 1.
 
 Optional: add your dashboard snapshot ID as a top-level `"snapshot"` field in `.cursor/environment.json` (not inside `terminals`).
 
@@ -75,7 +75,7 @@ Pass criteria: at least 10 films with `enrichment_status` of `ready`; the home p
 
 ### Running the stack
 
-Preferred path (all three services):
+Preferred path (all services):
 
 ```bash
 docker compose up
@@ -87,6 +87,9 @@ docker compose up
 | API health | http://localhost:8000/api/v1/health |
 | OpenAPI docs | http://localhost:8000/docs |
 | Postgres | localhost:5433 on host (`5433:5432` in compose; user/pass/db: `cuebox`) |
+| Backups | `./backups/` on host (daily `pg_dump`, two-file retention) |
+
+The **backup** sidecar runs [supercronic](https://github.com/aptible/supercronic) with default schedule `0 3 * * *` UTC. Manual dump: `bash scripts/backup-db.sh`. Restore: [documents/database-backup-restore.md](documents/database-backup-restore.md).
 
 The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint.sh`. The API process also starts an APScheduler RSS poll job (every 900s) when the app boots; it no-ops until `PUT /sync/rss` configures a username.
 
@@ -112,6 +115,7 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | Phase 8 gate script | `bash scripts/verify-phase8-gates.sh` (integration suite, NFR timing, PRD audit, Phase 7 regression) |
 | PRD success criteria audit | `bash scripts/verify-prd-success-criteria.sh` |
 | Live stack smoke test | `bash scripts/smoke-test.sh` (requires `docker compose up` and `letterboxd/watchlist.csv`) |
+| Backup retention test | `bash scripts/test-backup-retention.sh` (no Docker or Postgres required) |
 | Phase 2.5 gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; regression after Phase 3+ changes) |
 | CI parity | PRs must pass GitHub Actions workflows `.github/workflows/api-ci.yml` and `.github/workflows/frontend-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
