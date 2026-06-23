@@ -54,6 +54,14 @@ Create the API key: [Cursor Dashboard → Integrations](https://cursor.com/dashb
 
 Use API key path in production — PAT fallback exists because Cursor filters bot-authored `@cursoragent` comments.
 
+### Draft pull requests
+
+Cloud agents **cannot** open PRs (`gh pr create` fails in the VM). **GitHub Actions** creates the draft PR when `stage` reaches `spec-ready`, using `GITHUB_TOKEN` (`pull-requests: write`).
+
+- Execute and later agents **push commits only** to the linked branch
+- `workflow-state.json` → `"pr"` is set by the Action
+- **Stuck without a PR?** Actions → **Cursor workflow handoff** → Run workflow → issue number → enable **ensure draft PR**
+
 ## 4. GitHub labels
 
 Create labels (Settings → Labels):

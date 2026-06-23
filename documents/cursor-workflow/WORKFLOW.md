@@ -10,7 +10,7 @@ Reusable pipeline: GitHub issue → spec → plan → execute → demo → babys
 | 2 | You comment `@cursoragent spec` | `review-and-spec` | Branch + `documents/specs/issue-NNN.md` |
 | 2b | You comment `@cursoragent continue spec` | `review-and-spec` | Resume after clarifications |
 | 3 | Handoff (`spec-ready`) | `planning` | `documents/plans/issue-NNN.md`, `demos/issue-NNN/demo-spec.md` |
-| 4 | Handoff (`plan-ready`) | `execute` | Code, docs, **draft PR** to `main` |
+| 4 | Handoff (`plan-ready`) | `execute` | Code, docs, pushes to **existing draft PR** |
 | 5 | Handoff (`execute-ready`) | `demo` | Artifacts under `demos/issue-NNN/` |
 | 6 | Handoff (`demo-ready`) | `babysit-pr` | PR marked ready; loops until clean or blocked |
 | 7 | GitHub notification | You | Final review and merge |
@@ -22,7 +22,7 @@ Reusable pipeline: GitHub issue → spec → plan → execute → demo → babys
 - **Implementation plan:** `documents/plans/issue-{NNN}.md`
 - **Demo spec + artifacts:** `demos/issue-{NNN}/` (`demo-spec.md`, screenshots, recordings, `workflow-state.json`)
 - **Base branch:** `main`
-- **PR:** One long-lived **draft** PR opened by `execute`; babysit marks it **ready for review**
+- **PR:** One long-lived **draft** PR opened by GitHub Actions at `spec-ready` (not by cloud agents); execute pushes commits; babysit marks it **ready for review**
 
 ## State file
 
