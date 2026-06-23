@@ -44,6 +44,54 @@ def get_by_letterboxd_uri(db: Session, letterboxd_uri: str) -> Film | None:
     return db.scalars(stmt).first()
 
 
+def find_for_rss_watched(
+    db: Session,
+    letterboxd_uri: str,
+    *,
+    title: str | None,
+    year: int | None,
+) -> tuple[Film | None, str]:
+    """Resolve a watched RSS event to a film row despite URI format differences."""
+    from app.services.letterboxd_uri import canonical_film_uri, extract_film_slug
+
+    film = get_by_letterboxd_uri(db, letterboxd_uri)
+    if film is not None:
+        return film, "exact"
+
+    if title:
+        stmt = (
+            select(Film)
+            .join(
+                WatchlistEntry,
+                (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
+            )
+            .where(func.lower(Film.title) == title.strip().lower())
+        )
+        if year is not None:
+            stmt = stmt.where(Film.year == year)
+        matches = list(db.scalars(stmt).all())
+        if len(matches) == 1:
+            return matches[0], "title_year"
+
+    canonical = canonical_film_uri(letterboxd_uri)
+    if canonical != letterboxd_uri:
+        film = get_by_letterboxd_uri(db, canonical)
+        if film is not None:
+            return film, "canonical"
+
+    slug = extract_film_slug(letterboxd_uri)
+    if slug is not None:
+        stmt = select(Film).where(
+            Film.letterboxd_uri.ilike(f"%/film/{slug}")
+            | Film.letterboxd_uri.ilike(f"%/film/{slug}/%")
+        )
+        matches = list(db.scalars(stmt).all())
+        if len(matches) == 1:
+            return matches[0], "slug"
+
+    return None, "none"
+
+
 def create(
     db: Session,
     *,
