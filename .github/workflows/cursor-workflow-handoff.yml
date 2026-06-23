@@ -1,0 +1,125 @@
+name: Cursor workflow handoff
+
+# Spawns the next Cursor cloud agent when workflow-state.json reaches a handoff stage.
+# Requires repository secret CURSOR_API_KEY (Cursor Dashboard → Integrations).
+# Optional fallback: CURSOR_HANDOFF_GITHUB_TOKEN (PAT) posts @cursoragent as you — see SETUP.md.
+
+on:
+  push:
+    branches:
+      - 'cursor/issue-*'
+    paths:
+      - 'demos/**/workflow-state.json'
+
+concurrency:
+  group: cursor-handoff-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+          if [ -n "${{ secrets.CURSOR_HANDOFF_GITHUB_TOKEN }}" ]; then
+            sudo apt-get install -y gh
+          fi
+
+      - name: Dispatch next agent
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          CURSOR_HANDOFF_GITHUB_TOKEN: ${{ secrets.CURSOR_HANDOFF_GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+
+          mapfile -t files < <(
+            if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+              git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -E '^demos/issue-[0-9]+/workflow-state\.json$' || true
+            else
+              git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" | grep -E '^demos/issue-[0-9]+/workflow-state\.json$' || true
+            fi
+          )
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No workflow-state.json changes in this push"
+            exit 0
+          fi
+
+          handoff() {
+            local stage="$1" issue="$2" branch="$3"
+            case "$stage" in
+              spec-ready)
+                PROMPT="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Read documents/cursor-workflow/WORKFLOW.md and demos/issue-${issue}/workflow-state.json."
+                ;;
+              plan-ready)
+                PROMPT="Use the execute skill for GitHub issue #${issue}. Branch: ${branch}. Run all tests and gate scripts before pushing. Open draft PR to main if not already open."
+                ;;
+              execute-ready)
+                PROMPT="Use the demo skill for GitHub issue #${issue}. Branch: ${branch}. Full Docker stack must be running. Follow demos/issue-${issue}/demo-spec.md."
+                ;;
+              demo-ready)
+                PROMPT="Use the babysit-pr skill for GitHub issue #${issue}. Branch: ${branch}. Loop limits: bugbot 3, ci_autofix 2, total 10. Mark PR ready for review when clean."
+                ;;
+              *)
+                echo "No handoff for stage: ${stage}"
+                return 0
+                ;;
+            esac
+
+            echo "Handoff: issue #${issue} stage=${stage} branch=${branch}"
+
+            if [ -n "${CURSOR_API_KEY:-}" ]; then
+              payload=$(jq -n \
+                --arg text "$PROMPT" \
+                --arg url "$REPO_URL" \
+                --arg ref "$branch" \
+                '{prompt: {text: $text}, repos: [{url: $url, startingRef: $ref}], autoCreatePR: false}')
+              http_code=$(curl -sS -o /tmp/cursor-agent.json -w "%{http_code}" \
+                -X POST "https://api.cursor.com/v1/agents" \
+                -u "${CURSOR_API_KEY}:" \
+                -H "Content-Type: application/json" \
+                -d "$payload")
+              if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+                echo "Cursor agent created: $(jq -r '.id // .agentId // .' /tmp/cursor-agent.json)"
+                return 0
+              fi
+              echo "Cursor API returned ${http_code}: $(cat /tmp/cursor-agent.json)"
+            fi
+
+            if [ -n "${CURSOR_HANDOFF_GITHUB_TOKEN:-}" ]; then
+              echo "${CURSOR_HANDOFF_GITHUB_TOKEN}" | gh auth login --with-token
+              gh issue comment "$issue" --repo "${GITHUB_REPOSITORY}" \
+                --body "@cursoragent ${PROMPT}"
+              echo "Posted handoff comment on issue #${issue} (PAT fallback)"
+              return 0
+            fi
+
+            echo "::warning::Set CURSOR_API_KEY or CURSOR_HANDOFF_GITHUB_TOKEN — see documents/cursor-workflow/SETUP.md"
+            exit 1
+          }
+
+          for file in "${files[@]}"; do
+            [ -f "$file" ] || continue
+            issue=$(jq -r '.issue // empty' "$file")
+            branch=$(jq -r '.branch // empty' "$file")
+            stage=$(jq -r '.stage // empty' "$file")
+            if [ -z "$issue" ] || [ -z "$branch" ]; then
+              echo "Skipping $file — missing issue or branch"
+              continue
+            fi
+            if [ "$stage" = "blocked" ] || [ "$stage" = "complete" ] || [ "$stage" = "spec-in-progress" ] || [ "$stage" = "spec-needs-info" ]; then
+              echo "Skipping $file — stage ${stage} does not hand off"
+              continue
+            fi
+            handoff "$stage" "$issue" "$branch"
+          done
