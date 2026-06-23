@@ -58,6 +58,21 @@ def find_for_rss_watched(
     if film is not None:
         return film, "exact"
 
+    if title:
+        stmt = (
+            select(Film)
+            .join(
+                WatchlistEntry,
+                (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
+            )
+            .where(func.lower(Film.title) == title.strip().lower())
+        )
+        if year is not None:
+            stmt = stmt.where(Film.year == year)
+        matches = list(db.scalars(stmt).all())
+        if len(matches) == 1:
+            return matches[0], "title_year"
+
     canonical = canonical_film_uri(letterboxd_uri)
     if canonical != letterboxd_uri:
         film = get_by_letterboxd_uri(db, canonical)
@@ -73,21 +88,6 @@ def find_for_rss_watched(
         matches = list(db.scalars(stmt).all())
         if len(matches) == 1:
             return matches[0], "slug"
-
-    if title:
-        stmt = (
-            select(Film)
-            .join(
-                WatchlistEntry,
-                (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
-            )
-            .where(func.lower(Film.title) == title.strip().lower())
-        )
-        if year is not None:
-            stmt = stmt.where(Film.year == year)
-        matches = list(db.scalars(stmt).all())
-        if len(matches) == 1:
-            return matches[0], "title_year"
 
     return None, "none"
 
