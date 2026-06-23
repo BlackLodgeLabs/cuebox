@@ -13,6 +13,7 @@ from xml.etree import ElementTree
 import httpx
 
 from app.database.enums import RssEventType
+from app.services.letterboxd_uri import canonical_film_uri
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ def parse_diary_feed(xml_text: str) -> list[RssEvent]:
             film_year_el = item.find("letterboxd:filmYear", _NS)
             if link_el is None or not (link_el.text or "").strip():
                 continue
-            uri = link_el.text.strip()
+            uri = canonical_film_uri(link_el.text.strip())
             if "/film/" not in uri:
                 continue
             timestamp = _parse_pub_date(pub_el.text if pub_el is not None else None)

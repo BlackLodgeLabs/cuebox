@@ -325,7 +325,7 @@ class SyncService:
         elif event.event_type == RssEventType.WATCHLIST_REMOVE:
             self._apply_watchlist_remove(db, uri)
         elif event.event_type == RssEventType.WATCHED:
-            self._apply_watched(db, uri)
+            self._apply_watched(db, uri, event.payload)
 
         rss_sync_repository.mark_processed(db, row)
         return True
@@ -384,8 +384,14 @@ class SyncService:
         watchlist_repository.deactivate_entry(db, entry)
         film_repository.archive_film(db, entry.film)
 
-    def _apply_watched(self, db: Session, uri: str) -> None:
-        film = film_repository.get_by_letterboxd_uri(db, uri)
+    def _apply_watched(self, db: Session, uri: str, payload: dict | None = None) -> None:
+        payload = payload or {}
+        film, _ = film_repository.find_for_rss_watched(
+            db,
+            uri,
+            title=payload.get("title"),
+            year=payload.get("year"),
+        )
         if film is None:
             return
         entry = watchlist_repository.get_active_by_film_id(db, film.id)
