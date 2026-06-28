@@ -2,11 +2,11 @@
   "issue": 54,
   "branch": "cursor/issue-54-smarter-recommendations-based-on-mood",
   "pr": null,
-  "stage": "spec-needs-info",
+  "stage": "spec-ready",
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-06-28T15:20:00Z"
+  "updated_at": "2026-06-28T16:00:00Z"
 }
