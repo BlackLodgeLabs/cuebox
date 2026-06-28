@@ -23,14 +23,15 @@ def _app_config(*, embedding_provider: str = "openai") -> AppConfig:
         recommendation=RecommendationConfig(retrieval_candidate_limit=100),
         enrichment=EnrichmentConfig(inter_film_delay_seconds=0),
         scoring=ScoringConfig(
-            theme_fit=0.25,
+            theme_fit=0.22,
             emotional_fit=0.20,
+            visual_tonal_fit=0.13,
             pacing_fit=0.15,
             complexity_fit=0.10,
-            era_fit=0.10,
-            obscurity_fit=0.05,
+            era_fit=0.07,
+            obscurity_fit=0.03,
             viewing_context_fit=0.05,
-            diversity_adjustment=0.10,
+            diversity_adjustment=0.05,
         ),
     )
 

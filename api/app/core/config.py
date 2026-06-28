@@ -41,6 +41,7 @@ class EnrichmentConfig(BaseModel):
 class ScoringConfig(BaseModel):
     theme_fit: float
     emotional_fit: float
+    visual_tonal_fit: float
     pacing_fit: float
     complexity_fit: float
     era_fit: float
@@ -53,6 +54,7 @@ class ScoringConfig(BaseModel):
         total = (
             self.theme_fit
             + self.emotional_fit
+            + self.visual_tonal_fit
             + self.pacing_fit
             + self.complexity_fit
             + self.era_fit
