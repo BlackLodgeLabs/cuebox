@@ -81,7 +81,7 @@ Then:
 1. `stage`: `complete`
 2. **Convert draft PR → ready for review** (not merged)
 3. Labels: `cursor:complete` applied by GitHub Actions on push.
-4. PR comment: summary for human reviewer — link `demo/demo-notes.md`, list gates run, note loop counts
+4. PR comment: summary for human reviewer — link `workflow/issues/issue-{NNN}/demo/demo-notes.md`, list gates run, note loop counts
 5. Issue comment: "@{issue-author} PR is ready for your final review" (use issue author; do not @cursoragent)
 
 Human receives GitHub notification for review.
