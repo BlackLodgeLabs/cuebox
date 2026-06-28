@@ -4,13 +4,13 @@
   "pr": 60,
   "stage": "execute-ready",
   "active_skill": null,
-  "active_agent_id": null,
+  "active_agent_id": "bc-b74255a7-271e-495c-8d3f-44046959f664",
   "agents": {
     "review-and-spec": null,
     "review-and-spec-continued": null,
     "planning": null,
     "execute": null,
-    "demo": null,
+    "demo": "bc-b74255a7-271e-495c-8d3f-44046959f664",
     "create-pr": null,
     "babysit-pr": null
   },
@@ -19,5 +19,5 @@
     "ci_autofix": 0,
     "total_runs": 3
   },
-  "updated_at": "2026-06-28T18:10:00Z"
+  "updated_at": "2026-06-28T18:11:07Z"
 }
