@@ -59,6 +59,7 @@ def score_candidates(
         raw = (
             breakdown["theme_fit"] * weights.theme_fit
             + breakdown["emotional_fit"] * weights.emotional_fit
+            + breakdown["visual_tonal_fit"] * weights.visual_tonal_fit
             + breakdown["pacing_fit"] * weights.pacing_fit
             + breakdown["complexity_fit"] * weights.complexity_fit
             + breakdown["era_fit"] * weights.era_fit
@@ -82,6 +83,14 @@ def _compute_breakdown(film: Film, profile: dict[str, Any]) -> dict[str, float]:
         emotions_pref,
         _normalize_list(getattr(semantic, "emotional_outcomes", None) or []),
     )
+    vibes_pref = _normalize_list(profile.get("visual_tonal_vibes", []))
+    film_tonal_labels: list[str] = []
+    if semantic is not None:
+        film_tonal_labels.extend(_normalize_list(getattr(semantic, "tones", None) or []))
+        film_tonal_labels.extend(
+            _normalize_list(getattr(semantic, "visual_descriptors", None) or [])
+        )
+    visual_tonal_fit = _overlap_score(vibes_pref, film_tonal_labels)
     pacing_fit = _numeric_fit(
         _PACING_TARGETS.get(profile.get("pacing", "no_preference"), 5.0),
         _to_float(getattr(semantic, "pacing", None)),
@@ -104,6 +113,7 @@ def _compute_breakdown(film: Film, profile: dict[str, Any]) -> dict[str, float]:
     return {
         "theme_fit": theme_fit,
         "emotional_fit": emotional_fit,
+        "visual_tonal_fit": visual_tonal_fit,
         "pacing_fit": pacing_fit,
         "complexity_fit": complexity_fit,
         "era_fit": era_fit,
