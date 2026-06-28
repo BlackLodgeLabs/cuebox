@@ -87,7 +87,7 @@ docker compose up
 | API health | http://localhost:8000/api/v1/health |
 | OpenAPI docs | http://localhost:8000/docs |
 | Postgres | localhost:5433 on host (`5433:5432` in compose; user/pass/db: `cuebox`) |
-| Backups | `./backups/` on host (daily `pg_dump`, two-file retention) |
+| Backups | `./data/backups/` on host (daily `pg_dump`, two-file retention) |
 
 The **backup** sidecar runs [supercronic](https://github.com/aptible/supercronic) with default schedule `0 3 * * *` UTC. Manual dump: `bash scripts/backup-db.sh`. Restore: [documents/database-backup-restore.md](documents/database-backup-restore.md).
 

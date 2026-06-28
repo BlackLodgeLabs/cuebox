@@ -9,7 +9,7 @@ Planning agent output. Demo agent follows this exactly.
 - Health checks pass:
   - `curl -sf http://localhost:8000/api/v1/health`
   - `curl -sf http://localhost:3000/api/v1/health`
-- Repo root has writable `./backups/` directory (created by compose mount or `.gitkeep`)
+- Repo has writable `./data/backups/` directory (created by compose mount or `.gitkeep`)
 - No secrets in screenshots (mask `.env` if visible)
 
 ## Scenarios
@@ -44,7 +44,7 @@ Planning agent output. Demo agent follows this exactly.
 
 1. Note current film count: `docker compose exec -T postgres psql -U cuebox -d cuebox -tAc "SELECT count(*) FROM films"`.
 2. Run manual backup per plan docs (e.g. `docker compose run --rm backup /usr/local/bin/backup-db.sh` or host wrapper).
-3. List `./backups/`: `ls -lh backups/`.
+3. List `./data/backups/`: `ls -lh data/backups/`.
 4. Confirm new file matches `cuebox-YYYY-MM-DD.dump` and size is > 0.
 5. Re-run health check; confirm API still ok.
 
@@ -55,7 +55,7 @@ Planning agent output. Demo agent follows this exactly.
 
 **Pass criteria:**
 
-- At least one non-empty `cuebox-*.dump` in `./backups/`
+- At least one non-empty `cuebox-*.dump` in `./data/backups/`
 - API/database health unchanged after backup
 - Film count query succeeded before backup (establishes DB had data)
 
@@ -68,7 +68,7 @@ Planning agent output. Demo agent follows this exactly.
 **Steps:**
 
 1. Run automated test: `bash scripts/test-backup-retention.sh` and capture PASS output.
-2. Optionally (if Scenario 2 created one file): create two additional small fixture files with older dates in `./backups/` (e.g. `touch backups/cuebox-2020-01-01.dump`), run backup script again or invoke retention-only mode, then `ls backups/` and confirm at most two `cuebox-*.dump` files remain.
+2. Optionally (if Scenario 2 created one file): create two additional small fixture files with older dates in `./data/backups/` (e.g. `touch data/backups/cuebox-2020-01-01.dump`), run backup script again or invoke retention-only mode, then `ls data/backups/` and confirm at most two `cuebox-*.dump` files remain.
 
 **Capture:**
 
@@ -78,7 +78,7 @@ Planning agent output. Demo agent follows this exactly.
 **Pass criteria:**
 
 - `scripts/test-backup-retention.sh` exits 0
-- After retention, no more than two `cuebox-*.dump` files in `./backups/`
+- After retention, no more than two `cuebox-*.dump` files in `./data/backups/`
 
 ---
 

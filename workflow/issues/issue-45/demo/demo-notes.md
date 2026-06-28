@@ -23,13 +23,13 @@
 docker compose exec -T backup /usr/local/bin/backup-db.sh
 ```
 
-Restore commands in the guide correctly use host stdin redirect (`< backups/cuebox-*.dump`) into the `postgres` container.
+Restore commands in the guide correctly use host stdin redirect (`< data/backups/cuebox-*.dump`) into the `postgres` container.
 
 ## Artifacts
 
 - `scenario-1-compose-ps.png` — `docker compose ps` + backup logs
 - `scenario-1-health-ok.png` — API health JSON
-- `scenario-2-backup-ls.png` — film count, backup, `ls -lh backups/`
+- `scenario-2-backup-ls.png` — film count, backup, `ls -lh data/backups/`
 - `scenario-2-health-after-backup.png` — API health after backup
 - `scenario-3-retention-test-pass.png` — retention test PASS
 - `scenario-3-two-files-remain.png` — ≤2 dump files after prune

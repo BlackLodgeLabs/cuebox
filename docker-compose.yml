@@ -52,7 +52,7 @@ services:
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-2}
       BACKUP_CRON: ${BACKUP_CRON:-0 3 * * *}
     volumes:
-      - ./backups:/backups
+      - ./data/backups:/backups
     restart: unless-stopped
 
 volumes:

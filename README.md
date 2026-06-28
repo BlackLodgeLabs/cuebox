@@ -50,7 +50,7 @@ docker compose restart api
 
 If you still see missing-column errors, rebuild the API image: `docker compose up --build api`.
 
-With the stack running, a **backup sidecar** dumps the database daily (default 03:00 UTC) to `./backups/` and keeps the two most recent files. See [documents/database-backup-restore.md](documents/database-backup-restore.md) for manual backups and restore.
+With the stack running, a **backup sidecar** dumps the database daily (default 03:00 UTC) to `./data/backups/` and keeps the two most recent files. See [documents/database-backup-restore.md](documents/database-backup-restore.md) for manual backups and restore.
 
 ## Documentation
 

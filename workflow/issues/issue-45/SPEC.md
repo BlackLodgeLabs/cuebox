@@ -18,7 +18,7 @@ Operators need:
 
 - [ ] A backup job produces a **full** logical dump of the `cuebox` database (schema + data, including pgvector objects) without stopping the API or Postgres service.
 - [ ] Backups run **once per calendar day** on a fixed schedule while Docker Compose is up (default: 03:00 UTC in the backup container).
-- [ ] Each backup file is uniquely named (e.g. `cuebox-YYYY-MM-DD.dump`) and written to a host-visible directory (default: `./backups/` at repo root).
+- [ ] Each backup file is uniquely named (e.g. `cuebox-YYYY-MM-DD.dump`) and written to a host-visible directory (default: `./data/backups/`).
 - [ ] After a successful daily backup, **at most two** daily backup files remain; any older daily backup files are deleted automatically.
 - [ ] Backup artifacts are excluded from git (`.gitignore` entry for the backup directory).
 - [ ] A restore guide (`documents/database-backup-restore.md`) documents end-to-end recovery: prerequisites, stopping dependent services if needed, restore command(s), verification (`psql` / health / film count), and notes on when a full volume reset vs. in-place restore is appropriate.
@@ -32,7 +32,7 @@ Operators need:
 
 - Docker Compose–first implementation: a lightweight **backup sidecar service** (or equivalent Compose-integrated scheduler) that connects to the existing `postgres` service on the internal network.
 - Shell script(s) under `scripts/` implementing `pg_dump`, gzip/custom-format output, filename convention, and retention pruning.
-- Compose changes: backup service definition, env vars for schedule/retention paths, volume mount for `./backups/`.
+- Compose changes: backup service definition, env vars for schedule/retention paths, volume mount for `./data/backups/`.
 - Documentation: dedicated restore guide + README cross-link.
 - `.gitignore` for generated backup files.
 
@@ -51,7 +51,7 @@ Operators need:
 
 ### Operator flows
 
-1. **Normal operation:** User runs `docker compose up` (or detached). Backup service starts with the stack and runs the daily job on schedule. Backup files appear under `./backups/`.
+1. **Normal operation:** User runs `docker compose up` (or detached). Backup service starts with the stack and runs the daily job on schedule. Backup files appear under `./data/backups/`.
 2. **Manual backup:** User runs documented one-liner (e.g. `bash scripts/backup-db.sh` or `docker compose run --rm backup`) before upgrades or migrations.
 3. **Restore after data loss:** User follows `documents/database-backup-restore.md` to load a chosen dump into Postgres and restart the API.
 
@@ -73,7 +73,7 @@ Operators need:
 
 - Add a `backup` service that:
   - `depends_on: postgres`
-  - Mounts `./backups` (or configurable `BACKUP_DIR`)
+  - Mounts `./data/backups` (or configurable `BACKUP_DIR`)
   - Runs cron (e.g. `supercronic`, `ofelia`, or minimal `crond` image) invoking the backup script daily
   - Restarts with the stack; no backup runs when Compose is stopped (acceptable for local-first single-user use)
 
@@ -87,7 +87,7 @@ Operators need:
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `BACKUP_DIR` | `./backups` | Host path for dump files |
+| `BACKUP_DIR` | `./data/backups` | Host path for dump files |
 | `BACKUP_RETENTION_DAYS` | `2` | Max daily backups to keep |
 | `BACKUP_CRON` | `0 3 * * *` | Daily schedule (UTC) |
 | `POSTGRES_*` | (existing) | DB connection |

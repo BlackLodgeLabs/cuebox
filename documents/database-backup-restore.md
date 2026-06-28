@@ -1,11 +1,11 @@
 # Database backup and restore
 
-Cuebox runs a **backup sidecar** with Docker Compose that dumps the full Postgres database once per day (default 03:00 UTC) into `./backups/`. Only the two most recent daily dumps are kept.
+Cuebox runs a **backup sidecar** with Docker Compose that dumps the full Postgres database once per day (default 03:00 UTC) into `./data/backups/`. Only the two most recent daily dumps are kept.
 
 ## Prerequisites
 
 - Docker Compose stack with the `backup` service running (`docker compose ps` shows `postgres`, `api`, `frontend`, and `backup` as **Up**).
-- A backup file under `./backups/` named `cuebox-YYYY-MM-DD.dump` (custom `pg_dump` format).
+- A backup file under `./data/backups/` named `cuebox-YYYY-MM-DD.dump` (custom `pg_dump` format).
 
 ## Manual backup
 
@@ -15,7 +15,7 @@ From the repo root:
 bash scripts/backup-db.sh
 ```
 
-This runs `pg_dump` inside the backup container and writes a dated file to `./backups/`. The API and Postgres services stay online.
+This runs `pg_dump` inside the backup container and writes a dated file to `./data/backups/`. The API and Postgres services stay online.
 
 Equivalent:
 
@@ -48,10 +48,10 @@ Postgres can stay running; `pg_dump` / `pg_restore` work against a live server.
 ### 2. Choose a backup file
 
 ```bash
-ls -lh backups/
+ls -lh data/backups/
 ```
 
-Example: `backups/cuebox-2026-06-23.dump`
+Example: `data/backups/cuebox-2026-06-23.dump`
 
 ### 3. Restore into `cuebox`
 
@@ -61,7 +61,7 @@ Replace the date in the filename with your chosen dump:
 docker compose exec -T postgres pg_restore \
   --clean --if-exists \
   -U cuebox -d cuebox \
-  < backups/cuebox-2026-06-23.dump
+  < data/backups/cuebox-2026-06-23.dump
 ```
 
 `--clean --if-exists` drops existing objects before recreating them. Expect harmless errors for objects that did not exist (e.g. extensions).
@@ -73,7 +73,7 @@ docker compose exec -T postgres psql -U cuebox -d postgres -c \
   "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'cuebox' AND pid <> pg_backend_pid();"
 docker compose exec -T postgres dropdb -U cuebox cuebox
 docker compose exec -T postgres createdb -U cuebox -O cuebox cuebox
-docker compose exec -T postgres pg_restore -U cuebox -d cuebox < backups/cuebox-2026-06-23.dump
+docker compose exec -T postgres pg_restore -U cuebox -d cuebox < data/backups/cuebox-2026-06-23.dump
 ```
 
 ### 4. Restart the stack
@@ -100,7 +100,7 @@ When the Postgres volume is gone:
 docker compose down -v
 docker compose up -d postgres
 # Wait for postgres healthy, then restore (no --clean needed on empty DB):
-docker compose exec -T postgres pg_restore -U cuebox -d cuebox < backups/cuebox-2026-06-23.dump
+docker compose exec -T postgres pg_restore -U cuebox -d cuebox < data/backups/cuebox-2026-06-23.dump
 docker compose up -d
 ```
 
@@ -109,7 +109,7 @@ Run API migrations only if restore did not include the `alembic_version` table; 
 ## Inspect a dump (non-destructive)
 
 ```bash
-docker compose exec -T postgres pg_restore --list < backups/cuebox-2026-06-23.dump | head
+docker compose exec -T postgres pg_restore --list < data/backups/cuebox-2026-06-23.dump | head
 ```
 
 ## Optional: restore into a test database
@@ -118,7 +118,7 @@ Do not use this on the production `cuebox` DB during normal operation:
 
 ```bash
 docker compose exec -T postgres createdb -U cuebox cuebox_restore_test
-docker compose exec -T postgres pg_restore -U cuebox -d cuebox_restore_test < backups/cuebox-2026-06-23.dump
+docker compose exec -T postgres pg_restore -U cuebox -d cuebox_restore_test < data/backups/cuebox-2026-06-23.dump
 docker compose exec -T postgres psql -U cuebox -d cuebox_restore_test -c "SELECT count(*) FROM films;"
 docker compose exec -T postgres dropdb -U cuebox cuebox_restore_test
 ```
@@ -131,10 +131,10 @@ Set in `.env` (see `.env.example`):
 |----------|---------|---------|
 | `BACKUP_RETENTION_DAYS` | `2` | Number of daily dumps to keep |
 | `BACKUP_CRON` | `0 3 * * *` | Cron schedule (UTC) in the backup container |
-| `BACKUP_DIR` | `/backups` (container) | Mount target; host path is `./backups/` |
+| `BACKUP_DIR` | `/backups` (container) | Mount target; host path is `./data/backups/` |
 
 ## Retention
 
-After each **successful** backup, files matching `cuebox-*.dump` in `./backups/` are sorted by date in the filename; all but the two newest are deleted. Failed partial dumps are removed and do not trigger pruning.
+After each **successful** backup, files matching `cuebox-*.dump` in `./data/backups/` are sorted by date in the filename; all but the two newest are deleted. Failed partial dumps are removed and do not trigger pruning.
 
 Automated check: `bash scripts/test-backup-retention.sh`
