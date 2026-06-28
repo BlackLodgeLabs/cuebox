@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh; do
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh; do
             git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
@@ -204,6 +204,9 @@ jobs:
             fi
           fi
           "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
+          if [ "$stage" = "complete" ]; then
+            "$WF/cursor-workflow-notify-complete.sh" /tmp/workflow.state.json || true
+          fi
 
           state_changed=false
           if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
@@ -256,7 +259,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh; do
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh; do
             git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
@@ -294,4 +297,8 @@ jobs:
             git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
           fi
           "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
+          STAGE=$(jq -r '.stage // empty' /tmp/workflow.state.json)
+          if [ "$STAGE" = "complete" ]; then
+            "$WF/cursor-workflow-notify-complete.sh" /tmp/workflow.state.json || true
+          fi
           echo "Done for issue #${ISSUE} on ${BRANCH}"

@@ -139,6 +139,8 @@ Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` wi
 
 Progress stages (`*-in-progress`) and terminal stages (`complete`, `blocked`, `spec-needs-info`) sync labels only — no new agent is spawned.
 
+When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` also @mentions the issue author (once) and assigns the linked PR to them. Babysit agents do not post issue comments.
+
 ### Draft PR creation
 
 At `spec-ready`, the Action creates a draft PR (if none exists) using `GITHUB_TOKEN`. Cloud agents cannot create PRs; they push commits and the open draft PR updates automatically. The PR number is written back to `workflow.state.json` on the branch.

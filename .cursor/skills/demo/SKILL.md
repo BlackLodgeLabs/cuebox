@@ -46,7 +46,7 @@ Follow **every** scenario in `demo-spec.md`:
 - Short screen recordings where specified (use Cursor screen recording or browser tools)
 - Write `workflow/issues/issue-{NNN}/demo/demo-notes.md`:
   - Date, commit SHA
-  - Scenario-by-scenario pass/fail
+  - Scenario-by-scenario pass/fail, including embedded screenshots or recordings
   - Links to any oversized artifacts posted on the PR instead of committed
 
 ## Quality bar

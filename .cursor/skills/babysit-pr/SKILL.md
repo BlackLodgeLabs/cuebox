@@ -80,15 +80,15 @@ Then:
 
 1. `stage`: `complete`
 2. **Convert draft PR → ready for review** (not merged)
-3. Labels: `cursor:complete` applied by GitHub Actions on push.
+3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions the issue author, and assigns the PR (cloud agents cannot post issue comments)
 4. PR comment: summary for human reviewer — link `demo/demo-notes.md`, list gates run, note loop counts
-5. Issue comment: "@{issue-author} PR is ready for your final review" (use issue author; do not @cursoragent)
 
-Human receives GitHub notification for review.
+Do **not** post an issue comment — the handoff Action handles that notification.
 
 ## Do not
 
 - Merge the PR
+- Post issue comments (GitHub Actions notifies the issue author at `complete`)
 - Exceed loop limits silently
 - Disable tests or skip gates to greenwash CI
 - Mark ready while demo artifacts or critical checks are missing
