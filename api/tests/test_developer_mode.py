@@ -87,9 +87,10 @@ def test_dev_endpoints_return_trace_when_enabled(dev_mode_client, db_session):
     scoring = dev_mode_client.get(f"/api/v1/dev/recommendations/{session_id}/scoring")
     assert scoring.status_code == 200, scoring.text
     scoring_body = scoring.json()
-    assert scoring_body["weights"]["theme_fit"] == 0.25
+    assert scoring_body["weights"]["theme_fit"] == 0.22
+    assert scoring_body["weights"]["visual_tonal_fit"] == 0.13
     assert scoring_body["candidates"]
-    assert scoring_body["candidates"][0]["score_breakdown"]
+    assert "visual_tonal_fit" in scoring_body["candidates"][0]["score_breakdown"]
 
     ai = dev_mode_client.get(f"/api/v1/dev/recommendations/{session_id}/ai")
     assert ai.status_code == 200, ai.text
