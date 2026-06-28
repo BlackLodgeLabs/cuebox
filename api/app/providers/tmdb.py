@@ -21,6 +21,7 @@ class TmdbSearchResult:
     original_title: str
     year: int | None
     overview: str | None
+    poster_path: str | None
 
 
 @dataclass(frozen=True)
@@ -70,6 +71,7 @@ class TmdbClient:
                     original_title=item.get("original_title") or "",
                     year=parsed_year,
                     overview=item.get("overview"),
+                    poster_path=item.get("poster_path"),
                 )
             )
         return parsed

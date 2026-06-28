@@ -100,3 +100,25 @@ class ReviewRequiredItem(BaseModel):
 class ReviewRequiredListResponse(BaseModel):
     data: list[ReviewRequiredItem]
     pagination: PaginationMeta
+
+
+class TmdbSearchResultItem(BaseModel):
+    tmdb_id: int
+    title: str
+    original_title: str
+    year: int | None
+    overview: str | None
+    poster_url: str | None
+
+
+class TmdbSearchResponse(BaseModel):
+    data: list[TmdbSearchResultItem]
+
+
+class RematchRequest(BaseModel):
+    tmdb_id: int
+
+
+class RematchResponse(BaseModel):
+    film_id: UUID
+    enrichment_status: str

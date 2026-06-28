@@ -75,3 +75,23 @@ def update_status(
     review.reviewed_at = datetime.now(UTC)
     db.flush()
     return review
+
+
+def resolve_pending_for_film(
+    db: Session,
+    film_id: uuid.UUID,
+    *,
+    status: ReviewStatus = ReviewStatus.ACCEPTED,
+) -> int:
+    from sqlalchemy import update
+
+    result = db.execute(
+        update(MetadataMatchReview)
+        .where(
+            MetadataMatchReview.film_id == film_id,
+            MetadataMatchReview.review_status == ReviewStatus.PENDING,
+        )
+        .values(review_status=status, reviewed_at=datetime.now(UTC))
+    )
+    db.flush()
+    return result.rowcount  # type: ignore[attr-defined]
