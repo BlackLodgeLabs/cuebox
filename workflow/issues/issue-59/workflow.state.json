@@ -2,15 +2,15 @@
   "issue": 59,
   "branch": "cursor/issue-59-manual-film-metadata-rematch",
   "pr": 60,
-  "stage": "execute-ready",
-  "active_skill": null,
-  "active_agent_id": "bc-b74255a7-271e-495c-8d3f-44046959f664",
+  "stage": "demo-in-progress",
+  "active_skill": "demo",
+  "active_agent_id": null,
   "agents": {
     "review-and-spec": null,
     "review-and-spec-continued": null,
     "planning": null,
     "execute": null,
-    "demo": "bc-b74255a7-271e-495c-8d3f-44046959f664",
+    "demo": null,
     "create-pr": null,
     "babysit-pr": null
   },
@@ -19,5 +19,5 @@
     "ci_autofix": 0,
     "total_runs": 3
   },
-  "updated_at": "2026-06-28T18:11:07Z"
+  "updated_at": "2026-06-28T19:00:00Z"
 }
