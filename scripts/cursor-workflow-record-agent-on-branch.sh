@@ -20,7 +20,7 @@ fi
 
 REL_PATH="workflow/issues/issue-${ISSUE}/workflow.state.json"
 
-CURRENT=$(jq -r --arg k "$AGENT_KEY" '.agents[$k] // empty | if type == "object" then .id // empty else . end' "$STATE_FILE")
+CURRENT=$(jq -r --arg k "$AGENT_KEY" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$STATE_FILE")
 if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$AGENT_ID" ]; then
   echo "Agent already recorded for ${AGENT_KEY} as ${AGENT_ID}" >&2
   exit 0

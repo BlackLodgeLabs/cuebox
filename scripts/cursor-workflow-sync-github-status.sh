@@ -27,7 +27,7 @@ ACTIVE_AGENT=$(jq -r '.active_agent_id // empty' "$STATE_FILE")
 
 agent_id_for_key() {
   jq -r --arg k "$1" '
-    (.agents[$k] // empty)
+    ((.agents // {})[$k] // empty)
     | if type == "object" then .id // empty else . end
   ' "$STATE_FILE"
 }
