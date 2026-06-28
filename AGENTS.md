@@ -116,6 +116,7 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | PRD success criteria audit | `bash scripts/verify-prd-success-criteria.sh` |
 | Live stack smoke test | `bash scripts/smoke-test.sh` (requires `docker compose up` and `letterboxd/watchlist.csv`) |
 | Backup retention test | `bash scripts/test-backup-retention.sh` (no Docker or Postgres required) |
+| Workflow path regression | `bash scripts/verify-workflow-paths.sh` (no Docker or Postgres required) |
 | Phase 2.5 gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; regression after Phase 3+ changes) |
 | CI parity | PRs must pass GitHub Actions workflows `.github/workflows/api-ci.yml` and `.github/workflows/frontend-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
@@ -163,6 +164,7 @@ GitHub issue → spec → plan → execute → demo → babysit → human review
 | `@cursoragent continue spec` | `review-and-spec` |
 | Handoff (automated) | `planning` → `execute` → `demo` → `babysit-pr` |
 
+- Skills: `.cursor/skills/{review-and-spec,planning,execute,demo,babysit-pr,run-gate-scripts}/SKILL.md`
 - Specs: `workflow/issues/issue-NNN/SPEC.md`
 - Plans: `workflow/issues/issue-NNN/PLAN.md`
 - Demo spec + artifacts: `workflow/issues/issue-NNN/demo/`

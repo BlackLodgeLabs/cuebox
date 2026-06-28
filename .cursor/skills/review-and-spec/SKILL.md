@@ -115,6 +115,6 @@ Cloud agents often **cannot** post issue comments or set labels (integration tok
 
 ## Do not
 
-- Open a pull request (execute opens the draft PR later)
+- Open a pull request (`.github/workflows/cursor-workflow-handoff.yml` opens the draft PR at `spec-ready`)
 - Start planning or implementation in this skill
 - Post bot `@cursoragent` comments to chain agents
