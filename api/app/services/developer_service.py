@@ -106,6 +106,7 @@ class DeveloperService:
             weights={
                 "theme_fit": scoring.theme_fit,
                 "emotional_fit": scoring.emotional_fit,
+                "visual_tonal_fit": scoring.visual_tonal_fit,
                 "pacing_fit": scoring.pacing_fit,
                 "complexity_fit": scoring.complexity_fit,
                 "era_fit": scoring.era_fit,
