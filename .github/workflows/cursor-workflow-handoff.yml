@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh; do
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh; do
             git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
@@ -117,6 +117,11 @@ jobs:
                 progress_stage="demo-in-progress"
                 ;;
               demo-ready)
+                prompt="Use the create-pr skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — write workflow/issues/issue-${issue}/PR.md from spec, plan, commits, and demo notes; do not create a PR."
+                skill="create-pr"
+                progress_stage="create-pr-in-progress"
+                ;;
+              create-pr-ready)
                 prompt="Use the babysit-pr skill for GitHub issue #${issue}. Branch: ${branch}. Loop limits: bugbot 3, ci_autofix 2, total 10. Mark PR ready for review when clean."
                 skill="babysit-pr"
                 progress_stage="babysit-in-progress"
@@ -141,8 +146,14 @@ jobs:
                 -H "Content-Type: application/json" \
                 -d "$payload")
               if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-                agent_id=$(jq -r '.id // .agentId // empty' /tmp/cursor-agent.json)
+                agent_id=$(jq -r '.agent.id // .id // .agentId // empty' /tmp/cursor-agent.json)
                 echo "Cursor agent created: ${agent_id:-unknown}"
+                if [ -n "$agent_id" ]; then
+                  jq --arg key "$skill" --arg id "$agent_id" \
+                    '.agents //= {} | .agents[$key] = $id | .active_agent_id = $id | .active_skill = $skill' \
+                    "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
+                  "$WF/cursor-workflow-record-agent-on-branch.sh" "$state_file" "$skill" "$agent_id" "$branch" || true
+                fi
                 HANDOFF_PROGRESS_STAGE="$progress_stage" \
                 HANDOFF_ACTIVE_SKILL="$skill" \
                 HANDOFF_ACTIVE_AGENT="$agent_id" \
@@ -169,14 +180,14 @@ jobs:
 
           is_handoff_stage() {
             case "$1" in
-              spec-ready|plan-ready|execute-ready|demo-ready) return 0 ;;
+              spec-ready|plan-ready|execute-ready|demo-ready|create-pr-ready) return 0 ;;
               *) return 1 ;;
             esac
           }
 
           is_skip_stage() {
             case "$1" in
-              blocked|complete|spec-in-progress|spec-needs-info|plan-in-progress|execute-in-progress|demo-in-progress|babysit-in-progress) return 0 ;;
+              blocked|complete|spec-in-progress|spec-needs-info|plan-in-progress|execute-in-progress|demo-in-progress|create-pr-in-progress|babysit-in-progress) return 0 ;;
               *) return 1 ;;
             esac
           }
@@ -190,7 +201,33 @@ jobs:
           fi
 
           # Always sync labels + status comment on every cloud-agent push
+          if [ -n "${CURSOR_API_KEY:-}" ]; then
+            "$WF/cursor-workflow-discover-agents.sh" /tmp/workflow.state.json "$branch" || true
+            git fetch origin "$branch" --quiet 2>/dev/null || true
+            if git cat-file -e "origin/${branch}:${STATE_FILE}" 2>/dev/null; then
+              git show "origin/${branch}:${STATE_FILE}" > /tmp/workflow.state.json
+            fi
+          fi
           "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
+          if [ "$stage" = "complete" ]; then
+            "$WF/cursor-workflow-notify-complete.sh" /tmp/workflow.state.json || true
+          fi
+
+          PR_MD_FILE="workflow/issues/issue-${ISSUE}/PR.md"
+          pr_md_changed=false
+          if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            if git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qF "$PR_MD_FILE"; then
+              pr_md_changed=true
+            fi
+          else
+            if git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" | grep -qF "$PR_MD_FILE"; then
+              pr_md_changed=true
+            fi
+          fi
+          if [ "$pr_md_changed" = "true" ] && git cat-file -e "${AFTER_SHA}:${PR_MD_FILE}" 2>/dev/null; then
+            git show "${AFTER_SHA}:${PR_MD_FILE}" > /tmp/PR.md
+            "$WF/cursor-workflow-update-pr-body.sh" /tmp/workflow.state.json /tmp/PR.md || true
+          fi
 
           state_changed=false
           if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
@@ -243,7 +280,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh; do
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh; do
             git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
@@ -252,6 +289,7 @@ jobs:
       - name: Resync issue status and ensure draft PR
         env:
           GH_TOKEN: ${{ github.token }}
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           ISSUE: ${{ github.event.inputs.issue_number }}
           ENSURE_PR: ${{ github.event.inputs.ensure_draft_pr }}
         run: |
@@ -266,6 +304,13 @@ jobs:
           fi
           git fetch origin "$BRANCH"
           git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
+          if [ -n "${CURSOR_API_KEY:-}" ]; then
+            "$WF/cursor-workflow-discover-agents.sh" /tmp/workflow.state.json "$BRANCH" || true
+            git fetch origin "$BRANCH" --quiet 2>/dev/null || true
+            if git cat-file -e "origin/${BRANCH}:${STATE}" 2>/dev/null; then
+              git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
+            fi
+          fi
           if [ "${ENSURE_PR}" = "true" ]; then
             PR=$("$WF/cursor-workflow-ensure-draft-pr.sh" "$ISSUE" "$BRANCH")
             "$WF/cursor-workflow-record-pr-on-branch.sh" /tmp/workflow.state.json "$PR" "$BRANCH"
@@ -273,4 +318,8 @@ jobs:
             git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
           fi
           "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
+          STAGE=$(jq -r '.stage // empty' /tmp/workflow.state.json)
+          if [ "$STAGE" = "complete" ]; then
+            "$WF/cursor-workflow-notify-complete.sh" /tmp/workflow.state.json || true
+          fi
           echo "Done for issue #${ISSUE} on ${BRANCH}"

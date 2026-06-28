@@ -1,8 +1,8 @@
 # Cursor issue workflow — setup guide
 
-One-time setup to run the 7-stage pipeline (spec → plan → execute → demo → babysit → your review).
+One-time setup to run the 8-stage pipeline (spec → plan → execute → demo → create-pr → babysit → your review).
 
-Copy `workflow/cursor-workflow/`, `.cursor/skills/{review-and-spec,planning,execute,demo,babysit-pr,run-gate-scripts}/`, `.github/workflows/cursor-workflow-handoff.yml`, and `.github/ISSUE_TEMPLATE/cursor_feature.yml` to reuse in other repositories. Adjust `main` if your default branch differs.
+Copy `workflow/cursor-workflow/`, `.cursor/skills/{review-and-spec,planning,execute,demo,create-pr,babysit-pr,run-gate-scripts}/`, `.github/workflows/cursor-workflow-handoff.yml`, and `.github/ISSUE_TEMPLATE/cursor_feature.yml` to reuse in other repositories. Adjust `main` if your default branch differs.
 
 ## Architecture
 
@@ -13,14 +13,14 @@ review-and-spec skill → branch + spec → push workflow.state.json (spec-ready
         ↓
 GitHub Action (CURSOR_API_KEY) → planning cloud agent
         ↓
-plan-ready → execute → draft PR → execute-ready → demo → demo-ready → babysit-pr → complete (ready for review)
+plan-ready → execute → draft PR → execute-ready → demo → demo-ready → create-pr → create-pr-ready → babysit-pr → complete (ready for review)
         ↓
 You: GitHub PR review notification → merge
 ```
 
 Human gates: **spec start** (`@cursoragent spec`) and **spec resume** (`@cursoragent continue spec`).
 
-Automated handoffs: stages 3–6 via `.github/workflows/cursor-workflow-handoff.yml` when `workflow/issues/issue-NNN/workflow.state.json` is pushed with a handoff `stage`.
+Automated handoffs: stages 3–7 via `.github/workflows/cursor-workflow-handoff.yml` when `workflow/issues/issue-NNN/workflow.state.json` is pushed with a handoff `stage`.
 
 ---
 
@@ -75,6 +75,8 @@ Create labels (Settings → Labels):
 | `cursor:plan-ready` | `#0E8A16` | Plan done |
 | `cursor:execute-ready` | `#0E8A16` | Code + draft PR done |
 | `cursor:demo-ready` | `#0E8A16` | Demo artifacts done |
+| `cursor:create-pr-in-progress` | `#1D76DB` | Create PR agent running |
+| `cursor:create-pr-ready` | `#0E8A16` | PR.md committed |
 | `cursor:complete` | `#5319E7` | Babysit done |
 | `cursor:blocked` | `#B60205` | Loop limit or failure |
 

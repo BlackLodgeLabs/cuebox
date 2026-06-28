@@ -156,15 +156,15 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 
 ## Cursor issue workflow (multi-agent)
 
-GitHub issue → spec → plan → execute → demo → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md).
+GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md).
 
 | You do | Skill |
 |--------|-------|
 | `@cursoragent spec` on issue | `review-and-spec` |
 | `@cursoragent continue spec` | `review-and-spec` |
-| Handoff (automated) | `planning` → `execute` → `demo` → `babysit-pr` |
+| Handoff (automated) | `planning` → `execute` → `demo` → `create-pr` → `babysit-pr` |
 
-- Skills: `.cursor/skills/{review-and-spec,planning,execute,demo,babysit-pr,run-gate-scripts}/SKILL.md`
+- Skills: `.cursor/skills/{review-and-spec,planning,execute,demo,create-pr,babysit-pr,run-gate-scripts}/SKILL.md`
 - Specs: `workflow/issues/issue-NNN/SPEC.md`
 - Plans: `workflow/issues/issue-NNN/PLAN.md`
 - Demo spec + artifacts: `workflow/issues/issue-NNN/demo/`

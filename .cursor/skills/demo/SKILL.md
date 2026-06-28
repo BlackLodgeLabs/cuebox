@@ -46,7 +46,7 @@ Follow **every** scenario in `demo-spec.md`:
 - Short screen recordings where specified (use Cursor screen recording or browser tools)
 - Write `workflow/issues/issue-{NNN}/demo/demo-notes.md`:
   - Date, commit SHA
-  - Scenario-by-scenario pass/fail
+  - Scenario-by-scenario pass/fail, including embedded screenshots or recordings
   - Links to any oversized artifacts posted on the PR instead of committed
 
 ## Quality bar
@@ -65,7 +65,7 @@ Follow **every** scenario in `demo-spec.md`:
 4. PR comment: summary + thumbnail/list of artifacts (paths in repo)
 5. Issue labels synced by GitHub Actions on push.
 
-Handoff Action triggers babysit. No bot `@cursoragent` comment.
+Handoff Action triggers create-pr. No bot `@cursoragent` comment.
 
 ### If any scenario cannot pass
 
@@ -75,7 +75,7 @@ Handoff Action triggers babysit. No bot `@cursoragent` comment.
 4. Post summary on issue and PR explaining the failure
 5. Issue labels: `cursor:blocked`; remove `cursor:execute-ready`
 
-Do **not** set `demo-ready` or hand off to babysit.
+Do **not** set `demo-ready` or hand off to create-pr when scenarios fail.
 
 ## Do not
 
