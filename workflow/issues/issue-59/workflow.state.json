@@ -2,8 +2,8 @@
   "issue": 59,
   "branch": "cursor/issue-59-manual-film-metadata-rematch",
   "pr": 60,
-  "stage": "plan-in-progress",
-  "active_skill": "planning",
+  "stage": "plan-ready",
+  "active_skill": null,
   "active_agent_id": null,
   "agents": {
     "review-and-spec": null,
@@ -17,7 +17,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
-  "updated_at": "2026-06-28T18:00:00Z"
+  "updated_at": "2026-06-28T18:05:00Z"
 }
