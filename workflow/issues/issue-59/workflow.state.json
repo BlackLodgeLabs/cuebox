@@ -4,7 +4,7 @@
   "pr": 60,
   "stage": "create-pr-ready",
   "active_skill": null,
-  "active_agent_id": null,
+  "active_agent_id": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6",
   "agents": {
     "review-and-spec": null,
     "review-and-spec-continued": null,
@@ -12,12 +12,12 @@
     "execute": null,
     "demo": null,
     "create-pr": null,
-    "babysit-pr": null
+    "babysit-pr": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6"
   },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 5
   },
-  "updated_at": "2026-06-28T18:31:51Z"
+  "updated_at": "2026-06-28T18:36:09Z"
 }
