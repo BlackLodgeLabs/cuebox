@@ -38,5 +38,22 @@ services:
       - /app/node_modules
       - /app/.next
 
+  backup:
+    build:
+      context: .
+      dockerfile: backup/Dockerfile
+    depends_on:
+      - postgres
+    env_file: .env
+    environment:
+      CUEBOX_IN_BACKUP_CONTAINER: "1"
+      PGHOST: postgres
+      BACKUP_DIR: /backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-2}
+      BACKUP_CRON: ${BACKUP_CRON:-0 3 * * *}
+    volumes:
+      - ./backups:/backups
+    restart: unless-stopped
+
 volumes:
   postgres_data:

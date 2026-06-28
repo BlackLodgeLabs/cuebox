@@ -50,6 +50,8 @@ docker compose restart api
 
 If you still see missing-column errors, rebuild the API image: `docker compose up --build api`.
 
+With the stack running, a **backup sidecar** dumps the database daily (default 03:00 UTC) to `./backups/` and keeps the two most recent files. See [documents/database-backup-restore.md](documents/database-backup-restore.md) for manual backups and restore.
+
 ## Documentation
 
 | Document | Purpose |
@@ -60,6 +62,7 @@ If you still see missing-column errors, rebuild the API image: `docker compose u
 | [documents/api-contracts.md](documents/api-contracts.md) | REST API v1 reference |
 | [documents/Architecture.md](documents/Architecture.md) | Technical architecture |
 | [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md) | Cursor Cloud agent test data (Tier 2 seeding) |
+| [documents/database-backup-restore.md](documents/database-backup-restore.md) | Daily Postgres backups and restore procedure |
 | [AGENTS.md](AGENTS.md) | Agent and CI development guide |
 
 ## Testing
