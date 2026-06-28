@@ -239,6 +239,7 @@ export interface Questionnaire {
 export interface CreateRecommendationRequest {
   questionnaire: Questionnaire;
   notes?: string;
+  quick_pick_preset_id?: string;
 }
 
 export interface FilmExplanation {

@@ -61,14 +61,15 @@ const scoringDetail = {
   scoring_version: "scoring-v1",
   weight_set: "default",
   weights: {
-    theme_fit: 0.25,
+    theme_fit: 0.22,
     emotional_fit: 0.2,
+    visual_tonal_fit: 0.13,
     pacing_fit: 0.15,
     complexity_fit: 0.1,
-    era_fit: 0.1,
-    obscurity_fit: 0.05,
+    era_fit: 0.07,
+    obscurity_fit: 0.03,
     viewing_context_fit: 0.05,
-    diversity_adjustment: 0.1,
+    diversity_adjustment: 0.05,
   },
   candidates: [
     {
@@ -80,6 +81,7 @@ const scoringDetail = {
       score_breakdown: {
         theme_fit: 0.92,
         emotional_fit: 0.88,
+        visual_tonal_fit: 0.85,
         pacing_fit: 0.95,
       },
     },

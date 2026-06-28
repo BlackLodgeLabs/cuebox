@@ -698,7 +698,8 @@ POST /recommendations
     "subtitle_preference": "no_preference",
     "obscurity_preference": "hidden_gems"
   },
-  "notes": "I've been enjoying slow-burn atmospheric horror lately."
+  "notes": "I've been enjoying slow-burn atmospheric horror lately.",
+  "quick_pick_preset_id": "cozy_night_in"
 }
 ```
 
@@ -720,6 +721,7 @@ POST /recommendations
 |Field  |Type            |Required|Validation         |
 |-------|----------------|--------|-------------------|
 |`notes`|string, optional|no      |Max 1000 characters|
+|`quick_pick_preset_id`|string, optional|no|One of: `cozy_night_in`, `adrenaline_rush`, `deep_and_arty`, `scare_me`, `feel_good_escape`, `dark_and_unsettling`. Unknown values return `400`. When set, Stage 5 uses stochastic band `0.04` (default `0.08`) and appends `Quick pick: {label}` to notes before profile canonicalization.|
 
 **Validation Rules**
 
@@ -1020,14 +1022,15 @@ GET /dev/recommendations/{session_id}/scoring
   "scoring_version": "scoring-v1",
   "weight_set": "default",
   "weights": {
-    "theme_fit": 0.25,
+    "theme_fit": 0.22,
     "emotional_fit": 0.20,
+    "visual_tonal_fit": 0.13,
     "pacing_fit": 0.15,
     "complexity_fit": 0.10,
-    "era_fit": 0.10,
-    "obscurity_fit": 0.05,
+    "era_fit": 0.07,
+    "obscurity_fit": 0.03,
     "viewing_context_fit": 0.05,
-    "diversity_adjustment": 0.10
+    "diversity_adjustment": 0.05
   },
   "candidates": [
     {
@@ -1039,6 +1042,7 @@ GET /dev/recommendations/{session_id}/scoring
       "score_breakdown": {
         "theme_fit": 0.92,
         "emotional_fit": 0.88,
+        "visual_tonal_fit": 0.85,
         "pacing_fit": 0.95,
         "complexity_fit": 0.70,
         "era_fit": 0.50,

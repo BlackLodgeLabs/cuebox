@@ -247,16 +247,17 @@ Each remaining film receives a score based on how well its stored taste profile 
 
 | What you said | What it is compared to | Weight |
 |---------------|------------------------|--------|
-| Genres | Film genres, keywords, subgenres, and themes | 25% |
+| Genres | Film genres, keywords, subgenres, and themes | 22% |
 | Emotional outcomes | Film’s predicted emotional impact | 20% |
+| Visual / tonal vibes | Film tones and visual descriptors | 13% |
 | Pacing | Film’s pacing score | 15% |
 | Thinking effort | Film’s complexity score | 10% |
-| Era | Film’s release year | 10% |
-| Obscurity preference | Film’s obscurity score | 5% |
+| Era | Film’s release year | 7% |
+| Obscurity preference | Film’s obscurity score | 3% |
 | Viewing context | Film’s ideal viewing situations | 5% |
-| (Stage 4 adjustment) | Variety / recommendation history penalty/bonus | 10% |
+| (Stage 4 adjustment) | Variety / recommendation history penalty/bonus | 5% |
 
-Visual and tonal vibes are not scored separately here, but they still matter through semantic search (Stage 2) and the final AI step (Stage 6).
+Visual and tonal vibes are scored in Stage 3 (overlap with film `tones` and `visual_descriptors`) in addition to influencing semantic search (Stage 2) and the final AI step (Stage 6).
 
 #### Stage 4 — Variety adjustment
 

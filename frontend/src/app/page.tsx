@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Icon } from "@/components/icon";
+import { RecommendationLoading } from "@/components/recommendation-loading";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,10 +21,20 @@ import {
   useHasWatchlist,
   usePendingReviewCount,
 } from "@/hooks/use-films";
+import { useCreateRecommendation } from "@/hooks/use-recommendations";
+import { ApiClientError } from "@/lib/api-client";
 import { getHealth } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/error-messages";
+import {
+  buildQuestionnaireFromPreset,
+  MOOD_PRESETS,
+} from "@/lib/mood-presets";
 
 export default function HomePage() {
+  const router = useRouter();
   const [healthOpen, setHealthOpen] = useState(false);
+  const [quickPickError, setQuickPickError] = useState<string | null>(null);
+  const create = useCreateRecommendation();
   const {
     data: hasWatchlist,
     isLoading: watchlistLoading,
@@ -35,6 +47,31 @@ export default function HomePage() {
     queryFn: getHealth,
     staleTime: 60_000,
   });
+
+  const handleQuickPick = async (presetId: string) => {
+    if (create.isPending) return;
+    setQuickPickError(null);
+    try {
+      const questionnaire = buildQuestionnaireFromPreset(presetId);
+      const result = await create.mutateAsync({
+        questionnaire,
+        quick_pick_preset_id: presetId,
+      });
+      router.push(`/recommend/results/${result.session_id}`);
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        setQuickPickError(
+          getErrorMessage({
+            code: error.code as Parameters<typeof getErrorMessage>[0]["code"],
+            message: error.message,
+            details: error.details,
+          }),
+        );
+      } else {
+        setQuickPickError("Recommendation failed. Please try again.");
+      }
+    }
+  };
 
   if (watchlistLoading) {
     return <CardGridSkeleton count={1} />;
@@ -77,6 +114,10 @@ export default function HomePage() {
     );
   }
 
+  if (create.isPending) {
+    return <RecommendationLoading />;
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -85,6 +126,45 @@ export default function HomePage() {
           Start a new recommendation or browse your past picks.
         </p>
       </div>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-h2">Mood quick pick</h2>
+          <p className="mt-1 text-body-md text-muted-foreground">
+            Skip the questionnaire — tap a mood and we&apos;ll pick a film.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {MOOD_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              disabled={create.isPending}
+              onClick={() => void handleQuickPick(preset.id)}
+              className="text-left"
+            >
+              <Card className="hover-glow h-full transition-colors">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Icon name={preset.icon} size={20} className="text-secondary" />
+                    {preset.label}
+                  </CardTitle>
+                  <CardDescription>{preset.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            </button>
+          ))}
+        </div>
+        {quickPickError && (
+          <p className="text-sm text-destructive">{quickPickError}</p>
+        )}
+        <p className="text-body-sm text-muted-foreground">
+          <Link href="/recommend" className="text-secondary hover:underline">
+            Customize instead
+          </Link>{" "}
+          — answer the full questionnaire for finer control.
+        </p>
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="hover-glow">

@@ -462,14 +462,15 @@ Scoring weights are configuration-driven.
 
 ```yaml
 scoring:
-  theme_fit: 0.25
+  theme_fit: 0.22
   emotional_fit: 0.20
+  visual_tonal_fit: 0.13
   pacing_fit: 0.15
   complexity_fit: 0.10
-  era_fit: 0.10
-  obscurity_fit: 0.05
+  era_fit: 0.07
+  obscurity_fit: 0.03
   viewing_context_fit: 0.05
-  diversity_adjustment: 0.10
+  diversity_adjustment: 0.05
 ```
 
 Stored with every session as `scoring_version` and `weight_set`. Developer Mode displays active configuration.

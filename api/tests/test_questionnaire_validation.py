@@ -44,3 +44,20 @@ def test_notes_max_length():
             questionnaire=QuestionnaireRequest(**_questionnaire()),
             notes="x" * 1001,
         )
+
+
+def test_unknown_quick_pick_preset_id():
+    with pytest.raises(AppError) as exc:
+        CreateRecommendationRequest(
+            questionnaire=QuestionnaireRequest(**_questionnaire()),
+            quick_pick_preset_id="unknown_preset",
+        )
+    assert exc.value.code.value == "VALIDATION_ERROR"
+
+
+def test_valid_quick_pick_preset_id():
+    request = CreateRecommendationRequest(
+        questionnaire=QuestionnaireRequest(**_questionnaire()),
+        quick_pick_preset_id="cozy_night_in",
+    )
+    assert request.quick_pick_preset_id == "cozy_night_in"
