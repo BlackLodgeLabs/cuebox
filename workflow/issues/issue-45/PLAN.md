@@ -19,8 +19,8 @@ Add a lightweight Docker Compose **backup sidecar** that runs `pg_dump` on a dai
 | `documents/database-backup-restore.md` | **Add** | End-to-end restore guide |
 | `README.md` | **Modify** | Link restore guide in Documentation table; brief mention of daily backups |
 | `AGENTS.md` | **Modify** | Note backup service in stack table / running stack section |
-| `demos/issue-45/demo-spec.md` | **Add** | Demo scenarios for execute-ready handoff |
-| `demos/issue-45/workflow-state.json` | **Modify** | Stage → `plan-ready` |
+| `workflow/issues/issue-45/demo/demo-spec.md` | **Add** | Demo scenarios for execute-ready handoff |
+| `workflow/issues/issue-45/workflow.state.json` | **Modify** | Stage → `plan-ready` |
 
 ## Implementation steps
 

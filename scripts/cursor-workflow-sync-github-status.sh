@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Sync GitHub issue labels and a single updatable status comment from
-# demos/issue-NNN/workflow-state.json. Intended for GitHub Actions (GITHUB_TOKEN
-# or PAT with issues:write). Cloud agents cannot rely on this — they push state;
-# this script runs on the subsequent workflow trigger.
+# workflow/issues/issue-NNN/workflow.state.json. Intended for GitHub Actions
+# (GITHUB_TOKEN or PAT with issues:write). Cloud agents cannot rely on this —
+# they push state; this script runs on the subsequent workflow trigger.
 set -euo pipefail
 
 MARKER="<!-- cursor-workflow-status:v1 -->"
 
-STATE_FILE="${1:?usage: cursor-workflow-sync-github-status.sh <path-to-workflow-state.json>}"
+STATE_FILE="${1:?usage: cursor-workflow-sync-github-status.sh <path-to-workflow.state.json>}"
 
 if [ ! -f "$STATE_FILE" ]; then
   echo "State file not found: $STATE_FILE"
@@ -151,9 +151,9 @@ BODY="${MARKER}
 | **State updated** | ${UPDATED:-—} |
 | **Latest agent** | ${AGENT_LINE} |
 
-[Open Cursor agents](https://cursor.com/agents) · [Workflow docs](https://github.com/${REPO}/blob/main/documents/cursor-workflow/WORKFLOW.md)
+[Open Cursor agents](https://cursor.com/agents) · [Workflow docs](https://github.com/${REPO}/blob/main/workflow/cursor-workflow/WORKFLOW.md)
 
-_This comment is updated automatically when \`demos/issue-${ISSUE}/workflow-state.json\` changes on the branch._"
+_This comment is updated automatically on every push to \`${BRANCH:-cursor/issue-*}\` from \`workflow/issues/issue-${ISSUE}/workflow.state.json\`._"
 
 COMMENT_ID=$(gh api "repos/${REPO}/issues/${ISSUE}/comments" --paginate \
   | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id')

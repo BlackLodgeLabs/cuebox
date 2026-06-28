@@ -26,8 +26,8 @@ Planning agent output. Demo agent follows this exactly.
 
 **Capture:**
 
-- Screenshot: `demos/issue-45/scenario-1-compose-ps.png` (terminal showing `docker compose ps` with backup Up)
-- Screenshot: `demos/issue-45/scenario-1-health-ok.png` (health JSON or browser network panel)
+- Screenshot: `workflow/issues/issue-45/demo/scenario-1-compose-ps.png` (terminal showing `docker compose ps` with backup Up)
+- Screenshot: `workflow/issues/issue-45/demo/scenario-1-health-ok.png` (health JSON or browser network panel)
 
 **Pass criteria:**
 
@@ -50,8 +50,8 @@ Planning agent output. Demo agent follows this exactly.
 
 **Capture:**
 
-- Screenshot: `demos/issue-45/scenario-2-backup-ls.png` (ls showing dated `.dump` file and size)
-- Screenshot: `demos/issue-45/scenario-2-health-after-backup.png`
+- Screenshot: `workflow/issues/issue-45/demo/scenario-2-backup-ls.png` (ls showing dated `.dump` file and size)
+- Screenshot: `workflow/issues/issue-45/demo/scenario-2-health-after-backup.png`
 
 **Pass criteria:**
 
@@ -72,8 +72,8 @@ Planning agent output. Demo agent follows this exactly.
 
 **Capture:**
 
-- Screenshot: `demos/issue-45/scenario-3-retention-test-pass.png` (terminal showing PASS from test script)
-- Screenshot: `demos/issue-45/scenario-3-two-files-remain.png` (ls showing ≤2 dump files after prune)
+- Screenshot: `workflow/issues/issue-45/demo/scenario-3-retention-test-pass.png` (terminal showing PASS from test script)
+- Screenshot: `workflow/issues/issue-45/demo/scenario-3-two-files-remain.png` (ls showing ≤2 dump files after prune)
 
 **Pass criteria:**
 
@@ -94,8 +94,8 @@ Planning agent output. Demo agent follows this exactly.
 
 **Capture:**
 
-- Screenshot: `demos/issue-45/scenario-4-restore-doc.png` (restore guide headings visible)
-- Screenshot: `demos/issue-45/scenario-4-readme-link.png` (README table row)
+- Screenshot: `workflow/issues/issue-45/demo/scenario-4-restore-doc.png` (restore guide headings visible)
+- Screenshot: `workflow/issues/issue-45/demo/scenario-4-readme-link.png` (README table row)
 
 **Pass criteria:**
 
@@ -119,7 +119,7 @@ Planning agent output. Demo agent follows this exactly.
 
 **Capture:**
 
-- Screenshot: `demos/issue-45/scenario-5-restore-verify.png`
+- Screenshot: `workflow/issues/issue-45/demo/scenario-5-restore-verify.png`
 
 **Pass criteria:**
 
@@ -136,5 +136,5 @@ Planning agent output. Demo agent follows this exactly.
 - [ ] `scenario-4-restore-doc.png`
 - [ ] `scenario-4-readme-link.png`
 - [ ] (optional) `scenario-5-restore-verify.png`
-- [ ] `demos/issue-45/demo-notes.md` — short narrative of scenarios run and outcomes
+- [ ] `workflow/issues/issue-45/demo/demo-notes.md` — short narrative of scenarios run and outcomes
 - [ ] No API keys, passwords, or `.env` secrets in images or demo-notes

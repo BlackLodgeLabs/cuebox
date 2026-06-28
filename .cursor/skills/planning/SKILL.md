@@ -14,16 +14,16 @@ Produce an implementation plan and demo spec on the existing feature branch.
 
 ## Read first
 
-1. `documents/specs/issue-{NNN}.md`
-2. `demos/issue-{NNN}/workflow-state.json`
-3. [documents/cursor-workflow/WORKFLOW.md](../../documents/cursor-workflow/WORKFLOW.md)
+1. `workflow/issues/issue-{NNN}/SPEC.md`
+2. `workflow/issues/issue-{NNN}/workflow.state.json`
+3. [workflow/cursor-workflow/WORKFLOW.md](../../../workflow/cursor-workflow/WORKFLOW.md)
 4. Relevant code areas (grep/read before planning)
 
 ## Preconditions
 
 - Branch `cursor/issue-{NNN}-*` exists and is checked out
 - Spec has no open questions in **Open questions** section
-- `workflow-state.json` shows `stage: spec-ready` (or you are explicitly resuming planning)
+- `workflow.state.json` shows `stage: spec-ready` (or you are explicitly resuming planning)
 
 ## Start — update state (first commit)
 
@@ -41,7 +41,7 @@ Push (triggers status sync on the issue).
 
 ## Outputs
 
-### 1. Implementation plan — `documents/plans/issue-{NNN}.md`
+### 1. Implementation plan — `workflow/issues/issue-{NNN}/PLAN.md`
 
 Include:
 
@@ -54,19 +54,19 @@ Include:
 - **Risks and rollback**
 - **Definition of done** — checklist execute must satisfy
 
-### 2. Demo spec — `demos/issue-{NNN}/demo-spec.md`
+### 2. Demo spec — `workflow/issues/issue-{NNN}/demo/demo-spec.md`
 
 Instruct the demo agent what to capture on the VM:
 
 - Preconditions (stack health URLs, seed data)
-- Numbered scenarios with steps, pass criteria, and **exact artifact filenames** under `demos/issue-{NNN}/`
-- Reference [demos/_template/demo-spec.md](../../demos/_template/demo-spec.md)
+- Numbered scenarios with steps, pass criteria, and **exact artifact filenames** under `workflow/issues/issue-{NNN}/demo/`
+- Reference [workflow/cursor-workflow/templates/demo-spec.md](../../../workflow/cursor-workflow/templates/demo-spec.md)
 
 Assume **full Docker stack** on the cloud VM (frontend :3000, API :8000). API keys come from VM secrets / `.env`.
 
 ## Workflow state
 
-Update `demos/issue-{NNN}/workflow-state.json`:
+Update `workflow/issues/issue-{NNN}/workflow.state.json`:
 
 ```json
 {

@@ -1,13 +1,13 @@
 ---
 name: demo
-description: Run the demo spec on the cloud VM with full Docker stack, capture screenshots and recordings under demos/issue-NNN/, and push evidence to the PR branch. Use when workflow stage is execute-ready or when asked to demo issue NNN.
+description: Run the demo spec on the cloud VM with full Docker stack, capture screenshots and recordings under workflow/issues/issue-NNN/demo/, and push evidence to the PR branch. Use when workflow stage is execute-ready or when asked to demo issue NNN.
 paths:
-  - "demos/**"
+  - "workflow/**"
 ---
 
 # Demo
 
-Execute `demos/issue-{NNN}/demo-spec.md` on the running stack and commit evidence.
+Execute `workflow/issues/issue-{NNN}/demo/demo-spec.md` on the running stack and commit evidence.
 
 ## When to use
 
@@ -24,9 +24,9 @@ Push before running scenarios.
 
 ## Read first
 
-1. `demos/issue-{NNN}/demo-spec.md`
-2. `documents/specs/issue-{NNN}.md` (context)
-3. `demos/issue-{NNN}/workflow-state.json`
+1. `workflow/issues/issue-{NNN}/demo/demo-spec.md`
+2. `workflow/issues/issue-{NNN}/SPEC.md` (context)
+3. `workflow/issues/issue-{NNN}/workflow.state.json`
 4. PR diff (know what changed)
 
 ## Environment
@@ -42,9 +42,9 @@ Push before running scenarios.
 
 Follow **every** scenario in `demo-spec.md`:
 
-- Screenshots → paths named in the spec (under `demos/issue-{NNN}/`)
+- Screenshots → paths named in the spec (under `workflow/issues/issue-{NNN}/demo/`)
 - Short screen recordings where specified (use Cursor screen recording or browser tools)
-- Write `demos/issue-{NNN}/demo-notes.md`:
+- Write `workflow/issues/issue-{NNN}/demo/demo-notes.md`:
   - Date, commit SHA
   - Scenario-by-scenario pass/fail
   - Links to any oversized artifacts posted on the PR instead of committed

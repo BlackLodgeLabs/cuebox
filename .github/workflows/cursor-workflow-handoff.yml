@@ -1,14 +1,13 @@
 name: Cursor workflow handoff
 
-# On workflow-state.json push: sync issue status, ensure draft PR, spawn next cloud agent.
+# On every push to cursor/issue-*: sync issue labels + status comment from workflow.state.json.
+# When workflow.state.json stage changes to a handoff value: ensure draft PR, spawn next cloud agent.
 # Requires: CURSOR_API_KEY. Uses GITHUB_TOKEN for labels, comments, and draft PRs.
 
 on:
   push:
     branches:
       - 'cursor/issue-*'
-    paths:
-      - 'demos/**/workflow-state.json'
   workflow_dispatch:
     inputs:
       issue_number:
@@ -35,7 +34,7 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.3.1
         with:
           fetch-depth: 0
 
@@ -65,6 +64,23 @@ jobs:
           set -euo pipefail
           REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
           WF="${SCRIPTS_DIR:-/tmp/cursor-workflow-scripts}"
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          STATE_PATH_PATTERN='^workflow/issues/issue-[0-9]+/workflow\.state\.json$'
+
+          ISSUE=$(echo "$BRANCH" | sed -n 's/^cursor\/issue-\([0-9]\+\).*/\1/p')
+          if [ -z "$ISSUE" ]; then
+            echo "Could not parse issue number from branch ${BRANCH}"
+            exit 0
+          fi
+
+          STATE_FILE="workflow/issues/issue-${ISSUE}/workflow.state.json"
+
+          if ! git cat-file -e "${AFTER_SHA}:${STATE_FILE}" 2>/dev/null; then
+            echo "No ${STATE_FILE} on ${BRANCH} — skipping"
+            exit 0
+          fi
+
+          git show "${AFTER_SHA}:${STATE_FILE}" > /tmp/workflow.state.json
 
           ensure_pr_on_branch() {
             local issue="$1" branch="$2" state_file="$3"
@@ -75,19 +91,6 @@ jobs:
             echo "Draft PR #${pr} linked for issue #${issue}"
           }
 
-          mapfile -t files < <(
-            if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
-              git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -E '^demos/issue-[0-9]+/workflow-state\.json$' || true
-            else
-              git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" | grep -E '^demos/issue-[0-9]+/workflow-state\.json$' || true
-            fi
-          )
-
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No workflow-state.json changes in this push"
-            exit 0
-          fi
-
           handoff() {
             local stage="$1" issue="$2" branch="$3" state_file="$4"
             local prompt skill progress_stage agent_id=""
@@ -96,7 +99,7 @@ jobs:
               spec-ready)
                 ensure_pr_on_branch "$issue" "$branch" "$state_file"
                 "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
-                prompt="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — do not create a PR. Read documents/cursor-workflow/WORKFLOW.md and demos/issue-${issue}/workflow-state.json."
+                prompt="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — do not create a PR. Read workflow/cursor-workflow/WORKFLOW.md and workflow/issues/issue-${issue}/workflow.state.json."
                 skill="planning"
                 progress_stage="plan-in-progress"
                 ;;
@@ -109,7 +112,7 @@ jobs:
                 progress_stage="execute-in-progress"
                 ;;
               execute-ready)
-                prompt="Use the demo skill for GitHub issue #${issue}. Branch: ${branch}. Full Docker stack must be running. Follow demos/issue-${issue}/demo-spec.md."
+                prompt="Use the demo skill for GitHub issue #${issue}. Branch: ${branch}. Full Docker stack must be running. Follow workflow/issues/issue-${issue}/demo/demo-spec.md."
                 skill="demo"
                 progress_stage="demo-in-progress"
                 ;;
@@ -178,47 +181,57 @@ jobs:
             esac
           }
 
-          for file in "${files[@]}"; do
-            git cat-file -e "${AFTER_SHA}:${file}" 2>/dev/null || continue
-            git show "${AFTER_SHA}:${file}" > /tmp/workflow-state.json
+          branch=$(jq -r '.branch // empty' /tmp/workflow.state.json)
+          stage=$(jq -r '.stage // empty' /tmp/workflow.state.json)
 
-            prev_stage=""
-            if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}:${file}" 2>/dev/null; then
-              prev_stage=$(git show "${BEFORE_SHA}:${file}" | jq -r '.stage // empty')
-            fi
+          if [ -z "$branch" ]; then
+            echo "Skipping — missing branch in ${STATE_FILE}"
+            exit 0
+          fi
 
-            issue=$(jq -r '.issue // empty' /tmp/workflow-state.json)
-            branch=$(jq -r '.branch // empty' /tmp/workflow-state.json)
-            stage=$(jq -r '.stage // empty' /tmp/workflow-state.json)
+          # Always sync labels + status comment on every cloud-agent push
+          "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
 
-            if [ -z "$issue" ] || [ -z "$branch" ]; then
-              echo "Skipping $file — missing issue or branch"
-              continue
+          state_changed=false
+          if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            if git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE "$STATE_PATH_PATTERN"; then
+              state_changed=true
             fi
+          else
+            if git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" | grep -qE "$STATE_PATH_PATTERN"; then
+              state_changed=true
+            fi
+          fi
 
-            # Always sync labels + status comment from committed state
-            "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow-state.json
+          if [ "$state_changed" != "true" ]; then
+            echo "workflow.state.json unchanged — sync only (stage=${stage})"
+            exit 0
+          fi
 
-            if [ "$stage" = "$prev_stage" ]; then
-              echo "Stage unchanged ($stage) — no handoff"
-              continue
-            fi
-            if is_skip_stage "$stage"; then
-              echo "No handoff for stage ${stage}"
-              continue
-            fi
-            if is_handoff_stage "$stage"; then
-              handoff "$stage" "$issue" "$branch" /tmp/workflow-state.json
-            else
-              echo "::warning::Unrecognized stage '${stage}' in ${file} (sync only)"
-            fi
-          done
+          prev_stage=""
+          if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}:${STATE_FILE}" 2>/dev/null; then
+            prev_stage=$(git show "${BEFORE_SHA}:${STATE_FILE}" | jq -r '.stage // empty')
+          fi
+
+          if [ "$stage" = "$prev_stage" ]; then
+            echo "Stage unchanged ($stage) — no handoff"
+            exit 0
+          fi
+          if is_skip_stage "$stage"; then
+            echo "No handoff for stage ${stage}"
+            exit 0
+          fi
+          if is_handoff_stage "$stage"; then
+            handoff "$stage" "$ISSUE" "$branch" /tmp/workflow.state.json
+          else
+            echo "::warning::Unrecognized stage '${stage}' in ${STATE_FILE} (sync only)"
+          fi
 
   resync-status:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.3.1
         with:
           fetch-depth: 0
 
@@ -244,7 +257,7 @@ jobs:
         run: |
           set -euo pipefail
           WF="${SCRIPTS_DIR:-/tmp/cursor-workflow-scripts}"
-          STATE="demos/issue-${ISSUE}/workflow-state.json"
+          STATE="workflow/issues/issue-${ISSUE}/workflow.state.json"
           mapfile -t BRANCHES < <(git branch -r | grep -E "origin/cursor/issue-${ISSUE}-" | sed 's|^[[:space:]]*origin/||' || true)
           BRANCH="${BRANCHES[0]:-}"
           if [ -z "$BRANCH" ]; then
@@ -252,12 +265,12 @@ jobs:
             exit 1
           fi
           git fetch origin "$BRANCH"
-          git show "origin/${BRANCH}:${STATE}" > /tmp/workflow-state.json
+          git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
           if [ "${ENSURE_PR}" = "true" ]; then
             PR=$("$WF/cursor-workflow-ensure-draft-pr.sh" "$ISSUE" "$BRANCH")
-            "$WF/cursor-workflow-record-pr-on-branch.sh" /tmp/workflow-state.json "$PR" "$BRANCH"
+            "$WF/cursor-workflow-record-pr-on-branch.sh" /tmp/workflow.state.json "$PR" "$BRANCH"
             git fetch origin "$BRANCH"
-            git show "origin/${BRANCH}:${STATE}" > /tmp/workflow-state.json
+            git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
           fi
-          "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow-state.json
+          "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
           echo "Done for issue #${ISSUE} on ${BRANCH}"

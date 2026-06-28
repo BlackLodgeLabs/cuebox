@@ -1,5 +1,5 @@
-# Feature specs
+# Feature specs (legacy path)
 
-Written by the **review-and-spec** skill: `issue-{NNN}.md` per GitHub issue number.
+Feature specs now live at [`workflow/issues/issue-{NNN}/SPEC.md`](../../workflow/issues/).
 
-Handoff to planning when `demos/issue-{NNN}/workflow-state.json` has `stage: spec-ready`.
+Handoff to planning when `workflow/issues/issue-{NNN}/workflow.state.json` has `stage: spec-ready`.

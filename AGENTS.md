@@ -155,7 +155,7 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 
 ## Cursor issue workflow (multi-agent)
 
-GitHub issue → spec → plan → execute → demo → babysit → human review. **Setup:** [documents/cursor-workflow/SETUP.md](documents/cursor-workflow/SETUP.md). **Stages:** [documents/cursor-workflow/WORKFLOW.md](documents/cursor-workflow/WORKFLOW.md).
+GitHub issue → spec → plan → execute → demo → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md).
 
 | You do | Skill |
 |--------|-------|
@@ -163,8 +163,8 @@ GitHub issue → spec → plan → execute → demo → babysit → human review
 | `@cursoragent continue spec` | `review-and-spec` |
 | Handoff (automated) | `planning` → `execute` → `demo` → `babysit-pr` |
 
-- Specs: `documents/specs/issue-NNN.md`
-- Plans: `documents/plans/issue-NNN.md`
-- Demo spec + artifacts: `demos/issue-NNN/`
-- State / handoffs: `demos/issue-NNN/workflow-state.json` + `.github/workflows/cursor-workflow-handoff.yml`
+- Specs: `workflow/issues/issue-NNN/SPEC.md`
+- Plans: `workflow/issues/issue-NNN/PLAN.md`
+- Demo spec + artifacts: `workflow/issues/issue-NNN/demo/`
+- State / handoffs: `workflow/issues/issue-NNN/workflow.state.json` + `.github/workflows/cursor-workflow-handoff.yml`
 - Pre-PR gates: `run-gate-scripts` skill
