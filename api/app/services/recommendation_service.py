@@ -34,13 +34,17 @@ from app.schemas.recommendations import (
     RecommendationSessionDetail,
 )
 from app.services.diversity_service import apply_diversity
+from app.services.quick_pick_presets import (
+    DEFAULT_STOCHASTIC_BAND,
+    QUICK_PICK_STOCHASTIC_BAND,
+    merge_quick_pick_notes,
+)
 from app.services.ranking_service import RankingService
 from app.services.recommendation_profile_service import RecommendationProfileService
 from app.services.scoring_service import runtime_ceiling, score_candidates
 from app.services.provider_service import ProviderService
 
 MIN_CANDIDATES = 5
-STOCHASTIC_BAND = 0.08
 
 
 @dataclass
@@ -66,8 +70,14 @@ class RecommendationService:
         request: CreateRecommendationRequest,
     ) -> CreateRecommendationResponse:
         questionnaire = request.questionnaire.model_dump()
+        notes = merge_quick_pick_notes(request.notes, request.quick_pick_preset_id)
+        stochastic_band = (
+            QUICK_PICK_STOCHASTIC_BAND
+            if request.quick_pick_preset_id
+            else DEFAULT_STOCHASTIC_BAND
+        )
         profile = await self._profile_service.resolve_profile(
-            db, questionnaire, request.notes
+            db, questionnaire, notes
         )
 
         candidates, relaxation = self._stage1_filter(db, questionnaire)
@@ -88,7 +98,7 @@ class RecommendationService:
             db, [item.film.id for item in scored]
         )
         diversified = apply_diversity(scored, exposure_map, get_app_config().scoring)
-        shortlist = self._stage5_stochastic(diversified)
+        shortlist = self._stage5_stochastic(diversified, band=stochastic_band)
 
         ranking = RankingService(self._providers.get_ranking_provider())
         ranking_result = await ranking.rank(
@@ -445,15 +455,15 @@ class RecommendationService:
                 )
         return retrieved
 
-    def _stage5_stochastic(self, diversified: list[Any]) -> list[Any]:
+    def _stage5_stochastic(self, diversified: list[Any], *, band: float = DEFAULT_STOCHASTIC_BAND) -> list[Any]:
         if not diversified:
             return []
         top_score = diversified[0].final_score
-        band = [item for item in diversified if item.final_score >= top_score - STOCHASTIC_BAND]
-        if len(band) <= 1:
+        in_band = [item for item in diversified if item.final_score >= top_score - band]
+        if len(in_band) <= 1:
             return diversified[:20]
-        weights = [max(item.final_score, 0.01) for item in band]
-        promoted = random.choices(band, weights=weights, k=1)[0]
+        weights = [max(item.final_score, 0.01) for item in in_band]
+        promoted = random.choices(in_band, weights=weights, k=1)[0]
         remainder = [item for item in diversified if item.film_id != promoted.film_id]
         return [promoted, *remainder[:19]]
 

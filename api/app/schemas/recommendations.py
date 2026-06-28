@@ -7,9 +7,10 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.schemas.errors import ErrorDetail
+from app.services.quick_pick_presets import QUICK_PICK_PRESETS
 
 
 NO_PREFERENCE = "No Preference"
@@ -96,6 +97,28 @@ class QuestionnaireRequest(BaseModel):
 class CreateRecommendationRequest(BaseModel):
     questionnaire: QuestionnaireRequest
     notes: str | None = Field(default=None, max_length=1000)
+    quick_pick_preset_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_quick_pick_preset(self) -> "CreateRecommendationRequest":
+        if self.quick_pick_preset_id is None:
+            return self
+        if self.quick_pick_preset_id not in QUICK_PICK_PRESETS:
+            from app.core.exceptions import AppError
+            from app.schemas.errors import ErrorCode
+
+            raise AppError(
+                code=ErrorCode.VALIDATION_ERROR,
+                message=f"Unknown quick_pick_preset_id: {self.quick_pick_preset_id}",
+                status_code=400,
+                details=[
+                    ErrorDetail(
+                        field="quick_pick_preset_id",
+                        message=f"Unknown quick_pick_preset_id: {self.quick_pick_preset_id}",
+                    )
+                ],
+            )
+        return self
 
 
 class Explanation(BaseModel):
