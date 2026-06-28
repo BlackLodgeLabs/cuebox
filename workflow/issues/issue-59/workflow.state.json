@@ -4,11 +4,11 @@
   "pr": 60,
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "active_agent_id": null,
+  "active_agent_id": "bc-f877646a-dc7a-462c-b7cc-e29ae8317312",
   "agents": {
     "review-and-spec": null,
     "review-and-spec-continued": null,
-    "planning": null,
+    "planning": "bc-f877646a-dc7a-462c-b7cc-e29ae8317312",
     "execute": null,
     "demo": null,
     "create-pr": null,
@@ -19,5 +19,5 @@
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-06-28T17:42:09Z"
+  "updated_at": "2026-06-28T17:42:17Z"
 }
