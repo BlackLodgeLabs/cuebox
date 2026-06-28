@@ -5,6 +5,14 @@
   "stage": "spec-in-progress",
   "active_skill": null,
   "active_agent_id": null,
+  "agents": {
+    "review-and-spec": null,
+    "review-and-spec-continued": null,
+    "planning": null,
+    "execute": null,
+    "demo": null,
+    "babysit-pr": null
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,

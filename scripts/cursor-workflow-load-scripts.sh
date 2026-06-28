@@ -17,7 +17,9 @@ mkdir -p "$DEST"
 for script in \
   cursor-workflow-sync-github-status.sh \
   cursor-workflow-ensure-draft-pr.sh \
-  cursor-workflow-record-pr-on-branch.sh; do
+  cursor-workflow-record-pr-on-branch.sh \
+  cursor-workflow-record-agent-on-branch.sh \
+  cursor-workflow-discover-agents.sh; do
   git show "${REF}:scripts/${script}" > "${DEST}/${script}"
   chmod +x "${DEST}/${script}"
 done

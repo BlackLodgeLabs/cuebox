@@ -25,6 +25,23 @@ UPDATED=$(jq -r '.updated_at // empty' "$STATE_FILE")
 ACTIVE_SKILL=$(jq -r '.active_skill // empty' "$STATE_FILE")
 ACTIVE_AGENT=$(jq -r '.active_agent_id // empty' "$STATE_FILE")
 
+agent_id_for_key() {
+  jq -r --arg k "$1" '
+    (.agents[$k] // empty)
+    | if type == "object" then .id // empty else . end
+  ' "$STATE_FILE"
+}
+
+agent_link_for_key() {
+  local id
+  id=$(agent_id_for_key "$1")
+  if [ -z "$id" ] || [ "$id" = "null" ]; then
+    echo "—"
+  else
+    echo "[\`${id}\`](https://cursor.com/agents/${id})"
+  fi
+}
+
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 
 if [ -z "$ISSUE" ] || [ -z "$STAGE" ]; then
@@ -129,12 +146,28 @@ if [ -n "$PR" ] && [ "$PR" != "null" ]; then
   PR_LINE="[#${PR}](https://github.com/${REPO}/pull/${PR})"
 fi
 
-AGENT_LINE="—"
-if [ -n "$ACTIVE_AGENT" ]; then
-  AGENT_LINE="[\`${ACTIVE_AGENT}\`](https://cursor.com/agents)"
+LATEST_AGENT_LINE="—"
+if [ -n "$ACTIVE_AGENT" ] && [ "$ACTIVE_AGENT" != "null" ]; then
+  LATEST_AGENT_LINE="[\`${ACTIVE_AGENT}\`](https://cursor.com/agents/${ACTIVE_AGENT})"
 fi
 
 SKILL_LINE="${ACTIVE_SKILL:-—}"
+
+AGENTS_TABLE="| **Review & spec** | $(agent_link_for_key review-and-spec) |
+| **Planning** | $(agent_link_for_key planning) |
+| **Execute** | $(agent_link_for_key execute) |
+| **Demo** | $(agent_link_for_key demo) |
+| **PR babysitter** | $(agent_link_for_key babysit-pr) |"
+
+CONTINUED_ID=$(agent_id_for_key review-and-spec-continued)
+if [ -n "$CONTINUED_ID" ] && [ "$CONTINUED_ID" != "null" ]; then
+  AGENTS_TABLE="| **Review & spec** | $(agent_link_for_key review-and-spec) |
+| **Review & spec (continued)** | $(agent_link_for_key review-and-spec-continued) |
+| **Planning** | $(agent_link_for_key planning) |
+| **Execute** | $(agent_link_for_key execute) |
+| **Demo** | $(agent_link_for_key demo) |
+| **PR babysitter** | $(agent_link_for_key babysit-pr) |"
+fi
 
 BODY="${MARKER}
 ## Cursor workflow — issue #${ISSUE}
@@ -149,7 +182,13 @@ BODY="${MARKER}
 | **PR** | ${PR_LINE} |
 | **Loops** | bugbot ${BUGBOT}/3 · ci ${CI_FIX}/2 · total ${TOTAL}/10 |
 | **State updated** | ${UPDATED:-—} |
-| **Latest agent** | ${AGENT_LINE} |
+| **Latest agent** | ${LATEST_AGENT_LINE} |
+
+### Agent conversations
+
+| Stage | Link |
+|---|---|
+${AGENTS_TABLE}
 
 [Open Cursor agents](https://cursor.com/agents) · [Workflow docs](https://github.com/${REPO}/blob/main/workflow/cursor-workflow/WORKFLOW.md)
 

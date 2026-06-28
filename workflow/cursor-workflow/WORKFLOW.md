@@ -45,6 +45,21 @@ Handoff stages (trigger next agent): `spec-ready`, `plan-ready`, `execute-ready`
 
 Terminal stages: `complete`, `blocked`, `spec-needs-info`.
 
+### Agent conversation links
+
+`workflow.state.json` includes an `agents` object with one entry per workflow stage:
+
+| Key | Stage |
+|-----|-------|
+| `review-and-spec` | Initial `@cursoragent spec` run |
+| `review-and-spec-continued` | `@cursoragent continue spec` (only set when clarifications were needed) |
+| `planning` | Handoff from `spec-ready` |
+| `execute` | Handoff from `plan-ready` |
+| `demo` | Handoff from `execute-ready` |
+| `babysit-pr` | Handoff from `demo-ready` |
+
+Handoff stages record the agent id when `POST /v1/agents` succeeds. Spec agents are backfilled by `scripts/cursor-workflow-discover-agents.sh` (branch match via Cursor API). The issue status comment renders each as a link to `https://cursor.com/agents/{id}`.
+
 ## Loop limits (babysit stage)
 
 | Counter | Max |
@@ -80,7 +95,7 @@ Create these on the repository. **Agents do not set them reliably** — `.github
 2. **GitHub issue labels** — `cursor:*` label matches stage
 3. **Branch** — `workflow/issues/issue-NNN/workflow.state.json` → `"stage"` field
 4. **Actions** — workflow run **Cursor workflow handoff** on each push to `cursor/issue-*`
-5. **cursor.com/agents** — latest cloud agent run (usage dashboard)
+5. **Issue status comment → Agent conversations** — direct links to each cloud agent run (`https://cursor.com/agents/bc-…`); handoff stages are recorded when spawned; spec agents are discovered via the Cursor API when `CURSOR_API_KEY` is set
 
 **Manual resync** (e.g. issue already mid-flight): Actions → Cursor workflow handoff → **Run workflow** → enter issue number `45`.
 
@@ -106,7 +121,7 @@ Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, p
 3. **Sync GitHub issue status** via `scripts/cursor-workflow-sync-github-status.sh`:
    - Remove all existing `cursor:*` labels on the issue
    - Add the label matching the current `stage` (e.g. `cursor:execute-in-progress`)
-   - Create or update the **Cursor workflow — issue #NNN** status comment (stage, skill, branch, PR, loop counters, latest agent id)
+   - Create or update the **Cursor workflow — issue #NNN** status comment (stage, skill, branch, PR, loop counters, per-stage agent conversation links)
 4. **Handoff** (spawn next cloud agent) **only when**:
    - `workflow.state.json` changed in this push, **and**
    - `stage` changed to a handoff value: `spec-ready`, `plan-ready`, `execute-ready`, or `demo-ready`
