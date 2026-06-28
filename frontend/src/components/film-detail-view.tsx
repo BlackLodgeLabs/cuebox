@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { EditFilmMatchDialog } from "@/components/edit-film-match-dialog";
 import { FilmPoster } from "@/components/film-poster";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -15,6 +18,7 @@ import type { FilmDetail } from "@/types/api";
 
 interface FilmDetailViewProps {
   film: FilmDetail;
+  autoOpenEditMatch?: boolean;
 }
 
 function TagGroup({ label, tags }: { label: string; tags: string[] }) {
@@ -50,10 +54,18 @@ function formatRating(value: number | null): string {
   return value.toFixed(1);
 }
 
-export function FilmDetailView({ film }: FilmDetailViewProps) {
+export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailViewProps) {
+  const [editOpen, setEditOpen] = useState(false);
   const metadata = film.metadata;
   const semantic = film.semantic_profile;
   const backdropUrl = metadata?.backdrop_url ?? null;
+  const isEnriching = film.enrichment_status === "enriching";
+
+  useEffect(() => {
+    if (autoOpenEditMatch) {
+      setEditOpen(true);
+    }
+  }, [autoOpenEditMatch, film.id]);
 
   return (
     <div className="space-y-8">
@@ -96,7 +108,17 @@ export function FilmDetailView({ film }: FilmDetailViewProps) {
                 <Badge variant="secondary">
                   {formatEnrichmentStatus(film.enrichment_status)}
                 </Badge>
+                {isEnriching && (
+                  <span className="text-label-md text-muted-foreground">
+                    Updating metadata…
+                  </span>
+                )}
                 <Badge variant="outline">{film.status}</Badge>
+              </div>
+              <div className="mt-3">
+                <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+                  Edit film match
+                </Button>
               </div>
             </div>
           </div>
@@ -259,6 +281,12 @@ export function FilmDetailView({ film }: FilmDetailViewProps) {
           </CardContent>
         </Card>
       )}
+
+      <EditFilmMatchDialog
+        film={film}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </div>
   );
 }

@@ -21,8 +21,11 @@ import type {
   ReviewActionResponse,
   ReviewRequiredFilm,
   ReviewRequiredQueryParams,
+  RematchResponse,
   FilmSummary,
   FilmDetail,
+  TmdbSearchParams,
+  TmdbSearchResponse,
   HistoryCard,
   SyncCsvResponse,
   SyncRssConfigResponse,
@@ -164,6 +167,25 @@ export function acceptReview(reviewId: string): Promise<ReviewActionResponse> {
 export function rejectReview(reviewId: string): Promise<ReviewActionResponse> {
   return fetchApi<ReviewActionResponse>(`/reviews/${reviewId}/reject`, {
     method: "POST",
+  });
+}
+
+export function searchTmdb(
+  filmId: string,
+  params: TmdbSearchParams,
+): Promise<TmdbSearchResponse> {
+  return fetchApi<TmdbSearchResponse>(
+    `/films/${filmId}/tmdb-search${buildQuery(params)}`,
+  );
+}
+
+export function rematchFilm(
+  filmId: string,
+  tmdbId: number,
+): Promise<RematchResponse> {
+  return fetchApi<RematchResponse>(`/films/${filmId}/rematch`, {
+    method: "POST",
+    body: JSON.stringify({ tmdb_id: tmdbId }),
   });
 }
 

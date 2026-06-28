@@ -75,8 +75,13 @@ export default function ReviewPage() {
                 />
                 <div className="flex-1">
                   <CardTitle className="text-base">
-                    {film.title}
-                    {film.year ? ` (${film.year})` : ""}
+                    <Link
+                      href={`/watchlist/${film.film_id}?editMatch=1`}
+                      className="hover:text-primary hover:underline"
+                    >
+                      {film.title}
+                      {film.year ? ` (${film.year})` : ""}
+                    </Link>
                   </CardTitle>
                   <CardDescription>
                     Proposed: {film.candidate_payload.title}
@@ -94,7 +99,7 @@ export default function ReviewPage() {
                   </p>
                 </div>
               </CardHeader>
-              <CardContent className="flex gap-2">
+              <CardContent className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   disabled={isPending}
@@ -109,6 +114,11 @@ export default function ReviewPage() {
                   onClick={() => reject.mutate(film.review_id)}
                 >
                   Reject
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link href={`/watchlist/${film.film_id}?editMatch=1`}>
+                    Choose different match
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

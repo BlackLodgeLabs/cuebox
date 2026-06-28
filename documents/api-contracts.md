@@ -470,6 +470,112 @@ GET /films/review-required
 
 -----
 
+### 4.4 Search TMDB for Film
+
+Proxy TMDB movie search for manual metadata rematch. Requires `TMDB_API_KEY`.
+
+```
+GET /films/{film_id}/tmdb-search
+```
+
+#### Path Parameters
+
+|Parameter|Type|Description|
+|---------|----|-----------|
+|`film_id`|UUID|Film ID    |
+
+#### Query Parameters
+
+|Parameter|Type   |Default|Description                          |
+|---------|-------|-------|-------------------------------------|
+|`q`      |string |—      |Search query (required, min length 1)|
+|`year`   |integer|—      |Optional release year filter         |
+|`limit`  |integer|10     |Max results (1–20)                   |
+
+#### Response `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "tmdb_id": 11453,
+      "title": "The Wicker Man",
+      "original_title": "The Wicker Man",
+      "year": 1973,
+      "overview": "A devoutly Christian police officer...",
+      "poster_url": "https://image.tmdb.org/t/p/w500/..."
+    }
+  ]
+}
+```
+
+#### Errors
+
+|Code            |HTTP|Trigger                    |
+|----------------|----|---------------------------|
+|`NOT_FOUND`     |404 |`film_id` not found        |
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure          |
+
+-----
+
+### 4.5 Rematch Film
+
+Apply a user-selected TMDB movie to a watchlist film. Replaces `film_metadata`, reconciles pending metadata reviews, and enqueues semantic profile and embedding regeneration.
+
+```
+POST /films/{film_id}/rematch
+```
+
+#### Path Parameters
+
+|Parameter|Type|Description|
+|---------|----|-----------|
+|`film_id`|UUID|Film ID    |
+
+#### Request Body
+
+```json
+{
+  "tmdb_id": 11453
+}
+```
+
+#### Response `202 Accepted`
+
+```json
+{
+  "film_id": "f1a2b3c4-...",
+  "enrichment_status": "enriching"
+}
+```
+
+The film transitions to `ready` (or `failed` if the semantic/embedding pipeline errors) asynchronously.
+
+#### Enrichment state transitions (manual rematch)
+
+```mermaid
+stateDiagram-v2
+    review_required --> enriching: manual rematch
+    failed --> enriching: manual rematch
+    ready --> enriching: manual rematch
+    enriching --> ready: semantic + embed OK
+    enriching --> failed: pipeline error
+```
+
+Blocked while `matching` or `enriching` (concurrent rematch).
+
+#### Errors
+
+|Code            |HTTP|Trigger                                                                 |
+|----------------|----|------------------------------------------------------------------------|
+|`NOT_FOUND`     |404 |`film_id` not found, or TMDB movie ID not found                         |
+|`CONFLICT`      |409 |Film in `matching`/`enriching`; `tmdb_id`/`imdb_id` owned by another film|
+|`PROVIDER_ERROR`|502 |TMDB or OMDb HTTP failure during detail fetch                            |
+
+On success, `metadata_source` is set to `tmdb_manual` and `match_confidence` to `1.0`.
+
+-----
+
 ## 5. Metadata Match Reviews
 
 ### 5.1 Accept a Match
