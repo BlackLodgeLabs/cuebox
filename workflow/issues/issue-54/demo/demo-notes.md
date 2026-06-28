@@ -1,7 +1,7 @@
 # Demo notes — issue #54
 
 **Date:** 2026-06-28  
-**Commit:** `45c66b4b04fe6ff36b76aebdfc2ceed986af77c1`  
+**Commit:** `b48afdd1afdf288f28976591283a8da4e3da6a9e`  
 **Branch:** `cursor/issue-54-smarter-recommendations-based-on-mood`  
 **Stack:** Full Docker Compose (postgres, api, frontend, backup) with seeded Part 2 watchlist and live `OPENAI_API_KEY`.
 
