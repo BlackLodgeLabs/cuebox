@@ -20,25 +20,19 @@ def test_stage5_stochastic_tighter_band_excludes_nearby_candidates():
     service = RecommendationService(MagicMock())
     diversified = [
         _diversified_item(0.80),
-        _diversified_item(0.75),
-        _diversified_item(0.72),
+        _diversified_item(0.74),
+        _diversified_item(0.70),
     ]
 
-    tight_band = [
-        item
-        for item in diversified
-        if item.final_score >= diversified[0].final_score - 0.04
-    ]
-    wide_band = [
-        item
-        for item in diversified
-        if item.final_score >= diversified[0].final_score - 0.08
-    ]
+    def band_count(band: float) -> int:
+        top_score = diversified[0].final_score
+        return len(
+            item for item in diversified if item.final_score >= top_score - band
+        )
 
-    assert len(tight_band) == 1
-    assert len(wide_band) == 3
+    assert band_count(0.04) == 1
+    assert band_count(0.08) == 2
 
-    # When only one candidate is in band, stochastic step returns top 20 unchanged.
     tight_result = service._stage5_stochastic(diversified, band=0.04)
     assert tight_result[0].final_score == 0.80
     assert len(tight_result) == 3
