@@ -1,6 +1,6 @@
 # Cursor multi-agent issue workflow
 
-Reusable pipeline: GitHub issue → spec → plan → execute → demo → babysit → human review.
+Reusable pipeline: GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review.
 
 ## Stages
 
@@ -12,8 +12,9 @@ Reusable pipeline: GitHub issue → spec → plan → execute → demo → babys
 | 3 | Handoff (`spec-ready`) | `planning` | `workflow/issues/issue-NNN/PLAN.md`, `workflow/issues/issue-NNN/demo/demo-spec.md` |
 | 4 | Handoff (`plan-ready`) | `execute` | Code, docs, pushes to **existing draft PR** |
 | 5 | Handoff (`execute-ready`) | `demo` | Artifacts under `workflow/issues/issue-NNN/demo/` |
-| 6 | Handoff (`demo-ready`) | `babysit-pr` | PR marked ready; loops until clean or blocked |
-| 7 | GitHub notification | You | Final review and merge |
+| 6 | Handoff (`demo-ready`) | `create-pr` | `workflow/issues/issue-NNN/PR.md` → draft PR body |
+| 7 | Handoff (`create-pr-ready`) | `babysit-pr` | PR marked ready; loops until clean or blocked |
+| 8 | GitHub notification | You | Final review and merge |
 
 ## Branch and paths
 
@@ -27,13 +28,14 @@ workflow/
     issue-{NNN}/
       SPEC.md               # feature spec (review-and-spec)
       PLAN.md               # implementation plan (planning)
+      PR.md                 # PR description (create-pr; synced to GitHub PR body)
       workflow.state.json   # handoff contract (every stage updates)
       demo/                 # demo-spec.md, demo-notes.md, screenshots, recordings
 ```
 
 - **Branch:** `cursor/issue-{NNN}-{slug}` (slug from issue title, lowercase, hyphens)
 - **Base branch:** `main`
-- **PR:** One long-lived **draft** PR opened by GitHub Actions at `spec-ready` (not by cloud agents); execute pushes commits; babysit marks it **ready for review**
+- **PR:** One long-lived **draft** PR opened by GitHub Actions at `spec-ready` (not by cloud agents); execute pushes commits; **create-pr** writes `PR.md` (Actions syncs body); babysit marks it **ready for review**
 
 Copy [templates/demo-spec.md](templates/demo-spec.md) and [templates/workflow.state.json](templates/workflow.state.json) when bootstrapping manually.
 
@@ -41,7 +43,7 @@ Copy [templates/demo-spec.md](templates/demo-spec.md) and [templates/workflow.st
 
 `workflow/issues/issue-{NNN}/workflow.state.json` is the handoff contract. Cloud agents update `stage` and push; the GitHub Action reads it on every push to `cursor/issue-*` branches.
 
-Handoff stages (trigger next agent): `spec-ready`, `plan-ready`, `execute-ready`, `demo-ready`.
+Handoff stages (trigger next agent): `spec-ready`, `plan-ready`, `execute-ready`, `demo-ready`, `create-pr-ready`.
 
 Terminal stages: `complete`, `blocked`, `spec-needs-info`.
 
@@ -56,7 +58,8 @@ Terminal stages: `complete`, `blocked`, `spec-needs-info`.
 | `planning` | Handoff from `spec-ready` |
 | `execute` | Handoff from `plan-ready` |
 | `demo` | Handoff from `execute-ready` |
-| `babysit-pr` | Handoff from `demo-ready` |
+| `create-pr` | Handoff from `demo-ready` |
+| `babysit-pr` | Handoff from `create-pr-ready` |
 
 Handoff stages record the agent id when `POST /v1/agents` succeeds. Spec agents are backfilled by `scripts/cursor-workflow-discover-agents.sh` (branch match via Cursor API). The issue status comment renders each as a link to `https://cursor.com/agents/{id}`.
 
@@ -84,7 +87,9 @@ Create these on the repository. **Agents do not set them reliably** — `.github
 | `cursor:execute-in-progress` | Execute agent running |
 | `cursor:execute-ready` | Code/tests done; demo queued |
 | `cursor:demo-in-progress` | Demo agent running |
-| `cursor:demo-ready` | Demo artifacts committed; babysit queued |
+| `cursor:demo-ready` | Demo artifacts committed; create-pr queued |
+| `cursor:create-pr-in-progress` | Create PR agent running |
+| `cursor:create-pr-ready` | PR.md committed; babysit queued |
 | `cursor:babysit-in-progress` | Babysit agent running |
 | `cursor:complete` | Babysit finished; ready for your review |
 | `cursor:blocked` | Loop limit or unrecoverable failure |
@@ -112,7 +117,7 @@ Workflow file: [`.github/workflows/cursor-workflow-handoff.yml`](../../.github/w
 | **Push** | Any commit pushed to a branch matching `cursor/issue-*` |
 | **workflow_dispatch** | Manual run from Actions tab (resync labels/comment; optionally ensure draft PR) |
 
-Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, plan, execute, demo, babysit). The Action runs on **each of those pushes**, not only when `workflow.state.json` changes.
+Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, plan, execute, demo, create-pr, babysit). The Action runs on **each of those pushes**, not only when `workflow.state.json` changes.
 
 ### What it does on every push
 
@@ -124,7 +129,8 @@ Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, p
    - Create or update the **Cursor workflow — issue #NNN** status comment (stage, skill, branch, PR, loop counters, per-stage agent conversation links)
 4. **Handoff** (spawn next cloud agent) **only when**:
    - `workflow.state.json` changed in this push, **and**
-   - `stage` changed to a handoff value: `spec-ready`, `plan-ready`, `execute-ready`, or `demo-ready`
+   - `stage` changed to a handoff value: `spec-ready`, `plan-ready`, `execute-ready`, `demo-ready`, or `create-pr-ready`
+5. **Update draft PR body** when `workflow/issues/issue-{NNN}/PR.md` changes in the push (`scripts/cursor-workflow-update-pr-body.sh`)
 
 Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` with the next skill prompt. If the API key is missing, it falls back to `CURSOR_HANDOFF_GITHUB_TOKEN` posting an `@cursoragent` comment.
 
@@ -135,9 +141,12 @@ Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` wi
 | `spec-ready` | Ensure draft PR exists; record PR number in `workflow.state.json`; spawn **planning** agent |
 | `plan-ready` | Ensure draft PR if missing; spawn **execute** agent |
 | `execute-ready` | Spawn **demo** agent |
-| `demo-ready` | Spawn **babysit-pr** agent |
+| `demo-ready` | Spawn **create-pr** agent |
+| `create-pr-ready` | Spawn **babysit-pr** agent |
 
 Progress stages (`*-in-progress`) and terminal stages (`complete`, `blocked`, `spec-needs-info`) sync labels only — no new agent is spawned.
+
+When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action sets the linked draft PR description from that file (requires `"pr"` in state).
 
 When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` also @mentions the issue author (once) and assigns the linked PR to them. Babysit agents do not post issue comments.
 
@@ -170,4 +179,4 @@ Workflow helper scripts are always loaded from `main` in Actions so issue branch
 - Resume spec: `@cursoragent continue spec`
 - Do **not** rely on bot `@cursoragent` comments for handoffs (filtered by GitHub/Cursor).
 
-Automated stages 3–6 use the handoff Action or Cursor Automations (see [SETUP.md](SETUP.md)).
+Automated stages 3–7 use the handoff Action or Cursor Automations (see [SETUP.md](SETUP.md)).

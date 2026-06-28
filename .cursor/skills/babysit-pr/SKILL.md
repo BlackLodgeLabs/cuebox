@@ -1,6 +1,6 @@
 ---
 name: babysit-pr
-description: Monitor a draft PR through Bugbot, CI, and review feedback; fix issues within loop limits; mark PR ready for review when clean. Use when workflow stage is demo-ready or when asked to babysit issue NNN PR.
+description: Monitor a draft PR through Bugbot, CI, and review feedback; fix issues within loop limits; mark PR ready for review when clean. Use when workflow stage is create-pr-ready or when asked to babysit issue NNN PR.
 paths:
   - "api/**"
   - "frontend/**"
@@ -14,7 +14,7 @@ Keep the issue PR merge-ready: respond to Bugbot, CI failures, and review thread
 
 ## When to use
 
-- Handoff when `stage: demo-ready`
+- Handoff when `stage: create-pr-ready`
 - Prompt: "use babysit-pr skill for issue {NNN}"
 
 ## Start — update state
@@ -27,7 +27,8 @@ Keep the issue PR merge-ready: respond to Bugbot, CI failures, and review thread
 
 1. `workflow/issues/issue-{NNN}/workflow.state.json` — **check limits before acting**
 2. PR (number in state file): checks, Bugbot comments, review threads
-3. `workflow/issues/issue-{NNN}/PLAN.md` — definition of done
+3. `workflow/issues/issue-{NNN}/PR.md` — PR description (synced to GitHub by Actions)
+4. `workflow/issues/issue-{NNN}/PLAN.md` — definition of done
 4. `run-gate-scripts` — re-run gates after fixes
 
 ## Loop limits (hard stop)
@@ -75,6 +76,7 @@ When **all** true:
 - No unresolved Bugbot **must-fix** items you own
 - No merge conflicts
 - Demo artifacts present on branch (`workflow/issues/issue-{NNN}/demo/`)
+- `workflow/issues/issue-{NNN}/PR.md` committed (PR body synced by Actions)
 
 Then:
 
@@ -90,4 +92,4 @@ Do **not** post an issue comment — the handoff Action handles that notificatio
 - Post issue comments (GitHub Actions notifies the issue author at `complete`)
 - Exceed loop limits silently
 - Disable tests or skip gates to greenwash CI
-- Mark ready while demo artifacts or critical checks are missing
+- Mark ready while demo artifacts, PR.md, or critical checks are missing

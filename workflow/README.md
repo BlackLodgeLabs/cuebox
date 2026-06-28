@@ -12,6 +12,7 @@ Legacy paths (`documents/cursor-workflow/`, `documents/specs/`, `documents/plans
 | `demo/demo-spec.md` | `planning` |
 | `demo/demo-notes.md` | `demo` |
 | `demo/*.png`, `demo/*.mp4` | `demo` |
+| `PR.md` | `create-pr` |
 
 Workflow documentation and templates: [cursor-workflow/](cursor-workflow/).
 

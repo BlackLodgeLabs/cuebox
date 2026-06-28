@@ -67,6 +67,8 @@ stage_label() {
     execute-ready) echo "cursor:execute-ready" ;;
     demo-in-progress) echo "cursor:demo-in-progress" ;;
     demo-ready) echo "cursor:demo-ready" ;;
+    create-pr-in-progress) echo "cursor:create-pr-in-progress" ;;
+    create-pr-ready) echo "cursor:create-pr-ready" ;;
     babysit-in-progress) echo "cursor:babysit-in-progress" ;;
     complete) echo "cursor:complete" ;;
     blocked) echo "cursor:blocked" ;;
@@ -84,7 +86,9 @@ stage_title() {
     execute-in-progress) echo "Execute — in progress" ;;
     execute-ready) echo "Execute complete → demo queued" ;;
     demo-in-progress) echo "Demo — in progress" ;;
-    demo-ready) echo "Demo complete → babysit queued" ;;
+    demo-ready) echo "Demo complete → create PR queued" ;;
+    create-pr-in-progress) echo "Create PR — in progress" ;;
+    create-pr-ready) echo "PR description complete → babysit queued" ;;
     babysit-in-progress) echo "Babysit — in progress" ;;
     complete) echo "Complete — ready for your review" ;;
     blocked) echo "Blocked" ;;
@@ -102,6 +106,8 @@ CURSOR_LABELS=(
   "cursor:execute-ready"
   "cursor:demo-in-progress"
   "cursor:demo-ready"
+  "cursor:create-pr-in-progress"
+  "cursor:create-pr-ready"
   "cursor:babysit-in-progress"
   "cursor:complete"
   "cursor:blocked"
@@ -157,6 +163,7 @@ AGENTS_TABLE="| **Review & spec** | $(agent_link_for_key review-and-spec) |
 | **Planning** | $(agent_link_for_key planning) |
 | **Execute** | $(agent_link_for_key execute) |
 | **Demo** | $(agent_link_for_key demo) |
+| **Create PR** | $(agent_link_for_key create-pr) |
 | **PR babysitter** | $(agent_link_for_key babysit-pr) |"
 
 CONTINUED_ID=$(agent_id_for_key review-and-spec-continued)
@@ -166,6 +173,7 @@ if [ -n "$CONTINUED_ID" ] && [ "$CONTINUED_ID" != "null" ]; then
 | **Planning** | $(agent_link_for_key planning) |
 | **Execute** | $(agent_link_for_key execute) |
 | **Demo** | $(agent_link_for_key demo) |
+| **Create PR** | $(agent_link_for_key create-pr) |
 | **PR babysitter** | $(agent_link_for_key babysit-pr) |"
 fi
 
