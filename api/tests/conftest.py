@@ -15,15 +15,23 @@ from app.core.config import get_settings
 from app.database.session import SessionLocal, init_engine
 from app.main import create_app
 from app.services.provider_service import ProviderService
-from tests.db_safety import assert_safe_test_database_url
+from tests.db_safety import assert_safe_test_database_url, is_compose_dev_database_url
 from tests.mock_providers import create_mock_http_client
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
-TEST_DATABASE_URL = os.environ.get(
-    "TEST_DATABASE_URL",
-    os.environ.get("DATABASE_URL", ""),
-)
+
+def _resolve_test_database_url() -> str:
+    explicit = os.environ.get("TEST_DATABASE_URL")
+    if explicit is not None:
+        return explicit
+    database_url = os.environ.get("DATABASE_URL", "")
+    if is_compose_dev_database_url(database_url):
+        return ""
+    return database_url
+
+
+TEST_DATABASE_URL = _resolve_test_database_url()
 
 INTEGRATION_CONFIG_YAML = """
 developer_mode: false

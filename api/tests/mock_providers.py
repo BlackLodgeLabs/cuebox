@@ -84,6 +84,7 @@ def _search_result(tmdb_id: int, title: str, *, release_date: str) -> dict:
         "original_title": title,
         "release_date": release_date,
         "overview": f"Overview for {title}.",
+        "poster_path": "/poster.jpg",
     }
 
 
@@ -91,6 +92,15 @@ def _default_search_response(query: str) -> httpx.Response:
     if query == "Unknown Film":
         return httpx.Response(200, json={"results": []})
     if query == "Ambiguous Title":
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    _search_result(AMBIGUOUS_TMDB_ID, "Possession", release_date="1981-05-27")
+                ]
+            },
+        )
+    if query == "Possession":
         return httpx.Response(
             200,
             json={

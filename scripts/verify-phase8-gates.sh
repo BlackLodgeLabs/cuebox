@@ -44,6 +44,7 @@ INTEGRATION_TESTS=(
   tests/test_integration_profile_cache.py
   tests/test_integration_csv_sync.py
   tests/test_integration_review.py
+  tests/test_integration_rematch.py
   tests/test_integration_recommendation_history.py
   tests/test_integration_recommendation_errors.py
 )
