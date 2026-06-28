@@ -105,5 +105,5 @@ _None — defaults above are sufficient for planning._
 ## Links
 
 - GitHub issue: https://github.com/BlackLodgeLabs/cuebox/issues/45
-- Existing `pg_dump` reference: [documents/cloud-agent-part2-test-data.md](../cloud-agent-part2-test-data.md) (data-only dev seed; full backup differs)
-- Compose Postgres service: [docker-compose.yml](../../docker-compose.yml)
+- Existing `pg_dump` reference: [documents/cloud-agent-part2-test-data.md](../../../documents/cloud-agent-part2-test-data.md) (data-only dev seed; full backup differs)
+- Compose Postgres service: [docker-compose.yml](../../../docker-compose.yml)
