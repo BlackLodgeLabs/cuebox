@@ -9,7 +9,7 @@ body:
         After creating this issue, comment **`@cursoragent spec`** to start the spec agent.
         If it asks questions, reply then comment **`@cursoragent continue spec`**.
 
-        See [documents/cursor-workflow/WORKFLOW.md](../blob/main/documents/cursor-workflow/WORKFLOW.md).
+        See [workflow/cursor-workflow/WORKFLOW.md](../blob/main/workflow/cursor-workflow/WORKFLOW.md).
 
   - type: textarea
     id: problem

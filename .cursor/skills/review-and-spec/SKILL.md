@@ -16,8 +16,8 @@ Turn a GitHub issue into a clear, testable feature spec on a dedicated branch.
 ## Read first
 
 1. GitHub issue (title, body, comments)
-2. [documents/cursor-workflow/WORKFLOW.md](../../documents/cursor-workflow/WORKFLOW.md)
-3. Existing `demos/issue-{NNN}/workflow-state.json` if resuming
+2. [workflow/cursor-workflow/WORKFLOW.md](../../workflow/cursor-workflow/WORKFLOW.md)
+3. Existing `workflow/issues/issue-{NNN}/workflow.state.json` if resuming
 
 ## Completeness rubric
 
@@ -35,12 +35,12 @@ If any item is missing or ambiguous, **do not** write the spec document yet.
 
 1. Post a numbered comment on the issue with specific questions (one topic per number).
 2. Create branch `cursor/issue-{NNN}-{slug}` from `main` (same slug rules as below).
-3. Update or create `demos/issue-{NNN}/workflow-state.json`:
+3. Update or create `workflow/issues/issue-{NNN}/workflow.state.json`:
    - `stage`: `spec-needs-info`
    - `issue`: NNN
    - `branch`: `cursor/issue-{NNN}-{slug}`
    - increment `loops.total_runs`
-4. Commit and push **only** `demos/issue-{NNN}/workflow-state.json` on that branch (no spec file yet).
+4. Commit and push **only** `workflow/issues/issue-{NNN}/workflow.state.json` on that branch (no spec file yet).
 5. Add label `cursor:spec-needs-info`; remove `cursor:spec-ready` if present.
 6. **Stop.** Do not hand off to planning. User will reply and comment `@cursoragent continue spec`.
 
@@ -60,10 +60,10 @@ cursor/issue-{NNN}-{slug}
 
 | Path | Content |
 |------|---------|
-| `documents/specs/issue-{NNN}.md` | Full feature spec (template below) |
-| `demos/issue-{NNN}/workflow-state.json` | State file (see WORKFLOW.md) |
+| `workflow/issues/issue-{NNN}/SPEC.md` | Full feature spec (template below) |
+| `workflow/issues/issue-{NNN}/workflow.state.json` | State file (see WORKFLOW.md) |
 
-### Spec template (`documents/specs/issue-{NNN}.md`)
+### Spec template (`workflow/issues/issue-{NNN}/SPEC.md`)
 
 ```markdown
 # Issue #{NNN}: {title}
@@ -101,7 +101,7 @@ Preserve existing `loops` when resuming from `spec-needs-info` (do not reset `to
 
 Cloud agents often **cannot** post issue comments or set labels (integration token limits). **Do not fail the task** for that — commit and push are what matter.
 
-1. Commit spec + `demos/issue-{NNN}/workflow-state.json` on the feature branch; push.
+1. Commit spec + `workflow/issues/issue-{NNN}/workflow.state.json` on the feature branch; push.
 2. **Labels and a status comment** are applied by `.github/workflows/cursor-workflow-handoff.yml` using `GITHUB_TOKEN` (not your job).
 3. Optionally try labels/comments via `gh`; if permission denied, note in commit message only.
 
@@ -111,7 +111,7 @@ Cloud agents often **cannot** post issue comments or set labels (integration tok
 
 1. Re-read issue comments for answers to your numbered questions.
 2. If still ambiguous → ask follow-ups and stay on `spec-needs-info`.
-3. If clear → update spec, set `stage` to `spec-ready`, preserve `loops` from existing `workflow-state.json`, push, update labels.
+3. If clear → update spec, set `stage` to `spec-ready`, preserve `loops` from existing `workflow.state.json`, push, update labels.
 
 ## Do not
 

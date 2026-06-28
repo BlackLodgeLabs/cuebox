@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Write PR number into demos/issue-N/workflow-state.json on the remote branch.
+# Write PR number into workflow/issues/issue-N/workflow.state.json on the remote branch.
 set -euo pipefail
 
 STATE_FILE="${1:?}"
@@ -17,7 +17,7 @@ if [ -z "$ISSUE" ]; then
   exit 1
 fi
 
-REL_PATH="demos/issue-${ISSUE}/workflow-state.json"
+REL_PATH="workflow/issues/issue-${ISSUE}/workflow.state.json"
 
 CURRENT=$(jq -r '.pr // empty' "$STATE_FILE")
 if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$PR_NUM" ]; then

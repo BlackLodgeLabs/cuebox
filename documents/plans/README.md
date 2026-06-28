@@ -1,5 +1,5 @@
-# Implementation plans
+# Implementation plans (legacy path)
 
-Written by the **planning** skill: `issue-{NNN}.md` per GitHub issue number.
+Implementation plans now live at [`workflow/issues/issue-{NNN}/PLAN.md`](../../workflow/issues/).
 
 Referenced by **execute** and **babysit-pr** skills.

@@ -2,14 +2,14 @@
 
 One-time setup to run the 7-stage pipeline (spec → plan → execute → demo → babysit → your review).
 
-Copy this folder, `.cursor/skills/{review-and-spec,planning,execute,demo,babysit-pr}/`, `.github/workflows/cursor-workflow-handoff.yml`, and `.github/ISSUE_TEMPLATE/cursor_feature.yml` to reuse in other repositories. Adjust `main` if your default branch differs.
+Copy `workflow/cursor-workflow/`, `.cursor/skills/{review-and-spec,planning,execute,demo,babysit-pr}/`, `.github/workflows/cursor-workflow-handoff.yml`, and `.github/ISSUE_TEMPLATE/cursor_feature.yml` to reuse in other repositories. Adjust `main` if your default branch differs.
 
 ## Architecture
 
 ```text
 You: create issue → @cursoragent spec
         ↓
-review-and-spec skill → branch + spec → push workflow-state (spec-ready)
+review-and-spec skill → branch + spec → push workflow.state.json (spec-ready)
         ↓
 GitHub Action (CURSOR_API_KEY) → planning cloud agent
         ↓
@@ -20,7 +20,7 @@ You: GitHub PR review notification → merge
 
 Human gates: **spec start** (`@cursoragent spec`) and **spec resume** (`@cursoragent continue spec`).
 
-Automated handoffs: stages 3–6 via `.github/workflows/cursor-workflow-handoff.yml` when `demos/issue-NNN/workflow-state.json` is pushed with a handoff `stage`.
+Automated handoffs: stages 3–6 via `.github/workflows/cursor-workflow-handoff.yml` when `workflow/issues/issue-NNN/workflow.state.json` is pushed with a handoff `stage`.
 
 ---
 
@@ -59,7 +59,7 @@ Use API key path in production — PAT fallback exists because Cursor filters bo
 Cloud agents **cannot** open PRs (`gh pr create` fails in the VM). **GitHub Actions** creates the draft PR when `stage` reaches `spec-ready`, using `GITHUB_TOKEN` (`pull-requests: write`).
 
 - Execute and later agents **push commits only** to the linked branch
-- `workflow-state.json` → `"pr"` is set by the Action
+- `workflow.state.json` → `"pr"` is set by the Action
 - **Stuck without a PR?** Actions → **Cursor workflow handoff** → Run workflow → issue number → enable **ensure draft PR**
 
 Workflow scripts are always loaded from `main` in Actions (into `/tmp/cursor-workflow-scripts`), so issue branches created before #48 still work.
@@ -80,7 +80,7 @@ Create labels (Settings → Labels):
 
 Agents add/remove these; labels help you see state at a glance.
 
-**Important:** Cloud agents often **cannot** set labels or post comments (token limits). After merging workflow visibility updates, labels and a **status comment** on the issue are set automatically by GitHub Actions when `workflow-state.json` is pushed. Create all labels in the table in [WORKFLOW.md](WORKFLOW.md) (including `cursor:*-in-progress`).
+**Important:** Cloud agents often **cannot** set labels or post comments (token limits). Labels and a **status comment** on the issue are set automatically by GitHub Actions on **every push** to `cursor/issue-*` branches (reading `workflow.state.json`). Create all labels in the table in [WORKFLOW.md](WORKFLOW.md) (including `cursor:*-in-progress`).
 
 ### Visibility checklist
 
@@ -121,7 +121,7 @@ Merge `.github/workflows/cursor-workflow-handoff.yml` to `main`.
 Verify:
 
 ```bash
-# After a test push to cursor/issue-* with stage spec-ready in workflow-state.json
+# After a test push to cursor/issue-* with stage spec-ready in workflow.state.json
 # Actions tab → "Cursor workflow handoff" should spawn the next agent
 ```
 
@@ -151,13 +151,13 @@ Cross-reference in root `AGENTS.md` points agents to this workflow.
 3. If agent asks questions → answer in issue → `@cursoragent continue spec`
 4. Wait for automated stages (watch Actions + PR)
 5. Receive GitHub notification when PR is **ready for review**
-6. Inspect `demos/issue-NNN/`, code, checks → approve → merge
+6. Inspect `workflow/issues/issue-NNN/`, code, checks → approve → merge
 
 ### If blocked (`cursor:blocked`)
 
 Read issue + PR comments for loop counters. Fix manually or:
 
-1. Reset/adjust `demos/issue-NNN/workflow-state.json` if appropriate
+1. Reset/adjust `workflow/issues/issue-NNN/workflow.state.json` if appropriate
 2. Comment `@cursoragent` with explicit skill + issue number to resume
 
 ### Manual stage override
@@ -174,7 +174,7 @@ On any stage you can comment:
 
 | Knob | Location |
 |------|----------|
-| Loop limits | Skills `babysit-pr`, `workflow-state.json` schema |
+| Loop limits | Skills `babysit-pr`, `workflow.state.json` schema |
 | Gate script default | Skill `execute` → `run-gate-scripts` |
 | Handoff prompts | `.github/workflows/cursor-workflow-handoff.yml` |
 | Paths | `WORKFLOW.md` |
@@ -188,7 +188,7 @@ On any stage you can comment:
 |---------|-----|
 | `@cursoragent` does nothing | Reconnect GitHub integration; enable on-demand billing |
 | Handoff Action fails | Set `CURSOR_API_KEY`; check API key permissions |
-| Next agent never starts | Confirm `stage` is `spec-ready` / `plan-ready` / etc.; push includes `workflow-state.json` |
+| Next agent never starts | Confirm `stage` is `spec-ready` / `plan-ready` / etc.; push includes `workflow.state.json` |
 | Bot handoff ignored | Use API key, not cursor-bot comment |
 | Demo fails | `docker compose ps`; health curls; see `AGENTS.md` |
 | Tests fail on execute | Agent must not push until green — check Action logs |

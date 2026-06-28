@@ -5,6 +5,7 @@ paths:
   - "api/**"
   - "frontend/**"
   - ".github/**"
+  - "workflow/**"
 ---
 
 # Babysit PR
@@ -24,9 +25,9 @@ Keep the issue PR merge-ready: respond to Bugbot, CI failures, and review thread
 
 ## Read first
 
-1. `demos/issue-{NNN}/workflow-state.json` — **check limits before acting**
+1. `workflow/issues/issue-{NNN}/workflow.state.json` — **check limits before acting**
 2. PR (number in state file): checks, Bugbot comments, review threads
-3. `documents/plans/issue-{NNN}.md` — definition of done
+3. `workflow/issues/issue-{NNN}/PLAN.md` — definition of done
 4. `run-gate-scripts` — re-run gates after fixes
 
 ## Loop limits (hard stop)
@@ -54,14 +55,14 @@ Prioritize: CI blocking → Bugbot high severity → other comments.
 
 1. Identify root cause from logs / comments
 2. Fix on issue branch; run tests + gate script **before push** (same bar as `execute`)
-3. Push; update relevant counter in `workflow-state.json`
+3. Push; update relevant counter in `workflow.state.json`
 4. Re-check PR checks; repeat until clean or limit hit
 
 ## Blocked
 
 If limits exceeded or unrecoverable failure:
 
-1. Update `demos/issue-{NNN}/workflow-state.json`: `stage`: `blocked`, increment `loops.total_runs`, set `updated_at` to current ISO8601
+1. Update `workflow/issues/issue-{NNN}/workflow.state.json`: `stage`: `blocked`, increment `loops.total_runs`, set `updated_at` to current ISO8601
 2. **Commit and push** the state file to the issue branch (required so remote automation sees the terminal state and stops handoffs)
 3. Labels: `cursor:blocked` on issue; comment on issue + PR with counters and last errors
 4. **Stop** — no further automated handoffs
@@ -73,14 +74,14 @@ When **all** true:
 - Required CI checks green (or only allowed skips)
 - No unresolved Bugbot **must-fix** items you own
 - No merge conflicts
-- Demo artifacts present on branch (`demos/issue-{NNN}/`)
+- Demo artifacts present on branch (`workflow/issues/issue-{NNN}/demo/`)
 
 Then:
 
 1. `stage`: `complete`
 2. **Convert draft PR → ready for review** (not merged)
 3. Labels: `cursor:complete` applied by GitHub Actions on push.
-4. PR comment: summary for human reviewer — link `demo-notes.md`, list gates run, note loop counts
+4. PR comment: summary for human reviewer — link `demo/demo-notes.md`, list gates run, note loop counts
 5. Issue comment: "@{issue-author} PR is ready for your final review" (use issue author; do not @cursoragent)
 
 Human receives GitHub notification for review.

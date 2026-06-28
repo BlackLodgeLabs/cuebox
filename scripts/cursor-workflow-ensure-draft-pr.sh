@@ -23,14 +23,14 @@ if [ -n "$EXISTING" ]; then
 fi
 
 TITLE=$(gh issue view "$ISSUE" --repo "$REPO" --json title -q '.title')
-SPEC_PATH="documents/specs/issue-${ISSUE}.md"
-PLAN_PATH="documents/plans/issue-${ISSUE}.md"
-DEMO_PATH="demos/issue-${ISSUE}/"
+SPEC_PATH="workflow/issues/issue-${ISSUE}/SPEC.md"
+PLAN_PATH="workflow/issues/issue-${ISSUE}/PLAN.md"
+DEMO_PATH="workflow/issues/issue-${ISSUE}/demo/"
 
 BODY=$(cat <<EOF
 ## Cursor workflow — Issue #${ISSUE}
 
-Automated draft PR for the [Cursor issue workflow](https://github.com/${REPO}/blob/main/documents/cursor-workflow/WORKFLOW.md).
+Automated draft PR for the [Cursor issue workflow](https://github.com/${REPO}/blob/main/workflow/cursor-workflow/WORKFLOW.md).
 
 | Artifact | Path |
 |----------|------|

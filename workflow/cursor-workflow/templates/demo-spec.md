@@ -20,8 +20,8 @@ Planning agent replaces this file per issue. Demo agent follows it exactly.
 
 **Capture:**
 
-- Screenshot: `demos/issue-0/scenario-1-after.png`
-- Optional screen recording: `demos/issue-0/scenario-1.mp4` (keep under 30s if possible)
+- Screenshot: `workflow/issues/issue-0/demo/scenario-1-after.png`
+- Optional screen recording: `workflow/issues/issue-0/demo/scenario-1.mp4` (keep under 30s if possible)
 
 **Pass criteria:**
 
@@ -29,6 +29,6 @@ Planning agent replaces this file per issue. Demo agent follows it exactly.
 
 ## Artifacts checklist
 
-- [ ] All screenshots listed above saved under `demos/issue-{NNN}/`
-- [ ] `demos/issue-{NNN}/demo-notes.md` with short narrative of what was shown
+- [ ] All screenshots listed above saved under `workflow/issues/issue-{NNN}/demo/`
+- [ ] `workflow/issues/issue-{NNN}/demo/demo-notes.md` with short narrative of what was shown
 - [ ] No secrets in images or logs

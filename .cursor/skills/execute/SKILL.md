@@ -6,17 +6,18 @@ paths:
   - "frontend/**"
   - "documents/**"
   - "scripts/**"
+  - "workflow/**"
 ---
 
 # Execute
 
-Implement `documents/plans/issue-{NNN}.md`, verify with tests, update docs, push to the **existing draft PR** branch.
+Implement `workflow/issues/issue-{NNN}/PLAN.md`, verify with tests, update docs, push to the **existing draft PR** branch.
 
 ## Draft PR
 
-**Cloud agents cannot create PRs** (integration token). The handoff GitHub Action creates a draft PR at `spec-ready` and records `"pr"` in `workflow-state.json`.
+**Cloud agents cannot create PRs** (integration token). The handoff GitHub Action creates a draft PR at `spec-ready` and records `"pr"` in `workflow.state.json`.
 
-- Check `workflow-state.json` → `"pr"` for the PR number
+- Check `workflow.state.json` → `"pr"` for the PR number
 - If `pr` is null, **do not** use `gh pr create` — push your commits and note in the issue that the human should run **Actions → Cursor workflow handoff → Run workflow** with **ensure draft PR** enabled
 - Push commits to the branch; the open draft PR updates automatically
 
@@ -35,9 +36,9 @@ Commit and push early:
 
 ## Read first
 
-1. `documents/plans/issue-{NNN}.md`
-2. `documents/specs/issue-{NNN}.md`
-3. `demos/issue-{NNN}/workflow-state.json`
+1. `workflow/issues/issue-{NNN}/PLAN.md`
+2. `workflow/issues/issue-{NNN}/SPEC.md`
+3. `workflow/issues/issue-{NNN}/workflow.state.json`
 4. Use **`run-gate-scripts`** skill to pick and run the correct gate script
 
 ## Implementation rules
@@ -81,7 +82,7 @@ After code is green, check the plan's **Documentation updates** section:
 }
 ```
 
-Preserve `pr` from workflow-state (set by GitHub Actions). Do not reset `loops.bugbot` / `loops.ci_autofix`.
+Preserve `pr` from workflow.state.json (set by GitHub Actions). Do not reset `loops.bugbot` / `loops.ci_autofix`.
 
 Issue labels: synced by GitHub Actions on push. Push state file; handoff Action triggers demo.
 
