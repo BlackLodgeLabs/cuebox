@@ -2,12 +2,12 @@
   "issue": 54,
   "branch": "cursor/issue-54-smarter-recommendations-based-on-mood",
   "pr": 55,
-  "stage": "demo-in-progress",
+  "stage": "demo-ready",
   "active_skill": "demo",
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   },
-  "updated_at": "2026-06-28T17:00:00Z"
+  "updated_at": "2026-06-28T17:10:00Z"
 }
