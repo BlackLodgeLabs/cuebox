@@ -81,7 +81,6 @@ Then:
 1. `stage`: `complete`
 2. **Convert draft PR → ready for review** (not merged)
 3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions the issue author, and assigns the PR (cloud agents cannot post issue comments)
-4. PR comment: summary for human reviewer — link `demo/demo-notes.md`, list gates run, note loop counts
 
 Do **not** post an issue comment — the handoff Action handles that notification.
 

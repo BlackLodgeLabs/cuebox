@@ -2,7 +2,7 @@
 
 One-time setup to run the 7-stage pipeline (spec → plan → execute → demo → babysit → your review).
 
-Copy `workflow/cursor-workflow/`, `.cursor/skills/{review-and-spec,planning,execute,demo,babysit-pr}/`, `.github/workflows/cursor-workflow-handoff.yml`, and `.github/ISSUE_TEMPLATE/cursor_feature.yml` to reuse in other repositories. Adjust `main` if your default branch differs.
+Copy `workflow/cursor-workflow/`, `.cursor/skills/{review-and-spec,planning,execute,demo,babysit-pr,run-gate-scripts}/`, `.github/workflows/cursor-workflow-handoff.yml`, and `.github/ISSUE_TEMPLATE/cursor_feature.yml` to reuse in other repositories. Adjust `main` if your default branch differs.
 
 ## Architecture
 
@@ -135,7 +135,7 @@ If you prefer dashboard automations instead of (or alongside) the GitHub Action,
 
 Skills live in `.cursor/skills/` (committed — see `.gitignore` exceptions). After merge:
 
-- Cursor Settings → Rules → Skills → confirm all five appear
+- Cursor Settings → Rules → Skills → confirm all six appear
 - Cloud agent on this repo should list them in Agent Decides
 
 Cross-reference in root `AGENTS.md` points agents to this workflow.
