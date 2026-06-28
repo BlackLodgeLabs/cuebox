@@ -27,7 +27,11 @@ def test_stage5_stochastic_tighter_band_excludes_nearby_candidates():
     def band_count(band: float) -> int:
         top_score = diversified[0].final_score
         return len(
-            item for item in diversified if item.final_score >= top_score - band
+            [
+                item
+                for item in diversified
+                if item.final_score >= top_score - band
+            ]
         )
 
     assert band_count(0.04) == 1
