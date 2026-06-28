@@ -16,7 +16,7 @@ Turn a GitHub issue into a clear, testable feature spec on a dedicated branch.
 ## Read first
 
 1. GitHub issue (title, body, comments)
-2. [workflow/cursor-workflow/WORKFLOW.md](../../workflow/cursor-workflow/WORKFLOW.md)
+2. [workflow/cursor-workflow/WORKFLOW.md](../../../workflow/cursor-workflow/WORKFLOW.md)
 3. Existing `workflow/issues/issue-{NNN}/workflow.state.json` if resuming
 
 ## Completeness rubric

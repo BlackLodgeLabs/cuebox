@@ -16,7 +16,7 @@ Produce an implementation plan and demo spec on the existing feature branch.
 
 1. `workflow/issues/issue-{NNN}/SPEC.md`
 2. `workflow/issues/issue-{NNN}/workflow.state.json`
-3. [workflow/cursor-workflow/WORKFLOW.md](../../workflow/cursor-workflow/WORKFLOW.md)
+3. [workflow/cursor-workflow/WORKFLOW.md](../../../workflow/cursor-workflow/WORKFLOW.md)
 4. Relevant code areas (grep/read before planning)
 
 ## Preconditions
@@ -60,7 +60,7 @@ Instruct the demo agent what to capture on the VM:
 
 - Preconditions (stack health URLs, seed data)
 - Numbered scenarios with steps, pass criteria, and **exact artifact filenames** under `workflow/issues/issue-{NNN}/demo/`
-- Reference [workflow/cursor-workflow/templates/demo-spec.md](../../workflow/cursor-workflow/templates/demo-spec.md)
+- Reference [workflow/cursor-workflow/templates/demo-spec.md](../../../workflow/cursor-workflow/templates/demo-spec.md)
 
 Assume **full Docker stack** on the cloud VM (frontend :3000, API :8000). API keys come from VM secrets / `.env`.
 

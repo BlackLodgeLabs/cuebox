@@ -76,7 +76,7 @@ After code is green, check the plan's **Documentation updates** section:
 ```json
 {
   "stage": "execute-ready",
-  "pr": <number from workflow-state — preserve>,
+  "pr": <number from workflow.state.json — preserve>,
   "loops": { "bugbot": <preserve>, "ci_autofix": <preserve>, "total_runs": <increment> },
   "updated_at": "<ISO8601>"
 }
