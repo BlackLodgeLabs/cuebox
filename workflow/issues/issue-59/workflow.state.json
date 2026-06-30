@@ -4,7 +4,7 @@
   "pr": 60,
   "stage": "create-pr-ready",
   "active_skill": "create-pr",
-  "active_agent_id": null,
+  "active_agent_id": "bc-0ba769b4-c40f-4664-af4f-e34730603b0d",
   "agents": {
     "review-and-spec": "bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e",
     "review-and-spec-continued": null,
@@ -12,12 +12,12 @@
     "execute": null,
     "demo": null,
     "create-pr": null,
-    "babysit-pr": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6"
+    "babysit-pr": "bc-0ba769b4-c40f-4664-af4f-e34730603b0d"
   },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 8
   },
-  "updated_at": "2026-06-30T12:00:00Z"
+  "updated_at": "2026-06-30T06:37:56Z"
 }
