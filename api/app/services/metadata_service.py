@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import AppError, conflict, not_found
 from app.database.enums import EnrichmentStatus, ReviewStatus
 from app.database.models import Film
-from app.providers.tmdb import TmdbClient, TmdbMovieDetails
+from app.providers.tmdb import TMDB_SEARCH_PAGE_SIZE, TmdbClient, TmdbMovieDetails
 from app.repositories import (
     film_metadata_repository,
     film_repository,
@@ -220,7 +220,7 @@ class MetadataService:
             )
             for result in search_page.results[:capped_limit]
         ]
-        offset = (search_page.page - 1) * capped_limit
+        offset = (search_page.page - 1) * TMDB_SEARCH_PAGE_SIZE
         pagination = PaginationMeta(
             total=search_page.total_results,
             limit=capped_limit,

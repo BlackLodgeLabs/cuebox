@@ -2,7 +2,7 @@
   "issue": 59,
   "branch": "cursor/issue-59-manual-film-metadata-rematch",
   "pr": 60,
-  "stage": "complete",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
   "active_agent_id": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6",
   "agents": {
@@ -15,9 +15,9 @@
     "babysit-pr": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6"
   },
   "loops": {
-    "bugbot": 0,
+    "bugbot": 1,
     "ci_autofix": 0,
     "total_runs": 9
   },
-  "updated_at": "2026-06-30T12:15:00Z"
+  "updated_at": "2026-06-30T12:20:00Z"
 }

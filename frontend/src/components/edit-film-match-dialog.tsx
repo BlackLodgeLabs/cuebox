@@ -69,6 +69,11 @@ export function EditFilmMatchDialog({
 
   const results = search.data?.data ?? [];
   const pagination = search.data?.pagination;
+  const isSearchPending = search.isLoading || search.isFetching;
+  const activePage =
+    pagination && !search.isFetching
+      ? Math.floor(pagination.offset / pagination.limit) + 1
+      : page;
   const totalPages =
     pagination && pagination.limit > 0
       ? Math.max(1, Math.ceil(pagination.total / pagination.limit))
@@ -116,18 +121,22 @@ export function EditFilmMatchDialog({
         </div>
 
         <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
-          {search.isLoading && (
+          {isSearchPending && (
             <p className="text-sm text-muted-foreground">Searching TMDB…</p>
           )}
-          {search.isError && (
+          {!isSearchPending && search.isError && (
             <p className="text-sm text-destructive">
               Could not load search results. Check your TMDB API key and try again.
             </p>
           )}
-          {!search.isLoading && !search.isError && results.length === 0 && debouncedQuery && (
+          {!isSearchPending &&
+            !search.isError &&
+            results.length === 0 &&
+            debouncedQuery && (
             <p className="text-sm text-muted-foreground">No results found.</p>
           )}
-          {results.map((result) => {
+          {!isSearchPending &&
+            results.map((result) => {
             const isSelected = selected?.tmdb_id === result.tmdb_id;
             return (
               <button
@@ -168,20 +177,20 @@ export function EditFilmMatchDialog({
               type="button"
               variant="outline"
               size="sm"
-              disabled={page <= 1 || search.isFetching}
+              disabled={activePage <= 1 || isSearchPending}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
             >
               Previous
             </Button>
             <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
+              Page {activePage} of {totalPages}
               {pagination.total > 0 ? ` (${pagination.total} results)` : ""}
             </p>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              disabled={!pagination.has_more || search.isFetching}
+              disabled={!pagination.has_more || isSearchPending}
               onClick={() => setPage((current) => current + 1)}
             >
               Next
