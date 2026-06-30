@@ -6,7 +6,7 @@
   "active_skill": null,
   "active_agent_id": null,
   "agents": {
-    "review-and-spec": null,
+    "review-and-spec": "bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e",
     "review-and-spec-continued": null,
     "planning": null,
     "execute": null,
@@ -19,5 +19,5 @@
     "ci_autofix": 0,
     "total_runs": 7
   },
-  "updated_at": "2026-06-30T06:35:00Z"
+  "updated_at": "2026-06-30T06:34:10Z"
 }
