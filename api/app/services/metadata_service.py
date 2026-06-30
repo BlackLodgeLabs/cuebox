@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import AppError, conflict, not_found
 from app.database.enums import EnrichmentStatus, ReviewStatus
 from app.database.models import Film
-from app.providers.tmdb import TMDB_SEARCH_PAGE_SIZE, TmdbClient, TmdbMovieDetails
+from app.providers.tmdb import TMDB_SEARCH_PAGE_SIZE, TmdbClient, TmdbMovieDetails, TmdbSearchResult
 from app.repositories import (
     film_metadata_repository,
     film_repository,
@@ -198,16 +198,47 @@ class MetadataService:
         if film is None:
             raise not_found("Film")
 
-        capped_limit = min(max(limit, 1), 20)
+        capped_limit = min(max(limit, 1), TMDB_SEARCH_PAGE_SIZE)
+        offset = (page - 1) * capped_limit
+
         tmdb = self._providers.get_tmdb_client()
-        try:
-            search_page = await tmdb.search_movie(q, year=year, page=page)
-        except httpx.HTTPError as exc:
-            raise AppError(
-                code=ErrorCode.PROVIDER_ERROR,
-                message=f"TMDB search failed: {exc}",
-                status_code=502,
-            ) from exc
+        tmdb_page = offset // TMDB_SEARCH_PAGE_SIZE + 1
+        slice_start = offset % TMDB_SEARCH_PAGE_SIZE
+
+        collected: list[TmdbSearchResult] = []
+        total_results = 0
+        current_tmdb_page = tmdb_page
+        next_slice_start = slice_start
+
+        while len(collected) < capped_limit:
+            try:
+                search_page = await tmdb.search_movie(
+                    q, year=year, page=current_tmdb_page
+                )
+            except httpx.HTTPError as exc:
+                raise AppError(
+                    code=ErrorCode.PROVIDER_ERROR,
+                    message=f"TMDB search failed: {exc}",
+                    status_code=502,
+                ) from exc
+
+            total_results = search_page.total_results
+
+            if search_page.total_pages > 0 and current_tmdb_page > search_page.total_pages:
+                break
+            if not search_page.results:
+                break
+
+            page_slice = search_page.results[next_slice_start:]
+            needed = capped_limit - len(collected)
+            collected.extend(page_slice[:needed])
+            next_slice_start = 0
+
+            if len(collected) >= capped_limit:
+                break
+            if current_tmdb_page >= search_page.total_pages:
+                break
+            current_tmdb_page += 1
 
         items = [
             TmdbSearchResultItem(
@@ -218,14 +249,14 @@ class MetadataService:
                 overview=result.overview,
                 poster_url=TmdbClient.poster_url(result.poster_path),
             )
-            for result in search_page.results[:capped_limit]
+            for result in collected
         ]
-        offset = (search_page.page - 1) * TMDB_SEARCH_PAGE_SIZE
+        has_more = total_results > 0 and offset + len(items) < total_results
         pagination = PaginationMeta(
-            total=search_page.total_results,
+            total=total_results,
             limit=capped_limit,
             offset=offset,
-            has_more=search_page.page < search_page.total_pages,
+            has_more=has_more,
         )
         return items, pagination
 

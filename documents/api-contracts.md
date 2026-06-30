@@ -490,8 +490,8 @@ GET /films/{film_id}/tmdb-search
 |---------|-------|-------|-------------------------------------|
 |`q`      |string |—      |Search query (required, min length 1)|
 |`year`   |integer|—      |Optional release year filter         |
-|`page`   |integer|1      |TMDB results page (1-based)          |
-|`limit`  |integer|20     |Max results per page (1–20)          |
+|`page`   |integer|1      |Logical results page (1-based; offset = `(page - 1) * limit`)|
+|`limit`  |integer|20     |Results per page (1–20; may slice within a TMDB page when &lt; 20)|
 
 #### Response `200 OK`
 

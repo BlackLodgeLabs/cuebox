@@ -2,8 +2,6 @@
 
 import uuid
 
-import pytest
-
 from app.database.enums import EnrichmentStatus
 from app.repositories import film_repository
 from tests.conftest import requires_db
@@ -155,27 +153,72 @@ def test_tmdb_search_supports_pagination(integration_client):
 
     page_one = integration_client.get(
         f"/api/v1/films/{film_id}/tmdb-search",
-        params={"q": "Star", "page": 1},
+        params={"q": "Paginated", "page": 1},
     )
     assert page_one.status_code == 200
     page_one_body = page_one.json()
-    assert len(page_one_body["data"]) >= 1
+    assert len(page_one_body["data"]) == 20
     pagination = page_one_body["pagination"]
     assert pagination["offset"] == 0
-
-    if not pagination["has_more"]:
-        pytest.skip("TMDB returned only one page for query 'Star'")
+    assert pagination["total"] == 25
+    assert pagination["has_more"] is True
 
     page_two = integration_client.get(
         f"/api/v1/films/{film_id}/tmdb-search",
-        params={"q": "Star", "page": 2},
+        params={"q": "Paginated", "page": 2},
     )
     assert page_two.status_code == 200
     page_two_body = page_two.json()
+    assert len(page_two_body["data"]) == 5
     assert page_two_body["pagination"]["offset"] == pagination["limit"]
     page_one_ids = {item["tmdb_id"] for item in page_one_body["data"]}
     page_two_ids = {item["tmdb_id"] for item in page_two_body["data"]}
     assert page_one_ids.isdisjoint(page_two_ids)
+
+
+def test_tmdb_search_limit_splits_single_tmdb_page(integration_client):
+    _import_csv(integration_client, _single_film_csv())
+    films = integration_client.get("/api/v1/films?limit=1").json()["data"]
+    film_id = films[0]["id"]
+
+    page_one = integration_client.get(
+        f"/api/v1/films/{film_id}/tmdb-search",
+        params={"q": "Paginated", "page": 1, "limit": 10},
+    )
+    page_two = integration_client.get(
+        f"/api/v1/films/{film_id}/tmdb-search",
+        params={"q": "Paginated", "page": 2, "limit": 10},
+    )
+
+    assert page_one.status_code == 200
+    assert page_two.status_code == 200
+    page_one_body = page_one.json()
+    page_two_body = page_two.json()
+    assert len(page_one_body["data"]) == 10
+    assert len(page_two_body["data"]) == 10
+    assert page_one_body["pagination"]["offset"] == 0
+    assert page_two_body["pagination"]["offset"] == 10
+    page_one_ids = {item["tmdb_id"] for item in page_one_body["data"]}
+    page_two_ids = {item["tmdb_id"] for item in page_two_body["data"]}
+    assert page_one_ids.isdisjoint(page_two_ids)
+    assert page_one_body["data"][0]["title"] == "Film 0"
+    assert page_two_body["data"][0]["title"] == "Film 10"
+
+
+def test_tmdb_search_page_beyond_total_returns_empty(integration_client):
+    _import_csv(integration_client, _single_film_csv())
+    films = integration_client.get("/api/v1/films?limit=1").json()["data"]
+    film_id = films[0]["id"]
+
+    response = integration_client.get(
+        f"/api/v1/films/{film_id}/tmdb-search",
+        params={"q": "Paginated", "page": 99},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"] == []
+    assert body["pagination"]["total"] == 25
+    assert body["pagination"]["has_more"] is False
 
 
 def test_tmdb_search_not_found_film(integration_client):

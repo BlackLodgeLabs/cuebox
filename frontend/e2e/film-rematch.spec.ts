@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   mockFilmRematchFlow,
+  mockFilmRematchPaginationFlow,
   REMATCH_FILM_ID,
   UPDATED_TMDB_ID,
 } from "./helpers/film-rematch-mocks";
@@ -54,5 +55,25 @@ test.describe("Film rematch UI (mocked API)", () => {
     ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("Possession")).toBeVisible();
     await expect(page.getByText(String(UPDATED_TMDB_ID))).toBeVisible();
+  });
+});
+
+test.describe("Film rematch pagination (mocked API)", () => {
+  test.beforeEach(async ({ page }) => {
+    await mockFilmRematchPaginationFlow(page);
+  });
+
+  test("next page loads a different result set", async ({ page }) => {
+    await page.goto(`/watchlist/${REMATCH_FILM_ID}`);
+    await page.getByRole("button", { name: /edit film match/i }).click();
+
+    await expect(page.getByText("Alpha Film (1970)")).toBeVisible();
+    await expect(page.getByText("Page 1 of 2 (4 results)")).toBeVisible();
+
+    await page.getByRole("button", { name: /^next$/i }).click();
+
+    await expect(page.getByText("Gamma Film (1972)")).toBeVisible();
+    await expect(page.getByText("Page 2 of 2 (4 results)")).toBeVisible();
+    await expect(page.getByText("Alpha Film (1970)")).not.toBeVisible();
   });
 });

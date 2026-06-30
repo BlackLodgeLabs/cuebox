@@ -15,7 +15,7 @@
     "babysit-pr": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6"
   },
   "loops": {
-    "bugbot": 1,
+    "bugbot": 2,
     "ci_autofix": 0,
     "total_runs": 9
   },

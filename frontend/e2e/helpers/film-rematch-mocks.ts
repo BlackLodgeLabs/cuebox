@@ -94,17 +94,67 @@ const searchResults = {
   },
 };
 
-export async function mockFilmRematchFlow(page: Page) {
+const PAGINATED_PAGE_SIZE = 2;
+const PAGINATED_TOTAL = 4;
+
+function paginatedSearchResults(page: number) {
+  const pages = [
+    [
+      {
+        tmdb_id: 9001,
+        title: "Alpha Film",
+        original_title: "Alpha Film",
+        year: 1970,
+        overview: "First page result A.",
+        poster_url: "https://image.tmdb.org/t/p/w500/alpha.jpg",
+      },
+      {
+        tmdb_id: 9002,
+        title: "Beta Film",
+        original_title: "Beta Film",
+        year: 1971,
+        overview: "First page result B.",
+        poster_url: "https://image.tmdb.org/t/p/w500/beta.jpg",
+      },
+    ],
+    [
+      {
+        tmdb_id: 9003,
+        title: "Gamma Film",
+        original_title: "Gamma Film",
+        year: 1972,
+        overview: "Second page result A.",
+        poster_url: "https://image.tmdb.org/t/p/w500/gamma.jpg",
+      },
+      {
+        tmdb_id: 9004,
+        title: "Delta Film",
+        original_title: "Delta Film",
+        year: 1973,
+        overview: "Second page result B.",
+        poster_url: "https://image.tmdb.org/t/p/w500/delta.jpg",
+      },
+    ],
+  ];
+
+  const safePage = Math.min(Math.max(page, 1), pages.length);
+  const data = pages[safePage - 1] ?? [];
+  const offset = (safePage - 1) * PAGINATED_PAGE_SIZE;
+
+  return {
+    data,
+    pagination: {
+      total: PAGINATED_TOTAL,
+      limit: PAGINATED_PAGE_SIZE,
+      offset,
+      has_more: offset + data.length < PAGINATED_TOTAL,
+    },
+  };
+}
+
+async function mockFilmDetailRoutes(page: Page) {
   let filmState: "failed" | "enriching" | "ready" = "failed";
   let pollsWhileEnriching = 0;
-
-  await page.route(`**${API_PATH_PREFIX}/films/${REMATCH_FILM_ID}/tmdb-search**`, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(searchResults),
-    });
-  });
 
   await page.route(`**${API_PATH_PREFIX}/films/${REMATCH_FILM_ID}/rematch`, async (route) => {
     filmState = "enriching";
@@ -143,6 +193,32 @@ export async function mockFilmRematchFlow(page: Page) {
       status: 200,
       contentType: "application/json",
       body: JSON.stringify(payload),
+    });
+  });
+}
+
+export async function mockFilmRematchFlow(page: Page) {
+  await mockFilmDetailRoutes(page);
+
+  await page.route(`**${API_PATH_PREFIX}/films/${REMATCH_FILM_ID}/tmdb-search**`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(searchResults),
+    });
+  });
+}
+
+export async function mockFilmRematchPaginationFlow(page: Page) {
+  await mockFilmDetailRoutes(page);
+
+  await page.route(`**${API_PATH_PREFIX}/films/${REMATCH_FILM_ID}/tmdb-search**`, async (route) => {
+    const url = new URL(route.request().url());
+    const requestedPage = Number(url.searchParams.get("page") || "1");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(paginatedSearchResults(requestedPage)),
     });
   });
 }

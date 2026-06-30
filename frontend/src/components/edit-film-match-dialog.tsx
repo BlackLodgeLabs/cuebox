@@ -35,6 +35,9 @@ export function EditFilmMatchDialog({
     film.year !== null ? String(film.year) : "",
   );
   const [debouncedQuery, setDebouncedQuery] = useState(film.title);
+  const [debouncedYearFilter, setDebouncedYearFilter] = useState(
+    film.year !== null ? String(film.year) : "",
+  );
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<TmdbSearchResultItem | null>(null);
 
@@ -43,6 +46,7 @@ export function EditFilmMatchDialog({
     setSearchQuery(film.title);
     setYearFilter(film.year !== null ? String(film.year) : "");
     setDebouncedQuery(film.title);
+    setDebouncedYearFilter(film.year !== null ? String(film.year) : "");
     setPage(1);
     setSelected(null);
   }, [open, film.title, film.year]);
@@ -53,11 +57,18 @@ export function EditFilmMatchDialog({
   }, [searchQuery]);
 
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedYearFilter(yearFilter), 300);
+    return () => clearTimeout(timer);
+  }, [yearFilter]);
+
+  useEffect(() => {
     setPage(1);
     setSelected(null);
-  }, [debouncedQuery, yearFilter]);
+  }, [debouncedQuery, debouncedYearFilter]);
 
-  const parsedYear = yearFilter.trim() ? Number(yearFilter) : undefined;
+  const parsedYear = debouncedYearFilter.trim()
+    ? Number(debouncedYearFilter)
+    : undefined;
   const yearParam =
     parsedYear !== undefined && !Number.isNaN(parsedYear) ? parsedYear : undefined;
 
