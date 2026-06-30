@@ -4,14 +4,14 @@
   "pr": 60,
   "stage": "demo-ready",
   "active_skill": null,
-  "active_agent_id": null,
+  "active_agent_id": "bc-a65d210c-b971-402e-88ef-33940dfad866",
   "agents": {
     "review-and-spec": "bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e",
     "review-and-spec-continued": null,
     "planning": null,
     "execute": null,
     "demo": null,
-    "create-pr": null,
+    "create-pr": "bc-a65d210c-b971-402e-88ef-33940dfad866",
     "babysit-pr": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6"
   },
   "loops": {
@@ -19,5 +19,5 @@
     "ci_autofix": 0,
     "total_runs": 7
   },
-  "updated_at": "2026-06-30T06:34:10Z"
+  "updated_at": "2026-06-30T06:34:22Z"
 }
