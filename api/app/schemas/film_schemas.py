@@ -113,6 +113,7 @@ class TmdbSearchResultItem(BaseModel):
 
 class TmdbSearchResponse(BaseModel):
     data: list[TmdbSearchResultItem]
+    pagination: PaginationMeta
 
 
 class RematchRequest(BaseModel):

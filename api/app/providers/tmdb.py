@@ -25,6 +25,14 @@ class TmdbSearchResult:
 
 
 @dataclass(frozen=True)
+class TmdbSearchPage:
+    results: list[TmdbSearchResult]
+    page: int
+    total_pages: int
+    total_results: int
+
+
+@dataclass(frozen=True)
 class TmdbMovieDetails:
     tmdb_id: int
     imdb_id: str | None
@@ -47,8 +55,18 @@ class TmdbClient:
         self._client = client
         self._api_key = api_key
 
-    async def search_movie(self, title: str, *, year: int | None = None) -> list[TmdbSearchResult]:
-        params: dict[str, Any] = {"api_key": self._api_key, "query": title}
+    async def search_movie(
+        self,
+        title: str,
+        *,
+        year: int | None = None,
+        page: int = 1,
+    ) -> TmdbSearchPage:
+        params: dict[str, Any] = {
+            "api_key": self._api_key,
+            "query": title,
+            "page": page,
+        }
         if year is not None:
             params["year"] = year
         response = await request_with_retry(
@@ -58,7 +76,8 @@ class TmdbClient:
             params=params,
         )
         response.raise_for_status()
-        results = response.json().get("results", [])
+        payload = response.json()
+        results = payload.get("results", [])
         parsed: list[TmdbSearchResult] = []
         for item in results:
             release = item.get("release_date") or ""
@@ -74,7 +93,12 @@ class TmdbClient:
                     poster_path=item.get("poster_path"),
                 )
             )
-        return parsed
+        return TmdbSearchPage(
+            results=parsed,
+            page=payload.get("page", page),
+            total_pages=payload.get("total_pages", 1),
+            total_results=payload.get("total_results", len(parsed)),
+        )
 
     async def get_movie_details(self, tmdb_id: int) -> TmdbMovieDetails:
         response = await request_with_retry(

@@ -135,14 +135,15 @@ async def tmdb_search(
     film_id: uuid.UUID,
     q: str = Query(min_length=1),
     year: int | None = None,
-    limit: int = Query(default=10, ge=1, le=20),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=20),
     db: Session = Depends(get_db),
     metadata_service: MetadataService = Depends(get_metadata_service),
 ) -> TmdbSearchResponse:
-    results = await metadata_service.search_tmdb(
-        db, film_id, q=q, year=year, limit=limit
+    results, pagination = await metadata_service.search_tmdb(
+        db, film_id, q=q, year=year, page=page, limit=limit
     )
-    return TmdbSearchResponse(data=results)
+    return TmdbSearchResponse(data=results, pagination=pagination)
 
 
 @router.post("/{film_id}/rematch", response_model=RematchResponse, status_code=202)

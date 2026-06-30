@@ -35,6 +35,7 @@ export function EditFilmMatchDialog({
     film.year !== null ? String(film.year) : "",
   );
   const [debouncedQuery, setDebouncedQuery] = useState(film.title);
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<TmdbSearchResultItem | null>(null);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export function EditFilmMatchDialog({
     setSearchQuery(film.title);
     setYearFilter(film.year !== null ? String(film.year) : "");
     setDebouncedQuery(film.title);
+    setPage(1);
     setSelected(null);
   }, [open, film.title, film.year]);
 
@@ -50,17 +52,27 @@ export function EditFilmMatchDialog({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  useEffect(() => {
+    setPage(1);
+    setSelected(null);
+  }, [debouncedQuery, yearFilter]);
+
   const parsedYear = yearFilter.trim() ? Number(yearFilter) : undefined;
   const yearParam =
     parsedYear !== undefined && !Number.isNaN(parsedYear) ? parsedYear : undefined;
 
   const search = useTmdbSearch(
     film.id,
-    { q: debouncedQuery, year: yearParam },
+    { q: debouncedQuery, year: yearParam, page },
     { enabled: open },
   );
 
   const results = search.data?.data ?? [];
+  const pagination = search.data?.pagination;
+  const totalPages =
+    pagination && pagination.limit > 0
+      ? Math.max(1, Math.ceil(pagination.total / pagination.limit))
+      : 1;
 
   async function handleConfirm() {
     if (!selected) return;
@@ -149,6 +161,33 @@ export function EditFilmMatchDialog({
             );
           })}
         </div>
+
+        {pagination && pagination.total > 0 && (
+          <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || search.isFetching}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
+              Previous
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+              {pagination.total > 0 ? ` (${pagination.total} results)` : ""}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!pagination.has_more || search.isFetching}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

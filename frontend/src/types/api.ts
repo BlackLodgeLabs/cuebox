@@ -182,11 +182,13 @@ export interface TmdbSearchResultItem {
 
 export interface TmdbSearchResponse {
   data: TmdbSearchResultItem[];
+  pagination: Pagination;
 }
 
 export interface TmdbSearchParams {
   q: string;
   year?: number;
+  page?: number;
   limit?: number;
 }
 

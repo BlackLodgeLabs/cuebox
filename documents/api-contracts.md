@@ -490,7 +490,8 @@ GET /films/{film_id}/tmdb-search
 |---------|-------|-------|-------------------------------------|
 |`q`      |string |—      |Search query (required, min length 1)|
 |`year`   |integer|—      |Optional release year filter         |
-|`limit`  |integer|10     |Max results (1–20)                   |
+|`page`   |integer|1      |TMDB results page (1-based)          |
+|`limit`  |integer|20     |Max results per page (1–20)          |
 
 #### Response `200 OK`
 
@@ -505,7 +506,13 @@ GET /films/{film_id}/tmdb-search
       "overview": "A devoutly Christian police officer...",
       "poster_url": "https://image.tmdb.org/t/p/w500/..."
     }
-  ]
+  ],
+  "pagination": {
+    "total": 42,
+    "limit": 20,
+    "offset": 0,
+    "has_more": true
+  }
 }
 ```
 

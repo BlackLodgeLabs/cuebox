@@ -86,6 +86,12 @@ const searchResults = {
       poster_url: "https://image.tmdb.org/t/p/w500/possession.jpg",
     },
   ],
+  pagination: {
+    total: 2,
+    limit: 20,
+    offset: 0,
+    has_more: false,
+  },
 };
 
 export async function mockFilmRematchFlow(page: Page) {

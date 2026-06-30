@@ -2,6 +2,8 @@
 
 import uuid
 
+import pytest
+
 from app.database.enums import EnrichmentStatus
 from app.repositories import film_repository
 from tests.conftest import requires_db
@@ -133,11 +135,47 @@ def test_tmdb_search_returns_results(integration_client):
         params={"q": "The Matrix"},
     )
     assert response.status_code == 200
-    data = response.json()["data"]
+    body = response.json()
+    data = body["data"]
+    pagination = body["pagination"]
     assert len(data) >= 1
     assert data[0]["tmdb_id"] == MATRIX_TMDB_ID
     assert data[0]["title"] == "The Matrix"
     assert data[0]["poster_url"] is not None
+    assert pagination["total"] >= 1
+    assert pagination["limit"] == 20
+    assert pagination["offset"] == 0
+    assert isinstance(pagination["has_more"], bool)
+
+
+def test_tmdb_search_supports_pagination(integration_client):
+    _import_csv(integration_client, _single_film_csv())
+    films = integration_client.get("/api/v1/films?limit=1").json()["data"]
+    film_id = films[0]["id"]
+
+    page_one = integration_client.get(
+        f"/api/v1/films/{film_id}/tmdb-search",
+        params={"q": "Star", "page": 1},
+    )
+    assert page_one.status_code == 200
+    page_one_body = page_one.json()
+    assert len(page_one_body["data"]) >= 1
+    pagination = page_one_body["pagination"]
+    assert pagination["offset"] == 0
+
+    if not pagination["has_more"]:
+        pytest.skip("TMDB returned only one page for query 'Star'")
+
+    page_two = integration_client.get(
+        f"/api/v1/films/{film_id}/tmdb-search",
+        params={"q": "Star", "page": 2},
+    )
+    assert page_two.status_code == 200
+    page_two_body = page_two.json()
+    assert page_two_body["pagination"]["offset"] == pagination["limit"]
+    page_one_ids = {item["tmdb_id"] for item in page_one_body["data"]}
+    page_two_ids = {item["tmdb_id"] for item in page_two_body["data"]}
+    assert page_one_ids.isdisjoint(page_two_ids)
 
 
 def test_tmdb_search_not_found_film(integration_client):

@@ -22,7 +22,7 @@ from app.repositories import (
     metadata_review_repository,
 )
 from app.schemas.errors import ErrorCode
-from app.schemas.film_schemas import TmdbSearchResultItem
+from app.schemas.film_schemas import PaginationMeta, TmdbSearchResultItem
 from app.services.confidence import compute_confidence, confidence_action
 from app.services.enrichment_pipeline import mark_film_failed, sync_import_job_progress
 from app.services.provider_service import ProviderService
@@ -55,10 +55,11 @@ class MetadataService:
             return self._mark_failed(db, film, str(exc))
 
         try:
-            search_results = await tmdb.search_movie(film.title, year=film.year)
+            search_page = await tmdb.search_movie(film.title, year=film.year)
         except httpx.HTTPError as exc:
             return self._mark_failed(db, film, f"TMDB search failed: {exc}")
 
+        search_results = search_page.results
         if not search_results:
             return self._mark_failed(db, film, "TMDB match not found")
 
@@ -190,8 +191,9 @@ class MetadataService:
         *,
         q: str,
         year: int | None,
+        page: int,
         limit: int,
-    ) -> list[TmdbSearchResultItem]:
+    ) -> tuple[list[TmdbSearchResultItem], PaginationMeta]:
         film = film_repository.get_by_id(db, film_id)
         if film is None:
             raise not_found("Film")
@@ -199,7 +201,7 @@ class MetadataService:
         capped_limit = min(max(limit, 1), 20)
         tmdb = self._providers.get_tmdb_client()
         try:
-            results = await tmdb.search_movie(q, year=year)
+            search_page = await tmdb.search_movie(q, year=year, page=page)
         except httpx.HTTPError as exc:
             raise AppError(
                 code=ErrorCode.PROVIDER_ERROR,
@@ -207,7 +209,7 @@ class MetadataService:
                 status_code=502,
             ) from exc
 
-        return [
+        items = [
             TmdbSearchResultItem(
                 tmdb_id=result.tmdb_id,
                 title=result.title,
@@ -216,8 +218,16 @@ class MetadataService:
                 overview=result.overview,
                 poster_url=TmdbClient.poster_url(result.poster_path),
             )
-            for result in results[:capped_limit]
+            for result in search_page.results[:capped_limit]
         ]
+        offset = (search_page.page - 1) * capped_limit
+        pagination = PaginationMeta(
+            total=search_page.total_results,
+            limit=capped_limit,
+            offset=offset,
+            has_more=search_page.page < search_page.total_pages,
+        )
+        return items, pagination
 
     async def rematch_film(self, db: Session, film_id: uuid.UUID, tmdb_id: int) -> Film:
         film = film_repository.get_by_id(db, film_id)
