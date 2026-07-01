@@ -38,33 +38,60 @@ Draft PR creation at `spec-ready` is done by [`.github/workflows/cursor-workflow
 
 ## What happened — timeline
 
+Agent links open the conversation in the [Cursor agents UI](https://cursor.com/agents). IDs are attributed from [`workflow.state.json`](workflow.state.json) on adjacent commits, [`cursor-workflow-record-agent-on-branch.sh`](https://github.com/BlackLodgeLabs/cuebox/blob/main/scripts/cursor-workflow-record-agent-on-branch.sh) pushes, and Cursor bot links on issue/PR comments. Steps without a recorded ID show **—**.
+
 ### 2026-06-28 — First automated pass (successful)
 
-| Time (UTC) | Event | Stage / label |
-|------------|-------|----------------|
-| 17:37 | Human [`@cursoragent spec`](https://github.com/BlackLodgeLabs/cuebox/issues/59#issuecomment-4826876842) on [#59](https://github.com/BlackLodgeLabs/cuebox/issues/59) | — |
-| 17:40 | Spec committed ([`37b894e`](https://github.com/BlackLodgeLabs/cuebox/commit/37b894e4158037c06ac087ed2f1d678595467349)) | `spec-ready` |
-| 17:42 | Actions linked [draft PR #60](https://github.com/BlackLodgeLabs/cuebox/pull/60) ([`d6a9d5e`](https://github.com/BlackLodgeLabs/cuebox/commit/d6a9d5ef9d6c58048efb22bda271aeb056478b5e)) | `cursor:spec-ready` → planning handoff |
-| 17:43–17:44 | [PLAN.md](PLAN.md) + [demo-spec.md](demo/demo-spec.md) ([`85f86f2`](https://github.com/BlackLodgeLabs/cuebox/commit/85f86f22edca43bb9a5b0c88c6257fa78e13ced2)) | `plan-ready` |
-| 17:47–18:09 | Execute: API, tests, docs, frontend, E2E ([`04bd2b8`…`5833d83`](https://github.com/BlackLodgeLabs/cuebox/commit/5833d83)) | GitHub label `cursor:execute-in-progress` during work |
-| 18:09 | `execute-ready` ([`2a75356`](https://github.com/BlackLodgeLabs/cuebox/commit/2a75356)) | demo handoff |
-| 18:13–18:29 | Demo: all four scenarios **PASS** ([`8ff24fd`](https://github.com/BlackLodgeLabs/cuebox/commit/8ff24fdd8467ac99a9a4f4ec4200cd65d52b2ebb)) | `demo-ready` |
-| 18:32 | [PR.md](PR.md) written ([`4a8898b`](https://github.com/BlackLodgeLabs/cuebox/commit/4a8898bbdf38d8373ed5465509020caf6375c9cb)) | `create-pr-ready` |
-| 18:43–18:49 | Babysit marked complete ([`fcdc0e1`](https://github.com/BlackLodgeLabs/cuebox/commit/fcdc0e16ac887be39676b951dc98a51e9f28ba54)); PR marked ready; [`cursor:complete`](https://github.com/BlackLodgeLabs/cuebox/issues/59#issuecomment-4827056380) notification | `complete` |
+| Time (UTC) | Event | Stage / label | Agent |
+|------------|-------|----------------|-------|
+| 17:37 | Human [`@cursoragent spec`](https://github.com/BlackLodgeLabs/cuebox/issues/59#issuecomment-4826876842) on [#59](https://github.com/BlackLodgeLabs/cuebox/issues/59) | — | — (human trigger) |
+| 17:40 | Spec committed ([`37b894e`](https://github.com/BlackLodgeLabs/cuebox/commit/37b894e4158037c06ac087ed2f1d678595467349)) | `spec-ready` | [`bc-d394e178…`](https://cursor.com/agents/bc-d394e178-1b87-408b-bab3-153240218df4) ([spec reply](https://github.com/BlackLodgeLabs/cuebox/issues/59#issuecomment-4826877059)) |
+| 17:42 | Actions linked [draft PR #60](https://github.com/BlackLodgeLabs/cuebox/pull/60) ([`d6a9d5e`](https://github.com/BlackLodgeLabs/cuebox/commit/d6a9d5ef9d6c58048efb22bda271aeb056478b5e)) | `cursor:spec-ready` → planning handoff | — (GitHub Actions) |
+| 17:42 | Planning agent spawned ([`917c011`](https://github.com/BlackLodgeLabs/cuebox/commit/917c0111c197f259878190d8e43643658c990989)) | handoff | [`bc-f877646a…`](https://cursor.com/agents/bc-f877646a-dc7a-462c-b7cc-e29ae8317312) |
+| 17:43 | Plan in progress ([`dda0d2c`](https://github.com/BlackLodgeLabs/cuebox/commit/dda0d2c6e064fe80dd45c9dc9d82fdd96bff58f1)) | `plan-in-progress` | [`bc-f877646a…`](https://cursor.com/agents/bc-f877646a-dc7a-462c-b7cc-e29ae8317312) (inferred) |
+| 17:44 | [PLAN.md](PLAN.md) + [demo-spec.md](demo/demo-spec.md) ([`85f86f2`](https://github.com/BlackLodgeLabs/cuebox/commit/85f86f22edca43bb9a5b0c88c6257fa78e13ced2)) | `plan-ready` | [`bc-f877646a…`](https://cursor.com/agents/bc-f877646a-dc7a-462c-b7cc-e29ae8317312) (inferred) |
+| 17:47 | Execute agent spawned ([`a3dd4c6`](https://github.com/BlackLodgeLabs/cuebox/commit/a3dd4c648ae307d2b2d5265fde67729f0a1b9f60)) | handoff | [`bc-3bd9ae07…`](https://cursor.com/agents/bc-3bd9ae07-6ffe-4689-bb6a-50bbf4e0b01b) |
+| 17:47–18:09 | Execute: API, tests, docs, frontend, E2E ([`04bd2b8`…`5833d83`](https://github.com/BlackLodgeLabs/cuebox/commit/5833d83)) | GitHub label `cursor:execute-in-progress` | [`bc-3bd9ae07…`](https://cursor.com/agents/bc-3bd9ae07-6ffe-4689-bb6a-50bbf4e0b01b) ([`a3dd4c6`](https://github.com/BlackLodgeLabs/cuebox/commit/a3dd4c648ae307d2b2d5265fde67729f0a1b9f60)) |
+| 18:09 | `execute-ready` ([`2a75356`](https://github.com/BlackLodgeLabs/cuebox/commit/2a75356)) | demo handoff | [`bc-3bd9ae07…`](https://cursor.com/agents/bc-3bd9ae07-6ffe-4689-bb6a-50bbf4e0b01b) (inferred) |
+| 18:11 | Demo agent spawned ([`762172f`](https://github.com/BlackLodgeLabs/cuebox/commit/762172fe0da17c226bd7d060bbde4c1e90d31f72)) | handoff | [`bc-b74255a7…`](https://cursor.com/agents/bc-b74255a7-271e-495c-8d3f-44046959f664) |
+| 18:13 | Demo in progress ([`4d02040`](https://github.com/BlackLodgeLabs/cuebox/commit/4d020408ccd0f5db936486dd8b87552a3d8b7204)) | `demo-in-progress` | [`bc-b74255a7…`](https://cursor.com/agents/bc-b74255a7-271e-495c-8d3f-44046959f664) (inferred) |
+| 18:29 | Demo: all four scenarios **PASS** ([`8ff24fd`](https://github.com/BlackLodgeLabs/cuebox/commit/8ff24fdd8467ac99a9a4f4ec4200cd65d52b2ebb)) | `demo-ready` | [`bc-b74255a7…`](https://cursor.com/agents/bc-b74255a7-271e-495c-8d3f-44046959f664) (inferred) |
+| 18:31 | Create-pr agent spawned ([`b4e1cf1`](https://github.com/BlackLodgeLabs/cuebox/commit/b4e1cf17f8d48a9d61adf0aaf3e4af7a8dbf4c3e)) | handoff | [`bc-a4648891…`](https://cursor.com/agents/bc-a4648891-26b8-4b07-8cac-e41dc44efb09) |
+| 18:32 | [PR.md](PR.md) written ([`4a8898b`](https://github.com/BlackLodgeLabs/cuebox/commit/4a8898bbdf38d8373ed5465509020caf6375c9cb)) | `create-pr-ready` | [`bc-a4648891…`](https://cursor.com/agents/bc-a4648891-26b8-4b07-8cac-e41dc44efb09) (inferred) |
+| 18:36 | Babysit agent spawned ([`2854052`](https://github.com/BlackLodgeLabs/cuebox/commit/2854052418202763d7e1c326e9b80d90c7811540)) | handoff | [`bc-ce79799e…`](https://cursor.com/agents/bc-ce79799e-7aba-4300-b9b8-6db8f247eae6) |
+| 18:43–18:49 | Babysit marked complete ([`fcdc0e1`](https://github.com/BlackLodgeLabs/cuebox/commit/fcdc0e16ac887be39676b951dc98a51e9f28ba54)); PR marked ready; [`cursor:complete`](https://github.com/BlackLodgeLabs/cuebox/issues/59#issuecomment-4827056380) notification | `complete` | [`bc-ce79799e…`](https://cursor.com/agents/bc-ce79799e-7aba-4300-b9b8-6db8f247eae6) |
 
 **Duration (spec trigger → complete):** ~75 minutes.
 
 ### 2026-06-30 — Human-driven second pass (pagination + Bugbot)
 
-| Time (UTC) | Event | Notes |
-|------------|-------|-------|
-| 06:18 | Human [PR comment](https://github.com/BlackLodgeLabs/cuebox/pull/60#issuecomment-4840460950): TMDB results capped; request pagination + demo | After `complete`; not routed through issue workflow |
-| 06:21 | Pagination feature ([`c0876a2`](https://github.com/BlackLodgeLabs/cuebox/commit/c0876a256c6fa9a09c90f489e5d0cf782b611c71)) | `workflow.state.json` still `complete` |
-| 06:31 | Demo re-run ([`d9f2b67`](https://github.com/BlackLodgeLabs/cuebox/commit/d9f2b6729e2be4ea8812e8b6eae9061a23b0e93e)) | Scenario 3 **SKIP** (empty review queue) |
-| 06:36–06:43 | create-pr + babysit → `complete` again ([`24fbb9b`](https://github.com/BlackLodgeLabs/cuebox/commit/24fbb9be1ce4430ec69195346827675ec8ed1425)) | `loops.total_runs` 6 → 9 |
-| 07:00 | Human [requests Bugbot review](https://github.com/BlackLodgeLabs/cuebox/pull/60#issuecomment-4840733664) | After second `complete` |
-| 07:02–07:08 | Bugbot fixes ([`c852a9e`](https://github.com/BlackLodgeLabs/cuebox/commit/c852a9e0110b0bd630ac56becb418742ca08808e), [`bc0e3b2`](https://github.com/BlackLodgeLabs/cuebox/commit/bc0e3b286142ce2464a4aa6572c990e4441b5e94)) | `loops.bugbot` → 2; stage `babysit-in-progress` |
-| 07:10 | Issue label `cursor:babysit-in-progress` removed; **no** `cursor:complete` re-applied | Issue currently has **no** `cursor:*` label |
+| Time (UTC) | Event | Stage / label | Agent |
+|------------|-------|----------------|-------|
+| 06:18 | Human [PR comment](https://github.com/BlackLodgeLabs/cuebox/pull/60#issuecomment-4840460950): TMDB pagination + demo | After `complete`; not routed through issue workflow | — (human trigger) |
+| 06:18–06:41 | Pagination, demo, create-pr, babysit ([`c0876a2`…`24fbb9b`](https://github.com/BlackLodgeLabs/cuebox/commits/cursor/issue-59-manual-film-metadata-rematch)) | `complete` → `demo-ready` → `create-pr-ready` → `complete` | [`bc-cd85c308…`](https://cursor.com/agents/bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e) ([pagination reply](https://github.com/BlackLodgeLabs/cuebox/pull/60#issuecomment-4840461774); also [discovered](https://github.com/BlackLodgeLabs/cuebox/commit/2d332fa3a2697b4bf0c4650947dea126c0d58c37) as `review-and-spec`) |
+| 06:21 | Pagination feature ([`c0876a2`](https://github.com/BlackLodgeLabs/cuebox/commit/c0876a256c6fa9a09c90f489e5d0cf782b611c71)) | `complete` (state not reset) | [`bc-cd85c308…`](https://cursor.com/agents/bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e) (inferred) |
+| 06:31 | Demo re-run ([`d9f2b67`](https://github.com/BlackLodgeLabs/cuebox/commit/d9f2b6729e2be4ea8812e8b6eae9061a23b0e93e)) | `demo-ready` | [`bc-cd85c308…`](https://cursor.com/agents/bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e) (inferred; Scenario 3 **SKIP**) |
+| 06:34 | Create-pr agent spawned ([`a399ee7`](https://github.com/BlackLodgeLabs/cuebox/commit/a399ee72dc16873241c37c74ccb12c8d6b88720f)) | handoff | [`bc-a65d210c…`](https://cursor.com/agents/bc-a65d210c-b971-402e-88ef-33940dfad866) |
+| 06:36 | [PR.md](PR.md) updated ([`b4e9480`](https://github.com/BlackLodgeLabs/cuebox/commit/b4e948042244840fe00b9e62b3a0ea2c8c903b9c)) | `create-pr-ready` | [`bc-a65d210c…`](https://cursor.com/agents/bc-a65d210c-b971-402e-88ef-33940dfad866) (inferred) |
+| 06:37 | Babysit agent spawned ([`fffb3eb`](https://github.com/BlackLodgeLabs/cuebox/commit/fffb3ebd42fd78b86170ac5105084d0a5330ba49)) | handoff | [`bc-0ba769b4…`](https://cursor.com/agents/bc-0ba769b4-c40f-4664-af4f-e34730603b0d) |
+| 06:41 | Babysit → `complete` again ([`24fbb9b`](https://github.com/BlackLodgeLabs/cuebox/commit/24fbb9be1ce4430ec69195346827675ec8ed1425)) | `complete` | [`bc-ce79799e…`](https://cursor.com/agents/bc-ce79799e-7aba-4300-b9b8-6db8f247eae6) (state file; may be stale ID vs spawn) |
+| 07:00 | Human [requests Bugbot review](https://github.com/BlackLodgeLabs/cuebox/pull/60#issuecomment-4840733664) | After second `complete` | — (human trigger) |
+| 07:00–07:08 | Bugbot review + fixes ([`c852a9e`](https://github.com/BlackLodgeLabs/cuebox/commit/c852a9e0110b0bd630ac56becb418742ca08808e), [`bc0e3b2`](https://github.com/BlackLodgeLabs/cuebox/commit/bc0e3b286142ce2464a4aa6572c990e4441b5e94)) | `babysit-in-progress` | [`bc-cd85c308…`](https://cursor.com/agents/bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e) ([Bugbot reply](https://github.com/BlackLodgeLabs/cuebox/pull/60#issuecomment-4840734340)); state file shows [`bc-ce79799e…`](https://cursor.com/agents/bc-ce79799e-7aba-4300-b9b8-6db8f247eae6) |
+| 07:10 | Issue label `cursor:babysit-in-progress` removed; **no** `cursor:complete` re-applied | — | — |
+
+**Agent index (all attributed IDs)**
+
+| Skill / role | Agent ID | Conversation |
+|--------------|----------|--------------|
+| review-and-spec | `bc-d394e178-1b87-408b-bab3-153240218df4` | [Open](https://cursor.com/agents/bc-d394e178-1b87-408b-bab3-153240218df4) |
+| PR follow-up (pagination, Bugbot) | `bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e` | [Open](https://cursor.com/agents/bc-cd85c308-c95c-45b0-b4ee-7a71f27a6b2e) |
+| planning | `bc-f877646a-dc7a-462c-b7cc-e29ae8317312` | [Open](https://cursor.com/agents/bc-f877646a-dc7a-462c-b7cc-e29ae8317312) |
+| execute | `bc-3bd9ae07-6ffe-4689-bb6a-50bbf4e0b01b` | [Open](https://cursor.com/agents/bc-3bd9ae07-6ffe-4689-bb6a-50bbf4e0b01b) |
+| demo | `bc-b74255a7-271e-495c-8d3f-44046959f664` | [Open](https://cursor.com/agents/bc-b74255a7-271e-495c-8d3f-44046959f664) |
+| create-pr (1st pass) | `bc-a4648891-26b8-4b07-8cac-e41dc44efb09` | [Open](https://cursor.com/agents/bc-a4648891-26b8-4b07-8cac-e41dc44efb09) |
+| create-pr (2nd pass) | `bc-a65d210c-b971-402e-88ef-33940dfad866` | [Open](https://cursor.com/agents/bc-a65d210c-b971-402e-88ef-33940dfad866) |
+| babysit-pr (1st pass) | `bc-ce79799e-7aba-4300-b9b8-6db8f247eae6` | [Open](https://cursor.com/agents/bc-ce79799e-7aba-4300-b9b8-6db8f247eae6) |
+| babysit-pr (2nd spawn) | `bc-0ba769b4-c40f-4664-af4f-e34730603b0d` | [Open](https://cursor.com/agents/bc-0ba769b4-c40f-4664-af4f-e34730603b0d) |
 
 **HEAD state ([`workflow.state.json`](workflow.state.json)):** `babysit-in-progress`, `loops.bugbot: 2`, `loops.total_runs: 9`.  
 **PR state:** Open, **not draft**, CI green ([API](https://github.com/BlackLodgeLabs/cuebox/actions), [Frontend](https://github.com/BlackLodgeLabs/cuebox/actions)).
