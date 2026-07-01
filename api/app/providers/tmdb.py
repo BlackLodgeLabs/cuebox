@@ -12,6 +12,7 @@ from app.providers.http_retry import request_with_retry
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w780"
+TMDB_SEARCH_PAGE_SIZE = 20
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,15 @@ class TmdbSearchResult:
     original_title: str
     year: int | None
     overview: str | None
+    poster_path: str | None
+
+
+@dataclass(frozen=True)
+class TmdbSearchPage:
+    results: list[TmdbSearchResult]
+    page: int
+    total_pages: int
+    total_results: int
 
 
 @dataclass(frozen=True)
@@ -46,8 +56,18 @@ class TmdbClient:
         self._client = client
         self._api_key = api_key
 
-    async def search_movie(self, title: str, *, year: int | None = None) -> list[TmdbSearchResult]:
-        params: dict[str, Any] = {"api_key": self._api_key, "query": title}
+    async def search_movie(
+        self,
+        title: str,
+        *,
+        year: int | None = None,
+        page: int = 1,
+    ) -> TmdbSearchPage:
+        params: dict[str, Any] = {
+            "api_key": self._api_key,
+            "query": title,
+            "page": page,
+        }
         if year is not None:
             params["year"] = year
         response = await request_with_retry(
@@ -57,7 +77,8 @@ class TmdbClient:
             params=params,
         )
         response.raise_for_status()
-        results = response.json().get("results", [])
+        payload = response.json()
+        results = payload.get("results", [])
         parsed: list[TmdbSearchResult] = []
         for item in results:
             release = item.get("release_date") or ""
@@ -70,9 +91,15 @@ class TmdbClient:
                     original_title=item.get("original_title") or "",
                     year=parsed_year,
                     overview=item.get("overview"),
+                    poster_path=item.get("poster_path"),
                 )
             )
-        return parsed
+        return TmdbSearchPage(
+            results=parsed,
+            page=payload.get("page", page),
+            total_pages=payload.get("total_pages", 1),
+            total_results=payload.get("total_results", len(parsed)),
+        )
 
     async def get_movie_details(self, tmdb_id: int) -> TmdbMovieDetails:
         response = await request_with_retry(

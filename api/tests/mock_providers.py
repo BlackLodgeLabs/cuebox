@@ -84,13 +84,48 @@ def _search_result(tmdb_id: int, title: str, *, release_date: str) -> dict:
         "original_title": title,
         "release_date": release_date,
         "overview": f"Overview for {title}.",
+        "poster_path": "/poster.jpg",
     }
+
+
+def _paginated_search_response(page: int) -> httpx.Response:
+    page_one = [
+        _search_result(1000 + i, f"Film {i}", release_date="2000-01-01") for i in range(20)
+    ]
+    page_two = [
+        _search_result(1020 + i, f"Film {20 + i}", release_date="2000-01-01") for i in range(5)
+    ]
+    current_page = max(1, page)
+    if current_page <= 1:
+        results = page_one
+    elif current_page == 2:
+        results = page_two
+    else:
+        results = []
+    return httpx.Response(
+        200,
+        json={
+            "page": current_page,
+            "total_pages": 2,
+            "total_results": 25,
+            "results": results,
+        },
+    )
 
 
 def _default_search_response(query: str) -> httpx.Response:
     if query == "Unknown Film":
         return httpx.Response(200, json={"results": []})
     if query == "Ambiguous Title":
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    _search_result(AMBIGUOUS_TMDB_ID, "Possession", release_date="1981-05-27")
+                ]
+            },
+        )
+    if query == "Possession":
         return httpx.Response(
             200,
             json={
@@ -296,6 +331,9 @@ def mock_provider_handler(request: httpx.Request, profile: str = "default") -> h
 
     if "/search/movie" in url:
         query = request.url.params.get("query", "")
+        if query == "Paginated":
+            page = int(request.url.params.get("page", "1"))
+            return _paginated_search_response(page)
         return _default_search_response(query)
 
     if profile == "partial_http_failure":

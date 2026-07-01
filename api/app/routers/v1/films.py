@@ -3,21 +3,27 @@
 import uuid
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
-from app.dependencies import get_db
+from app.dependencies import get_db, get_metadata_service, get_provider_service
 from app.repositories import film_repository, metadata_review_repository
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
     FilmListResponse,
     PaginationMeta,
+    RematchRequest,
+    RematchResponse,
     ReviewRequiredListResponse,
+    TmdbSearchResponse,
 )
+from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.services.film_presenter import film_to_detail, film_to_summary, review_to_item
+from app.services.metadata_service import MetadataService
+from app.services.provider_service import ProviderService
 
 router = APIRouter(prefix="/films", tags=["films"])
 
@@ -122,6 +128,37 @@ def list_review_required(
             has_more=offset + len(data) < total,
         ),
     )
+
+
+@router.get("/{film_id}/tmdb-search", response_model=TmdbSearchResponse)
+async def tmdb_search(
+    film_id: uuid.UUID,
+    q: str = Query(min_length=1),
+    year: int | None = None,
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=20),
+    db: Session = Depends(get_db),
+    metadata_service: MetadataService = Depends(get_metadata_service),
+) -> TmdbSearchResponse:
+    results, pagination = await metadata_service.search_tmdb(
+        db, film_id, q=q, year=year, page=page, limit=limit
+    )
+    return TmdbSearchResponse(data=results, pagination=pagination)
+
+
+@router.post("/{film_id}/rematch", response_model=RematchResponse, status_code=202)
+async def rematch_film(
+    film_id: uuid.UUID,
+    body: RematchRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    metadata_service: MetadataService = Depends(get_metadata_service),
+    provider_service: ProviderService = Depends(get_provider_service),
+) -> RematchResponse:
+    film = await metadata_service.rematch_film(db, film_id, body.tmdb_id)
+    db.commit()
+    background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
+    return RematchResponse(film_id=film.id, enrichment_status="enriching")
 
 
 @router.get("/{film_id}", response_model=FilmDetail)

@@ -171,6 +171,32 @@ export interface ReviewActionResponse {
   reviewed_at: string;
 }
 
+export interface TmdbSearchResultItem {
+  tmdb_id: number;
+  title: string;
+  original_title: string;
+  year: number | null;
+  overview: string | null;
+  poster_url: string | null;
+}
+
+export interface TmdbSearchResponse {
+  data: TmdbSearchResultItem[];
+  pagination: Pagination;
+}
+
+export interface TmdbSearchParams {
+  q: string;
+  year?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface RematchResponse {
+  film_id: string;
+  enrichment_status: string;
+}
+
 export interface SyncFilmSummary {
   film_id: string;
   title: string;

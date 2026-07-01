@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getFilm, getFilms, getReviewRequired } from "@/lib/api-client";
-import type { FilmsQueryParams, ReviewRequiredQueryParams } from "@/types/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getFilm, getFilms, getReviewRequired, rematchFilm, searchTmdb } from "@/lib/api-client";
+import type { FilmsQueryParams, ReviewRequiredQueryParams, TmdbSearchParams } from "@/types/api";
+import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useFilms(params?: FilmsQueryParams) {
   return useQuery({
@@ -11,11 +12,47 @@ export function useFilms(params?: FilmsQueryParams) {
   });
 }
 
-export function useFilm(filmId: string) {
+export function useFilm(
+  filmId: string,
+  options?: { pollWhileEnriching?: boolean },
+) {
   return useQuery({
     queryKey: ["films", filmId],
     queryFn: () => getFilm(filmId),
     enabled: Boolean(filmId),
+    refetchInterval: (query) =>
+      options?.pollWhileEnriching &&
+      query.state.data?.enrichment_status === "enriching"
+        ? 2000
+        : false,
+  });
+}
+
+export function useTmdbSearch(
+  filmId: string,
+  params: TmdbSearchParams,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["films", filmId, "tmdb-search", params],
+    queryFn: () => searchTmdb(filmId, params),
+    enabled: Boolean(filmId) && Boolean(params.q.trim()) && (options?.enabled ?? true),
+  });
+}
+
+export function useRematchFilm() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({ filmId, tmdbId }: { filmId: string; tmdbId: number }) =>
+      rematchFilm(filmId, tmdbId),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["films"] });
+      void queryClient.invalidateQueries({ queryKey: ["films", variables.filmId] });
+      void queryClient.invalidateQueries({ queryKey: ["films", "review-required"] });
+    },
+    onError,
   });
 }
 

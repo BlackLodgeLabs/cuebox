@@ -31,8 +31,11 @@ def _movie_response(
     }
 
 
-def _search_response(release_date: str) -> dict:
+def _search_response(release_date: str, *, page: int = 1, total_pages: int = 1) -> dict:
     return {
+        "page": page,
+        "total_pages": total_pages,
+        "total_results": 1,
         "results": [
             {
                 "id": 603,
@@ -41,7 +44,7 @@ def _search_response(release_date: str) -> dict:
                 "release_date": release_date,
                 "overview": "A computer hacker learns about the true nature of reality.",
             }
-        ]
+        ],
     }
 
 
@@ -99,8 +102,8 @@ async def test_release_date_year_parsing(release_date, expected_year):
 
     client = _make_client(handler)
     try:
-        search_results = await client.search_movie("The Matrix")
-        assert search_results[0].year == expected_year
+        search_page = await client.search_movie("The Matrix")
+        assert search_page.results[0].year == expected_year
 
         details = await client.get_movie_details(603)
         assert details.year == expected_year

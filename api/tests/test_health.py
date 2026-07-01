@@ -77,7 +77,9 @@ def test_health_database_error(client):
     assert response.json()["database"] == "error"
 
 
-def test_health_provider_keys_missing(client):
+def test_health_provider_keys_missing(client, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    get_settings.cache_clear()
     with patch("app.routers.v1.health.check_database", return_value=True):
         response = client.get("/api/v1/health")
 

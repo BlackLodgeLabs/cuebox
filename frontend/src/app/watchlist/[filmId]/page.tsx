@@ -1,16 +1,46 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { FilmDetailView } from "@/components/film-detail-view";
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilm } from "@/hooks/use-films";
+import { useToast } from "@/hooks/use-toast";
 
 export default function WatchlistFilmPage() {
   const params = useParams<{ filmId: string }>();
+  const searchParams = useSearchParams();
   const filmId = params.filmId;
+  const { toast } = useToast();
+  const prevStatusRef = useRef<string | null>(null);
 
-  const { data, isLoading, isError, refetch } = useFilm(filmId);
+  const { data, isLoading, isError, refetch } = useFilm(filmId, {
+    pollWhileEnriching: true,
+  });
+
+  const autoOpenEdit = searchParams.get("editMatch") === "1";
+
+  useEffect(() => {
+    if (!data) return;
+
+    const prev = prevStatusRef.current;
+    const current = data.enrichment_status;
+    prevStatusRef.current = current;
+
+    if (prev === "enriching" && current === "ready") {
+      toast({
+        title: "Enrichment complete",
+        description: "Film metadata and semantic profile are up to date.",
+      });
+    } else if (prev === "enriching" && current === "failed") {
+      toast({
+        variant: "destructive",
+        title: "Enrichment failed",
+        description: "Could not regenerate semantic data for this film.",
+      });
+    }
+  }, [data, toast]);
 
   if (isLoading) {
     return <CardGridSkeleton count={2} />;
@@ -31,5 +61,10 @@ export default function WatchlistFilmPage() {
     );
   }
 
-  return <FilmDetailView film={data} />;
+  return (
+    <FilmDetailView
+      film={data}
+      autoOpenEditMatch={autoOpenEdit}
+    />
+  );
 }

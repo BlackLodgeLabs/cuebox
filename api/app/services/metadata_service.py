@@ -12,17 +12,19 @@ import httpx
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import conflict, not_found
+from app.core.exceptions import AppError, conflict, not_found
 from app.database.enums import EnrichmentStatus, ReviewStatus
 from app.database.models import Film
-from app.providers.tmdb import TmdbClient, TmdbMovieDetails
+from app.providers.tmdb import TMDB_SEARCH_PAGE_SIZE, TmdbClient, TmdbMovieDetails, TmdbSearchResult
 from app.repositories import (
     film_metadata_repository,
     film_repository,
     metadata_review_repository,
 )
+from app.schemas.errors import ErrorCode
+from app.schemas.film_schemas import PaginationMeta, TmdbSearchResultItem
 from app.services.confidence import compute_confidence, confidence_action
-from app.services.enrichment_pipeline import mark_film_failed
+from app.services.enrichment_pipeline import mark_film_failed, sync_import_job_progress
 from app.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
@@ -53,10 +55,11 @@ class MetadataService:
             return self._mark_failed(db, film, str(exc))
 
         try:
-            search_results = await tmdb.search_movie(film.title, year=film.year)
+            search_page = await tmdb.search_movie(film.title, year=film.year)
         except httpx.HTTPError as exc:
             return self._mark_failed(db, film, f"TMDB search failed: {exc}")
 
+        search_results = search_page.results
         if not search_results:
             return self._mark_failed(db, film, "TMDB match not found")
 
@@ -109,7 +112,13 @@ class MetadataService:
 
         try:
             await self._persist_metadata(
-                db, film, best_details, best_keywords, best_score, tmdb
+                db,
+                film,
+                best_details,
+                best_keywords,
+                tmdb,
+                metadata_source="tmdb",
+                match_confidence=best_score,
             )
         except IntegrityError:
             db.rollback()
@@ -148,8 +157,9 @@ class MetadataService:
             film,
             details,
             keywords,
-            float(review.confidence_score),
             tmdb,
+            metadata_source="tmdb",
+            match_confidence=float(review.confidence_score),
         )
         metadata_review_repository.update_status(db, review, ReviewStatus.ACCEPTED)
         film_repository.update_enrichment_status(db, film, EnrichmentStatus.ENRICHING)
@@ -174,14 +184,169 @@ class MetadataService:
         assert updated is not None
         return updated
 
+    async def search_tmdb(
+        self,
+        db: Session,
+        film_id: uuid.UUID,
+        *,
+        q: str,
+        year: int | None,
+        page: int,
+        limit: int,
+    ) -> tuple[list[TmdbSearchResultItem], PaginationMeta]:
+        film = film_repository.get_by_id(db, film_id)
+        if film is None:
+            raise not_found("Film")
+
+        capped_limit = min(max(limit, 1), TMDB_SEARCH_PAGE_SIZE)
+        offset = (page - 1) * capped_limit
+
+        tmdb = self._providers.get_tmdb_client()
+        tmdb_page = offset // TMDB_SEARCH_PAGE_SIZE + 1
+        slice_start = offset % TMDB_SEARCH_PAGE_SIZE
+
+        collected: list[TmdbSearchResult] = []
+        total_results = 0
+        current_tmdb_page = tmdb_page
+        next_slice_start = slice_start
+
+        while len(collected) < capped_limit:
+            try:
+                search_page = await tmdb.search_movie(
+                    q, year=year, page=current_tmdb_page
+                )
+            except httpx.HTTPError as exc:
+                raise AppError(
+                    code=ErrorCode.PROVIDER_ERROR,
+                    message=f"TMDB search failed: {exc}",
+                    status_code=502,
+                ) from exc
+
+            total_results = search_page.total_results
+
+            if search_page.total_pages > 0 and current_tmdb_page > search_page.total_pages:
+                break
+            if not search_page.results:
+                break
+
+            page_slice = search_page.results[next_slice_start:]
+            needed = capped_limit - len(collected)
+            collected.extend(page_slice[:needed])
+            next_slice_start = 0
+
+            if len(collected) >= capped_limit:
+                break
+            if current_tmdb_page >= search_page.total_pages:
+                break
+            current_tmdb_page += 1
+
+        items = [
+            TmdbSearchResultItem(
+                tmdb_id=result.tmdb_id,
+                title=result.title,
+                original_title=result.original_title,
+                year=result.year,
+                overview=result.overview,
+                poster_url=TmdbClient.poster_url(result.poster_path),
+            )
+            for result in collected
+        ]
+        has_more = total_results > 0 and offset + len(items) < total_results
+        pagination = PaginationMeta(
+            total=total_results,
+            limit=capped_limit,
+            offset=offset,
+            has_more=has_more,
+        )
+        return items, pagination
+
+    async def rematch_film(self, db: Session, film_id: uuid.UUID, tmdb_id: int) -> Film:
+        film = film_repository.get_by_id(db, film_id)
+        if film is None:
+            raise not_found("Film")
+
+        if film.enrichment_status in (
+            EnrichmentStatus.MATCHING,
+            EnrichmentStatus.ENRICHING,
+        ):
+            raise conflict(
+                f"Cannot rematch while film is {film.enrichment_status.value}"
+            )
+
+        tmdb = self._providers.get_tmdb_client()
+        try:
+            details = await tmdb.get_movie_details(tmdb_id)
+            keywords = await tmdb.get_movie_keywords(tmdb_id)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 404:
+                raise not_found("TMDB movie") from exc
+            raise AppError(
+                code=ErrorCode.PROVIDER_ERROR,
+                message=f"TMDB lookup failed: {exc}",
+                status_code=502,
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise AppError(
+                code=ErrorCode.PROVIDER_ERROR,
+                message=f"TMDB lookup failed: {exc}",
+                status_code=502,
+            ) from exc
+
+        conflicting = film_metadata_repository.get_by_tmdb_id(
+            db, tmdb_id, exclude_film_id=film.id
+        )
+        if conflicting is not None:
+            other = film_repository.get_by_id(db, conflicting.film_id)
+            title = other.title if other else str(conflicting.film_id)
+            raise conflict(
+                f"TMDB ID {tmdb_id} is already linked to film \"{title}\""
+            )
+
+        if details.imdb_id:
+            imdb_conflict = film_metadata_repository.get_by_imdb_id(
+                db, details.imdb_id, exclude_film_id=film.id
+            )
+            if imdb_conflict is not None:
+                other = film_repository.get_by_id(db, imdb_conflict.film_id)
+                title = other.title if other else str(imdb_conflict.film_id)
+                raise conflict(
+                    f"IMDb ID {details.imdb_id} is already linked to film \"{title}\""
+                )
+
+        try:
+            await self._persist_metadata(
+                db,
+                film,
+                details,
+                keywords,
+                tmdb,
+                metadata_source="tmdb_manual",
+                match_confidence=1.0,
+            )
+        except IntegrityError as exc:
+            db.rollback()
+            raise conflict("Duplicate TMDB metadata record") from exc
+
+        metadata_review_repository.resolve_pending_for_film(
+            db, film.id, status=ReviewStatus.ACCEPTED
+        )
+        film_repository.update_enrichment_status(db, film, EnrichmentStatus.ENRICHING)
+
+        if film.import_job_id:
+            sync_import_job_progress(db, film.import_job_id)
+
+        return film
+
     async def _persist_metadata(
         self,
         db: Session,
         film: Film,
         details: TmdbMovieDetails,
         keywords: list[str],
-        confidence: float,
         tmdb: TmdbClient,
+        *,
+        metadata_source: str,
+        match_confidence: float,
     ) -> None:
         rt_score: int | None = None
         omdb = self._providers.get_omdb_client()
@@ -210,8 +375,8 @@ class MetadataService:
             rotten_tomatoes_score=rt_score,
             poster_url=TmdbClient.poster_url(details.poster_path),
             backdrop_url=TmdbClient.backdrop_url(details.backdrop_path),
-            match_confidence=Decimal(str(confidence)),
-            metadata_source="tmdb",
+            match_confidence=Decimal(str(match_confidence)),
+            metadata_source=metadata_source,
         )
 
     def _mark_failed(self, db: Session, film: Film, reason: str) -> EnrichmentOutcome:
