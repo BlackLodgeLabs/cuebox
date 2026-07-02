@@ -27,7 +27,11 @@ Produce an implementation plan and demo spec on the existing feature branch.
 
 ## Start — update state (first commit)
 
-Before planning work, commit an early state update so GitHub shows progress:
+Before planning work, run the merge helper and commit an early state update:
+
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
 
 ```json
 {
@@ -61,10 +65,15 @@ Instruct the demo agent what to capture on the VM:
 - Preconditions (stack health URLs, seed data)
 - Numbered scenarios with steps, pass criteria, and **exact artifact filenames** under `workflow/issues/issue-{NNN}/demo/`
 - Reference [workflow/cursor-workflow/templates/demo-spec.md](../../../workflow/cursor-workflow/templates/demo-spec.md)
+- Include **Seed steps** under Preconditions when any scenario depends on non-default DB state
 
 Assume **full Docker stack** on the cloud VM (frontend :3000, API :8000). API keys come from VM secrets / `.env`.
 
 ## Workflow state
+
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
 
 Update `workflow/issues/issue-{NNN}/workflow.state.json`:
 

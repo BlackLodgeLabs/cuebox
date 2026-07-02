@@ -16,6 +16,10 @@ Execute `workflow/issues/issue-{NNN}/demo/demo-spec.md` on the running stack and
 
 ## Start — update state
 
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
 ```json
 { "stage": "demo-in-progress", "active_skill": "demo", "updated_at": "<ISO8601>" }
 ```
@@ -77,7 +81,20 @@ Handoff Action triggers create-pr. No bot `@cursoragent` comment.
 
 Do **not** set `demo-ready` or hand off to create-pr when scenarios fail.
 
+## Pass-back path (code defect)
+
+When a scenario fails due to a **code defect** (not environment/seed):
+
+1. Write `## Pass-back to execute` in `workflow/issues/issue-{NNN}/demo/demo-notes.md` with failure details
+2. Run merge helper, then set:
+   - `stage`: `execute-passback`
+   - `passback_to`: `execute`
+   - `passback_reason`: short summary
+3. Push — **do not** edit `api/` or `frontend/`
+4. Handoff Action calls `POST /v1/agents/{id}/runs` on the stored execute agent
+
 ## Do not
 
+- Change production code on pass-back (execute fixes defects)
 - Change production code (file bugs on PR if demo reveals issues — babysit may fix)
 - Mark PR ready for review

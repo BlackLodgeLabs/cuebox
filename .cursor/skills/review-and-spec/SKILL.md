@@ -35,7 +35,7 @@ If any item is missing or ambiguous, **do not** write the spec document yet.
 
 1. Post a numbered comment on the issue with specific questions (one topic per number).
 2. Create branch `cursor/issue-{NNN}-{slug}` from `main` (same slug rules as below).
-3. Update or create `workflow/issues/issue-{NNN}/workflow.state.json`:
+3. Run merge helper, then update or create `workflow/issues/issue-{NNN}/workflow.state.json`:
    - `stage`: `spec-needs-info`
    - `issue`: NNN
    - `branch`: `cursor/issue-{NNN}-{slug}`
@@ -45,6 +45,20 @@ If any item is missing or ambiguous, **do not** write the spec document yet.
 6. **Stop.** Do not hand off to planning. User will reply and comment `@cursoragent continue spec`.
 
 ## If detail is sufficient
+
+### Start — update state (first commit)
+
+Before writing the spec, commit an early state update:
+
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
+```json
+{ "stage": "spec-in-progress", "active_skill": "review-and-spec", "updated_at": "<ISO8601>" }
+```
+
+Push before substantive work.
 
 ### Branch
 
@@ -83,6 +97,10 @@ cursor/issue-{NNN}-{slug}
 ```
 
 ### Finalize state
+
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
 
 ```json
 {

@@ -16,6 +16,10 @@ Write `workflow/issues/issue-{NNN}/PR.md` using the repo template. GitHub Action
 
 ## Start — update state
 
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
 ```json
 { "stage": "create-pr-in-progress", "active_skill": "create-pr", "updated_at": "<ISO8601>" }
 ```
