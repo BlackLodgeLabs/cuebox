@@ -7,6 +7,12 @@ Planning agent replaces this file per issue. Demo agent follows it exactly.
 - Full Docker stack running (`docker compose ps` — frontend :3000, API :8000, DB ok)
 - Seeded watchlist present (cloud Part 2 gate) unless the change is API-only
 
+### Seed steps
+
+_Required when any scenario depends on non-default DB state (`review_required`, `failed`, empty watchlist, etc.)._
+
+1. _(List exact commands or API calls to reach the required state before scenarios run.)_
+
 ## Scenarios
 
 ### Scenario 1: (title)
