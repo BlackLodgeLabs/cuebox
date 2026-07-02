@@ -1,0 +1,25 @@
+{
+  "issue": 62,
+  "branch": "cursor/issue-62-harden-cursor-workflow-state-pass-back",
+  "pr": null,
+  "stage": "spec-ready",
+  "active_skill": "review-and-spec",
+  "active_agent_id": null,
+  "agents": {
+    "review-and-spec": null,
+    "review-and-spec-continued": null,
+    "planning": null,
+    "execute": null,
+    "demo": null,
+    "create-pr": null,
+    "babysit-pr": null
+  },
+  "passback_to": null,
+  "passback_reason": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  },
+  "updated_at": "2026-07-02T07:00:07Z"
+}
