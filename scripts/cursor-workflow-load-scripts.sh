@@ -20,7 +20,9 @@ for script in \
   cursor-workflow-record-pr-on-branch.sh \
   cursor-workflow-record-agent-on-branch.sh \
   cursor-workflow-discover-agents.sh \
-  cursor-workflow-notify-complete.sh; do
+  cursor-workflow-notify-complete.sh \
+  cursor-workflow-update-pr-body.sh \
+  cursor-workflow-merge-state.sh; do
   git show "${REF}:scripts/${script}" > "${DEST}/${script}"
   chmod +x "${DEST}/${script}"
 done

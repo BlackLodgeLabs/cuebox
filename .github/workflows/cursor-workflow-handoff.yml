@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh; do
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh; do
             git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
@@ -92,7 +92,7 @@ jobs:
           }
 
           handoff() {
-            local stage="$1" issue="$2" branch="$3" state_file="$4"
+            local stage="$1" issue="$2" branch="$3" state_file="$4" prev_stage="${5:-}"
             local prompt skill progress_stage agent_id=""
 
             case "$stage" in
@@ -112,9 +112,15 @@ jobs:
                 progress_stage="execute-in-progress"
                 ;;
               execute-ready)
-                prompt="Use the demo skill for GitHub issue #${issue}. Branch: ${branch}. Full Docker stack must be running. Follow workflow/issues/issue-${issue}/demo/demo-spec.md."
-                skill="demo"
-                progress_stage="demo-in-progress"
+                if [ "$prev_stage" = "changes-requested" ]; then
+                  prompt="Use the execute skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — push commits only; do not create a PR. Post-complete scope changes requested; read SPEC.md and PLAN.md for updates. Run all tests and gate scripts before pushing."
+                  skill="execute"
+                  progress_stage="execute-in-progress"
+                else
+                  prompt="Use the demo skill for GitHub issue #${issue}. Branch: ${branch}. Full Docker stack must be running. Follow workflow/issues/issue-${issue}/demo/demo-spec.md."
+                  skill="demo"
+                  progress_stage="demo-in-progress"
+                fi
                 ;;
               demo-ready)
                 prompt="Use the create-pr skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — write workflow/issues/issue-${issue}/PR.md from spec, plan, commits, and demo notes; do not create a PR."
@@ -178,6 +184,73 @@ jobs:
             exit 1
           }
 
+          handle_changes_requested() {
+            local issue="$1" branch="$2" state_file="$3"
+            local pr
+            pr=$(jq -r '.pr // empty' "$state_file")
+            if [ -n "$pr" ] && [ "$pr" != "null" ]; then
+              gh pr ready "$pr" --undo --repo "${GITHUB_REPOSITORY}" 2>/dev/null || \
+                gh api -X PATCH "repos/${GITHUB_REPOSITORY}/pulls/${pr}" -f draft=true >/dev/null || \
+                echo "::warning::Could not convert PR #${pr} to draft"
+              echo "Converted PR #${pr} to draft for changes-requested"
+            fi
+            jq '.loops.total_runs = ((.loops.total_runs // 0) + 1) | .updated_at = (now | strftime("%Y-%m-%dT%H:%M:%SZ"))' \
+              "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
+            "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
+            echo "Handled changes-requested for issue #${issue} (no agent spawned)"
+          }
+
+          handle_passback() {
+            local issue="$1" branch="$2" state_file="$3"
+            local passback_to passback_reason agent_id prompt http_code
+            passback_to=$(jq -r '.passback_to // empty' "$state_file")
+            passback_reason=$(jq -r '.passback_reason // empty' "$state_file")
+            agent_id=$(jq -r --arg k "$passback_to" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$state_file")
+
+            if [ -z "$passback_to" ] || [ "$passback_to" = "null" ] || [ -z "$agent_id" ] || [ "$agent_id" = "null" ]; then
+              echo "Pass-back skipped — missing passback_to or agents.${passback_to}"
+              return 1
+            fi
+
+            prompt="Resume execute for GitHub issue #${issue} on branch ${branch}. Pass-back reason: ${passback_reason}. Read workflow/issues/issue-${issue}/demo/demo-notes.md section 'Pass-back to execute' and use the execute skill. Draft PR #$(jq -r '.pr // empty' "$state_file") already exists — push commits only."
+
+            if [ -n "${CURSOR_API_KEY:-}" ]; then
+              payload=$(jq -n --arg text "$prompt" '{prompt: {text: $text}}')
+              http_code=$(curl -sS -o /tmp/cursor-passback.json -w "%{http_code}" \
+                -X POST "https://api.cursor.com/v1/agents/${agent_id}/runs" \
+                -u "${CURSOR_API_KEY}:" \
+                -H "Content-Type: application/json" \
+                -d "$payload")
+              if [ "$http_code" = "409" ]; then
+                echo "::warning::Pass-back agent busy (409) — re-push after current run completes"
+                return 0
+              fi
+              if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+                echo "Pass-back run started on agent ${agent_id}"
+                HANDOFF_PROGRESS_STAGE="execute-in-progress" \
+                HANDOFF_ACTIVE_SKILL="execute" \
+                HANDOFF_ACTIVE_AGENT="$agent_id" \
+                  "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
+                return 0
+              fi
+              echo "Pass-back API returned ${http_code}: $(cat /tmp/cursor-passback.json)"
+            fi
+
+            if [ -n "${CURSOR_HANDOFF_GITHUB_TOKEN:-}" ]; then
+              echo "${CURSOR_HANDOFF_GITHUB_TOKEN}" | gh auth login --with-token
+              gh issue comment "$issue" --repo "${GITHUB_REPOSITORY}" \
+                --body "@cursoragent ${prompt}"
+              HANDOFF_PROGRESS_STAGE="execute-in-progress" \
+              HANDOFF_ACTIVE_SKILL="execute" \
+              HANDOFF_ACTIVE_AGENT="$agent_id" \
+                "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
+              return 0
+            fi
+
+            echo "::warning::Pass-back failed — set CURSOR_API_KEY or CURSOR_HANDOFF_GITHUB_TOKEN"
+            return 1
+          }
+
           is_handoff_stage() {
             case "$1" in
               spec-ready|plan-ready|execute-ready|demo-ready|create-pr-ready) return 0 ;;
@@ -187,7 +260,7 @@ jobs:
 
           is_skip_stage() {
             case "$1" in
-              blocked|complete|spec-in-progress|spec-needs-info|plan-in-progress|execute-in-progress|demo-in-progress|create-pr-in-progress|babysit-in-progress) return 0 ;;
+              blocked|complete|spec-in-progress|spec-needs-info|plan-in-progress|execute-in-progress|demo-in-progress|create-pr-in-progress|babysit-in-progress|changes-requested|execute-passback) return 0 ;;
               *) return 1 ;;
             esac
           }
@@ -254,12 +327,24 @@ jobs:
             echo "Stage unchanged ($stage) — no handoff"
             exit 0
           fi
+
+          if [ "$stage" = "changes-requested" ]; then
+            handle_changes_requested "$ISSUE" "$branch" /tmp/workflow.state.json
+            exit 0
+          fi
+
+          passback_to=$(jq -r '.passback_to // empty' /tmp/workflow.state.json)
+          if [ "$stage" = "execute-passback" ] && [ -n "$passback_to" ] && [ "$passback_to" != "null" ]; then
+            handle_passback "$ISSUE" "$branch" /tmp/workflow.state.json || true
+            exit 0
+          fi
+
           if is_skip_stage "$stage"; then
             echo "No handoff for stage ${stage}"
             exit 0
           fi
           if is_handoff_stage "$stage"; then
-            handoff "$stage" "$ISSUE" "$branch" /tmp/workflow.state.json
+            handoff "$stage" "$ISSUE" "$branch" /tmp/workflow.state.json "$prev_stage"
           else
             echo "::warning::Unrecognized stage '${stage}' in ${STATE_FILE} (sync only)"
           fi
@@ -280,7 +365,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh; do
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh; do
             git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
