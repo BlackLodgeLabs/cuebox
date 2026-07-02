@@ -133,6 +133,19 @@ Set in `.env` (see `.env.example`):
 | `BACKUP_CRON` | `0 3 * * *` | Cron schedule (UTC) in the backup container |
 | `BACKUP_DIR` | `/backups` (container) | Mount target; host path is `./data/backups/` |
 
+### Cross-platform deployment
+
+The backup image installs [supercronic](https://github.com/aptible/supercronic) for the host CPU at **build** time (`amd64` on Windows/macOS Intel, `arm64` on Raspberry Pi and Apple Silicon). Build on the machine that will run the stack:
+
+```bash
+docker compose build backup
+docker compose up -d backup
+```
+
+If you build on one architecture and deploy the image elsewhere, use multi-platform build (e.g. `docker buildx build --platform linux/arm64`) or rebuild on the target host. Other services (`api`, `frontend`, `postgres`) use multi-arch base images and do not need special handling.
+
+On Windows, keep shell scripts checked out with LF line endings; CRLF in `entrypoint.sh` can break container startup (the frontend Dockerfile already avoids this pattern).
+
 ## Retention
 
 After each **successful** backup, files matching `cuebox-*.dump` in `./data/backups/` are sorted by date in the filename; all but the two newest are deleted. Failed partial dumps are removed and do not trigger pruning.
