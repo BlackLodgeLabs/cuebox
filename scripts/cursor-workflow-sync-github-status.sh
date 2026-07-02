@@ -25,6 +25,9 @@ UPDATED=$(jq -r '.updated_at // empty' "$STATE_FILE")
 ACTIVE_SKILL=$(jq -r '.active_skill // empty' "$STATE_FILE")
 ACTIVE_AGENT=$(jq -r '.active_agent_id // empty' "$STATE_FILE")
 
+PASSBACK_TO=$(jq -r '.passback_to // empty' "$STATE_FILE")
+PASSBACK_REASON=$(jq -r '.passback_reason // empty' "$STATE_FILE")
+
 agent_id_for_key() {
   jq -r --arg k "$1" '
     ((.agents // {})[$k] // empty)
@@ -65,6 +68,8 @@ stage_label() {
     plan-ready) echo "cursor:plan-ready" ;;
     execute-in-progress) echo "cursor:execute-in-progress" ;;
     execute-ready) echo "cursor:execute-ready" ;;
+    execute-passback) echo "cursor:execute-passback" ;;
+    changes-requested) echo "cursor:changes-requested" ;;
     demo-in-progress) echo "cursor:demo-in-progress" ;;
     demo-ready) echo "cursor:demo-ready" ;;
     create-pr-in-progress) echo "cursor:create-pr-in-progress" ;;
@@ -85,6 +90,8 @@ stage_title() {
     plan-ready) echo "Plan complete → execute queued" ;;
     execute-in-progress) echo "Execute — in progress" ;;
     execute-ready) echo "Execute complete → demo queued" ;;
+    execute-passback) echo "Execute pass-back — demo found code defect" ;;
+    changes-requested) echo "Changes requested — scope added after complete" ;;
     demo-in-progress) echo "Demo — in progress" ;;
     demo-ready) echo "Demo complete → create PR queued" ;;
     create-pr-in-progress) echo "Create PR — in progress" ;;
@@ -104,6 +111,8 @@ CURSOR_LABELS=(
   "cursor:plan-ready"
   "cursor:execute-in-progress"
   "cursor:execute-ready"
+  "cursor:execute-passback"
+  "cursor:changes-requested"
   "cursor:demo-in-progress"
   "cursor:demo-ready"
   "cursor:create-pr-in-progress"
@@ -159,6 +168,20 @@ fi
 
 SKILL_LINE="${ACTIVE_SKILL:-—}"
 
+PASSBACK_LINES=""
+if [ -n "$PASSBACK_TO" ] && [ "$PASSBACK_TO" != "null" ]; then
+  PASSBACK_TARGET_LINE="$PASSBACK_TO"
+  PASSBACK_AGENT_LINK=$(agent_link_for_key "$PASSBACK_TO")
+  if [ "$PASSBACK_AGENT_LINK" != "—" ]; then
+    PASSBACK_TARGET_LINE="${PASSBACK_TO} (${PASSBACK_AGENT_LINK})"
+  fi
+  PASSBACK_LINES="| **Pass-back target** | ${PASSBACK_TARGET_LINE} |"
+  if [ -n "$PASSBACK_REASON" ] && [ "$PASSBACK_REASON" != "null" ]; then
+    PASSBACK_LINES="${PASSBACK_LINES}
+| **Pass-back reason** | ${PASSBACK_REASON} |"
+  fi
+fi
+
 AGENTS_TABLE="| **Review & spec** | $(agent_link_for_key review-and-spec) |
 | **Planning** | $(agent_link_for_key planning) |
 | **Execute** | $(agent_link_for_key execute) |
@@ -191,6 +214,7 @@ BODY="${MARKER}
 | **Loops** | bugbot ${BUGBOT}/3 · ci ${CI_FIX}/2 · total ${TOTAL}/10 |
 | **State updated** | ${UPDATED:-—} |
 | **Latest agent** | ${LATEST_AGENT_LINE} |
+${PASSBACK_LINES}
 
 ### Agent conversations
 
