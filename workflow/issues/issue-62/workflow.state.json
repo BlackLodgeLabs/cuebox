@@ -2,24 +2,24 @@
   "issue": 62,
   "branch": "cursor/issue-62-harden-cursor-workflow-state-pass-back",
   "pr": 63,
-  "stage": "execute-ready",
+  "stage": "demo-ready",
   "active_skill": null,
   "active_agent_id": "bc-b6e7fb91-bd6d-4f34-9988-29bc90a0d64f",
   "agents": {
-    "review-and-spec": null,
-    "review-and-spec-continued": null,
-    "planning": "bc-945abe07-409b-47dd-a8b0-d3af827485a0",
-    "execute": "bc-b6e7fb91-bd6d-4f34-9988-29bc90a0d64f",
-    "demo": null,
+    "babysit-pr": null,
     "create-pr": null,
-    "babysit-pr": null
+    "demo": null,
+    "execute": "bc-b6e7fb91-bd6d-4f34-9988-29bc90a0d64f",
+    "planning": "bc-945abe07-409b-47dd-a8b0-d3af827485a0",
+    "review-and-spec": null,
+    "review-and-spec-continued": null
   },
   "passback_to": null,
   "passback_reason": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   },
-  "updated_at": "2026-07-02T13:00:00Z"
+  "updated_at": "2026-07-02T14:30:00Z"
 }
