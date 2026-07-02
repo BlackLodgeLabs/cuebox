@@ -22,6 +22,8 @@ Human gates: **spec start** (`@cursoragent spec`) and **spec resume** (`@cursora
 
 Automated handoffs: stages 3–7 via `.github/workflows/cursor-workflow-handoff.yml` when `workflow/issues/issue-NNN/workflow.state.json` is pushed with a handoff `stage`.
 
+**State merge:** Before committing `workflow.state.json`, agents run `bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-NNN/workflow.state.json` to preserve remote `agents`, `pr`, and loop counters. See [WORKFLOW.md](WORKFLOW.md#state-merge).
+
 ---
 
 ## 1. Cursor account and billing
@@ -77,6 +79,8 @@ Create labels (Settings → Labels):
 | `cursor:demo-ready` | `#0E8A16` | Demo artifacts done |
 | `cursor:create-pr-in-progress` | `#1D76DB` | Create PR agent running |
 | `cursor:create-pr-ready` | `#0E8A16` | PR.md committed |
+| `cursor:changes-requested` | `#D93F0B` | Post-complete scope added |
+| `cursor:execute-passback` | `#1D76DB` | Demo pass-back to execute |
 | `cursor:complete` | `#5319E7` | Babysit done |
 | `cursor:blocked` | `#B60205` | Loop limit or failure |
 
@@ -102,6 +106,27 @@ In [cursor.com/dashboard](https://cursor.com/dashboard) → **Cloud Agents** →
 - [ ] Stack terminal or snapshot verifies Part 1 + Part 2 gates from `AGENTS.md`
 
 Demo and execute agents assume **full Docker stack** (frontend :3000, API :8000).
+
+### Post-complete changes (`changes-requested`)
+
+When scope is added after `complete`:
+
+```text
+complete → changes-requested (PR → draft, total_runs++) → execute-ready → execute → demo → create-pr → babysit → complete
+```
+
+1. Update SPEC/PLAN if needed
+2. Push `stage: changes-requested` (Action converts PR to draft; no agent spawned)
+3. Push `stage: execute-ready` in a follow-up commit (Action spawns execute)
+
+### Pass-back (`execute-passback`)
+
+When demo finds a code defect:
+
+1. Demo writes `## Pass-back to execute` in `demo-notes.md`
+2. Sets `stage: execute-passback`, `passback_to: execute`, `passback_reason: <summary>`
+3. Action calls `POST /v1/agents/{execute_id}/runs` (same conversation, not a new agent)
+4. On 409 `agent_busy`, re-push after the current run completes
 
 ## 6. Bugbot (step 6)
 
@@ -193,6 +218,7 @@ On any stage you can comment:
 | Next agent never starts | Confirm `stage` is `spec-ready` / `plan-ready` / etc.; push includes `workflow.state.json` |
 | Bot handoff ignored | Use API key, not cursor-bot comment |
 | Demo fails | `docker compose ps`; health curls; see `AGENTS.md` |
-| Tests fail on execute | Agent must not push until green — check Action logs |
+| Pass-back 409 agent busy | Re-push `workflow.state.json` after execute run completes |
+| Agent links show "—" in status comment | Agent clobbered state — run merge helper before state commits; see [WORKFLOW.md#state-merge](workflow/cursor-workflow/WORKFLOW.md#state-merge) |
 
 See also [WORKFLOW.md](WORKFLOW.md).
