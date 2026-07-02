@@ -2,8 +2,8 @@
   "issue": 62,
   "branch": "cursor/issue-62-harden-cursor-workflow-state-pass-back",
   "pr": 63,
-  "stage": "demo-ready",
-  "active_skill": null,
+  "stage": "create-pr-in-progress",
+  "active_skill": "create-pr",
   "active_agent_id": "bc-b6e7fb91-bd6d-4f34-9988-29bc90a0d64f",
   "agents": {
     "babysit-pr": null,
@@ -21,5 +21,5 @@
     "ci_autofix": 0,
     "total_runs": 4
   },
-  "updated_at": "2026-07-02T14:30:00Z"
+  "updated_at": "2026-07-02T15:00:00Z"
 }
