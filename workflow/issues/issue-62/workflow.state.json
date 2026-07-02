@@ -2,8 +2,8 @@
   "issue": 62,
   "branch": "cursor/issue-62-harden-cursor-workflow-state-pass-back",
   "pr": 63,
-  "stage": "spec-ready",
-  "active_skill": "review-and-spec",
+  "stage": "plan-in-progress",
+  "active_skill": "planning",
   "active_agent_id": "bc-945abe07-409b-47dd-a8b0-d3af827485a0",
   "agents": {
     "review-and-spec": null,
@@ -21,5 +21,5 @@
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-07-02T07:04:20Z"
+  "updated_at": "2026-07-02T07:05:45Z"
 }
