@@ -14,6 +14,8 @@
     "create-pr": null,
     "babysit-pr": "bc-ce79799e-7aba-4300-b9b8-6db8f247eae6"
   },
+  "passback_to": null,
+  "passback_reason": null,
   "loops": {
     "bugbot": 2,
     "ci_autofix": 0,
