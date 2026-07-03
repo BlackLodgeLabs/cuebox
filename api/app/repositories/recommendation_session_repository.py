@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.database.enums import FilmStatus
@@ -108,9 +108,8 @@ def list_history(
 
 
 def delete_by_id(db: Session, session_id: uuid.UUID) -> bool:
-    session = db.get(RecommendationSession, session_id)
-    if session is None:
-        return False
-    db.delete(session)
+    result = db.execute(
+        delete(RecommendationSession).where(RecommendationSession.id == session_id)
+    )
     db.flush()
-    return True
+    return result.rowcount > 0

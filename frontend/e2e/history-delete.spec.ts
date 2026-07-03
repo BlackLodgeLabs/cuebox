@@ -16,11 +16,11 @@ test.describe("History delete (mocked API)", () => {
     await expect(page.getByText("Delete Me Film")).toBeVisible();
     await expect(page.getByText("Keep Me Film")).toBeVisible();
 
-    const deleteCard = page
-      .locator("div")
+    await page
+      .locator(".hover-glow")
       .filter({ hasText: "Delete Me Film" })
-      .first();
-    await deleteCard.getByRole("button", { name: /remove from history/i }).click();
+      .getByRole("button", { name: /remove from history/i })
+      .click();
 
     await expect(
       page.getByRole("dialog", { name: /remove from history/i }),

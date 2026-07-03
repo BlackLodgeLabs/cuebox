@@ -134,6 +134,7 @@ def test_delete_reverses_exposure_counts(integration_client, db_session):
     response = integration_client.delete(f"/api/v1/recommendations/{session_id}")
     assert response.status_code == 204
 
+    db_session.expire_all()
     for film_id in candidate_ids:
         row = db_session.get(RecommendationExposure, film_id)
         assert row is None
@@ -166,6 +167,8 @@ def test_delete_recomputes_last_recommended_at(integration_client, db_session):
     response = integration_client.delete(f"/api/v1/recommendations/{second_session_id}")
     assert response.status_code == 204
 
+    db_session.expire_all()
+    first_session = db_session.get(RecommendationSession, first_session_id)
     exposure_after = db_session.get(RecommendationExposure, film_id)
     assert exposure_after is not None
     assert exposure_after.last_recommended_at == first_session.created_at

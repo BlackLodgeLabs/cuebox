@@ -13,11 +13,13 @@ import {
   useDeleteRecommendation,
   useRecommendation,
 } from "@/hooks/use-recommendations";
+import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export default function HistoryDetailPage() {
   const router = useRouter();
   const params = useParams<{ sessionId: string }>();
   const deleteRecommendation = useDeleteRecommendation();
+  const onDeleteError = useToastOnError();
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useRecommendation(
     params.sessionId,
@@ -29,6 +31,7 @@ export default function HistoryDetailPage() {
         setDialogOpen(false);
         router.push("/history");
       },
+      onError: onDeleteError,
     });
   };
 

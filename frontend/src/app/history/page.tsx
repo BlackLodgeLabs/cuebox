@@ -27,11 +27,13 @@ import {
   useDeleteRecommendation,
   useRecommendationHistory,
 } from "@/hooks/use-recommendations";
+import { useToastOnError } from "@/hooks/use-toast-on-error";
 import type { WatchStatusFilter } from "@/types/api";
 
 export default function HistoryPage() {
   const router = useRouter();
   const deleteRecommendation = useDeleteRecommendation();
+  const onDeleteError = useToastOnError();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -69,6 +71,7 @@ export default function HistoryPage() {
       onSuccess: () => {
         setDeletingSessionId(null);
       },
+      onError: onDeleteError,
     });
   };
 

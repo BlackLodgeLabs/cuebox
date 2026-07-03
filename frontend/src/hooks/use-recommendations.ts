@@ -8,7 +8,6 @@ import {
   deleteRecommendation,
 } from "@/lib/api-client";
 import type { CreateRecommendationRequest, HistoryQueryParams } from "@/types/api";
-import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useCreateRecommendation() {
   const queryClient = useQueryClient();
@@ -38,7 +37,6 @@ export function useRecommendationHistory(params?: HistoryQueryParams) {
 
 export function useDeleteRecommendation() {
   const queryClient = useQueryClient();
-  const onError = useToastOnError();
 
   return useMutation({
     mutationFn: (sessionId: string) => deleteRecommendation(sessionId),
@@ -46,6 +44,5 @@ export function useDeleteRecommendation() {
       void queryClient.invalidateQueries({ queryKey: ["recommendations", "history"] });
       queryClient.removeQueries({ queryKey: ["recommendations", sessionId] });
     },
-    onError,
   });
 }
