@@ -3,18 +3,18 @@
   "branch": "cursor/issue-35-view-returns-to-final-question",
   "stage": "execute-ready",
   "active_skill": "execute",
-  "updated_at": "2026-07-03T08:33:30Z",
+  "updated_at": "2026-07-03T08:36:07Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
-    "demo": null,
+    "demo": "bc-712d0ed5-bed5-4064-9057-f68fd3d25af6",
     "execute": "bc-08868155-6e75-4496-b879-edc9b3137647",
     "planning": "bc-0c532260-9a16-4d49-a251-847b36613032",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 65,
-  "active_agent_id": "bc-08868155-6e75-4496-b879-edc9b3137647",
+  "active_agent_id": "bc-712d0ed5-bed5-4064-9057-f68fd3d25af6",
   "passback_to": null,
   "passback_reason": null,
   "loops": {
