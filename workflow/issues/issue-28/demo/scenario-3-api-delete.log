@@ -1,54 +1,7 @@
-=== Scenario 3: API delete ===
-Session ID: 2ccf6f4c-0542-4934-bc01-098a3e758ccd
+=== Scenario 3: API delete and exposure reversal ===
+Date: 2026-07-03T15:00:57Z
 
 --- List before delete ---
-{
-    "data": [
-        {
-            "session_id": "2ccf6f4c-0542-4934-bc01-098a3e758ccd",
-            "winner_film_id": "2a2fa40e-bf37-4382-b77a-51a5585244a2",
-            "winner_title": "Ready Film 4",
-            "winner_year": 1994,
-            "winner_poster_url": "https://image.tmdb.org/t/p/w500/seed-poster-4.jpg",
-            "winner_watch_status": "active",
-            "preference_summary": "Horror slow burn pacing seeking disturbed outcomes atmospheric vibes.",
-            "created_at": "2026-07-03T15:04:14.629927Z"
-        },
-        {
-            "session_id": "c618464a-c80a-4bbf-8dee-db0ed68f3abb",
-            "winner_film_id": "b3714da2-1efd-4fc5-9768-12cfa12abcd4",
-            "winner_title": "The Matrix",
-            "winner_year": 1999,
-            "winner_poster_url": "https://image.tmdb.org/t/p/w500/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg",
-            "winner_watch_status": "active",
-            "preference_summary": "Open to any film that fits the current watchlist mood.",
-            "created_at": "2026-06-20T21:45:28.718424Z"
-        }
-    ],
-    "pagination": {
-        "total": 2,
-        "limit": 5,
-        "offset": 0,
-        "has_more": false
-    }
-}
-
-pagination.total before: 2
-
---- DELETE ---
-DELETE status: 204
-
---- Detail after delete (expect 404) ---
-GET detail status: 404
-{
-    "error": {
-        "code": "NOT_FOUND",
-        "message": "Recommendation session not found",
-        "details": null
-    }
-}
-
---- List after delete ---
 {
     "data": [
         {
@@ -70,6 +23,25 @@ GET detail status: 404
     }
 }
 
-pagination.total after: 1
+session_id to delete: c618464a-c80a-4bbf-8dee-db0ed68f3abb
+pagination.total before: 1
+
+--- DELETE request ---
+DELETE /api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb => HTTP 204
+
+--- Detail after delete ---
+GET /api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb => HTTP 404non-2xx
+
+--- List after delete ---
+{
+    "data": [],
+    "pagination": {
+        "total": 0,
+        "limit": 5,
+        "offset": 0,
+        "has_more": false
+    }
+}
 
 PASS: session excluded from list
+pagination.total after: 0
