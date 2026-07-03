@@ -1,0 +1,37 @@
+# Scenario 3: API delete and exposure reversal
+# Date: 2026-07-03
+# Commit: 0b4eed2e3154378722b8d69f72b4ec2f8999252b
+
+## List before delete
+$ curl -sf "http://localhost:3000/api/v1/recommendations?limit=5"
+{
+  "data": [
+    {
+      "session_id": "c618464a-c80a-4bbf-8dee-db0ed68f3abb",
+      "winner_title": "The Matrix",
+      "winner_year": 1999
+    }
+  ],
+  "pagination": { "total": 1, "limit": 5, "offset": 0, "has_more": false }
+}
+
+## DELETE session
+$ curl -sf -o /dev/null -w "%{http_code}\n" -X DELETE \
+  "http://localhost:3000/api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb"
+204
+
+## Detail after delete (expect 404)
+$ curl -s -w "\nHTTP %{http_code}\n" \
+  "http://localhost:3000/api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb"
+{"error":{"code":"NOT_FOUND","message":"Recommendation session not found"}}
+HTTP 404
+
+## List after delete
+$ curl -sf "http://localhost:3000/api/v1/recommendations?limit=5"
+{
+  "data": [],
+  "pagination": { "total": 0, "limit": 5, "offset": 0, "has_more": false }
+}
+
+## Assertion
+Session c618464a-c80a-4bbf-8dee-db0ed68f3abb excluded from list — PASS
