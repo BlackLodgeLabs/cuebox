@@ -43,7 +43,7 @@ Demo run on workflow-only VM (2026-07-02, commit `cd4e7dc`). No Docker stack req
 | 4 — Status comment pass-back rendering | **PASS** — Preview shows Pass-back target and Pass-back reason rows |
 | 5 — Skill and doc cross-check | **PASS** — All six skills reference merge helper; `WORKFLOW.md` mentions new stages |
 
-**Workflow regression:** `verify-workflow-paths.sh` exit 0 at `cd4e7dc`
+**Workflow regression:** `verify-workflow-paths.sh` exit 0 at `33703cf`
 
 ### Scenario 1 — Workflow regression gates
 
@@ -126,7 +126,7 @@ New handoff behavior (pass-back runs, `changes-requested` draft conversion) load
 | **Medium** | `handle_changes_requested` incremented `loops.total_runs` only in `/tmp` — never persisted to branch | New `cursor-workflow-record-loops-on-branch.sh`; handoff calls it before status sync |
 | **Low** | Pass-back `409 agent_busy` leaves stage unchanged; re-push with same `execute-passback` stage is skipped by unchanged-stage guard | Documented in SETUP.md; operator must bump `updated_at` or clear/re-set stage to retry |
 
-**Workflow regression:** `verify-workflow-paths.sh` exit 0 and `test-cursor-workflow-merge-state.sh` exit 0 after fixes (pending commit SHA).
+**Workflow regression:** `verify-workflow-paths.sh` exit 0 and `test-cursor-workflow-merge-state.sh` exit 0 at `33703cf`.
 
 ## Checklist
 
