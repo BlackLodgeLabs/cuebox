@@ -64,6 +64,8 @@ API log: `workflow/issues/issue-28/demo/scenario-3-api-delete.log` — `DELETE` 
 
 ![Delete error toast](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-4-delete-error-toast.png)
 
+With the API container stopped, destructive toast **Request failed** / **API request failed: 500 Internal Server Error** appeared; the history card remained.
+
 ## How to Test
 
 ### Checkout and stack
