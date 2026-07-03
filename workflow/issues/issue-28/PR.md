@@ -18,20 +18,22 @@ Exposure reversal mirrors the existing `increment_exposure` path in `recommendat
 
 ## Changes Proposed
 
+Key commits: `e62f790` (feature), `1dbfb8e` (duplicate import fix), `bb479da` (SQL session delete, toast wiring, test fixes).
+
 * **Exposure repository** (`api/app/repositories/recommendation_exposure_repository.py`): Add `decrement_exposure` and `recompute_last_recommended_at` helpers; floor counts at 0 and remove exposure rows when both counts reach 0.
 * **Session repository** (`api/app/repositories/recommendation_session_repository.py`): Add `delete_by_id` using SQL `DELETE` for reliable cascade behavior.
 * **Recommendation service** (`api/app/services/recommendation_service.py`): Add `delete_session` — load session + candidates, reverse exposure per film, recompute `last_recommended_at`, delete session, commit in one transaction.
 * **API route** (`api/app/routers/v1/recommendations.py`): `DELETE /recommendations/{session_id}` → `204 No Content`; unknown session → `404 NOT_FOUND`.
 * **Frontend API + hook** (`frontend/src/lib/api-client.ts`, `frontend/src/hooks/use-recommendations.ts`): `deleteRecommendation` client and `useDeleteRecommendation` mutation with React Query invalidation for `["recommendations", "history"]` and removal of `["recommendations", sessionId]`.
 * **Shared dialog** (`frontend/src/components/delete-history-dialog.tsx`): Confirmation copy *"Are you sure you want to remove this from your history? This cannot be undone."*
-* **History list** (`frontend/src/app/history/page.tsx`): Trash control on each card with `stopPropagation`; error toast on failure.
+* **History list** (`frontend/src/app/history/page.tsx`): Trash control on each card with `stopPropagation`; error toast wired on failure.
 * **History detail** (`frontend/src/app/history/[sessionId]/page.tsx`): **Remove from history** button; redirect to `/history` on success; error toast on failure.
 * **Tests**: Integration tests in `api/tests/test_integration_recommendation_history.py` (happy path, 404, cascade, exposure reversal, `last_recommended_at` recompute, list exclusion, dev routes 404, diversity scoring parity); hook unit test in `frontend/src/hooks/use-recommendations.test.tsx`; mocked Playwright E2E in `frontend/e2e/history-delete.spec.ts` with helpers in `frontend/e2e/helpers/history-delete-mocks.ts`.
 * **Docs** (`documents/api-contracts.md` §8.2, `documents/PRD.md` §17): Document DELETE endpoint and clarify user-initiated delete vs no automatic pruning.
 
 ## Scenario Results
 
-Demo run on cloud VM (2026-07-03, implementation at `bb479da`, demo at `eaa7db4`). Full Docker stack (`postgres`, `api`, `frontend`, `backup` all Up). Part 2 seed plus additional recommendation sessions for three history cards (*Ready Film 3*, *Ready Film 4*, *The Matrix*). See `workflow/issues/issue-28/demo/demo-notes.md`.
+Demo run on cloud VM (2026-07-03; implementation at `bb479da`, demo at `eaa7db4`). Full Docker stack (`postgres`, `api`, `frontend`, `backup` all Up). Part 2 seed plus additional recommendation sessions for three history cards (*Ready Film 3*, *Ready Film 4*, *The Matrix*). See `workflow/issues/issue-28/demo/demo-notes.md`.
 
 | # | Scenario | Result |
 |---|----------|--------|
@@ -41,6 +43,8 @@ Demo run on cloud VM (2026-07-03, implementation at `bb479da`, demo at `eaa7db4`
 | 4 — Failed delete shows error (optional) | **PASS** — Destructive error toast on API failure; card remains in list |
 
 ### Scenario 1 — Delete from history list
+
+Opened `/history` with three cards. Clicked **Remove from history** on **Ready Film 3**; navigation to detail did not occur. **Cancel** preserved the card; **Remove** deleted it without a full page reload.
 
 ![History list before delete](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-1-history-list-before.png)
 
@@ -52,15 +56,21 @@ Demo run on cloud VM (2026-07-03, implementation at `bb479da`, demo at `eaa7db4`
 
 ### Scenario 2 — Delete from history detail
 
+Opened **Ready Film 4** detail; confirmed **Remove from history** → redirected to `/history` with entry gone.
+
 ![Detail page before delete](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-2-detail-before.png)
 
 ![History after redirect](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-2-history-after-redirect.png)
 
 ### Scenario 3 — API delete
 
-API log: `workflow/issues/issue-28/demo/scenario-3-api-delete.log` — `DELETE` returned `204`, detail returned `404 NOT_FOUND`, list `pagination.total` went from 1 to 0.
+`DELETE /api/v1/recommendations/{session_id}` returned **204**; detail `GET` returned **404** with `NOT_FOUND`; list `pagination.total` went from 1 to 0.
+
+[API log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-3-api-delete.log)
 
 ### Scenario 4 — Failed delete (optional)
+
+Stopped API container, attempted delete from history list. Destructive toast **Request failed** / **API request failed: 500 Internal Server Error** appeared; card remained. API restarted afterward.
 
 ![Delete error toast](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-4-delete-error-toast.png)
 
