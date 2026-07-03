@@ -3,7 +3,7 @@
   "branch": "cursor/issue-35-view-returns-to-final-question",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-03T08:22:00Z",
+  "updated_at": "2026-07-03T08:21:16Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 65,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
