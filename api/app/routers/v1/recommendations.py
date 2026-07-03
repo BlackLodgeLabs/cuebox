@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import validation_error
@@ -37,6 +37,16 @@ def get_recommendation_session(
     recommendation_service: RecommendationService = Depends(get_recommendation_service),
 ) -> RecommendationSessionDetail:
     return recommendation_service.get_session(db, session_id)
+
+
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_recommendation_session(
+    session_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    recommendation_service: RecommendationService = Depends(get_recommendation_service),
+) -> Response:
+    recommendation_service.delete_session(db, session_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("", response_model=RecommendationHistoryListResponse)

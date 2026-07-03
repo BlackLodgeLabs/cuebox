@@ -678,7 +678,7 @@ User can review questionnaire answers and additional notes via a modal, drawer, 
 
 ## 17. Recommendation History
 
-History is retained indefinitely. No automatic pruning.
+History is retained indefinitely. No automatic pruning. Users may manually remove individual history entries; removed sessions are permanently deleted and do not affect future recommendation diversity scoring.
 
 ---
 

@@ -158,3 +158,31 @@ def integration_client(integration_env, monkeypatch, mock_profile):
 
     with TestClient(create_app()) as client:
         yield client
+
+
+DEV_MODE_CONFIG_YAML = INTEGRATION_CONFIG_YAML.replace(
+    "developer_mode: false",
+    "developer_mode: true",
+)
+
+
+@pytest.fixture
+def dev_mode_client(integration_env, monkeypatch):
+    integration_env.write_text(DEV_MODE_CONFIG_YAML, encoding="utf-8")
+    get_settings.cache_clear()
+
+    original_startup = ProviderService.startup
+
+    async def patched_startup(self, http_client=None):
+        return await original_startup(
+            self,
+            http_client=http_client or create_mock_http_client("default"),
+        )
+
+    monkeypatch.setattr(ProviderService, "startup", patched_startup)
+
+    with TestClient(create_app()) as client:
+        yield client
+
+    get_settings.cache_clear()
+    integration_env.write_text(INTEGRATION_CONFIG_YAML, encoding="utf-8")

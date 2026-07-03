@@ -1066,6 +1066,28 @@ GET /recommendations
 
 -----
 
+### 8.2 Delete Recommendation Session
+
+Permanently remove a single recommendation history entry. Before the session row is deleted, exposure counters (`recommendation_exposure`) are decremented for every shortlisted candidate so future diversity scoring treats those films as if the run never happened. Child `recommendation_candidates` and `recommendation_results` rows are removed via `ON DELETE CASCADE`.
+
+```
+DELETE /recommendations/{session_id}
+```
+
+#### Success `204 No Content`
+
+Empty body.
+
+#### Errors
+
+|Code        |HTTP|Trigger              |
+|------------|----|---------------------|
+|`NOT_FOUND` |404 |Unknown `session_id` |
+
+**Idempotency:** A second `DELETE` for the same `session_id` returns `404` after the first delete succeeds.
+
+-----
+
 ## 9. Developer Mode
 
 All Developer Mode endpoints are prefixed with `/dev`. They return the same recommendation data with additional internal observability fields.
