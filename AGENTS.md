@@ -156,7 +156,7 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 
 ## Cursor issue workflow (multi-agent)
 
-GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md).
+GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md). **State merge / pass-back:** [workflow/cursor-workflow/WORKFLOW.md#state-merge](workflow/cursor-workflow/WORKFLOW.md#state-merge).
 
 | You do | Skill |
 |--------|-------|

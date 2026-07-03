@@ -19,6 +19,10 @@ Keep the issue PR merge-ready: respond to Bugbot, CI failures, and review thread
 
 ## Start — update state
 
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
 ```json
 { "stage": "babysit-in-progress", "active_skill": "babysit-pr", "updated_at": "<ISO8601>" }
 ```
@@ -77,10 +81,11 @@ When **all** true:
 - No merge conflicts
 - Demo artifacts present on branch (`workflow/issues/issue-{NNN}/demo/`)
 - `workflow/issues/issue-{NNN}/PR.md` committed (PR body synced by Actions)
+- **Gate evidence** recorded in `PR.md` or `demo/demo-notes.md`, e.g. `Workflow regression: verify-workflow-paths.sh exit 0 at <short-sha>` (workflow-only issues) or `Phase 8 gate exit 0 at <short-sha>` (feature issues)
 
 Then:
 
-1. `stage`: `complete`
+1. Run merge helper, then set `stage`: `complete`
 2. **Convert draft PR → ready for review** (not merged)
 3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions the issue author, and assigns the PR (cloud agents cannot post issue comments)
 

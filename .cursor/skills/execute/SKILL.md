@@ -28,11 +28,23 @@ Implement `workflow/issues/issue-{NNN}/PLAN.md`, verify with tests, update docs,
 
 ## Start — update state
 
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
 Commit and push early:
 
 ```json
 { "stage": "execute-in-progress", "active_skill": "execute", "updated_at": "<ISO8601>" }
 ```
+
+## Pass-back resume
+
+When resuming after demo pass-back (`stage` was `execute-passback`):
+
+1. Read `workflow/issues/issue-{NNN}/demo/demo-notes.md` § **Pass-back to execute**
+2. Fix the code defect; run tests and gates
+3. Run merge helper, then set `execute-ready` and **clear** `passback_to` / `passback_reason` to `null`
 
 ## Read first
 
@@ -73,9 +85,15 @@ After code is green, check the plan's **Documentation updates** section:
 
 ## Finalize state
 
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
 ```json
 {
   "stage": "execute-ready",
+  "passback_to": null,
+  "passback_reason": null,
   "pr": <number from workflow.state.json — preserve>,
   "loops": { "bugbot": <preserve>, "ci_autofix": <preserve>, "total_runs": <increment> },
   "updated_at": "<ISO8601>"

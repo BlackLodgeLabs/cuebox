@@ -3,6 +3,19 @@
   "branch": "cursor/issue-45-set-auto-database-back-up-daily",
   "pr": 50,
   "stage": "complete",
+  "active_skill": null,
+  "active_agent_id": null,
+  "agents": {
+    "review-and-spec": null,
+    "review-and-spec-continued": null,
+    "planning": null,
+    "execute": null,
+    "demo": null,
+    "create-pr": null,
+    "babysit-pr": null
+  },
+  "passback_to": null,
+  "passback_reason": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,

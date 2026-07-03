@@ -45,7 +45,34 @@ Copy [templates/demo-spec.md](templates/demo-spec.md) and [templates/workflow.st
 
 Handoff stages (trigger next agent): `spec-ready`, `plan-ready`, `execute-ready`, `demo-ready`, `create-pr-ready`.
 
+Pass-back handoff: `execute-passback` (with `passback_to` set) — continues the same execute agent via `POST /v1/agents/{id}/runs`.
+
+Re-open handoff: `changes-requested` → `execute-ready` (two-step: first push sets `changes-requested`, follow-up push sets `execute-ready`).
+
+Progress stages: `spec-in-progress`, `plan-in-progress`, `execute-in-progress`, `demo-in-progress`, `create-pr-in-progress`, `babysit-in-progress`.
+
 Terminal stages: `complete`, `blocked`, `spec-needs-info`.
+
+### In-progress commit rule
+
+Every skill must commit the matching `*-in-progress` stage **before** substantive work (spec file, plan, code, demo artifacts, PR.md, babysit fixes). Run the merge helper first (see below).
+
+## State merge
+
+Before committing `workflow.state.json`, always run:
+
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
+This fetches `origin/<branch>` and deep-merges with local edits:
+
+- **Local wins:** `stage`, `active_skill`, `updated_at`
+- **Remote wins unless local non-null override:** `agents` (per key), `pr`, `active_agent_id`, `passback_to`, `passback_reason`
+- **`loops`:** per-counter **max** of remote and local (counters only increment; preserves Action-recorded totals when agents commit stale loop values)
+- **Always from local:** `issue`, `branch`
+
+Prevents agents from clobbering `agents.*`, `pr`, and loop counters recorded by GitHub Actions.
 
 ### Agent conversation links
 
@@ -91,6 +118,8 @@ Create these on the repository. **Agents do not set them reliably** — `.github
 | `cursor:create-pr-in-progress` | Create PR agent running |
 | `cursor:create-pr-ready` | PR.md committed; babysit queued |
 | `cursor:babysit-in-progress` | Babysit agent running |
+| `cursor:changes-requested` | Post-complete scope added; PR returned to draft |
+| `cursor:execute-passback` | Demo found code defect; pass-back to execute agent |
 | `cursor:complete` | Babysit finished; ready for your review |
 | `cursor:blocked` | Loop limit or unrecoverable failure |
 
@@ -130,9 +159,14 @@ Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, p
 4. **Handoff** (spawn next cloud agent) **only when**:
    - `workflow.state.json` changed in this push, **and**
    - `stage` changed to a handoff value: `spec-ready`, `plan-ready`, `execute-ready`, `demo-ready`, or `create-pr-ready`
+   - **Exception:** `execute-ready` from `changes-requested` spawns **execute** (not demo)
+   - **Pass-back:** `execute-passback` with `passback_to` set calls `POST /v1/agents/{id}/runs` (not `POST /v1/agents`)
+   - **Re-open:** `changes-requested` converts PR to draft and increments `loops.total_runs` — does **not** spawn an agent until a follow-up push sets `execute-ready`
 5. **Update draft PR body** when `workflow/issues/issue-{NNN}/PR.md` changes in the push (`scripts/cursor-workflow-update-pr-body.sh`)
 
-Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` with the next skill prompt. If the API key is missing, it falls back to `CURSOR_HANDOFF_GITHUB_TOKEN` posting an `@cursoragent` comment.
+Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` with the next skill prompt. Pass-back uses `POST https://api.cursor.com/v1/agents/{id}/runs` to continue the same agent conversation. If the API key is missing, it falls back to `CURSOR_HANDOFF_GITHUB_TOKEN` posting an `@cursoragent` comment.
+
+**Deployment note:** Workflow helper scripts are loaded from `main` in Actions. New pass-back and `changes-requested` behavior does not take effect until this work merges to `main`.
 
 ### Stage-specific handoff behavior
 
@@ -143,10 +177,11 @@ Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` wi
 | `execute-ready` | Spawn **demo** agent |
 | `demo-ready` | Spawn **create-pr** agent |
 | `create-pr-ready` | Spawn **babysit-pr** agent |
+| `execute-ready` (from `changes-requested`) | Spawn **execute** agent (post-complete re-open) |
 
-Progress stages (`*-in-progress`) and terminal stages (`complete`, `blocked`, `spec-needs-info`) sync labels only — no new agent is spawned.
+Progress stages (`*-in-progress`), pass-back (`execute-passback`), re-open (`changes-requested`), and terminal stages (`complete`, `blocked`, `spec-needs-info`) sync labels only — no forward agent spawn (except pass-back runs API).
 
-When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action sets the linked draft PR description from that file (requires `"pr"` in state).
+When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action sets the linked draft PR description from that file (requires `"pr"` in state). Demo screenshots in `PR.md` must use absolute `raw.githubusercontent.com` URLs — relative `demo/...` paths break when rendered on the PR page (see create-pr skill).
 
 When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` also @mentions the issue author (once) and assigns the linked PR to them. Babysit agents do not post issue comments.
 

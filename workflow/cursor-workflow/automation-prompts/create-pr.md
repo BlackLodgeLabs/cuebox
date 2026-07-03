@@ -11,5 +11,6 @@ Read workflow.state.json. If stage is demo-ready:
 - Use the create-pr skill for that issue number
 - Read SPEC.md, PLAN.md, demo-notes.md, and git log on the branch
 - Fill workflow/cursor-workflow/templates/PR.md structure; save as workflow/issues/issue-NNN/PR.md
+- Demo screenshots in Scenario Results must use absolute `raw.githubusercontent.com` URLs (not relative `demo/...` paths) — see create-pr skill
 - Set stage to create-pr-ready and push
 ```

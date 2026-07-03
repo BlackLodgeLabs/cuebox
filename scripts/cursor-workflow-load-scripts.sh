@@ -19,9 +19,19 @@ for script in \
   cursor-workflow-ensure-draft-pr.sh \
   cursor-workflow-record-pr-on-branch.sh \
   cursor-workflow-record-agent-on-branch.sh \
+  cursor-workflow-record-loops-on-branch.sh \
   cursor-workflow-discover-agents.sh \
-  cursor-workflow-notify-complete.sh; do
-  git show "${REF}:scripts/${script}" > "${DEST}/${script}"
+  cursor-workflow-notify-complete.sh \
+  cursor-workflow-update-pr-body.sh \
+  cursor-workflow-merge-state.sh; do
+  if git cat-file -e "${REF}:scripts/${script}" 2>/dev/null; then
+    git show "${REF}:scripts/${script}" > "${DEST}/${script}"
+  elif git cat-file -e "HEAD:scripts/${script}" 2>/dev/null; then
+    git show "HEAD:scripts/${script}" > "${DEST}/${script}"
+  else
+    echo "Missing workflow script: scripts/${script} (not on ${REF} or HEAD)" >&2
+    exit 1
+  fi
   chmod +x "${DEST}/${script}"
 done
 
