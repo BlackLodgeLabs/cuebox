@@ -61,7 +61,15 @@ run_merge \
 assert_eq "case4 passback_to" "execute" "$(jq -r '.passback_to' "$STATE")"
 assert_eq "case4 passback_reason" "fix pagination" "$(jq -r '.passback_reason' "$STATE")"
 
-# Case 5: invalid JSON — exit non-zero
+# Case 6: local loops stale — remote higher total_runs preserved via max merge
+STATE="$TMP/case6.json"
+run_merge \
+  '{"issue":6,"branch":"cursor/issue-6-test","stage":"babysit-in-progress","loops":{"bugbot":0,"ci_autofix":0,"total_runs":3}}' \
+  '{"issue":6,"branch":"cursor/issue-6-test","loops":{"bugbot":1,"ci_autofix":0,"total_runs":5}}' \
+  "$STATE"
+assert_eq "case6 loops.total_runs" "5" "$(jq -r '.loops.total_runs' "$STATE")"
+assert_eq "case6 loops.bugbot" "1" "$(jq -r '.loops.bugbot' "$STATE")"
+
 INVALID="$TMP/invalid.json"
 echo 'not json' > "$INVALID"
 if MERGE_STATE_REMOTE_JSON='{}' bash "$MERGE" "$INVALID" 2>/dev/null; then

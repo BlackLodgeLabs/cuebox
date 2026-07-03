@@ -68,7 +68,8 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 This fetches `origin/<branch>` and deep-merges with local edits:
 
 - **Local wins:** `stage`, `active_skill`, `updated_at`
-- **Remote wins unless local non-null override:** `agents` (per key), `pr`, `loops`, `active_agent_id`, `passback_to`, `passback_reason`
+- **Remote wins unless local non-null override:** `agents` (per key), `pr`, `active_agent_id`, `passback_to`, `passback_reason`
+- **`loops`:** per-counter **max** of remote and local (counters only increment; preserves Action-recorded totals when agents commit stale loop values)
 - **Always from local:** `issue`, `branch`
 
 Prevents agents from clobbering `agents.*`, `pr`, and loop counters recorded by GitHub Actions.

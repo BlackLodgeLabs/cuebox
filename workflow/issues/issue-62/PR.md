@@ -117,6 +117,17 @@ New handoff behavior (pass-back runs, `changes-requested` draft conversion) load
 * **Demo Scenario 4:** Used local `render-status-preview.sh` dry-run because `GH_TOKEN` was unavailable on the cloud VM; output matches expected status comment markdown.
 * **Gate evidence for babysit:** Babysit stage should append `Workflow regression: verify-workflow-paths.sh exit 0 at <short-sha>` before setting `complete`.
 
+## Bugbot review (2026-07-03)
+
+| Severity | Finding | Resolution |
+|----------|---------|------------|
+| **High** | Handoff Action loads `cursor-workflow-merge-state.sh` from `origin/main` only; script does not exist until this PR merges → CI `handoff` job fails on every push | Script loader now falls back to `HEAD` when a script is missing on `main` |
+| **Medium** | `pick_local_or_remote` for `loops` let stale local loop counters clobber Action-incremented remote values (agents always commit a full `loops` object) | `merge_loops` now takes per-counter **max** of remote and local |
+| **Medium** | `handle_changes_requested` incremented `loops.total_runs` only in `/tmp` — never persisted to branch | New `cursor-workflow-record-loops-on-branch.sh`; handoff calls it before status sync |
+| **Low** | Pass-back `409 agent_busy` leaves stage unchanged; re-push with same `execute-passback` stage is skipped by unchanged-stage guard | Documented in SETUP.md; operator must bump `updated_at` or clear/re-set stage to retry |
+
+**Workflow regression:** `verify-workflow-paths.sh` exit 0 and `test-cursor-workflow-merge-state.sh` exit 0 after fixes (pending commit SHA).
+
 ## Checklist
 
 - [ ] Acceptance criteria in `workflow/issues/issue-62/SPEC.md` met

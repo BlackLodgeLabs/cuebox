@@ -2,8 +2,8 @@
   "issue": 62,
   "branch": "cursor/issue-62-harden-cursor-workflow-state-pass-back",
   "pr": 63,
-  "stage": "create-pr-ready",
-  "active_skill": null,
+  "stage": "babysit-in-progress",
+  "active_skill": "babysit-pr",
   "active_agent_id": "bc-b6e7fb91-bd6d-4f34-9988-29bc90a0d64f",
   "agents": {
     "babysit-pr": null,
@@ -17,9 +17,9 @@
   "passback_to": null,
   "passback_reason": null,
   "loops": {
-    "bugbot": 0,
+    "bugbot": 1,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   },
-  "updated_at": "2026-07-02T15:05:00Z"
+  "updated_at": "2026-07-03T06:55:00Z"
 }

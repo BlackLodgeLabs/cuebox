@@ -60,6 +60,12 @@ MERGED=$(jq -n \
   def pick_local_or_remote($field; $r; $l):
     if ($l[$field] // null) != null then $l[$field] else ($r[$field] // null) end;
 
+  def merge_loops($r; $l):
+    (($r // {}) + ($l // {}) | keys | unique) as $keys |
+    ($r // {}) as $rl |
+    ($l // {}) as $ll |
+    reduce $keys[] as $k ({}; .[$k] = ([($rl[$k] // 0), ($ll[$k] // 0)] | max));
+
   $remote as $r | $local as $l |
   ($r // {}) as $base |
   $base
@@ -73,7 +79,7 @@ MERGED=$(jq -n \
   | .active_agent_id = pick_local_or_remote("active_agent_id"; $base; $l)
   | .passback_to = pick_local_or_remote("passback_to"; $base; $l)
   | .passback_reason = pick_local_or_remote("passback_reason"; $base; $l)
-  | .loops = pick_local_or_remote("loops"; $base; $l)
+  | .loops = merge_loops($base.loops; $l.loops)
   ')
 
 printf '%s\n' "$MERGED" > "$STATE_FILE"

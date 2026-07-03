@@ -46,8 +46,15 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh; do
-            git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-record-loops-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh; do
+            if git cat-file -e "origin/main:scripts/${script}" 2>/dev/null; then
+              git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+            elif git cat-file -e "HEAD:scripts/${script}" 2>/dev/null; then
+              git show "HEAD:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+            else
+              echo "::error::Missing workflow script: scripts/${script}"
+              exit 1
+            fi
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
           echo "SCRIPTS_DIR=/tmp/cursor-workflow-scripts" >> "$GITHUB_ENV"
@@ -194,8 +201,12 @@ jobs:
                 echo "::warning::Could not convert PR #${pr} to draft"
               echo "Converted PR #${pr} to draft for changes-requested"
             fi
-            jq '.loops.total_runs = ((.loops.total_runs // 0) + 1) | .updated_at = (now | strftime("%Y-%m-%dT%H:%M:%SZ"))' \
-              "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
+            "$WF/cursor-workflow-record-loops-on-branch.sh" "$state_file" "$branch" || \
+              echo "::warning::Could not persist loops.total_runs increment on branch"
+            git fetch origin "$branch" --quiet 2>/dev/null || true
+            if git cat-file -e "origin/${branch}:${STATE_FILE}" 2>/dev/null; then
+              git show "origin/${branch}:${STATE_FILE}" > "$state_file"
+            fi
             "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
             echo "Handled changes-requested for issue #${issue} (no agent spawned)"
           }
@@ -365,8 +376,15 @@ jobs:
           set -euo pipefail
           git fetch origin main
           mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh; do
-            git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-record-loops-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh; do
+            if git cat-file -e "origin/main:scripts/${script}" 2>/dev/null; then
+              git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+            elif git cat-file -e "HEAD:scripts/${script}" 2>/dev/null; then
+              git show "HEAD:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
+            else
+              echo "::error::Missing workflow script: scripts/${script}"
+              exit 1
+            fi
             chmod +x "/tmp/cursor-workflow-scripts/${script}"
           done
           echo "SCRIPTS_DIR=/tmp/cursor-workflow-scripts" >> "$GITHUB_ENV"
