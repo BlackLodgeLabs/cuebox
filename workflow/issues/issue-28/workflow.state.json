@@ -1,9 +1,9 @@
 {
   "issue": 28,
   "branch": "cursor/issue-28-hard-delete-past-recommendations",
-  "stage": "execute-ready",
-  "active_skill": "execute",
-  "updated_at": "2026-07-03T14:52:40Z",
+  "stage": "demo-in-progress",
+  "active_skill": "demo",
+  "updated_at": "2026-07-03T14:57:30Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
