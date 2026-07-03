@@ -1,9 +1,9 @@
 {
   "issue": 35,
   "branch": "cursor/issue-35-view-returns-to-final-question",
-  "stage": "create-pr-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-03T08:47:29Z",
+  "stage": "complete",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-03T08:52:30Z",
   "agents": {
     "babysit-pr": "bc-fbef1bb5-d2e9-463f-92a1-e3004f97e4fa",
     "create-pr": "bc-a41606e9-b4e4-4219-8009-47dd29e01e04",
@@ -20,6 +20,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   }
 }

@@ -62,3 +62,7 @@ Rapid double-click on **Get recommendation** after completing questionnaire.
 - [x] `scenario-2-single-session.png`
 - [x] `demo-notes.md`
 - [x] No secrets in images or logs
+
+## Gate evidence
+
+- Phase 6 gate: `bash scripts/verify-phase6-gates.sh` exit 0 at `dd777a5` (2026-07-03, babysit-pr)

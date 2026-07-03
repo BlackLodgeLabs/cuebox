@@ -89,9 +89,13 @@ curl -sf http://localhost:3000/api/v1/health | python3 -m json.tool
 
 ## Checklist
 
-- [ ] Acceptance criteria in `workflow/issues/issue-35/SPEC.md` met
-- [ ] `cd frontend && npx tsc --noEmit` passes
-- [ ] `cd frontend && npm run test:unit` passes (including `page.test.tsx`)
-- [ ] `bash scripts/verify-phase6-gates.sh` passes
-- [ ] Demo screenshots reviewed (no secrets in artifacts)
-- [ ] CI green on PR #65
+- [x] Acceptance criteria in `workflow/issues/issue-35/SPEC.md` met
+- [x] `cd frontend && npx tsc --noEmit` passes
+- [x] `cd frontend && npm run test:unit` passes (including `page.test.tsx`)
+- [x] `bash scripts/verify-phase6-gates.sh` passes
+- [x] Demo screenshots reviewed (no secrets in artifacts)
+- [x] CI green on PR #65
+
+## Gate evidence
+
+- Phase 6 gate: `bash scripts/verify-phase6-gates.sh` exit 0 at `dd777a5` (2026-07-03, babysit-pr)
