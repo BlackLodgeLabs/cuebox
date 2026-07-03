@@ -1,37 +1,75 @@
-# Scenario 3: API delete and exposure reversal
-# Date: 2026-07-03
-# Commit: 0b4eed2e3154378722b8d69f72b4ec2f8999252b
+=== Scenario 3: API delete ===
+Session ID: 2ccf6f4c-0542-4934-bc01-098a3e758ccd
 
-## List before delete
-$ curl -sf "http://localhost:3000/api/v1/recommendations?limit=5"
+--- List before delete ---
 {
-  "data": [
-    {
-      "session_id": "c618464a-c80a-4bbf-8dee-db0ed68f3abb",
-      "winner_title": "The Matrix",
-      "winner_year": 1999
+    "data": [
+        {
+            "session_id": "2ccf6f4c-0542-4934-bc01-098a3e758ccd",
+            "winner_film_id": "2a2fa40e-bf37-4382-b77a-51a5585244a2",
+            "winner_title": "Ready Film 4",
+            "winner_year": 1994,
+            "winner_poster_url": "https://image.tmdb.org/t/p/w500/seed-poster-4.jpg",
+            "winner_watch_status": "active",
+            "preference_summary": "Horror slow burn pacing seeking disturbed outcomes atmospheric vibes.",
+            "created_at": "2026-07-03T15:04:14.629927Z"
+        },
+        {
+            "session_id": "c618464a-c80a-4bbf-8dee-db0ed68f3abb",
+            "winner_film_id": "b3714da2-1efd-4fc5-9768-12cfa12abcd4",
+            "winner_title": "The Matrix",
+            "winner_year": 1999,
+            "winner_poster_url": "https://image.tmdb.org/t/p/w500/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg",
+            "winner_watch_status": "active",
+            "preference_summary": "Open to any film that fits the current watchlist mood.",
+            "created_at": "2026-06-20T21:45:28.718424Z"
+        }
+    ],
+    "pagination": {
+        "total": 2,
+        "limit": 5,
+        "offset": 0,
+        "has_more": false
     }
-  ],
-  "pagination": { "total": 1, "limit": 5, "offset": 0, "has_more": false }
 }
 
-## DELETE session
-$ curl -sf -o /dev/null -w "%{http_code}\n" -X DELETE \
-  "http://localhost:3000/api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb"
-204
+pagination.total before: 2
 
-## Detail after delete (expect 404)
-$ curl -s -w "\nHTTP %{http_code}\n" \
-  "http://localhost:3000/api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb"
-{"error":{"code":"NOT_FOUND","message":"Recommendation session not found"}}
-HTTP 404
+--- DELETE ---
+DELETE status: 204
 
-## List after delete
-$ curl -sf "http://localhost:3000/api/v1/recommendations?limit=5"
+--- Detail after delete (expect 404) ---
+GET detail status: 404
 {
-  "data": [],
-  "pagination": { "total": 0, "limit": 5, "offset": 0, "has_more": false }
+    "error": {
+        "code": "NOT_FOUND",
+        "message": "Recommendation session not found",
+        "details": null
+    }
 }
 
-## Assertion
-Session c618464a-c80a-4bbf-8dee-db0ed68f3abb excluded from list — PASS
+--- List after delete ---
+{
+    "data": [
+        {
+            "session_id": "c618464a-c80a-4bbf-8dee-db0ed68f3abb",
+            "winner_film_id": "b3714da2-1efd-4fc5-9768-12cfa12abcd4",
+            "winner_title": "The Matrix",
+            "winner_year": 1999,
+            "winner_poster_url": "https://image.tmdb.org/t/p/w500/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg",
+            "winner_watch_status": "active",
+            "preference_summary": "Open to any film that fits the current watchlist mood.",
+            "created_at": "2026-06-20T21:45:28.718424Z"
+        }
+    ],
+    "pagination": {
+        "total": 1,
+        "limit": 5,
+        "offset": 0,
+        "has_more": false
+    }
+}
+
+pagination.total after: 1
+
+PASS: session excluded from list

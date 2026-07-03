@@ -1,55 +1,78 @@
 # Demo notes — issue #28: Hard delete past recommendations
 
 - **Date:** 2026-07-03
-- **Commit:** `0b4eed2e3154378722b8d69f72b4ec2f8999252b`
-- **Branch:** `cursor/issue-28-hard-delete-past-recommendations`
-- **Stack:** Docker Compose (`postgres`, `api`, `frontend`, `backup` all Up); health checks OK on ports 3000 and 8000.
+- **Commit SHA:** `c3bef16` (branch `cursor/issue-28-hard-delete-past-recommendations`)
+- **Stack:** Full Docker Compose (`postgres`, `api`, `frontend`, `backup` all Up); health checks OK on ports 3000 and 8000.
 
 ## Preconditions
 
-- Seeded 10 ready films via `python3 scripts/seed-dev-db.py` (DB had only 2 films after boot).
-- Created two additional recommendation sessions via `POST /api/v1/recommendations` so three history cards were available for UI scenarios (original seeded session: The Matrix).
+- Seeded 10 ready films via `scripts/seed-dev-db.py`; created additional live recommendation sessions via `POST /api/v1/recommendations` (OpenAI providers available in `.env`).
+- History list showed multiple cards before scenarios ran.
 
-## Scenario 1: Delete from history list — **PASS**
+## Scenario results
 
-Opened `/history` with three cards (Ready Film 4, Ready Film 3, The Matrix).
+### Scenario 1: Delete from history list — **PASS**
 
-1. Captured list before delete (`scenario-1-history-list-before.png`).
-2. Clicked trash control on first card (Ready Film 4) — did not navigate to detail.
-3. Confirmation dialog showed: *"Are you sure you want to remove this from your history? This cannot be undone."* (`scenario-1-confirm-dialog.png`).
-4. **Cancel** closed dialog; card remained.
-5. Delete again → **Remove** — card disappeared without full page reload (`scenario-1-history-list-after.png`); two cards remained.
+Deleted **Ready Film 2** from `/history`:
 
-## Scenario 2: Delete from history detail — **PASS**
+1. Trash control (✕, `aria-label="Remove from history"`) visible on card; click did not navigate to detail.
+2. Confirmation dialog showed irreversible warning: *"Are you sure you want to remove this from your history? This cannot be undone."*
+3. **Cancel** closed dialog; card remained.
+4. **Remove** confirmed delete; card disappeared without full page reload.
 
-1. Opened Ready Film 3 detail from history (`scenario-2-detail-before.png`).
-2. Clicked **Remove from history** and confirmed.
-3. Redirected to `/history`; Ready Film 3 no longer listed (`scenario-2-history-after-redirect.png`). Only The Matrix remained.
+| Artifact | Path |
+|----------|------|
+| Before | `scenario-1-history-list-before.png` |
+| Dialog | `scenario-1-confirm-dialog.png` |
+| After | `scenario-1-history-list-after.png` |
 
-## Scenario 3: API delete and exposure reversal — **PASS**
+![History list before delete](scenario-1-history-list-before.png)
 
-Used remaining session `c618464a-c80a-4bbf-8dee-db0ed68f3abb` (The Matrix). See `scenario-3-api-delete.log`.
+![Confirmation dialog](scenario-1-confirm-dialog.png)
+
+![History list after delete](scenario-1-history-list-after.png)
+
+### Scenario 2: Delete from history detail — **PASS**
+
+Opened `/history/c681e5d7-9780-46b9-8adb-1f2c158bdaff` (**Ready Film 3**), clicked **Remove from history**, confirmed in dialog.
+
+- Redirected to `/history`.
+- **Ready Film 3** no longer in list.
+
+| Artifact | Path |
+|----------|------|
+| Detail before | `scenario-2-detail-before.png` |
+| History after redirect | `scenario-2-history-after-redirect.png` |
+
+![Detail before delete](scenario-2-detail-before.png)
+
+![History after redirect](scenario-2-history-after-redirect.png)
+
+### Scenario 3: API delete and exposure reversal — **PASS**
+
+Session `2ccf6f4c-0542-4934-bc01-098a3e758ccd` (**Ready Film 4**):
 
 | Step | Result |
 |------|--------|
-| `DELETE /recommendations/{session_id}` | `204` |
-| `GET /recommendations/{session_id}` | `404` / `NOT_FOUND` |
-| List excludes deleted session | `pagination.total` 1 → 0 |
+| List before | `pagination.total`: 2 |
+| `DELETE /recommendations/{session_id}` | **204** |
+| `GET /recommendations/{session_id}` | **404** `NOT_FOUND` |
+| List after | `pagination.total`: 1; session absent from `data` |
 
-## Scenario 4: Failed delete shows error (optional) — **PARTIAL / NOT REQUIRED**
+Full log: `scenario-3-api-delete.log`
 
-Stopped API briefly and attempted delete from history list. Confirmation dialog hung ~5s then closed; **no error toast** appeared (console showed 500/404). Entry remained after API restart. Screenshot: `scenario-4-delete-error-toast.png` (browser devtools). This optional scenario is documented for awareness; Scenarios 1–3 (required) all passed. Error-toast UX may be a follow-up polish item, not a blocker for the core delete feature.
+### Scenario 4: Failed delete shows error — **PASS**
 
-## Artifacts
+Simulated DELETE failure via Playwright route interception (500 response) while API remained up. Destructive error toast appeared; **The Matrix** card remained on `/history`.
 
-| File | Description |
-|------|-------------|
-| `scenario-1-history-list-before.png` | History list with 3 cards |
-| `scenario-1-confirm-dialog.png` | Irreversible confirmation copy |
-| `scenario-1-history-list-after.png` | List after list-card delete |
-| `scenario-2-detail-before.png` | Detail page with Remove control |
-| `scenario-2-history-after-redirect.png` | `/history` after detail delete |
-| `scenario-3-api-delete.log` | API status codes and list totals |
-| `scenario-4-delete-error-toast.png` | Optional: API-down attempt (console) |
+| Artifact | Path |
+|----------|------|
+| Error toast | `scenario-4-delete-error-toast.png` |
 
-No secrets in images or logs.
+![Delete error toast](scenario-4-delete-error-toast.png)
+
+*Note: Spec allows skipping Scenario 4 when stopping API is disruptive; failure was demonstrated with a mocked 500 instead of `docker compose stop api` so the stack stayed healthy for remaining checks.*
+
+## Summary
+
+All required scenarios (1–3) and optional Scenario 4 passed. Delete controls, confirmation copy, list/detail UX, API contract (`204` / `404`), and error handling behave as specified.
