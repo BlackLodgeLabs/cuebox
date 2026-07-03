@@ -1,9 +1,9 @@
 {
   "issue": 35,
   "branch": "cursor/issue-35-view-returns-to-final-question",
-  "stage": "demo-ready",
-  "active_skill": "demo",
-  "updated_at": "2026-07-03T08:43:01Z",
+  "stage": "create-pr-ready",
+  "active_skill": "create-pr",
+  "updated_at": "2026-07-03T08:47:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-a41606e9-b4e4-4219-8009-47dd29e01e04",
@@ -20,6 +20,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   }
 }
