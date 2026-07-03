@@ -64,6 +64,7 @@ stage_label() {
     spec-needs-info) echo "cursor:spec-needs-info" ;;
     spec-in-progress) echo "cursor:spec-in-progress" ;;
     spec-ready) echo "cursor:spec-ready" ;;
+    plan-needs-info) echo "cursor:plan-needs-info" ;;
     plan-in-progress) echo "cursor:plan-in-progress" ;;
     plan-ready) echo "cursor:plan-ready" ;;
     execute-in-progress) echo "cursor:execute-in-progress" ;;
@@ -86,6 +87,7 @@ stage_title() {
     spec-needs-info) echo "Spec — waiting on you" ;;
     spec-in-progress) echo "Spec — in progress" ;;
     spec-ready) echo "Spec complete → planning queued" ;;
+    plan-needs-info) echo "Planning — waiting on you (bug repro)" ;;
     plan-in-progress) echo "Planning — in progress" ;;
     plan-ready) echo "Plan complete → execute queued" ;;
     execute-in-progress) echo "Execute — in progress" ;;
@@ -107,6 +109,7 @@ CURSOR_LABELS=(
   "cursor:spec-needs-info"
   "cursor:spec-in-progress"
   "cursor:spec-ready"
+  "cursor:plan-needs-info"
   "cursor:plan-in-progress"
   "cursor:plan-ready"
   "cursor:execute-in-progress"

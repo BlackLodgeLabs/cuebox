@@ -18,7 +18,7 @@ plan-ready → execute → draft PR → execute-ready → demo → demo-ready �
 You: GitHub PR review notification → merge
 ```
 
-Human gates: **spec start** (`@cursoragent spec`) and **spec resume** (`@cursoragent continue spec`).
+Human gates: **spec start** (`@cursoragent spec`), **spec resume** (`@cursoragent continue spec`), and **plan resume** (`@cursoragent continue plan` when bug reproduction is blocked).
 
 Automated handoffs: stages 3–7 via `.github/workflows/cursor-workflow-handoff.yml` when `workflow/issues/issue-NNN/workflow.state.json` is pushed with a handoff `stage`.
 
@@ -73,6 +73,7 @@ Create labels (Settings → Labels):
 | Label | Color suggestion | When |
 |-------|------------------|------|
 | `cursor:spec-needs-info` | `#FBCA04` | Spec agent waiting on you |
+| `cursor:plan-needs-info` | `#FBCA04` | Planning agent waiting on you (bug repro) |
 | `cursor:spec-ready` | `#0E8A16` | Spec done |
 | `cursor:plan-ready` | `#0E8A16` | Plan done |
 | `cursor:execute-ready` | `#0E8A16` | Code + draft PR done |
