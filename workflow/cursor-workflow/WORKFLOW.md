@@ -180,7 +180,7 @@ Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` wi
 
 Progress stages (`*-in-progress`), pass-back (`execute-passback`), re-open (`changes-requested`), and terminal stages (`complete`, `blocked`, `spec-needs-info`) sync labels only — no forward agent spawn (except pass-back runs API).
 
-When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action sets the linked draft PR description from that file (requires `"pr"` in state).
+When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action sets the linked draft PR description from that file (requires `"pr"` in state). Demo screenshots in `PR.md` must use absolute `raw.githubusercontent.com` URLs — relative `demo/...` paths break when rendered on the PR page (see create-pr skill).
 
 When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` also @mentions the issue author (once) and assigns the linked PR to them. Babysit agents do not post issue comments.
 
