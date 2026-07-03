@@ -20,6 +20,14 @@
 
 *(Includes embedded Screenshots / Screen Recordings from demo - this is essential for UI/Frontend changes)*
 
+Use **absolute** `raw.githubusercontent.com` URLs — not relative `demo/...` paths. `PR.md` is copied to the GitHub PR description, where relative links resolve against `/pull/...` and break.
+
+```markdown
+![Scenario 1](https://raw.githubusercontent.com/OWNER/REPO/BRANCH/workflow/issues/issue-NNN/demo/scenario-1.png)
+```
+
+`BRANCH` = `workflow.state.json` → `branch`; `NNN` = issue number.
+
 ## How to Test
 
 *(Provide step-by-step instructions for the reviewer)*

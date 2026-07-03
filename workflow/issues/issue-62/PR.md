@@ -47,23 +47,23 @@ Demo run on workflow-only VM (2026-07-02, commit `cd4e7dc`). No Docker stack req
 
 ### Scenario 1 — Workflow regression gates
 
-![Scenario 1 gates pass](demo/scenario-1-gates-pass.png)
+![Scenario 1 gates pass](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-62-harden-cursor-workflow-state-pass-back/workflow/issues/issue-62/demo/scenario-1-gates-pass.png)
 
 ### Scenario 2 — Execute-passback fixture
 
-![Scenario 2 passback fixture](demo/scenario-2-passback-fixture.png)
+![Scenario 2 passback fixture](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-62-harden-cursor-workflow-state-pass-back/workflow/issues/issue-62/demo/scenario-2-passback-fixture.png)
 
 ### Scenario 3 — Merge helper preserves remote agents
 
-![Scenario 3 merge preserve](demo/scenario-3-merge-preserve.png)
+![Scenario 3 merge preserve](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-62-harden-cursor-workflow-state-pass-back/workflow/issues/issue-62/demo/scenario-3-merge-preserve.png)
 
 ### Scenario 4 — Status comment pass-back rendering
 
-![Scenario 4 status passback](demo/scenario-4-status-passback.png)
+![Scenario 4 status passback](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-62-harden-cursor-workflow-state-pass-back/workflow/issues/issue-62/demo/scenario-4-status-passback.png)
 
 ### Scenario 5 — Skill and doc cross-check
 
-![Scenario 5 skill grep](demo/scenario-5-skill-grep.png)
+![Scenario 5 skill grep](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-62-harden-cursor-workflow-state-pass-back/workflow/issues/issue-62/demo/scenario-5-skill-grep.png)
 
 ## How to Test
 
