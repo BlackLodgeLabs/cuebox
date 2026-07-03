@@ -96,7 +96,7 @@ Ground `PLAN.md` in what you observed — not only static code reading:
 - **Root cause** (if identified during repro) — tie to observed behavior
 - **Implementation steps** — address the reproduced failure mode
 - **Tests required** — include a regression test that would have caught the observed bug
-- **Demo spec** — Scenario 1 should re-run the reproduction steps and assert the fix (reference `bug-repro-notes.md`)
+- **Demo spec** — Scenario 0 should re-run the reproduction steps and assert the fix (reference `bug-repro-notes.md`)
 
 ### If reproduction is blocked or ambiguous
 
@@ -144,7 +144,7 @@ Include:
 Instruct the demo agent what to capture on the VM:
 
 - Preconditions (stack health URLs, seed data)
-- **Scenario 1 (bugs):** repeat reproduction steps from `bug-repro-notes.md`; pass criteria = fixed behavior
+- **Scenario 0 (bugs):** repeat reproduction steps from `bug-repro-notes.md`; pass criteria = fixed behavior
 - Numbered scenarios with steps, pass criteria, and **exact artifact filenames** under `workflow/issues/issue-{NNN}/demo/`
 - Reference [workflow/cursor-workflow/templates/demo-spec.md](../../../workflow/cursor-workflow/templates/demo-spec.md)
 - Include **Seed steps** under Preconditions when any scenario depends on non-default DB state
