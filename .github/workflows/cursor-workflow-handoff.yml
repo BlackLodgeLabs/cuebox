@@ -98,9 +98,33 @@ jobs:
             echo "Draft PR #${pr} linked for issue #${issue}"
           }
 
+          skill_agent_label() {
+            case "$1" in
+              planning) echo "Plan Agent" ;;
+              execute) echo "Execute Agent" ;;
+              demo) echo "Demo Agent" ;;
+              create-pr) echo "Create PR Agent" ;;
+              babysit-pr) echo "Babysit PR Agent" ;;
+              *) echo "$1" ;;
+            esac
+          }
+
+          agent_display_name() {
+            local issue="$1" state_file="$2" skill="$3"
+            local pr label name
+            pr=$(jq -r '.pr // empty' "$state_file")
+            label=$(skill_agent_label "$skill")
+            if [ -n "$pr" ] && [ "$pr" != "null" ]; then
+              name="Issue #${issue} / PR #${pr} - ${label}"
+            else
+              name="Issue #${issue} - ${label}"
+            fi
+            echo "${name:0:100}"
+          }
+
           handoff() {
             local stage="$1" issue="$2" branch="$3" state_file="$4" prev_stage="${5:-}"
-            local prompt skill progress_stage agent_id=""
+            local prompt skill progress_stage agent_id="" agent_name=""
 
             case "$stage" in
               spec-ready)
@@ -145,14 +169,17 @@ jobs:
                 ;;
             esac
 
-            echo "Handoff: issue #${issue} stage=${stage} branch=${branch}"
+            local agent_name
+            agent_name=$(agent_display_name "$issue" "$state_file" "$skill")
+            echo "Handoff: issue #${issue} stage=${stage} branch=${branch} name=${agent_name}"
 
             if [ -n "${CURSOR_API_KEY:-}" ]; then
               payload=$(jq -n \
+                --arg name "$agent_name" \
                 --arg text "$prompt" \
                 --arg url "$REPO_URL" \
                 --arg ref "$branch" \
-                '{prompt: {text: $text}, repos: [{url: $url, startingRef: $ref}], autoCreatePR: false}')
+                '{name: $name, prompt: {text: $text}, repos: [{url: $url, startingRef: $ref}], autoCreatePR: false}')
               http_code=$(curl -sS -o /tmp/cursor-agent.json -w "%{http_code}" \
                 -X POST "https://api.cursor.com/v1/agents" \
                 -u "${CURSOR_API_KEY}:" \
