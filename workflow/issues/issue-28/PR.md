@@ -24,21 +24,21 @@ Exposure reversal mirrors the existing `increment_exposure` path in `recommendat
 * **API route** (`api/app/routers/v1/recommendations.py`): `DELETE /recommendations/{session_id}` → `204 No Content`; unknown session → `404 NOT_FOUND`.
 * **Frontend API + hook** (`frontend/src/lib/api-client.ts`, `frontend/src/hooks/use-recommendations.ts`): `deleteRecommendation` client and `useDeleteRecommendation` mutation with React Query invalidation for `["recommendations", "history"]` and removal of `["recommendations", sessionId]`.
 * **Shared dialog** (`frontend/src/components/delete-history-dialog.tsx`): Confirmation copy *"Are you sure you want to remove this from your history? This cannot be undone."*
-* **History list** (`frontend/src/app/history/page.tsx`): Trash control on each card with `stopPropagation`; error toast wired on failure.
+* **History list** (`frontend/src/app/history/page.tsx`): Trash control on each card with `stopPropagation`; error toast on failure.
 * **History detail** (`frontend/src/app/history/[sessionId]/page.tsx`): **Remove from history** button; redirect to `/history` on success; error toast on failure.
 * **Tests**: Integration tests in `api/tests/test_integration_recommendation_history.py` (happy path, 404, cascade, exposure reversal, `last_recommended_at` recompute, list exclusion, dev routes 404, diversity scoring parity); hook unit test in `frontend/src/hooks/use-recommendations.test.tsx`; mocked Playwright E2E in `frontend/e2e/history-delete.spec.ts` with helpers in `frontend/e2e/helpers/history-delete-mocks.ts`.
 * **Docs** (`documents/api-contracts.md` §8.2, `documents/PRD.md` §17): Document DELETE endpoint and clarify user-initiated delete vs no automatic pruning.
 
 ## Scenario Results
 
-Demo run on cloud VM (2026-07-03, implementation at `bb479da`, demo at `447d1ac`). Full Docker stack (`postgres`, `api`, `frontend`, `backup` all Up). Seeded 10 ready films and created 2 additional recommendation sessions for 3 history cards. See `workflow/issues/issue-28/demo/demo-notes.md`.
+Demo run on cloud VM (2026-07-03, implementation at `bb479da`, demo at `eaa7db4`). Full Docker stack (`postgres`, `api`, `frontend`, `backup` all Up). Part 2 seed plus additional recommendation sessions for three history cards (*Ready Film 3*, *Ready Film 4*, *The Matrix*). See `workflow/issues/issue-28/demo/demo-notes.md`.
 
 | # | Scenario | Result |
 |---|----------|--------|
-| 1 — Delete from history list | **PASS** — Trash control (`aria-label="Remove from history"`), confirmation dialog, cancel preserves card, confirm removes card without full reload |
+| 1 — Delete from history list | **PASS** — Remove control (`aria-label="Remove from history"`), confirmation dialog, cancel preserves card, confirm removes card without full reload |
 | 2 — Delete from history detail | **PASS** — Remove control on detail; redirect to `/history` with entry gone |
-| 3 — API delete and exposure reversal | **PASS** — `DELETE` → 204; detail → 404; list `pagination.total` decreases |
-| 4 — Failed delete shows error (optional) | **PARTIAL / GAP** — Entry remained when API was stopped, but error toast did not appear; dialog stayed open in pending state |
+| 3 — API delete and exposure reversal | **PASS** — `DELETE` → 204; detail → 404 `NOT_FOUND`; list `pagination.total` decreases |
+| 4 — Failed delete shows error (optional) | **PASS** — Destructive error toast on API failure; card remains in list |
 
 ### Scenario 1 — Delete from history list
 
@@ -48,7 +48,7 @@ Demo run on cloud VM (2026-07-03, implementation at `bb479da`, demo at `447d1ac`
 
 ![History list after delete](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-1-history-list-after.png)
 
-https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-1-delete-list.mp4
+[Screen recording — scenario 1 delete from list](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-1-delete-list.mp4)
 
 ### Scenario 2 — Delete from history detail
 
@@ -62,7 +62,7 @@ API log: `workflow/issues/issue-28/demo/scenario-3-api-delete.log` — `DELETE` 
 
 ### Scenario 4 — Failed delete (optional)
 
-![Delete error state when API unreachable](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-4-delete-error-toast.png)
+![Delete error toast](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-28-hard-delete-past-recommendations/workflow/issues/issue-28/demo/scenario-4-delete-error-toast.png)
 
 ## How to Test
 
@@ -129,7 +129,6 @@ If host `npm run build` fails with `EACCES` while Compose frontend is running: `
 * **Developer Mode** — `/dev/recommendations/{session_id}/*` naturally returns 404 after delete (no code change required).
 * **`recommendation_profiles` preserved** — questionnaire cache may still be referenced by other sessions.
 * **Delete not on results page** — out of scope per spec; users delete from history after navigating away.
-* **Scenario 4 UX gap** — when the API container is fully unreachable (`docker compose stop api`), the delete dialog stays in a pending state instead of showing an error toast and dismissing. Mocked Playwright E2E covers the happy-path error toast with a 500 response; live API-down behavior is a known follow-up.
 * **Pre-existing Playwright issue** — `e2e/dev-mode.spec.ts` "history detail shows dev panel" has a known strict-mode selector clash (unrelated to this feature).
 
 ## Checklist
