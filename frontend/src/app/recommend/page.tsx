@@ -58,8 +58,11 @@ export default function RecommendPage() {
   const [notes, setNotes] = useState("");
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isNavigatingToResults, setIsNavigatingToResults] = useState(false);
   const submittingRef = useRef(false);
   const create = useCreateRecommendation();
+
+  const isSubmitting = create.isPending || isNavigatingToResults;
 
   const step = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -103,7 +106,7 @@ export default function RecommendPage() {
   const handleNext = () => {
     if (!validateStep()) return;
     if (isLastStep) {
-      if (submittingRef.current || create.isPending) return;
+      if (submittingRef.current || isSubmitting) return;
       void handleSubmit();
       return;
     }
@@ -114,6 +117,7 @@ export default function RecommendPage() {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setSubmitError(null);
+    setIsNavigatingToResults(true);
     try {
       const result = await create.mutateAsync({
         questionnaire,
@@ -121,6 +125,7 @@ export default function RecommendPage() {
       });
       router.push(`/recommend/results/${result.session_id}`);
     } catch (error) {
+      setIsNavigatingToResults(false);
       submittingRef.current = false;
       if (error instanceof ApiClientError) {
         setSubmitError(
@@ -136,7 +141,7 @@ export default function RecommendPage() {
     }
   };
 
-  if (create.isPending) {
+  if (isSubmitting) {
     return (
       <div className="mx-auto max-w-lg space-y-4 py-16 text-center">
         <h1 className="text-h1">Finding your film…</h1>
@@ -182,12 +187,12 @@ export default function RecommendPage() {
       <div className="flex justify-between">
         <Button
           variant="outline"
-          disabled={stepIndex === 0 || create.isPending}
+          disabled={stepIndex === 0 || isSubmitting}
           onClick={() => setStepIndex((i) => i - 1)}
         >
           Back
         </Button>
-        <Button onClick={handleNext} disabled={create.isPending}>
+        <Button onClick={handleNext} disabled={isSubmitting}>
           {isLastStep ? "Get recommendation" : "Next"}
         </Button>
       </div>

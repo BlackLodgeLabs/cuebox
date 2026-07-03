@@ -1,9 +1,9 @@
 {
   "issue": 35,
   "branch": "cursor/issue-35-view-returns-to-final-question",
-  "stage": "plan-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-03T08:28:37Z",
+  "stage": "execute-ready",
+  "active_skill": "execute",
+  "updated_at": "2026-07-03T08:33:30Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -20,6 +20,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   }
 }
