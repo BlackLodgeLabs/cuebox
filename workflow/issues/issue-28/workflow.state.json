@@ -1,9 +1,9 @@
 {
   "issue": 28,
   "branch": "cursor/issue-28-hard-delete-past-recommendations",
-  "stage": "demo-in-progress",
+  "stage": "demo-ready",
   "active_skill": "demo",
-  "updated_at": "2026-07-03T14:57:30Z",
+  "updated_at": "2026-07-03T15:08:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -20,6 +20,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   }
 }
