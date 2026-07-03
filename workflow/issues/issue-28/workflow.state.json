@@ -3,18 +3,18 @@
   "branch": "cursor/issue-28-hard-delete-past-recommendations",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-03T14:37:07Z",
+  "updated_at": "2026-07-03T14:37:21Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
-    "execute": "bc-e78d3782-fd30-4be3-b52d-f419cfa42663",
+    "execute": "bc-b341671c-e127-4b03-be94-8d732f4da013",
     "planning": "bc-70e8bf39-267e-4f87-b08c-cf8571cff09a",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 67,
-  "active_agent_id": "bc-e78d3782-fd30-4be3-b52d-f419cfa42663",
+  "active_agent_id": "bc-b341671c-e127-4b03-be94-8d732f4da013",
   "passback_to": null,
   "passback_reason": null,
   "loops": {
