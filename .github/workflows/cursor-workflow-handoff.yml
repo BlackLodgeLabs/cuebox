@@ -271,7 +271,7 @@ jobs:
 
           is_skip_stage() {
             case "$1" in
-              blocked|complete|spec-in-progress|spec-needs-info|plan-in-progress|execute-in-progress|demo-in-progress|create-pr-in-progress|babysit-in-progress|changes-requested|execute-passback) return 0 ;;
+              blocked|complete|spec-in-progress|spec-needs-info|plan-needs-info|plan-in-progress|execute-in-progress|demo-in-progress|create-pr-in-progress|babysit-in-progress|changes-requested|execute-passback) return 0 ;;
               *) return 1 ;;
             esac
           }

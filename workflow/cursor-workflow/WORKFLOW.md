@@ -9,7 +9,7 @@ Reusable pipeline: GitHub issue → spec → plan → execute → demo → creat
 | 1 | You create issue | — | GitHub issue |
 | 2 | You comment `@cursoragent spec` | `review-and-spec` | Branch + `workflow/issues/issue-NNN/SPEC.md` |
 | 2b | You comment `@cursoragent continue spec` | `review-and-spec` | Resume after clarifications |
-| 3 | Handoff (`spec-ready`) | `planning` | `workflow/issues/issue-NNN/PLAN.md`, `workflow/issues/issue-NNN/demo/demo-spec.md` |
+| 3 | Handoff (`spec-ready`) | `planning` | `workflow/issues/issue-NNN/PLAN.md`, `workflow/issues/issue-NNN/demo/demo-spec.md`; for app bugs, `demo/bug-repro-*` evidence first |
 | 4 | Handoff (`plan-ready`) | `execute` | Code, docs, pushes to **existing draft PR** |
 | 5 | Handoff (`execute-ready`) | `demo` | Artifacts under `workflow/issues/issue-NNN/demo/` |
 | 6 | Handoff (`demo-ready`) | `create-pr` | `workflow/issues/issue-NNN/PR.md` → draft PR body |
@@ -30,7 +30,7 @@ workflow/
       PLAN.md               # implementation plan (planning)
       PR.md                 # PR description (create-pr; synced to GitHub PR body)
       workflow.state.json   # handoff contract (every stage updates)
-      demo/                 # demo-spec.md, demo-notes.md, screenshots, recordings
+      demo/                 # demo-spec.md, demo-notes.md, bug-repro-* (planning), screenshots, recordings
 ```
 
 - **Branch:** `cursor/issue-{NNN}-{slug}` (slug from issue title, lowercase, hyphens)
@@ -51,7 +51,7 @@ Re-open handoff: `changes-requested` → `execute-ready` (two-step: first push s
 
 Progress stages: `spec-in-progress`, `plan-in-progress`, `execute-in-progress`, `demo-in-progress`, `create-pr-in-progress`, `babysit-in-progress`.
 
-Terminal stages: `complete`, `blocked`, `spec-needs-info`.
+Terminal stages: `complete`, `blocked`, `spec-needs-info`, `plan-needs-info`.
 
 ### In-progress commit rule
 
@@ -109,6 +109,7 @@ Create these on the repository. **Agents do not set them reliably** — `.github
 | `cursor:spec-needs-info` | Spec agent waiting on your answers |
 | `cursor:spec-in-progress` | Spec agent running |
 | `cursor:spec-ready` | Spec committed; planning queued |
+| `cursor:plan-needs-info` | Planning agent waiting on your answers (bug repro blocked) |
 | `cursor:plan-in-progress` | Planning agent running |
 | `cursor:plan-ready` | Plan committed; execute queued |
 | `cursor:execute-in-progress` | Execute agent running |
@@ -179,7 +180,7 @@ Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` wi
 | `create-pr-ready` | Spawn **babysit-pr** agent |
 | `execute-ready` (from `changes-requested`) | Spawn **execute** agent (post-complete re-open) |
 
-Progress stages (`*-in-progress`), pass-back (`execute-passback`), re-open (`changes-requested`), and terminal stages (`complete`, `blocked`, `spec-needs-info`) sync labels only — no forward agent spawn (except pass-back runs API).
+Progress stages (`*-in-progress`), pass-back (`execute-passback`), re-open (`changes-requested`), and terminal stages (`complete`, `blocked`, `spec-needs-info`, `plan-needs-info`) sync labels only — no forward agent spawn (except pass-back runs API).
 
 When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action sets the linked draft PR description from that file (requires `"pr"` in state). Demo screenshots in `PR.md` must use absolute `raw.githubusercontent.com` URLs — relative `demo/...` paths break when rendered on the PR page (see create-pr skill).
 
@@ -212,6 +213,7 @@ Workflow helper scripts are always loaded from `main` in Actions so issue branch
 
 - Start spec: `@cursoragent spec` (or `@cursoragent use review-and-spec`)
 - Resume spec: `@cursoragent continue spec`
+- Resume plan: `@cursoragent continue plan` (when planning is blocked on bug-repro clarifications)
 - Do **not** rely on bot `@cursoragent` comments for handoffs (filtered by GitHub/Cursor).
 
 Automated stages 3–7 use the handoff Action or Cursor Automations (see [SETUP.md](SETUP.md)).

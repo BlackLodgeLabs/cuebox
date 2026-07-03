@@ -15,6 +15,23 @@ _Required when any scenario depends on non-default DB state (`review_required`, 
 
 ## Scenarios
 
+### Scenario 0: Bug fix verification (bugs only)
+
+**Goal:** Confirm the reproduced defect is fixed.
+
+**Steps:**
+
+1. Repeat reproduction steps from `bug-repro-notes.md` (written during planning).
+2. ...
+
+**Capture:**
+
+- Screenshot: `workflow/issues/issue-0/demo/scenario-0-fixed.png`
+
+**Pass criteria:**
+
+- Observed behavior matches expected behavior documented in `bug-repro-notes.md`.
+
 ### Scenario 1: (title)
 
 **Goal:** What this proves about the change.

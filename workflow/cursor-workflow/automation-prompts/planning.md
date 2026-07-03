@@ -13,8 +13,13 @@ A push landed on a cursor/issue-* branch. Read workflow/issues/issue-*/workflow.
 
 If stage is spec-ready:
 - Use the planning skill for that issue number
+- For app bugs: reproduce the issue and commit workflow/issues/issue-NNN/demo/bug-repro-* evidence before PLAN.md
 - Commit workflow/issues/issue-NNN/PLAN.md and workflow/issues/issue-NNN/demo/demo-spec.md
 - Set stage to plan-ready and push
+
+If stage is plan-needs-info:
+- User must comment @cursoragent continue plan first (human trigger)
+- Resume planning skill; complete bug repro then PLAN.md
 
 Otherwise do nothing.
 ```
