@@ -214,6 +214,10 @@ export function listRecommendations(
   );
 }
 
+export function deleteRecommendation(sessionId: string): Promise<void> {
+  return fetchApi<void>(`/recommendations/${sessionId}`, { method: "DELETE" });
+}
+
 export function postSyncCsv(file: File): Promise<SyncCsvResponse> {
   return fetchMultipart<SyncCsvResponse>("/sync/csv", file);
 }

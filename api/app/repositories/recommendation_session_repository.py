@@ -105,3 +105,12 @@ def list_history(
         ).all()
     )
     return sessions, total
+
+
+def delete_by_id(db: Session, session_id: uuid.UUID) -> bool:
+    session = db.get(RecommendationSession, session_id)
+    if session is None:
+        return False
+    db.delete(session)
+    db.flush()
+    return True
