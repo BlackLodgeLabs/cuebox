@@ -1,25 +1,25 @@
 {
   "issue": 28,
   "branch": "cursor/issue-28-hard-delete-past-recommendations",
-  "stage": "create-pr-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-03T15:10:09Z",
+  "stage": "demo-ready",
+  "active_skill": "demo",
+  "updated_at": "2026-07-03T15:10:00Z",
   "agents": {
     "babysit-pr": null,
-    "create-pr": "bc-51bb38db-2cb6-4489-9ec3-8489702e655b",
-    "demo": "bc-be97ac7f-c508-4f27-81f4-edd6287c3d1d",
+    "create-pr": null,
+    "demo": "bc-7e67995a-ac9c-4159-9192-00535bd9a83f",
     "execute": "bc-b341671c-e127-4b03-be94-8d732f4da013",
     "planning": "bc-70e8bf39-267e-4f87-b08c-cf8571cff09a",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 67,
-  "active_agent_id": "bc-51bb38db-2cb6-4489-9ec3-8489702e655b",
+  "active_agent_id": "bc-7e67995a-ac9c-4159-9192-00535bd9a83f",
   "passback_to": null,
   "passback_reason": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 4
   }
 }

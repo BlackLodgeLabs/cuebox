@@ -1,7 +1,4 @@
-=== Scenario 3: API delete and exposure reversal ===
-Date: 2026-07-03T15:00:57Z
-
---- List before delete ---
+=== GET /recommendations (before) ===
 {
     "data": [
         {
@@ -23,16 +20,20 @@ Date: 2026-07-03T15:00:57Z
     }
 }
 
-session_id to delete: c618464a-c80a-4bbf-8dee-db0ed68f3abb
-pagination.total before: 1
+=== DELETE /recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb ===
+HTTP status: 204
 
---- DELETE request ---
-DELETE /api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb => HTTP 204
+=== GET /recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb (after delete) ===
+HTTP status: 404
+{
+    "error": {
+        "code": "NOT_FOUND",
+        "message": "Recommendation session not found",
+        "details": null
+    }
+}
 
---- Detail after delete ---
-GET /api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb => HTTP 404non-2xx
-
---- List after delete ---
+=== GET /recommendations (after) ===
 {
     "data": [],
     "pagination": {
@@ -43,5 +44,5 @@ GET /api/v1/recommendations/c618464a-c80a-4bbf-8dee-db0ed68f3abb => HTTP 404non-
     }
 }
 
-PASS: session excluded from list
-pagination.total after: 0
+=== Assert session absent from list ===
+PASS: session c618464a-c80a-4bbf-8dee-db0ed68f3abb not in list; total= 0

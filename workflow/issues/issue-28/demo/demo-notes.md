@@ -1,71 +1,53 @@
 # Demo notes — issue #28: Hard delete past recommendations
 
 - **Date:** 2026-07-03
-- **Commit:** `8494edbd21801df9bb6defc013890806d2bf7072`
-- **Branch:** `cursor/issue-28-hard-delete-past-recommendations`
-- **Stack:** Docker Compose (postgres, api, frontend, backup) — all Up; health checks OK
-
-## Preconditions
-
-- Seeded 10 ready films via `scripts/seed-dev-db.py` (DB had only 2 films on boot).
-- Created 2 additional recommendation sessions via `POST /api/v1/recommendations` (live OpenAI) so 3 history cards were available for UI scenarios.
-- Home page showed **New recommendation**; `pagination.total >= 1` on history API.
+- **Commit:** `b21322948eb5678a103286278878054a4d882a87` (demo-in-progress state); feature branch `cursor/issue-28-hard-delete-past-recommendations`
+- **Stack:** Full Docker Compose (`postgres`, `api`, `frontend`, `backup`) — health OK on `:3000` and `:8000`
+- **Seed:** Part 2 films present; created additional recommendation sessions via `POST /api/v1/recommendations` for multi-card UI demos
 
 ## Scenario results
 
 ### Scenario 1: Delete from history list — **PASS**
 
-Opened `/history` with 3 cards: *Ready Film 2 (1992)*, *Ready Film 4 (1994)*, *The Matrix (1999)*.
-
-- Trash control visible with `aria-label="Remove from history"`; clicking it did not navigate to detail.
-- Confirmation dialog showed: *"Are you sure you want to remove this from your history? This cannot be undone."*
-- **Cancel** closed dialog; card remained.
-- **Remove** deleted *Ready Film 2* without full page reload; 2 cards remained.
+Opened `/history` with three history cards. Clicked **Remove from history** (✕) on **Ready Film 3**; navigation to detail did not occur. Confirmation dialog showed irreversible warning copy. **Cancel** closed the dialog and left the card visible. Second delete → **Remove** removed the card without a full page reload; **Ready Film 4** and **The Matrix** remained.
 
 | Artifact | Path |
 |----------|------|
 | Before | `scenario-1-history-list-before.png` |
 | Dialog | `scenario-1-confirm-dialog.png` |
 | After | `scenario-1-history-list-after.png` |
-| Recording | `scenario-1-delete-list.mp4` |
+
+![History list before delete](scenario-1-history-list-before.png)
+
+![Confirm dialog](scenario-1-confirm-dialog.png)
+
+![History list after delete](scenario-1-history-list-after.png)
 
 ### Scenario 2: Delete from history detail — **PASS**
 
-- Opened detail for *Ready Film 4 (1994)*; **Remove from history** button visible.
-- Confirmed delete → redirected to `/history`; entry gone; *The Matrix* remained.
+Opened **Ready Film 4** detail from the history list. **Remove from history** → confirm **Remove** redirected to `/history`; **Ready Film 4** no longer listed; **The Matrix** still visible.
 
 | Artifact | Path |
 |----------|------|
 | Detail before | `scenario-2-detail-before.png` |
 | After redirect | `scenario-2-history-after-redirect.png` |
 
+![Detail before delete](scenario-2-detail-before.png)
+
+![History after redirect](scenario-2-history-after-redirect.png)
+
 ### Scenario 3: API delete and exposure reversal — **PASS**
 
-Deleted session `c618464a-c80a-4bbf-8dee-db0ed68f3abb` (*The Matrix*) via API:
+`DELETE /api/v1/recommendations/{session_id}` returned **204**. Detail `GET` returned **404** with `NOT_FOUND`. List excluded the deleted session (`total` 1 → 0).
 
-- `DELETE` → **204**
-- `GET /recommendations/{session_id}` → **404**
-- List `pagination.total` went from 1 → 0; session excluded from `data`.
+See `scenario-3-api-delete.log` for redacted request/response trace.
 
-| Artifact | Path |
-|----------|------|
-| API log | `scenario-3-api-delete.log` |
+### Scenario 4: Failed delete shows error (optional) — **PASS**
 
-### Scenario 4: Failed delete shows error (optional) — **PARTIAL / GAP**
+Loaded `/history` with API up, stopped `api` container, attempted delete from list. Destructive toast **Request failed** / **API request failed: 500 Internal Server Error** appeared; card remained. API restarted afterward.
 
-Stopped API (`docker compose stop api`), attempted delete from history list with API down.
-
-- Entry **remained** in the list (correct).
-- **Error toast did not appear**; dialog stayed open in pending state while requests failed (Next.js proxy 502/500). Screenshot captures the stuck dialog state.
-
-This optional scenario documents a UX gap when the API is fully unreachable — not a blocker for required scenarios 1–3.
-
-| Artifact | Path |
-|----------|------|
-| Error state | `scenario-4-delete-error-toast.png` |
+![Delete error toast](scenario-4-delete-error-toast.png)
 
 ## Summary
 
-Required scenarios **1–3 pass**. Hard delete works from history list, detail page, and API with correct confirmation copy, list updates, redirect, and 204/404 behavior.
-
-Optional scenario 4 reveals missing user-visible error feedback when the API container is stopped (dialog hangs instead of toast + dismiss).
+All required scenarios (1–3) and optional scenario 4 passed against the live stack on branch `cursor/issue-28-hard-delete-past-recommendations`.
