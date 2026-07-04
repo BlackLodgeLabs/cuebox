@@ -23,6 +23,10 @@ Keep the issue PR merge-ready: respond to Bugbot, CI failures, and review thread
 bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
 ```
 
+Push before monitoring or fixes.
+
+**Required:** Commit `babysit-in-progress` before substantive babysit work (CI fixes, Bugbot responses, gate re-runs).
+
 ```json
 { "stage": "babysit-in-progress", "active_skill": "babysit-pr", "updated_at": "<ISO8601>" }
 ```

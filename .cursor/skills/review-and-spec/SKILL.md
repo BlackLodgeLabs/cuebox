@@ -131,6 +131,14 @@ Cloud agents often **cannot** post issue comments or set labels (integration tok
 2. If still ambiguous → ask follow-ups and stay on `spec-needs-info`.
 3. If clear → update spec, set `stage` to `spec-ready`, preserve `loops` from existing `workflow.state.json`, push, update labels.
 
+## Agent side-branch merges
+
+When merging a cloud-agent side branch (`cursor/issue-NNN-pr-MMM-*-agent-*` or any `*-agent-*` branch) into the main issue branch, run the merge helper on `workflow.state.json` **before** committing so `stage`, `agents`, and `loops` do not regress:
+
+```bash
+bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
+```
+
 ## Do not
 
 - Open a pull request (`.github/workflows/cursor-workflow-handoff.yml` opens the draft PR at `spec-ready`)

@@ -22,7 +22,13 @@ Human gates: **spec start** (`@cursoragent spec`), **spec resume** (`@cursoragen
 
 Automated handoffs: stages 3–7 via `.github/workflows/cursor-workflow-handoff.yml` when `workflow/issues/issue-NNN/workflow.state.json` is pushed with a handoff `stage`.
 
-**State merge:** Before committing `workflow.state.json`, agents run `bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-NNN/workflow.state.json` to preserve remote `agents`, `pr`, and loop counters. See [WORKFLOW.md](WORKFLOW.md#state-merge).
+**State merge:** Before committing `workflow.state.json`, agents run `bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-NNN/workflow.state.json` to preserve remote `agents`, `pr`, loop counters, and monotonic `stage`. See [WORKFLOW.md](WORKFLOW.md#state-merge).
+
+**Agent cap:** The handoff Action never spawns more than **8** concurrent `ACTIVE` Cloud Agents for this repo (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`). At cap or on API 400, it defers with backoff and posts a single deferral comment per 30 minutes — the Action does not exit with failure.
+
+**Babysit recovery:** If a branch is stuck at `create-pr-ready` with a draft PR but no `agents.babysit-pr`, the next push (even sync-only) self-heals by spawning babysit. See [WORKFLOW.md](WORKFLOW.md#babysit-recovery).
+
+**`handoff_pending`:** Per-issue spawn lock in `workflow.state.json`; prevents duplicate forward spawns. Stale after 15 minutes.
 
 ---
 
