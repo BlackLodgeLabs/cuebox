@@ -1,9 +1,9 @@
 {
   "issue": 70,
   "branch": "cursor/issue-70-harden-cursor-workflow-handoff-dedup",
-  "stage": "create-pr-in-progress",
+  "stage": "create-pr-ready",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-04T10:10:00Z",
+  "updated_at": "2026-07-04T10:12:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -20,7 +20,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   },
   "handoff_pending": null
 }
