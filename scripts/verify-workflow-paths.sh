@@ -46,7 +46,7 @@ fi
 
 # --- Issue workflow.state.json schema ---
 REQUIRED_STATE_KEYS=(issue branch stage agents loops)
-OPTIONAL_STATE_KEYS=(pr active_skill active_agent_id passback_to passback_reason updated_at)
+OPTIONAL_STATE_KEYS=(pr active_skill active_agent_id passback_to passback_reason handoff_pending updated_at)
 
 while IFS= read -r -d '' state_file; do
   for key in "${REQUIRED_STATE_KEYS[@]}"; do
@@ -91,10 +91,10 @@ for skill in "${WORKFLOW_SKILLS[@]}"; do
   fi
 done
 
-# --- Template must include pass-back fields ---
+# --- Template must include pass-back fields and handoff_pending ---
 TEMPLATE_STATE="workflow/cursor-workflow/templates/workflow.state.json"
 if [ -f "$TEMPLATE_STATE" ]; then
-  for key in passback_to passback_reason; do
+  for key in passback_to passback_reason handoff_pending; do
     if ! jq -e --arg k "$key" 'has($k)' "$TEMPLATE_STATE" >/dev/null 2>&1; then
       echo "FAIL: ${TEMPLATE_STATE} missing key: ${key}" >&2
       fail=1
@@ -102,22 +102,82 @@ if [ -f "$TEMPLATE_STATE" ]; then
   done
 fi
 
+# --- Handoff hardening scripts exist ---
+HANDOFF_SCRIPTS=(
+  cursor-workflow-stage-rank.sh
+  cursor-workflow-count-active-agents.sh
+  cursor-workflow-admission-gate.sh
+  cursor-workflow-record-handoff-pending.sh
+  cursor-workflow-spawn-agent.sh
+  cursor-workflow-babysit-recovery.sh
+  cursor-workflow-post-deferral-comment.sh
+  test-cursor-workflow-handoff.sh
+)
+for script in "${HANDOFF_SCRIPTS[@]}"; do
+  if [ ! -x "scripts/${script}" ]; then
+    echo "FAIL: missing or non-executable script: scripts/${script}" >&2
+    fail=1
+  fi
+done
+
 # --- Handoff docs and workflow ---
 WORKFLOW_MD="workflow/cursor-workflow/WORKFLOW.md"
-for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh; do
+for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery; do
   if ! grep -qF "$keyword" "$WORKFLOW_MD"; then
     echo "FAIL: ${WORKFLOW_MD} must mention ${keyword}" >&2
     fail=1
   fi
 done
 
+SETUP_MD="workflow/cursor-workflow/SETUP.md"
+for keyword in CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS handoff_pending deferral; do
+  if ! grep -qF "$keyword" "$SETUP_MD"; then
+    echo "FAIL: ${SETUP_MD} must mention ${keyword}" >&2
+    fail=1
+  fi
+done
+
 HANDOFF_YML=".github/workflows/cursor-workflow-handoff.yml"
-for keyword in runs changes-requested execute-passback; do
+for keyword in runs changes-requested execute-passback cursor-workflow-spawn-agent.sh cursor-workflow-babysit-recovery.sh; do
   if ! grep -qF "$keyword" "$HANDOFF_YML"; then
     echo "FAIL: ${HANDOFF_YML} must reference ${keyword}" >&2
     fail=1
   fi
 done
+
+# --- PR template gate evidence ---
+PR_TEMPLATE="workflow/cursor-workflow/templates/PR.md"
+if ! grep -qF "Gate evidence" "$PR_TEMPLATE"; then
+  echo "FAIL: ${PR_TEMPLATE} must include Gate evidence section" >&2
+  fail=1
+fi
+
+# --- Agent side-branch merge rule in review-and-spec skill ---
+REVIEW_SPEC_SKILL=".cursor/skills/review-and-spec/SKILL.md"
+if ! grep -qF '*-agent-*' "$REVIEW_SPEC_SKILL"; then
+  echo "FAIL: ${REVIEW_SPEC_SKILL} must document agent side-branch merge rule" >&2
+  fail=1
+fi
+
+# --- create-pr skill gate evidence ---
+CREATE_PR_SKILL=".cursor/skills/create-pr/SKILL.md"
+if ! grep -qF "Gate evidence" "$CREATE_PR_SKILL"; then
+  echo "FAIL: ${CREATE_PR_SKILL} must reference Gate evidence" >&2
+  fail=1
+fi
+
+# --- AGENTS.md cross-link ---
+if ! grep -qF "handoff_pending" AGENTS.md; then
+  echo "FAIL: AGENTS.md must cross-link workflow hardening (handoff_pending)" >&2
+  fail=1
+fi
+
+if [[ "$fail" -ne 0 ]]; then
+  exit 1
+fi
+
+# --- Shell tests for handoff hardening ---
+bash scripts/test-cursor-workflow-handoff.sh
 
 if [[ "$fail" -ne 0 ]]; then
   exit 1

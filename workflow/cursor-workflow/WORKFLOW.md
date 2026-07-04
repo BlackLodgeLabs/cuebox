@@ -67,12 +67,37 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 
 This fetches `origin/<branch>` and deep-merges with local edits:
 
-- **Local wins:** `stage`, `active_skill`, `updated_at`
+- **Monotonic stage:** `stage` = higher rank of remote and local (never regress e.g. `create-pr-ready` → `demo-ready` when merging agent side-branches)
 - **Remote wins unless local non-null override:** `agents` (per key), `pr`, `active_agent_id`, `passback_to`, `passback_reason`
+- **`handoff_pending`:** fresh remote lock wins; stale locks (>15 minutes) treated as null; local explicit `null` clears
 - **`loops`:** per-counter **max** of remote and local (counters only increment; preserves Action-recorded totals when agents commit stale loop values)
 - **Always from local:** `issue`, `branch`
 
-Prevents agents from clobbering `agents.*`, `pr`, and loop counters recorded by GitHub Actions.
+Prevents agents from clobbering `agents.*`, `pr`, loop counters, and forward `stage` recorded by GitHub Actions.
+
+### Agent side-branch merges
+
+Before merging a cloud-agent side branch (`cursor/issue-NNN-pr-MMM-*-agent-*` or any `*-agent-*` branch) into the main issue branch, always run the merge helper on `workflow.state.json` so `stage`, `agents`, and `loops` do not regress from stale side-branch state.
+
+### `handoff_pending` lock
+
+Optional object in `workflow.state.json` set by the handoff Action immediately before `POST /v1/agents`:
+
+| Field | Purpose |
+|-------|---------|
+| `skill` | Target skill being spawned |
+| `started_at` | ISO8601 lock time |
+| `attempt` | Defer/retry counter |
+
+Cleared on successful agent record, explicit deferral, or after **15 minutes** (stale lock). While fresh, duplicate spawns for the same issue/skill are blocked.
+
+### Global agent cap and deferral
+
+The handoff Action enforces a maximum of **8** concurrent `ACTIVE` Cloud Agents for this repository (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`, overridable in tests). When at cap or on Cursor API 400 (plan limit), the Action **defers** with backoff and posts at most one issue comment per 30 minutes — it does not fail the workflow run.
+
+### Babysit recovery
+
+When `stage` is `create-pr-ready`, the linked PR is still draft, and `agents.babysit-pr` is null, the Action spawns babysit even on **sync-only** pushes (no `workflow.state.json` change). Self-heals missed handoffs from quota exhaustion or lost transitions.
 
 ### Agent conversation links
 
@@ -163,9 +188,11 @@ Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, p
    - **Exception:** `execute-ready` from `changes-requested` spawns **execute** (not demo)
    - **Pass-back:** `execute-passback` with `passback_to` set calls `POST /v1/agents/{id}/runs` (not `POST /v1/agents`)
    - **Re-open:** `changes-requested` converts PR to draft and increments `loops.total_runs` — does **not** spawn an agent until a follow-up push sets `execute-ready`
+   - **Admission gate:** dedup against `agents.<skill>`, `handoff_pending` lock, and global 8-agent cap before `POST /v1/agents` (via `cursor-workflow-spawn-agent.sh`)
+   - **Babysit recovery:** on sync-only pushes, if `create-pr-ready` + draft PR + no `agents.babysit-pr` → spawn babysit (`cursor-workflow-babysit-recovery.sh`)
 5. **Update draft PR body** when `workflow/issues/issue-{NNN}/PR.md` changes in the push (`scripts/cursor-workflow-update-pr-body.sh`)
 
-Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` with the next skill prompt. Pass-back uses `POST https://api.cursor.com/v1/agents/{id}/runs` to continue the same agent conversation. If the API key is missing, it falls back to `CURSOR_HANDOFF_GITHUB_TOKEN` posting an `@cursoragent` comment.
+Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` with the next skill prompt via `cursor-workflow-spawn-agent.sh` (admission gate, pending lock, deferral on cap/API 400). Pass-back uses `POST https://api.cursor.com/v1/agents/{id}/runs` to continue the same agent conversation. If defer/retry exhausts, it falls back to `CURSOR_HANDOFF_GITHUB_TOKEN` posting an `@cursoragent` comment.
 
 **Deployment note:** Workflow helper scripts are loaded from `main` in Actions. New pass-back and `changes-requested` behavior does not take effect until this work merges to `main`.
 

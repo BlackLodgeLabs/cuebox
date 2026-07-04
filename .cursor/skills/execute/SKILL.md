@@ -32,7 +32,9 @@ Implement `workflow/issues/issue-{NNN}/PLAN.md`, verify with tests, update docs,
 bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow.state.json
 ```
 
-Commit and push early:
+Push before substantive work.
+
+**Required:** The `execute-in-progress` commit must land before any implementation files, tests, or docs beyond workflow state.
 
 ```json
 { "stage": "execute-in-progress", "active_skill": "execute", "updated_at": "<ISO8601>" }

@@ -42,3 +42,7 @@ Use **absolute** `raw.githubusercontent.com` URLs — not relative `demo/...` pa
 
 * [e.g., "I left a TODO on line 45 regarding a future edge case."]
 * [e.g., "This relies on the new database migration, make sure to run `npx prisma db push`."]
+
+## Gate evidence
+
+- [ ] `Phase N gate exit 0 at <short-sha>` (feature issues) or `Workflow regression: verify-workflow-paths.sh exit 0 at <short-sha>` (workflow-only)
