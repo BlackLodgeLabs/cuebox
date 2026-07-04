@@ -3,14 +3,14 @@
   "branch": "cursor/issue-70-harden-cursor-workflow-handoff-dedup",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-04T08:55:00Z",
+  "updated_at": "2026-07-04T08:52:48Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
     "planning": null,
-    "review-and-spec": null,
+    "review-and-spec": "bc-52896f4f-0571-4c84-9e65-b1461925e202",
     "review-and-spec-continued": null
   },
   "pr": 71,
