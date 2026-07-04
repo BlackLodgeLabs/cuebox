@@ -1,0 +1,25 @@
+{
+  "issue": 70,
+  "branch": "cursor/issue-70-harden-cursor-workflow-handoff-dedup",
+  "stage": "spec-in-progress",
+  "active_skill": "review-and-spec",
+  "updated_at": "2026-07-04T08:50:00Z",
+  "agents": {
+    "babysit-pr": null,
+    "create-pr": null,
+    "demo": null,
+    "execute": null,
+    "planning": null,
+    "review-and-spec": null,
+    "review-and-spec-continued": null
+  },
+  "pr": null,
+  "active_agent_id": null,
+  "passback_to": null,
+  "passback_reason": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}
