@@ -20,17 +20,24 @@ fi
 
 REL_PATH="workflow/issues/issue-${ISSUE}/workflow.state.json"
 
-CURRENT=$(jq -r --arg k "$AGENT_KEY" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$STATE_FILE")
-if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$AGENT_ID" ]; then
-  echo "Agent already recorded for ${AGENT_KEY} as ${AGENT_ID}" >&2
-  exit 0
-fi
-
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
 
 git fetch origin "$BRANCH"
 git checkout -B "$BRANCH" "origin/$BRANCH"
+
+if [ ! -f "$REL_PATH" ]; then
+  echo "State file not found on branch: $REL_PATH" >&2
+  exit 1
+fi
+
+# spawn-agent pre-updates the local STATE_FILE before calling this script; compare
+# against the remote branch copy so we still push when the branch slot is empty.
+CURRENT=$(jq -r --arg k "$AGENT_KEY" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$REL_PATH")
+if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$AGENT_ID" ]; then
+  echo "Agent already recorded for ${AGENT_KEY} as ${AGENT_ID}" >&2
+  exit 0
+fi
 
 jq --arg key "$AGENT_KEY" --arg id "$AGENT_ID" \
   --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \

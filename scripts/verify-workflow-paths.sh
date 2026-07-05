@@ -112,6 +112,7 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-babysit-recovery.sh
   cursor-workflow-post-deferral-comment.sh
   test-cursor-workflow-handoff.sh
+  test-cursor-workflow-record-agent.sh
 )
 for script in "${HANDOFF_SCRIPTS[@]}"; do
   if [ ! -x "scripts/${script}" ]; then
@@ -191,6 +192,7 @@ fi
 
 # --- Shell tests for handoff hardening ---
 bash scripts/test-cursor-workflow-handoff.sh
+bash scripts/test-cursor-workflow-record-agent.sh
 
 if [[ "$fail" -ne 0 ]]; then
   exit 1
