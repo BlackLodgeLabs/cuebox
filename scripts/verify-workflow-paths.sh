@@ -120,9 +120,22 @@ for script in "${HANDOFF_SCRIPTS[@]}"; do
   fi
 done
 
+COUNT_SCRIPT="scripts/cursor-workflow-count-active-agents.sh"
+for keyword in RUNNING CREATING; do
+  if ! grep -qF "$keyword" "$COUNT_SCRIPT"; then
+    echo "FAIL: ${COUNT_SCRIPT} must count ${keyword} runs toward cap" >&2
+    fail=1
+  fi
+done
+
+if [ ! -f "scripts/cursor-workflow-list-agents.ps1" ]; then
+  echo "FAIL: missing scripts/cursor-workflow-list-agents.ps1 (Windows cap diagnostic)" >&2
+  fail=1
+fi
+
 # --- Handoff docs and workflow ---
 WORKFLOW_MD="workflow/cursor-workflow/WORKFLOW.md"
-for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery; do
+for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING; do
   if ! grep -qF "$keyword" "$WORKFLOW_MD"; then
     echo "FAIL: ${WORKFLOW_MD} must mention ${keyword}" >&2
     fail=1
@@ -130,7 +143,7 @@ for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh
 done
 
 SETUP_MD="workflow/cursor-workflow/SETUP.md"
-for keyword in CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS handoff_pending deferral; do
+for keyword in CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS handoff_pending deferral "in flight"; do
   if ! grep -qF "$keyword" "$SETUP_MD"; then
     echo "FAIL: ${SETUP_MD} must mention ${keyword}" >&2
     fail=1

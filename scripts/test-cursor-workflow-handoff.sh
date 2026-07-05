@@ -43,7 +43,7 @@ test_dedup() {
   rm -f "$state"
 }
 
-# --- At cap: MOCK_ACTIVE_AGENT_COUNT=8 → defer ---
+# --- At cap: MOCK_IN_FLIGHT_RUN_COUNT=8 (in-flight runs) → defer ---
 test_at_cap() {
   local state
   state=$(mktemp)

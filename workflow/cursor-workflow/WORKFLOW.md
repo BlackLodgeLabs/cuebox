@@ -188,7 +188,7 @@ Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, p
    - **Exception:** `execute-ready` from `changes-requested` spawns **execute** (not demo)
    - **Pass-back:** `execute-passback` with `passback_to` set calls `POST /v1/agents/{id}/runs` (not `POST /v1/agents`)
    - **Re-open:** `changes-requested` converts PR to draft and increments `loops.total_runs` — does **not** spawn an agent until a follow-up push sets `execute-ready`
-   - **Admission gate:** dedup against `agents.<skill>`, `handoff_pending` lock, and global 8-agent cap before `POST /v1/agents` (via `cursor-workflow-spawn-agent.sh`)
+   - **Admission gate:** dedup against `agents.<skill>`, `handoff_pending` lock, and global 8 in-flight run cap before `POST /v1/agents` (via `cursor-workflow-spawn-agent.sh`)
    - **Babysit recovery:** on sync-only pushes, if `create-pr-ready` + draft PR + no `agents.babysit-pr` → spawn babysit (`cursor-workflow-babysit-recovery.sh`)
 5. **Update draft PR body** when `workflow/issues/issue-{NNN}/PR.md` changes in the push (`scripts/cursor-workflow-update-pr-body.sh`)
 

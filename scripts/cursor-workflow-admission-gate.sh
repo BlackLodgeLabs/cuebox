@@ -49,8 +49,9 @@ if [ -n "$pending_skill" ] && [ "$pending_skill" != "null" ] && [ -n "$pending_s
   fi
 fi
 
-active_count=$("$SCRIPT_DIR/cursor-workflow-count-active-agents.sh")
-if [ "$active_count" -ge "$MAX_ACTIVE" ]; then
+# In-flight runs (RUNNING/CREATING) targeting this repo — not durable ACTIVE workspaces.
+in_flight_count=$("$SCRIPT_DIR/cursor-workflow-count-active-agents.sh")
+if [ "$in_flight_count" -ge "$MAX_ACTIVE" ]; then
   echo "defer:at-cap"
   exit 0
 fi

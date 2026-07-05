@@ -6,7 +6,8 @@
 set -euo pipefail
 
 if [ "${MOCK_CURSOR_API:-}" = "1" ]; then
-  echo "${MOCK_ACTIVE_AGENT_COUNT:-0}"
+  # MOCK_IN_FLIGHT_RUN_COUNT preferred; MOCK_ACTIVE_AGENT_COUNT kept for older tests.
+  echo "${MOCK_IN_FLIGHT_RUN_COUNT:-${MOCK_ACTIVE_AGENT_COUNT:-0}}"
   exit 0
 fi
 
