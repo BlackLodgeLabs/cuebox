@@ -3,7 +3,7 @@
   "branch": "cursor/issue-72-tmdb-watch-providers-real-time",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-05T12:20:00Z",
+  "updated_at": "2026-07-05T12:14:38Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 73,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
