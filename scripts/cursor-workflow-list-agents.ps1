@@ -43,14 +43,12 @@ function Get-DotEnvValue {
         throw "$Name not found in $Path"
     }
 
-    $val = ($line -replace "^\s*$([regex]::Escape($Name))=\s*", "").Trim()
-    if ($val.Length -ge 2 -and $val.StartsWith('"') -and $val.EndsWith('"')) {
-        $val = $val.Substring(1, $val.Length - 2)
+    if ($line -match "^\s*$([regex]::Escape($Name))\s*=\s*(?:`"([^`"]*)`"|'([^']*)'|([^#]*))") {
+        if ($Matches[1]) { return $Matches[1] }
+        if ($Matches[2]) { return $Matches[2] }
+        return $Matches[3].Trim()
     }
-    elseif ($val.Length -ge 2 -and $val.StartsWith("'") -and $val.EndsWith("'")) {
-        $val = $val.Substring(1, $val.Length - 2)
-    }
-    return ($val -split '#', 2)[0].Trim()
+    throw "Could not parse $Name value in $Path"
 }
 
 function Invoke-CursorApi {
