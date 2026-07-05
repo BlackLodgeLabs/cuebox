@@ -32,7 +32,7 @@ run_counts_toward_cap() {
 count=0
 page_cursor=""
 while true; do
-  url="https://api.cursor.com/v1/agents?limit=100"
+  url="https://api.cursor.com/v1/agents?limit=100&includeArchived=false"
   if [ -n "$page_cursor" ]; then
     url="${url}&cursor=${page_cursor}"
   fi

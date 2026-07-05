@@ -165,7 +165,7 @@ test_stage_merge() {
 
 # --- Stage rank helper ---
 test_stage_rank() {
-  local r1 r2
+  local r1 r2 r3 r4
   r1=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "demo-ready")
   r2=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "create-pr-ready")
   if [ "$r1" -lt "$r2" ]; then
@@ -173,6 +173,48 @@ test_stage_rank() {
   else
     fail_test "stage rank demo-ready ($r1) should be < create-pr-ready ($r2)"
   fi
+  r3=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "spec-ready")
+  r4=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "plan-ready")
+  if [ "$r3" -lt "$r4" ]; then
+    pass "plan-ready ranks above spec-ready"
+  else
+    fail_test "plan-ready ($r4) should rank above spec-ready ($r3)"
+  fi
+  local r5 r6 r7 r8
+  r5=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "plan-in-progress")
+  r6=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "plan-needs-info")
+  if [ "$r5" -lt "$r6" ]; then
+    pass "plan-needs-info ranks above plan-in-progress"
+  else
+    fail_test "plan-needs-info ($r6) should rank above plan-in-progress ($r5)"
+  fi
+  r7=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "complete")
+  r8=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "changes-requested")
+  if [ "$r7" -lt "$r8" ]; then
+    pass "changes-requested ranks above complete"
+  else
+    fail_test "changes-requested ($r8) should rank above complete ($r7)"
+  fi
+}
+
+# --- Stage merge: local plan-ready, remote spec-ready → plan-ready (issue #72) ---
+test_plan_ready_merge() {
+  local state remote local_json merged_stage
+  state=$(mktemp)
+  remote='{"issue":72,"branch":"cursor/issue-72-test","stage":"spec-ready","agents":{},"pr":73,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}'
+  local_json='{"issue":72,"branch":"cursor/issue-72-test","stage":"plan-ready","agents":{},"pr":73,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":3}}'
+  echo "$local_json" > "$state"
+
+  MERGE_STATE_REMOTE_JSON="$remote" \
+    "$SCRIPT_DIR/cursor-workflow-merge-state.sh" "$state" >/dev/null
+
+  merged_stage=$(jq -r '.stage' "$state")
+  if [ "$merged_stage" = "plan-ready" ]; then
+    pass "stage merge keeps plan-ready over spec-ready"
+  else
+    fail_test "stage merge expected plan-ready got $merged_stage"
+  fi
+  rm -f "$state"
 }
 
 test_dedup
@@ -182,6 +224,7 @@ test_fresh_pending
 test_babysit_recovery
 test_stage_merge
 test_stage_rank
+test_plan_ready_merge
 
 if [ "$fail" -ne 0 ]; then
   echo "test-cursor-workflow-handoff.sh: FAILED" >&2

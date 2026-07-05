@@ -133,7 +133,7 @@ do {
     $pageNum++
     Write-Host "  Listing page $pageNum..."
 
-    $url = "https://api.cursor.com/v1/agents?limit=100"
+    $url = "https://api.cursor.com/v1/agents?limit=100&includeArchived=false"
     if ($pageCursor) {
         $url += "&cursor=$pageCursor"
     }
