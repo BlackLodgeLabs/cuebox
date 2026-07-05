@@ -42,15 +42,72 @@ docker compose up
 
 5. Import your Letterboxd watchlist CSV, complete any metadata match review, run the questionnaire, and view results and history.
 
-After pulling updates that include database migrations, restart the API so migrations apply:
+With the stack running, a **backup sidecar** dumps the database daily (default 03:00 UTC) to `./data/backups/` and keeps the two most recent files. See [documents/database-backup-restore.md](documents/database-backup-restore.md) for manual backups and restore.
+
+## Deploying updates
+
+Use this when Cuebox is already running on a server (for example a machine on your LAN) and you want to deploy a newer `main` branch.
+
+From the repo root on the server:
 
 ```bash
-docker compose restart api
+bash scripts/deploy-update.sh
 ```
 
-If you still see missing-column errors, rebuild the API image: `docker compose up --build api`.
+The script will:
 
-With the stack running, a **backup sidecar** dumps the database daily (default 03:00 UTC) to `./data/backups/` and keeps the two most recent files. See [documents/database-backup-restore.md](documents/database-backup-restore.md) for manual backups and restore.
+1. Back up Postgres to `./data/backups/`
+2. `git pull --ff-only origin main`
+3. Warn if `.env` or `config.yaml` drift from the examples (merge new settings manually)
+4. Rebuild images and restart the stack (`docker compose up --build -d`)
+5. Verify API, frontend, and database health
+
+**Preserved across deploys:** `.env`, `config.yaml`, the `postgres_data` Docker volume, and `./data/backups/`. **Do not** run `docker compose down -v` unless you intend to wipe the database.
+
+### Common options
+
+| Flag | Purpose |
+|------|---------|
+| `--ref <branch>` | Deploy a branch other than `main` |
+| `--skip-backup` | Skip the pre-deploy backup (not recommended) |
+| `--skip-pull` | Rebuild/restart only — no `git pull` |
+| `--stop-services` | Stop API and frontend before rebuild (brief downtime) |
+| `--health-host <ip>` | Health-check host when verifying from the server itself (default `localhost`) |
+| `--allow-dirty` | Allow deploy with uncommitted local changes |
+
+Examples:
+
+```bash
+# Standard LAN server update
+bash scripts/deploy-update.sh
+
+# Rebuild after local git checkout without pulling
+bash scripts/deploy-update.sh --skip-pull
+
+# Roll back code, then redeploy without pulling
+git checkout <previous-sha>
+bash scripts/deploy-update.sh --skip-pull
+```
+
+Database migrations run automatically when the API container starts (`alembic upgrade head`). If you still see missing-column errors after deploy, check `docker compose logs api`.
+
+### Rollback
+
+If an update breaks the app:
+
+1. Check out the last known-good commit and redeploy without pulling:
+
+   ```bash
+   git log --oneline -5
+   git checkout <previous-sha>
+   bash scripts/deploy-update.sh --skip-pull
+   ```
+
+2. If the database was affected, restore from the backup created in step 1 of the deploy script. See [documents/database-backup-restore.md](documents/database-backup-restore.md).
+
+### LAN access
+
+Compose publishes port **3000** (frontend) and **8000** (API). From other devices on your network, open `http://<server-lan-ip>:3000`. Ensure the host firewall allows inbound traffic on those ports.
 
 ## Documentation
 
