@@ -25,6 +25,9 @@ recommendation:
 enrichment:
   inter_film_delay_seconds: 0.25
 
+watch_providers:
+  country_code: GB
+
 scoring:
   theme_fit: 0.25
   emotional_fit: 0.20

@@ -38,6 +38,10 @@ class EnrichmentConfig(BaseModel):
     inter_film_delay_seconds: float = 0.25
 
 
+class WatchProvidersConfig(BaseModel):
+    country_code: str = "GB"
+
+
 class ScoringConfig(BaseModel):
     theme_fit: float
     emotional_fit: float
@@ -70,6 +74,7 @@ class AppConfig(BaseModel):
     providers: ProvidersConfig
     recommendation: RecommendationConfig
     enrichment: EnrichmentConfig = EnrichmentConfig()
+    watch_providers: WatchProvidersConfig = WatchProvidersConfig()
     scoring: ScoringConfig
 
 
