@@ -25,7 +25,7 @@ run_counts_toward_cap() {
     "https://api.cursor.com/v1/agents/${agent_id}/runs/${run_id}" \
     | jq -e --arg repo "$REPO_SLUG" '
         (.status == "RUNNING" or .status == "CREATING")
-        and ((.git.branches // []) | any(.repoUrl == $repo))
+        and ((.git.branches? // []) | any(.repoUrl == $repo))
       ' >/dev/null
 }
 
@@ -48,7 +48,7 @@ while true; do
       | select(.status == "ACTIVE" and (.latestRunId // "") != "")
       | [.id, .latestRunId]
       | @tsv
-    ')
+    ' | tr -d '\r')
 
   page_cursor=$(echo "$response" | jq -r '.nextCursor // empty' | tr -d '\r')
   if [ -z "$page_cursor" ] || [ "$page_cursor" = "null" ]; then
