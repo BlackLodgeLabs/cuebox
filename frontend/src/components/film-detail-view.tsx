@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { EditFilmMatchDialog } from "@/components/edit-film-match-dialog";
 import { FilmPoster } from "@/components/film-poster";
+import { WhereToWatchSection } from "@/components/where-to-watch-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -242,6 +243,12 @@ export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailVi
           </CardContent>
         </Card>
       )}
+
+      <WhereToWatchSection
+        filmId={film.id}
+        hasTmdbId={metadata?.tmdb_id != null}
+        onEditMatch={() => setEditOpen(true)}
+      />
 
       {semantic && (
         <Card>

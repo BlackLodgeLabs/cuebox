@@ -24,6 +24,7 @@ import type {
   RematchResponse,
   FilmSummary,
   FilmDetail,
+  FilmWatchProvidersResponse,
   TmdbSearchParams,
   TmdbSearchResponse,
   HistoryCard,
@@ -148,6 +149,15 @@ export function getFilms(
 
 export function getFilm(filmId: string): Promise<FilmDetail> {
   return fetchApi<FilmDetail>(`/films/${filmId}`);
+}
+
+export function getFilmWatchProviders(
+  filmId: string,
+  params?: { country?: string },
+): Promise<FilmWatchProvidersResponse> {
+  return fetchApi<FilmWatchProvidersResponse>(
+    `/films/${filmId}/watch-providers${buildQuery(params)}`,
+  );
 }
 
 export function getReviewRequired(
