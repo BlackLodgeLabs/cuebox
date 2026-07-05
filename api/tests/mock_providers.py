@@ -11,6 +11,8 @@ from app.providers.embedding.base import EMBEDDING_DIMENSION
 MATRIX_TMDB_ID = 603
 AMBIGUOUS_TMDB_ID = 11622
 DUPLICATE_TMDB_ID = 77777
+EMPTY_GB_TMDB_ID = 99999
+WATCH_PROVIDER_FAIL_TMDB_ID = 88888
 
 ADVERSARIAL_PROFILES = frozenset(
     {
@@ -47,6 +49,70 @@ def mock_embedding_vector(seed: str = "default") -> list[float]:
     """Deterministic 1536-dimensional vector for pgvector inserts."""
     base = sum(ord(c) for c in seed) % 97
     return [round(((base + (i % 17)) * 0.001), 6) for i in range(EMBEDDING_DIMENSION)]
+
+
+def _watch_providers_json(tmdb_id: int) -> dict:
+    if tmdb_id == WATCH_PROVIDER_FAIL_TMDB_ID:
+        raise ValueError("handled as HTTP 500 in mock_provider_handler")
+    if tmdb_id == EMPTY_GB_TMDB_ID:
+        return {
+            "id": tmdb_id,
+            "results": {
+                "GB": {
+                    "link": f"https://www.themoviedb.org/movie/{tmdb_id}/watch?locale=GB",
+                    "flatrate": [],
+                    "rent": [],
+                    "buy": [],
+                    "ads": [],
+                }
+            },
+        }
+    return {
+        "id": tmdb_id,
+        "results": {
+            "GB": {
+                "link": f"https://www.themoviedb.org/movie/{tmdb_id}/watch?locale=GB",
+                "flatrate": [
+                    {
+                        "provider_id": 8,
+                        "provider_name": "Netflix",
+                        "logo_path": "/t/p/netflix.jpg",
+                        "display_priority": 1,
+                    },
+                    {
+                        "provider_id": 337,
+                        "provider_name": "Disney Plus",
+                        "logo_path": "/t/p/disney.jpg",
+                        "display_priority": 2,
+                    },
+                ],
+                "rent": [
+                    {
+                        "provider_id": 2,
+                        "provider_name": "Apple TV",
+                        "logo_path": "/t/p/apple.jpg",
+                        "display_priority": 3,
+                    },
+                ],
+                "buy": [
+                    {
+                        "provider_id": 3,
+                        "provider_name": "Google Play Movies",
+                        "logo_path": "/t/p/google.jpg",
+                        "display_priority": 4,
+                    },
+                ],
+                "ads": [
+                    {
+                        "provider_id": 1796,
+                        "provider_name": "Netflix Standard with Ads",
+                        "logo_path": "/t/p/netflix-ads.jpg",
+                        "display_priority": 5,
+                    },
+                ],
+            }
+        },
+    }
 
 
 def _movie_json(
@@ -335,6 +401,27 @@ def mock_provider_handler(request: httpx.Request, profile: str = "default") -> h
             page = int(request.url.params.get("page", "1"))
             return _paginated_search_response(page)
         return _default_search_response(query)
+
+    if "/watch/providers" in url:
+        if profile == "partial_http_failure":
+            return httpx.Response(500, json={"status_message": "Server error"})
+        for tmdb_id in (
+            MATRIX_TMDB_ID,
+            AMBIGUOUS_TMDB_ID,
+            DUPLICATE_TMDB_ID,
+            EMPTY_GB_TMDB_ID,
+            WATCH_PROVIDER_FAIL_TMDB_ID,
+        ):
+            if f"/movie/{tmdb_id}/watch/providers" in url:
+                if tmdb_id == WATCH_PROVIDER_FAIL_TMDB_ID:
+                    return httpx.Response(500, json={"status_message": "Server error"})
+                return httpx.Response(200, json=_watch_providers_json(tmdb_id))
+        # Generic watch/providers for seeded films (10000+)
+        parts = url.split("/movie/")
+        if len(parts) > 1:
+            tmdb_id_str = parts[1].split("/")[0]
+            if tmdb_id_str.isdigit():
+                return httpx.Response(200, json=_watch_providers_json(int(tmdb_id_str)))
 
     if profile == "partial_http_failure":
         if "/movie/" in url and "/keywords" not in url and "/credits" not in url:
