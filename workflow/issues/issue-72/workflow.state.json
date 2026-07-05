@@ -3,7 +3,7 @@
   "branch": "cursor/issue-72-tmdb-watch-providers-real-time",
   "stage": "create-pr-ready",
   "active_skill": null,
-  "updated_at": "2026-07-05T14:24:42Z",
+  "updated_at": "2026-07-05T14:24:46Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,11 +17,7 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-05T14:24:42Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
