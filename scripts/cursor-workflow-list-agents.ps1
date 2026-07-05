@@ -1,10 +1,13 @@
-# List Cursor Cloud Agents and run status (Windows / PowerShell).
+# List Cursor Cloud Agents and run status (Windows PowerShell 5.1+).
 # Matches the repo filter used by cursor-workflow-count-active-agents.sh for the 8-agent cap.
 #
 # Usage (from repo root):
-#   pwsh -File scripts/cursor-workflow-list-agents.ps1
-#   pwsh -File scripts/cursor-workflow-list-agents.ps1 -Repository BlackLodgeLabs/cuebox
-#   pwsh -File scripts/cursor-workflow-list-agents.ps1 -AllRepos
+#   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\cursor-workflow-list-agents.ps1
+#   .\scripts\cursor-workflow-list-agents.ps1
+#
+# Optional:
+#   .\scripts\cursor-workflow-list-agents.ps1 -Repository BlackLodgeLabs/cuebox
+#   .\scripts\cursor-workflow-list-agents.ps1 -AllRepos
 #
 # Requires: curl.exe (Windows 10+), .env with CURSOR_API_KEY (or set $env:CURSOR_API_KEY)
 
@@ -90,7 +93,12 @@ function Get-RunBranchesForRepo {
 $key = if ($ApiKey) { $ApiKey.Trim() } elseif ($env:CURSOR_API_KEY) { $env:CURSOR_API_KEY.Trim() } else { Get-DotEnvValue -Name "CURSOR_API_KEY" -Path $EnvFile }
 $repoSlug = "github.com/$Repository"
 
-Write-Host "Repository filter: $repoSlug$(if ($AllRepos) { ' (showing all repos — cap column still uses filter above)' } else { '' })"
+if ($AllRepos) {
+    Write-Host "Repository filter: $repoSlug (showing all repos; cap column still uses filter above)"
+}
+else {
+    Write-Host "Repository filter: $repoSlug"
+}
 Write-Host "Workflow cap: $MaxActiveCap ACTIVE agents targeting this repo (agent.status == ACTIVE)"
 Write-Host ""
 
@@ -107,14 +115,16 @@ do {
     $page = Invoke-CursorApi -Url $url -Key $key
 
     foreach ($item in $page.items) {
-        $agent = Invoke-CursorApi -Url "https://api.cursor.com/v1/agents/$($item.id)" -Key $key
+        $agentUrl = "https://api.cursor.com/v1/agents/$($item.id)"
+        $agent = Invoke-CursorApi -Url $agentUrl -Key $key
         $runId = $agent.latestRunId
-        $runStatus = "—"
+        $runStatus = "-"
         $branches = ""
         $countsTowardCap = $false
 
         if ($runId) {
-            $run = Invoke-CursorApi -Url "https://api.cursor.com/v1/agents/$($item.id)/runs/$runId" -Key $key
+            $runUrl = "https://api.cursor.com/v1/agents/$($item.id)/runs/$runId"
+            $run = Invoke-CursorApi -Url $runUrl -Key $key
             $runStatus = $run.status
             $branches = Get-RunBranchesForRepo -Run $run -RepoSlug $repoSlug
             $countsTowardCap = ($agent.status -eq "ACTIVE") -and (Test-RunTargetsRepo -Run $run -RepoSlug $repoSlug)
@@ -125,15 +135,16 @@ do {
         }
 
         if ($AllRepos -or $branches) {
+            $capFlag = if ($countsTowardCap) { "yes" } else { "" }
             $results += [PSCustomObject]@{
-                AgentId       = $item.id
-                AgentStatus   = $agent.status
-                RunStatus     = $runStatus
-                CountsToCap   = if ($countsTowardCap) { "yes" } else { "" }
-                Name          = $agent.name
-                Branch        = $branches
-                RunId         = $runId
-                Url           = "https://cursor.com/agents/$($item.id)"
+                AgentId     = $item.id
+                AgentStatus = $agent.status
+                RunStatus   = $runStatus
+                CountsToCap = $capFlag
+                Name        = $agent.name
+                Branch      = $branches
+                RunId       = $runId
+                Url         = "https://cursor.com/agents/$($item.id)"
             }
         }
     }
@@ -142,10 +153,17 @@ do {
 } while ($pageCursor)
 
 if ($results.Count -eq 0) {
-    Write-Host "No agents found$(if (-not $AllRepos) { " targeting $repoSlug" })."
+    if ($AllRepos) {
+        Write-Host "No agents found."
+    }
+    else {
+        Write-Host "No agents found targeting $repoSlug."
+    }
 }
 else {
-    $results | Sort-Object CountsToCap, RunStatus, AgentId -Descending | Format-Table -AutoSize AgentId, AgentStatus, RunStatus, CountsToCap, Name, Branch, RunId
+    $results |
+        Sort-Object CountsToCap, RunStatus, AgentId -Descending |
+        Format-Table -AutoSize AgentId, AgentStatus, RunStatus, CountsToCap, Name, Branch, RunId
 }
 
 Write-Host ""
@@ -154,11 +172,12 @@ Write-Host "-------"
 Write-Host "Listed rows       : $($results.Count)"
 Write-Host "Cap count (repo)  : $capCount / $MaxActiveCap"
 if ($capCount -ge $MaxActiveCap) {
-    Write-Host "Handoff status    : AT CAP — new spawns will defer (at-cap)"
+    Write-Host "Handoff status    : AT CAP - new spawns will defer (at-cap)"
 }
 else {
-    Write-Host "Handoff status    : OK — room for $($MaxActiveCap - $capCount) more spawn(s)"
+    $room = $MaxActiveCap - $capCount
+    Write-Host "Handoff status    : OK - room for $room more spawn(s)"
 }
 Write-Host ""
 Write-Host "Note: Cap uses agent.status ACTIVE + latest run targets repo, not run RUNNING."
-Write-Host "Archive finished agents: curl.exe -sS -X POST -u `"`${env:CURSOR_API_KEY}:`" https://api.cursor.com/v1/agents/AGENT_ID/archive"
+Write-Host 'Archive example: curl.exe -sS -X POST -u "$env:CURSOR_API_KEY:" https://api.cursor.com/v1/agents/AGENT_ID/archive'
