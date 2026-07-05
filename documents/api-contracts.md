@@ -583,6 +583,64 @@ On success, `metadata_source` is set to `tmdb_manual` and `match_confidence` to 
 
 -----
 
+### 4.6 Get Film Watch Providers
+
+Real-time streaming availability for a watchlist film via TMDB Watch Providers (GB by default). Requires `TMDB_API_KEY`.
+
+```
+GET /films/{film_id}/watch-providers
+```
+
+#### Path Parameters
+
+|Parameter|Type|Description|
+|---------|----|-----------|
+|`film_id`|UUID|Film ID    |
+
+#### Query Parameters
+
+|Parameter|Type  |Default|Description                                |
+|---------|------|-------|-------------------------------------------|
+|`country`|string|GB     |ISO 3166-1 country code (from `config.yaml`)|
+
+#### Response `200 OK`
+
+```json
+{
+  "film_id": "f1a2b3c4-...",
+  "tmdb_id": 603,
+  "country_code": "GB",
+  "link": "https://www.themoviedb.org/movie/603/watch?locale=GB",
+  "categories": [
+    {
+      "type": "flatrate",
+      "label": "Stream",
+      "providers": [
+        {
+          "provider_id": 8,
+          "provider_name": "Netflix",
+          "logo_url": "https://image.tmdb.org/t/p/w92/...",
+          "display_priority": 1
+        }
+      ]
+    }
+  ]
+}
+```
+
+Empty category groups are omitted. When the country object exists but all monetization arrays are empty, returns `200` with `categories: []`.
+
+#### Errors
+
+|Code            |HTTP|Trigger                                      |
+|----------------|----|---------------------------------------------|
+|`NOT_FOUND`     |404 |`film_id` not found                          |
+|`UNPROCESSABLE` |422 |Film has no `tmdb_id` in `film_metadata`     |
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure                            |
+|`PROVIDER_ERROR`|503 |`TMDB_API_KEY` missing or TMDB not configured|
+
+-----
+
 ## 5. Metadata Match Reviews
 
 ### 5.1 Accept a Match

@@ -113,6 +113,7 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | Phase 6.5 gate script | `bash scripts/verify-phase6.5-gates.sh` (design token audit + Phase 6 regression) |
 | Phase 7 gate script | `bash scripts/verify-phase7-gates.sh` (Developer Mode API tests + Phase 6.5 regression) |
 | Phase 8 gate script | `bash scripts/verify-phase8-gates.sh` (integration suite, NFR timing, PRD audit, Phase 7 regression) |
+| Watch providers gate script | `bash scripts/verify-watch-providers-gates.sh` (watch-provider tests + Phase 8 regression) |
 | PRD success criteria audit | `bash scripts/verify-prd-success-criteria.sh` |
 | Live stack smoke test | `bash scripts/smoke-test.sh` (requires `docker compose up` and `letterboxd/watchlist.csv`) |
 | Backup retention test | `bash scripts/test-backup-retention.sh` (no Docker or Postgres required) |

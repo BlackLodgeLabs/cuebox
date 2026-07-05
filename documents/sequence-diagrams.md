@@ -551,6 +551,46 @@ sequenceDiagram
 
 ---
 
+## §12 Watch Provider Fetch (Film Detail & Results)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant UI as Next.js UI
+    participant API as FastAPI
+    participant DB as Postgres
+    participant TMDB as TMDB API
+
+    alt Film detail (/watchlist/{filmId})
+        User->>UI: Open film detail
+        UI->>API: GET /films/{film_id}
+        API->>DB: Load film + metadata
+        API-->>UI: 200 FilmDetail
+        par Watch providers
+            UI->>API: GET /films/{film_id}/watch-providers
+            API->>DB: Resolve film_metadata.tmdb_id
+            API->>TMDB: GET /movie/{tmdb_id}/watch/providers
+            TMDB-->>API: results.GB monetization arrays
+            API-->>UI: 200 categorized providers
+        end
+        UI-->>User: Where to Watch card (Stream / Rent / Buy / Ads)
+    else Results (/recommend/results/{sessionId})
+        User->>UI: Open recommendation results
+        UI->>API: GET /recommendations/{session_id}
+        API-->>UI: 200 winner + runners_up
+        par Per-film watch providers (up to 5)
+            UI->>API: GET /films/{film_id}/watch-providers
+            API->>TMDB: GET /movie/{tmdb_id}/watch/providers
+            TMDB-->>API: results.GB
+            API-->>UI: 200 provider categories
+        end
+        UI-->>User: Condensed provider icons on result cards
+    end
+```
+
+---
+
 ## Diagram Index
 
 | Diagram | Primary Reference Docs | Key API Endpoints |
@@ -566,3 +606,4 @@ sequenceDiagram
 | §9 History | PRD §17, API §8 | `GET /recommendations`, `GET /recommendations/{id}` |
 | §10 Developer Mode | Architecture §21, PRD §20, API §9 | `GET /dev/...` |
 | §11 First-Time User | PRD §4 | Multiple |
+| §12 Watch Provider Fetch | API §4.6, PRD §5 | `GET /films/{film_id}/watch-providers` |
