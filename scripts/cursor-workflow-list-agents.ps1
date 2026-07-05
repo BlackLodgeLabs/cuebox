@@ -79,6 +79,14 @@ function Test-RunTargetsRepo {
     return [bool]($Run.git.branches | Where-Object { $_.repoUrl -eq $RepoSlug })
 }
 
+function Test-RunInFlight {
+    param(
+        [Parameter(Mandatory = $true)]$Run
+    )
+
+    return ($Run.status -eq "RUNNING") -or ($Run.status -eq "CREATING")
+}
+
 function Get-RunBranchesForRepo {
     param(
         [Parameter(Mandatory = $true)]$Run,
@@ -103,8 +111,8 @@ if ($AllRepos) {
 else {
     Write-Host "Repository filter: $repoSlug"
 }
-Write-Host "Workflow cap: $MaxActiveCap ACTIVE agents targeting this repo (agent.status == ACTIVE)"
-Write-Host "Fetching ACTIVE agents from Cursor API (one run lookup per agent)..."
+Write-Host "Workflow cap: $MaxActiveCap in-flight runs targeting this repo (run RUNNING or CREATING)"
+Write-Host "Fetching agent workspaces from Cursor API (one run lookup per ACTIVE workspace)..."
 Write-Host ""
 
 $results = @()
@@ -152,7 +160,7 @@ foreach ($item in $activeItems) {
         $run = Invoke-CursorApi -Url $runUrl -Key $key
         $runStatus = $run.status
         $branches = Get-RunBranchesForRepo -Run $run -RepoSlug $repoSlug
-        $countsTowardCap = Test-RunTargetsRepo -Run $run -RepoSlug $repoSlug
+        $countsTowardCap = (Test-RunInFlight -Run $run) -and (Test-RunTargetsRepo -Run $run -RepoSlug $repoSlug)
     }
 
     if ($countsTowardCap) {
@@ -199,7 +207,7 @@ Write-Host "ACTIVE in account : $activeTotal"
 if (-not $CapOnly) {
     Write-Host "Listed rows       : $($results.Count)"
 }
-Write-Host "Cap count (repo)  : $capCount / $MaxActiveCap"
+Write-Host "In-flight (repo)  : $capCount / $MaxActiveCap"
 if ($capCount -ge $MaxActiveCap) {
     Write-Host "Handoff status    : AT CAP - new spawns will defer (at-cap)"
 }
@@ -208,5 +216,6 @@ else {
     Write-Host "Handoff status    : OK - room for $room more spawn(s)"
 }
 Write-Host ""
-Write-Host "Note: Cap uses agent.status ACTIVE + latest run targets repo, not run RUNNING."
+Write-Host "Note: Cap counts runs with status RUNNING/CREATING targeting this repo."
+Write-Host "      Agent workspaces stay ACTIVE after FINISHED; archive old workspaces to tidy the UI."
 Write-Host 'Archive example: curl.exe -sS -X POST -u "$env:CURSOR_API_KEY:" https://api.cursor.com/v1/agents/AGENT_ID/archive'

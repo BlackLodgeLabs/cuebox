@@ -93,7 +93,7 @@ Cleared on successful agent record, explicit deferral, or after **15 minutes** (
 
 ### Global agent cap and deferral
 
-The handoff Action enforces a maximum of **8** concurrent `ACTIVE` Cloud Agents for this repository (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`, overridable in tests). When at cap or on Cursor API 400 (plan limit), the Action **defers** with backoff and posts at most one issue comment per 30 minutes — it does not fail the workflow run.
+The handoff Action enforces a maximum of **8** concurrent in-flight Cloud Agent **runs** for this repository (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`, overridable in tests). `cursor-workflow-count-active-agents.sh` counts latest runs with status `RUNNING` or `CREATING` that target `github.com/<owner>/<repo>` — not durable agent workspaces that remain `ACTIVE` after `FINISHED`. When at cap or on Cursor API 400 (plan limit), the Action **defers** with backoff and posts at most one issue comment per 30 minutes — it does not fail the workflow run.
 
 ### Babysit recovery
 
