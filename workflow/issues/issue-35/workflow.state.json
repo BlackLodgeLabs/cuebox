@@ -1,0 +1,25 @@
+{
+  "issue": 35,
+  "branch": "cursor/issue-35-view-returns-to-final-question",
+  "stage": "complete",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-03T08:52:30Z",
+  "agents": {
+    "babysit-pr": "bc-fbef1bb5-d2e9-463f-92a1-e3004f97e4fa",
+    "create-pr": "bc-a41606e9-b4e4-4219-8009-47dd29e01e04",
+    "demo": "bc-712d0ed5-bed5-4064-9057-f68fd3d25af6",
+    "execute": "bc-08868155-6e75-4496-b879-edc9b3137647",
+    "planning": "bc-0c532260-9a16-4d49-a251-847b36613032",
+    "review-and-spec": null,
+    "review-and-spec-continued": null
+  },
+  "pr": 65,
+  "active_agent_id": "bc-fbef1bb5-d2e9-463f-92a1-e3004f97e4fa",
+  "passback_to": null,
+  "passback_reason": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 6
+  }
+}
