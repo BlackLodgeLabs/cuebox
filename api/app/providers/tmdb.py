@@ -34,6 +34,23 @@ class TmdbSearchPage:
 
 
 @dataclass(frozen=True)
+class TmdbWatchProviderEntry:
+    provider_id: int
+    provider_name: str
+    logo_path: str | None
+    display_priority: int
+
+
+@dataclass(frozen=True)
+class TmdbWatchProvidersResult:
+    link: str | None
+    flatrate: list[TmdbWatchProviderEntry]
+    rent: list[TmdbWatchProviderEntry]
+    buy: list[TmdbWatchProviderEntry]
+    ads: list[TmdbWatchProviderEntry]
+
+
+@dataclass(frozen=True)
 class TmdbMovieDetails:
     tmdb_id: int
     imdb_id: str | None
@@ -158,6 +175,50 @@ class TmdbClient:
         directors = [c["name"] for c in crew if c.get("job") == "Director" and c.get("name")]
         return directors[0] if directors else None
 
+    async def get_movie_watch_providers(
+        self,
+        tmdb_id: int,
+        *,
+        country_code: str = "GB",
+    ) -> TmdbWatchProvidersResult:
+        response = await request_with_retry(
+            self._client,
+            "GET",
+            f"{TMDB_BASE_URL}/movie/{tmdb_id}/watch/providers",
+            params={"api_key": self._api_key},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        country = payload.get("results", {}).get(country_code) or {}
+
+        def _parse_entries(key: str) -> list[TmdbWatchProviderEntry]:
+            entries = country.get(key) or []
+            parsed: list[TmdbWatchProviderEntry] = []
+            for item in entries:
+                if not isinstance(item, dict):
+                    continue
+                provider_id = item.get("provider_id")
+                provider_name = item.get("provider_name")
+                if provider_id is None or not provider_name:
+                    continue
+                parsed.append(
+                    TmdbWatchProviderEntry(
+                        provider_id=int(provider_id),
+                        provider_name=str(provider_name),
+                        logo_path=item.get("logo_path"),
+                        display_priority=int(item.get("display_priority") or 0),
+                    )
+                )
+            return parsed
+
+        return TmdbWatchProvidersResult(
+            link=country.get("link"),
+            flatrate=_parse_entries("flatrate"),
+            rent=_parse_entries("rent"),
+            buy=_parse_entries("buy"),
+            ads=_parse_entries("ads"),
+        )
+
     @staticmethod
     def poster_url(path: str | None) -> str | None:
         return f"{TMDB_IMAGE_BASE}{path}" if path else None
@@ -165,3 +226,9 @@ class TmdbClient:
     @staticmethod
     def backdrop_url(path: str | None) -> str | None:
         return f"{TMDB_BACKDROP_BASE}{path}" if path else None
+
+    @staticmethod
+    def provider_logo_url(path: str | None, size: str = "w92") -> str | None:
+        if not path:
+            return None
+        return f"https://image.tmdb.org/t/p/{size}{path}"

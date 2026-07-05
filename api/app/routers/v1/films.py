@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
-from app.dependencies import get_db, get_metadata_service, get_provider_service
+from app.dependencies import get_db, get_metadata_service, get_provider_service, get_watch_provider_service
 from app.repositories import film_repository, metadata_review_repository
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
@@ -20,10 +20,12 @@ from app.schemas.film_schemas import (
     ReviewRequiredListResponse,
     TmdbSearchResponse,
 )
+from app.schemas.watch_providers import FilmWatchProvidersResponse
 from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.services.film_presenter import film_to_detail, film_to_summary, review_to_item
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
+from app.services.watch_provider_service import WatchProviderService
 
 router = APIRouter(prefix="/films", tags=["films"])
 
@@ -159,6 +161,16 @@ async def rematch_film(
     db.commit()
     background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
     return RematchResponse(film_id=film.id, enrichment_status="enriching")
+
+
+@router.get("/{film_id}/watch-providers", response_model=FilmWatchProvidersResponse)
+async def get_film_watch_providers(
+    film_id: uuid.UUID,
+    country: str | None = None,
+    db: Session = Depends(get_db),
+    watch_provider_service: WatchProviderService = Depends(get_watch_provider_service),
+) -> FilmWatchProvidersResponse:
+    return await watch_provider_service.get_watch_providers(db, film_id, country_code=country)
 
 
 @router.get("/{film_id}", response_model=FilmDetail)
