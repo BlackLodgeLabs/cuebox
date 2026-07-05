@@ -1,9 +1,9 @@
 {
   "issue": 72,
   "branch": "cursor/issue-72-tmdb-watch-providers-real-time",
-  "stage": "execute-ready",
+  "stage": "demo-ready",
   "active_skill": null,
-  "updated_at": "2026-07-05T14:05:46Z",
+  "updated_at": "2026-07-05T14:16:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   }
 }
