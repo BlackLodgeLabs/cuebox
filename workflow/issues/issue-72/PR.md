@@ -117,12 +117,12 @@ cd frontend && npx playwright test e2e/watch-providers.spec.ts
 
 ## Checklist
 
-- [ ] Acceptance criteria in `workflow/issues/issue-72/SPEC.md` met
-- [ ] `bash scripts/verify-watch-providers-gates.sh` passes
-- [ ] `documents/api-contracts.md` §4.6 accurate
-- [ ] Demo screenshots reviewed (no secrets in artifacts)
-- [ ] CI green on draft PR #73
+- [x] Acceptance criteria in `workflow/issues/issue-72/SPEC.md` met
+- [x] `bash scripts/verify-watch-providers-gates.sh` passes
+- [x] `documents/api-contracts.md` §4.6 accurate
+- [x] Demo screenshots reviewed (no secrets in artifacts)
+- [x] CI green on draft PR #73
 
 ## Gate evidence
 
-- [ ] `Watch providers gate: bash scripts/verify-watch-providers-gates.sh exit 0 at d3f6927`
+- [x] `Watch providers gate: bash scripts/verify-watch-providers-gates.sh exit 0 at dceaef1`
