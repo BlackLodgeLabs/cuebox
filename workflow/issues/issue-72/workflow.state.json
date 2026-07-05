@@ -1,9 +1,9 @@
 {
   "issue": 72,
   "branch": "cursor/issue-72-tmdb-watch-providers-real-time",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-05T12:15:00Z",
+  "updated_at": "2026-07-05T12:20:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
