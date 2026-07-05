@@ -24,7 +24,7 @@ Automated handoffs: stages 3–7 via `.github/workflows/cursor-workflow-handoff.
 
 **State merge:** Before committing `workflow.state.json`, agents run `bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-NNN/workflow.state.json` to preserve remote `agents`, `pr`, loop counters, and monotonic `stage`. See [WORKFLOW.md](WORKFLOW.md#state-merge).
 
-**Agent cap:** The handoff Action never spawns more than **8** concurrent `ACTIVE` Cloud Agents for this repo (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`). At cap or on API 400, it defers with backoff and posts a single deferral comment per 30 minutes — the Action does not exit with failure.
+**Agent cap:** The handoff Action never spawns when **8** or more Cloud Agent runs are already **in flight** (`RUNNING`/`CREATING`) for this repo (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`). Finished runs (`FINISHED`) do not count — agent workspaces may stay `ACTIVE` in the Cursor API after work completes. At cap or on API 400, it defers with backoff and posts a single deferral comment per 30 minutes — the Action does not exit with failure.
 
 **Babysit recovery:** If a branch is stuck at `create-pr-ready` with a draft PR but no `agents.babysit-pr`, the next push (even sync-only) self-heals by spawning babysit. See [WORKFLOW.md](WORKFLOW.md#babysit-recovery).
 

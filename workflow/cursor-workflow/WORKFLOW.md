@@ -93,7 +93,7 @@ Cleared on successful agent record, explicit deferral, or after **15 minutes** (
 
 ### Global agent cap and deferral
 
-The handoff Action enforces a maximum of **8** concurrent `ACTIVE` Cloud Agents for this repository (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`, overridable in tests). When at cap or on Cursor API 400 (plan limit), the Action **defers** with backoff and posts at most one issue comment per 30 minutes — it does not fail the workflow run.
+The handoff Action enforces a maximum of **8** concurrent in-flight Cloud Agent **runs** for this repository (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`, overridable in tests). `cursor-workflow-count-active-agents.sh` counts latest runs with status `RUNNING` or `CREATING` that target `github.com/<owner>/<repo>` — not durable agent workspaces that remain `ACTIVE` after `FINISHED`. When at cap or on Cursor API 400 (plan limit), the Action **defers** with backoff and posts at most one issue comment per 30 minutes — it does not fail the workflow run.
 
 ### Babysit recovery
 
@@ -188,7 +188,7 @@ Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, p
    - **Exception:** `execute-ready` from `changes-requested` spawns **execute** (not demo)
    - **Pass-back:** `execute-passback` with `passback_to` set calls `POST /v1/agents/{id}/runs` (not `POST /v1/agents`)
    - **Re-open:** `changes-requested` converts PR to draft and increments `loops.total_runs` — does **not** spawn an agent until a follow-up push sets `execute-ready`
-   - **Admission gate:** dedup against `agents.<skill>`, `handoff_pending` lock, and global 8-agent cap before `POST /v1/agents` (via `cursor-workflow-spawn-agent.sh`)
+   - **Admission gate:** dedup against `agents.<skill>`, `handoff_pending` lock, and global 8 in-flight run cap before `POST /v1/agents` (via `cursor-workflow-spawn-agent.sh`)
    - **Babysit recovery:** on sync-only pushes, if `create-pr-ready` + draft PR + no `agents.babysit-pr` → spawn babysit (`cursor-workflow-babysit-recovery.sh`)
 5. **Update draft PR body** when `workflow/issues/issue-{NNN}/PR.md` changes in the push (`scripts/cursor-workflow-update-pr-body.sh`)
 

@@ -156,7 +156,7 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 
 ## Cursor issue workflow (multi-agent)
 
-GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md). **State merge / pass-back / handoff hardening (`handoff_pending`, 8-agent cap, babysit recovery):** [workflow/cursor-workflow/WORKFLOW.md#state-merge](workflow/cursor-workflow/WORKFLOW.md#state-merge).
+GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md). **State merge / pass-back / handoff hardening (`handoff_pending`, 8 in-flight run cap, babysit recovery):** [workflow/cursor-workflow/WORKFLOW.md#state-merge](workflow/cursor-workflow/WORKFLOW.md#state-merge). **Cap diagnostic (Windows):** `.\scripts\cursor-workflow-list-agents.ps1` — counts `RUNNING`/`CREATING` runs, not `ACTIVE` workspaces after `FINISHED`.
 
 | You do | Skill |
 |--------|-------|
