@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DeleteHistoryDialog } from "@/components/delete-history-dialog";
 import { FilmPoster } from "@/components/film-poster";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,17 +17,23 @@ import {
 } from "@/components/ui/select";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
-import { useRecommendationHistory } from "@/hooks/use-recommendations";
+import {
+  useDeleteRecommendation,
+  useRecommendationHistory,
+} from "@/hooks/use-recommendations";
+import { useToastOnError } from "@/hooks/use-toast-on-error";
 import type { WatchStatusFilter } from "@/types/api";
 
 export default function HistoryPage() {
+  const router = useRouter();
+  const deleteRecommendation = useDeleteRecommendation();
+  const onDeleteError = useToastOnError();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -34,6 +42,9 @@ export default function HistoryPage() {
     "all",
   );
   const [offset, setOffset] = useState(0);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
+    null,
+  );
   const limit = 20;
 
   useEffect(() => {
@@ -53,6 +64,16 @@ export default function HistoryPage() {
     limit,
     offset,
   });
+
+  const handleConfirmDelete = () => {
+    if (!deletingSessionId) return;
+    deleteRecommendation.mutate(deletingSessionId, {
+      onSuccess: () => {
+        setDeletingSessionId(null);
+      },
+      onError: onDeleteError,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -121,9 +142,13 @@ export default function HistoryPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.data.map((item) => (
-              <Link key={item.session_id} href={`/history/${item.session_id}`}>
-                <Card className="h-full hover-glow">
-                  <CardHeader className="flex flex-row gap-3">
+              <Card key={item.session_id} className="h-full hover-glow">
+                <CardHeader className="flex flex-row gap-3">
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 cursor-pointer gap-3 text-left"
+                    onClick={() => router.push(`/history/${item.session_id}`)}
+                  >
                     <FilmPoster
                       src={item.winner_poster_url}
                       alt={item.winner_title}
@@ -148,9 +173,23 @@ export default function HistoryPage() {
                         )}
                       </div>
                     </div>
-                  </CardHeader>
-                </Card>
-              </Link>
+                  </button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-muted-foreground hover:text-destructive"
+                    aria-label="Remove from history"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDeletingSessionId(item.session_id);
+                    }}
+                  >
+                    <span aria-hidden="true">✕</span>
+                  </Button>
+                </CardHeader>
+              </Card>
             ))}
           </div>
 
@@ -172,6 +211,17 @@ export default function HistoryPage() {
           </div>
         </>
       )}
+
+      <DeleteHistoryDialog
+        open={deletingSessionId !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleteRecommendation.isPending) {
+            setDeletingSessionId(null);
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        isPending={deleteRecommendation.isPending}
+      />
     </div>
   );
 }

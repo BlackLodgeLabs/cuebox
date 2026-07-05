@@ -328,6 +328,36 @@ class RecommendationService:
             },
         )
 
+    def delete_session(self, db: Session, session_id: uuid.UUID) -> None:
+        from app.core.exceptions import not_found
+
+        session = recommendation_session_repository.get_by_id(db, session_id)
+        if session is None:
+            raise not_found("Recommendation session")
+
+        affected_film_ids: set[uuid.UUID] = set()
+        winner_film_id = session.winner_film_id
+        for candidate in session.candidates:
+            affected_film_ids.add(candidate.film_id)
+            is_winner = (
+                winner_film_id is not None and candidate.film_id == winner_film_id
+            )
+            recommendation_exposure_repository.decrement_exposure(
+                db,
+                film_id=candidate.film_id,
+                is_winner=is_winner,
+            )
+
+        for film_id in affected_film_ids:
+            recommendation_exposure_repository.recompute_last_recommended_at(
+                db,
+                film_id=film_id,
+                exclude_session_id=session_id,
+            )
+
+        recommendation_session_repository.delete_by_id(db, session_id)
+        db.commit()
+
     def _stage1_filter(
         self, db: Session, questionnaire: dict[str, Any]
     ) -> tuple[list[Any], dict[str, Any] | None]:
