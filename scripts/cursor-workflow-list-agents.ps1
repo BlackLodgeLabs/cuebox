@@ -43,7 +43,12 @@ function Get-DotEnvValue {
         throw "$Name not found in $Path"
     }
 
-    return ($line -replace "^\s*$([regex]::Escape($Name))=\s*", "" -replace '"', "").Trim()
+    if ($line -match "^\s*$([regex]::Escape($Name))\s*=\s*(?:`"([^`"]*)`"|'([^']*)'|([^#]*))") {
+        if ($Matches[1]) { return $Matches[1] }
+        if ($Matches[2]) { return $Matches[2] }
+        return $Matches[3].Trim()
+    }
+    throw "Could not parse $Name value in $Path"
 }
 
 function Invoke-CursorApi {
@@ -115,7 +120,7 @@ Write-Host "Workflow cap: $MaxActiveCap in-flight runs targeting this repo (run 
 Write-Host "Fetching agent workspaces from Cursor API (one run lookup per ACTIVE workspace)..."
 Write-Host ""
 
-$results = @()
+$results = [System.Collections.Generic.List[PSCustomObject]]::new()
 $pageCursor = $null
 $pageNum = 0
 $capCount = 0
@@ -155,7 +160,7 @@ foreach ($item in $activeItems) {
     $branches = ""
     $countsTowardCap = $false
 
-    if ($runId) {
+    if ($runId -and $runId -ne "null") {
         $runUrl = "https://api.cursor.com/v1/agents/$($item.id)/runs/$runId"
         $run = Invoke-CursorApi -Url $runUrl -Key $key
         $runStatus = $run.status
@@ -169,7 +174,7 @@ foreach ($item in $activeItems) {
 
     if (-not $CapOnly -and ($AllRepos -or $branches)) {
         $capFlag = if ($countsTowardCap) { "yes" } else { "" }
-        $results += [PSCustomObject]@{
+        $results.Add([PSCustomObject]@{
             AgentId     = $item.id
             AgentStatus = $item.status
             RunStatus   = $runStatus
@@ -178,7 +183,7 @@ foreach ($item in $activeItems) {
             Branch      = $branches
             RunId       = $runId
             Url         = "https://cursor.com/agents/$($item.id)"
-        }
+        })
     }
 }
 
