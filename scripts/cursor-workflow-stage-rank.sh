@@ -12,8 +12,10 @@ stage=$(echo "$stage" | tr -d '[:space:]')
 
 case "$stage" in
   spec-needs-info|plan-needs-info) echo 0 ;;
-  spec-in-progress|plan-in-progress) echo 10 ;;
-  spec-ready|plan-ready) echo 20 ;;
+  spec-in-progress) echo 10 ;;
+  spec-ready) echo 20 ;;
+  plan-in-progress) echo 25 ;;
+  plan-ready) echo 28 ;;
   execute-in-progress|execute-passback) echo 30 ;;
   execute-ready|changes-requested) echo 40 ;;
   demo-in-progress) echo 50 ;;

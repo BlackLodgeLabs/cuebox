@@ -56,8 +56,10 @@ MERGED=$(jq -n \
   def stage_rank($s):
     if $s == null or $s == "" then -1
     elif ($s | IN("spec-needs-info", "plan-needs-info")) then 0
-    elif ($s | IN("spec-in-progress", "plan-in-progress")) then 10
-    elif ($s | IN("spec-ready", "plan-ready")) then 20
+    elif $s == "spec-in-progress" then 10
+    elif $s == "spec-ready" then 20
+    elif $s == "plan-in-progress" then 25
+    elif $s == "plan-ready" then 28
     elif ($s | IN("execute-in-progress", "execute-passback")) then 30
     elif ($s | IN("execute-ready", "changes-requested")) then 40
     elif $s == "demo-in-progress" then 50
