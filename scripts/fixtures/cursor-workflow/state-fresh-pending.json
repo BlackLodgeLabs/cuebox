@@ -1,0 +1,13 @@
+{
+  "issue": 70,
+  "branch": "cursor/issue-70-test",
+  "stage": "plan-ready",
+  "agents": {},
+  "pr": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2099-01-01T00:00:00Z",
+    "attempt": 0
+  },
+  "loops": { "bugbot": 0, "ci_autofix": 0, "total_runs": 0 }
+}

@@ -1,0 +1,11 @@
+{
+  "issue": 70,
+  "branch": "cursor/issue-70-test",
+  "stage": "create-pr-ready",
+  "agents": {
+    "create-pr": "bc-create-pr-agent"
+  },
+  "pr": 71,
+  "handoff_pending": null,
+  "loops": { "bugbot": 0, "ci_autofix": 0, "total_runs": 3 }
+}

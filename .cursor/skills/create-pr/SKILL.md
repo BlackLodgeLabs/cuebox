@@ -26,6 +26,8 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 
 Push before drafting the PR description.
 
+**Required:** Commit `create-pr-in-progress` before writing `PR.md` or other substantive work (same rule as execute `execute-in-progress`).
+
 ## Read first
 
 1. `workflow/cursor-workflow/templates/PR.md` — section structure and placeholders
@@ -47,6 +49,7 @@ Fill every section in the template with **concrete** content from the sources ab
 | Scenario Results | Embed demo screenshots/recordings using **absolute** `raw.githubusercontent.com` URLs (see below); copy pass/fail table from `demo-notes.md` |
 | How to Test | PLAN test steps + demo-spec manual steps; include real branch name and routes |
 | Known Issues / Notes | `demo-notes.md` findings, migration commands, TODOs worth flagging |
+| Gate evidence | From execute/demo gate runs: `Phase N gate exit 0 at <short-sha>` or `Workflow regression: verify-workflow-paths.sh exit 0 at <short-sha>` for workflow-only issues |
 | Checklist | Leave boxes unchecked (`- [ ]`) for the human reviewer |
 
 ### Demo image URLs (required for Scenario Results)

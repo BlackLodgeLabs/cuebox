@@ -1,0 +1,12 @@
+{
+  "issue": 70,
+  "branch": "cursor/issue-70-test",
+  "stage": "execute-ready",
+  "active_skill": null,
+  "agents": {
+    "demo": "bc-existing-demo-agent"
+  },
+  "pr": 71,
+  "handoff_pending": null,
+  "loops": { "bugbot": 0, "ci_autofix": 0, "total_runs": 1 }
+}

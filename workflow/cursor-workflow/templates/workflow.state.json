@@ -16,6 +16,7 @@
   },
   "passback_to": null,
   "passback_reason": null,
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
