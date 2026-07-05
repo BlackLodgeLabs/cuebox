@@ -67,7 +67,7 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 
 This fetches `origin/<branch>` and deep-merges with local edits:
 
-- **Monotonic stage:** `stage` = higher rank of remote and local (never regress e.g. `create-pr-ready` → `demo-ready` when merging agent side-branches). Planning stages rank above spec: `spec-ready` (20) < `plan-in-progress` (25) < `plan-ready` (28) < `execute-in-progress` (30).
+- **Monotonic stage:** `stage` = higher rank of remote and local (never regress e.g. `create-pr-ready` → `demo-ready` when merging agent side-branches). Planning stages rank above spec: `spec-ready` (20) < `plan-in-progress` (25) < `plan-ready` (28) < `execute-in-progress` (30). Loop-back stages rank above the stage they replace: `*-needs-info` above `*-in-progress`, `execute-passback` above `demo-in-progress`, `changes-requested` above `complete`. Explicit resume transitions (e.g. `spec-needs-info` → `spec-in-progress`, `changes-requested` → `execute-ready` → `execute-in-progress`) allow local lower-ranked stages to win when expected.
 - **Remote wins unless local non-null override:** `agents` (per key), `pr`, `active_agent_id`, `passback_to`, `passback_reason`
 - **`handoff_pending`:** fresh remote lock wins; stale locks (>15 minutes) treated as null; local explicit `null` clears
 - **`loops`:** per-counter **max** of remote and local (counters only increment; preserves Action-recorded totals when agents commit stale loop values)

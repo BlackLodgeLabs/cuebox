@@ -180,6 +180,21 @@ test_stage_rank() {
   else
     fail_test "plan-ready ($r4) should rank above spec-ready ($r3)"
   fi
+  local r5 r6 r7 r8
+  r5=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "plan-in-progress")
+  r6=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "plan-needs-info")
+  if [ "$r5" -lt "$r6" ]; then
+    pass "plan-needs-info ranks above plan-in-progress"
+  else
+    fail_test "plan-needs-info ($r6) should rank above plan-in-progress ($r5)"
+  fi
+  r7=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "complete")
+  r8=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "changes-requested")
+  if [ "$r7" -lt "$r8" ]; then
+    pass "changes-requested ranks above complete"
+  else
+    fail_test "changes-requested ($r8) should rank above complete ($r7)"
+  fi
 }
 
 # --- Stage merge: local plan-ready, remote spec-ready → plan-ready (issue #72) ---

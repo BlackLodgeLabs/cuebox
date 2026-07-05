@@ -55,24 +55,35 @@ MERGED=$(jq -n \
   '
   def stage_rank($s):
     if $s == null or $s == "" then -1
-    elif ($s | IN("spec-needs-info", "plan-needs-info")) then 0
     elif $s == "spec-in-progress" then 10
+    elif $s == "spec-needs-info" then 15
     elif $s == "spec-ready" then 20
     elif $s == "plan-in-progress" then 25
+    elif $s == "plan-needs-info" then 26
     elif $s == "plan-ready" then 28
-    elif ($s | IN("execute-in-progress", "execute-passback")) then 30
-    elif ($s | IN("execute-ready", "changes-requested")) then 40
+    elif $s == "execute-in-progress" then 30
+    elif $s == "execute-ready" then 40
     elif $s == "demo-in-progress" then 50
+    elif $s == "execute-passback" then 55
     elif $s == "demo-ready" then 60
     elif $s == "create-pr-in-progress" then 70
     elif $s == "create-pr-ready" then 80
     elif $s == "babysit-in-progress" then 90
     elif ($s | IN("complete", "blocked")) then 100
+    elif $s == "changes-requested" then 105
     else -1
     end;
 
-  def stage_with_higher_rank($a; $b):
-    if (stage_rank($a)) >= (stage_rank($b)) then $a else $b end;
+  def stage_with_higher_rank($r; $l):
+    if $r == $l then $r
+    elif $r == "spec-needs-info" and $l == "spec-in-progress" then $l
+    elif $r == "plan-needs-info" and $l == "plan-in-progress" then $l
+    elif $r == "execute-passback" and $l == "execute-in-progress" then $l
+    elif $r == "changes-requested" and $l == "execute-ready" then $l
+    elif $r == "execute-ready" and $l == "execute-in-progress" then $l
+    elif (stage_rank($r)) >= (stage_rank($l)) then $r
+    else $l
+    end;
 
   def pending_fresh($p):
     if $p == null then false

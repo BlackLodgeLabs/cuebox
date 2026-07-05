@@ -70,6 +70,62 @@ run_merge \
 assert_eq "case6 loops.total_runs" "5" "$(jq -r '.loops.total_runs' "$STATE")"
 assert_eq "case6 loops.bugbot" "1" "$(jq -r '.loops.bugbot' "$STATE")"
 
+# Case 7: needs-info over in-progress (plan-needs-info rank > plan-in-progress)
+STATE="$TMP/case7.json"
+run_merge \
+  '{"issue":7,"branch":"cursor/issue-7-test","stage":"plan-needs-info","loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' \
+  '{"issue":7,"branch":"cursor/issue-7-test","stage":"plan-in-progress","loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' \
+  "$STATE"
+assert_eq "case7 plan-needs-info over plan-in-progress" "plan-needs-info" "$(jq -r '.stage' "$STATE")"
+
+# Case 8: pass-back over demo-in-progress
+STATE="$TMP/case8.json"
+run_merge \
+  '{"issue":8,"branch":"cursor/issue-8-test","stage":"execute-passback","passback_to":"execute","passback_reason":"bug","loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' \
+  '{"issue":8,"branch":"cursor/issue-8-test","stage":"demo-in-progress","loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' \
+  "$STATE"
+assert_eq "case8 execute-passback over demo-in-progress" "execute-passback" "$(jq -r '.stage' "$STATE")"
+
+# Case 9: changes-requested over complete
+STATE="$TMP/case9.json"
+run_merge \
+  '{"issue":9,"branch":"cursor/issue-9-test","stage":"changes-requested","loops":{"bugbot":0,"ci_autofix":0,"total_runs":4}}' \
+  '{"issue":9,"branch":"cursor/issue-9-test","stage":"complete","loops":{"bugbot":0,"ci_autofix":0,"total_runs":3}}' \
+  "$STATE"
+assert_eq "case9 changes-requested over complete" "changes-requested" "$(jq -r '.stage' "$STATE")"
+
+# Case 10: resume execute-ready after changes-requested
+STATE="$TMP/case10.json"
+run_merge \
+  '{"issue":10,"branch":"cursor/issue-10-test","stage":"execute-ready","loops":{"bugbot":0,"ci_autofix":0,"total_runs":5}}' \
+  '{"issue":10,"branch":"cursor/issue-10-test","stage":"changes-requested","loops":{"bugbot":0,"ci_autofix":0,"total_runs":5}}' \
+  "$STATE"
+assert_eq "case10 execute-ready after changes-requested" "execute-ready" "$(jq -r '.stage' "$STATE")"
+
+# Case 11: execute-in-progress after execute-ready (re-open spawn)
+STATE="$TMP/case11.json"
+run_merge \
+  '{"issue":11,"branch":"cursor/issue-11-test","stage":"execute-in-progress","loops":{"bugbot":0,"ci_autofix":0,"total_runs":5}}' \
+  '{"issue":11,"branch":"cursor/issue-11-test","stage":"execute-ready","loops":{"bugbot":0,"ci_autofix":0,"total_runs":5}}' \
+  "$STATE"
+assert_eq "case11 execute-in-progress after execute-ready" "execute-in-progress" "$(jq -r '.stage' "$STATE")"
+
+# Case 12: resume spec-in-progress after spec-needs-info
+STATE="$TMP/case12.json"
+run_merge \
+  '{"issue":12,"branch":"cursor/issue-12-test","stage":"spec-in-progress","loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' \
+  '{"issue":12,"branch":"cursor/issue-12-test","stage":"spec-needs-info","loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' \
+  "$STATE"
+assert_eq "case12 spec-in-progress after spec-needs-info" "spec-in-progress" "$(jq -r '.stage' "$STATE")"
+
+# Case 13: resume execute-in-progress after execute-passback
+STATE="$TMP/case13.json"
+run_merge \
+  '{"issue":13,"branch":"cursor/issue-13-test","stage":"execute-in-progress","loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' \
+  '{"issue":13,"branch":"cursor/issue-13-test","stage":"execute-passback","loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' \
+  "$STATE"
+assert_eq "case13 execute-in-progress after execute-passback" "execute-in-progress" "$(jq -r '.stage' "$STATE")"
+
 INVALID="$TMP/invalid.json"
 echo 'not json' > "$INVALID"
 if MERGE_STATE_REMOTE_JSON='{}' bash "$MERGE" "$INVALID" 2>/dev/null; then
