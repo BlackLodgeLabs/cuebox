@@ -90,7 +90,7 @@ trap 'rm -f "$CANDIDATES_FILE"' EXIT
 
 cursor=""
 while true; do
-  url="https://api.cursor.com/v1/agents?limit=50"
+  url="https://api.cursor.com/v1/agents?limit=50&includeArchived=false"
   if [ -n "$cursor" ]; then
     url="${url}&cursor=${cursor}"
   fi
