@@ -5,7 +5,10 @@
 # Prints integer count to stdout; always exit 0.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 if [ "${MOCK_CURSOR_API:-}" = "1" ]; then
+  "$SCRIPT_DIR/cursor-workflow-fetch-agents-list.sh" >/dev/null || true
   # MOCK_IN_FLIGHT_RUN_COUNT preferred; MOCK_ACTIVE_AGENT_COUNT kept for older tests.
   echo "${MOCK_IN_FLIGHT_RUN_COUNT:-${MOCK_ACTIVE_AGENT_COUNT:-0}}"
   exit 0
@@ -29,31 +32,20 @@ run_counts_toward_cap() {
       ' >/dev/null
 }
 
-count=0
-page_cursor=""
-while true; do
-  url="https://api.cursor.com/v1/agents?limit=100&includeArchived=false"
-  if [ -n "$page_cursor" ]; then
-    url="${url}&cursor=${page_cursor}"
-  fi
-  response=$(curl -sS -u "${CURSOR_API_KEY}:" "$url")
-  while IFS=$'\t' read -r agent_id run_id; do
-    [ -z "$agent_id" ] && continue
-    [ -z "$run_id" ] || [ "$run_id" = "null" ] && continue
-    if run_counts_toward_cap "$agent_id" "$run_id"; then
-      count=$((count + 1))
-    fi
-  done < <(echo "$response" | jq -r '
-      .items[]?
-      | select(.status == "ACTIVE" and (.latestRunId // "") != "")
-      | [.id, .latestRunId]
-      | @tsv
-    ' | tr -d '\r')
+CACHE=$("$SCRIPT_DIR/cursor-workflow-fetch-agents-list.sh")
 
-  page_cursor=$(echo "$response" | jq -r '.nextCursor // empty' | tr -d '\r')
-  if [ -z "$page_cursor" ] || [ "$page_cursor" = "null" ]; then
-    break
+count=0
+while IFS=$'\t' read -r agent_id run_id; do
+  [ -z "$agent_id" ] && continue
+  [ -z "$run_id" ] || [ "$run_id" = "null" ] && continue
+  if run_counts_toward_cap "$agent_id" "$run_id"; then
+    count=$((count + 1))
   fi
-done
+done < <(jq -r '
+    .items[]?
+    | select(.status == "ACTIVE" and (.latestRunId // "") != "")
+    | [.id, .latestRunId]
+    | @tsv
+  ' "$CACHE" | tr -d '\r')
 
 echo "$count"

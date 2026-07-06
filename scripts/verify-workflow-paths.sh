@@ -46,7 +46,7 @@ fi
 
 # --- Issue workflow.state.json schema ---
 REQUIRED_STATE_KEYS=(issue branch stage agents loops)
-OPTIONAL_STATE_KEYS=(pr active_skill active_agent_id passback_to passback_reason handoff_pending updated_at)
+OPTIONAL_STATE_KEYS=(pr active_skill active_agent_id passback_to passback_reason handoff_pending status_comment_id updated_at)
 
 while IFS= read -r -d '' state_file; do
   for key in "${REQUIRED_STATE_KEYS[@]}"; do
@@ -94,7 +94,7 @@ done
 # --- Template must include pass-back fields and handoff_pending ---
 TEMPLATE_STATE="workflow/cursor-workflow/templates/workflow.state.json"
 if [ -f "$TEMPLATE_STATE" ]; then
-  for key in passback_to passback_reason handoff_pending; do
+  for key in passback_to passback_reason handoff_pending status_comment_id; do
     if ! jq -e --arg k "$key" 'has($k)' "$TEMPLATE_STATE" >/dev/null 2>&1; then
       echo "FAIL: ${TEMPLATE_STATE} missing key: ${key}" >&2
       fail=1
@@ -111,6 +111,10 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-spawn-agent.sh
   cursor-workflow-babysit-recovery.sh
   cursor-workflow-post-deferral-comment.sh
+  cursor-workflow-fetch-agents-list.sh
+  cursor-workflow-should-discover-agents.sh
+  cursor-workflow-record-spawn-on-branch.sh
+  cursor-workflow-load-scripts.sh
   test-cursor-workflow-handoff.sh
   test-cursor-workflow-record-agent.sh
 )
@@ -136,7 +140,7 @@ fi
 
 # --- Handoff docs and workflow ---
 WORKFLOW_MD="workflow/cursor-workflow/WORKFLOW.md"
-for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING; do
+for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING status_comment_id CURSOR_AGENTS_LIST_CACHE skip discovery; do
   if ! grep -qF "$keyword" "$WORKFLOW_MD"; then
     echo "FAIL: ${WORKFLOW_MD} must mention ${keyword}" >&2
     fail=1
@@ -152,7 +156,7 @@ for keyword in CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS handoff_pending deferral "in fl
 done
 
 HANDOFF_YML=".github/workflows/cursor-workflow-handoff.yml"
-for keyword in runs changes-requested execute-passback cursor-workflow-spawn-agent.sh cursor-workflow-babysit-recovery.sh; do
+for keyword in runs changes-requested execute-passback cursor-workflow-spawn-agent.sh cursor-workflow-babysit-recovery.sh cursor-workflow-load-scripts.sh cursor-workflow-should-discover-agents.sh; do
   if ! grep -qF "$keyword" "$HANDOFF_YML"; then
     echo "FAIL: ${HANDOFF_YML} must reference ${keyword}" >&2
     fail=1

@@ -1,0 +1,13 @@
+{
+  "issue": 77,
+  "branch": "cursor/issue-77-test",
+  "stage": "spec-ready",
+  "pr": 78,
+  "agents": {},
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 0
+  }
+}

@@ -14,6 +14,16 @@ if [ ! -f "$STATE_FILE" ]; then
   exit 1
 fi
 
+if [ "${CURSOR_WORKFLOW_SYNCED:-}" = "1" ] && [ -z "${HANDOFF_PROGRESS_STAGE:-}" ]; then
+  echo "sync skipped — already synced this job"
+  exit 0
+fi
+
+if [ -n "${CURSOR_WORKFLOW_SYNC_CALL_COUNT:-}" ]; then
+  CURSOR_WORKFLOW_SYNC_CALL_COUNT=$((CURSOR_WORKFLOW_SYNC_CALL_COUNT + 1))
+  export CURSOR_WORKFLOW_SYNC_CALL_COUNT
+fi
+
 ISSUE=$(jq -r '.issue // empty' "$STATE_FILE")
 BRANCH=$(jq -r '.branch // empty' "$STATE_FILE")
 STAGE=$(jq -r '.stage // empty' "$STATE_FILE")
@@ -24,6 +34,7 @@ TOTAL=$(jq -r '.loops.total_runs // 0' "$STATE_FILE")
 UPDATED=$(jq -r '.updated_at // empty' "$STATE_FILE")
 ACTIVE_SKILL=$(jq -r '.active_skill // empty' "$STATE_FILE")
 ACTIVE_AGENT=$(jq -r '.active_agent_id // empty' "$STATE_FILE")
+CACHED_COMMENT_ID=$(jq -r '.status_comment_id // empty' "$STATE_FILE")
 
 PASSBACK_TO=$(jq -r '.passback_to // empty' "$STATE_FILE")
 PASSBACK_REASON=$(jq -r '.passback_reason // empty' "$STATE_FILE")
@@ -143,6 +154,7 @@ fi
 NEW_LABEL=$(stage_label "$DISPLAY_STAGE")
 TITLE=$(stage_title "$DISPLAY_STAGE")
 
+if [ "${MOCK_GITHUB_SYNC:-}" != "1" ]; then
 CURRENT_LABELS=$(gh issue view "$ISSUE" --repo "$REPO" --json labels -q '.labels[].name' 2>/dev/null || echo "")
 REMOVE_ARGS=()
 for label in "${CURSOR_LABELS[@]}"; do
@@ -157,6 +169,7 @@ if [ ${#REMOVE_ARGS[@]} -gt 0 ] || [ -n "$NEW_LABEL" ]; then
     EDIT_ARGS+=(--add-label "$NEW_LABEL")
   fi
   gh issue edit "$ISSUE" --repo "$REPO" "${EDIT_ARGS[@]}"
+fi
 fi
 
 PR_LINE="—"
@@ -229,14 +242,53 @@ ${AGENTS_TABLE}
 
 _This comment is updated automatically on every push to \`${BRANCH:-cursor/issue-*}\` from \`workflow/issues/issue-${ISSUE}/workflow.state.json\`._"
 
-COMMENT_ID=$(gh api "repos/${REPO}/issues/${ISSUE}/comments" --paginate \
-  | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id')
-COMMENT_ID="${COMMENT_ID%%$'\n'*}"
+COMMENT_ID=""
+PATCH_USED=false
+if [ -n "$CACHED_COMMENT_ID" ] && [ "$CACHED_COMMENT_ID" != "null" ]; then
+  if [ "${MOCK_GITHUB_SYNC:-}" = "1" ]; then
+    if [ "${MOCK_COMMENT_PATCH_404:-}" = "1" ]; then
+      COMMENT_ID=""
+    else
+      COMMENT_ID="$CACHED_COMMENT_ID"
+      PATCH_USED=true
+      echo "MOCK PATCH comment ${COMMENT_ID}" >&2
+    fi
+  else
+    http_code=$(gh api -X PATCH "repos/${REPO}/issues/comments/${CACHED_COMMENT_ID}" -f body="$BODY" -o /dev/null -w "%{http_code}" 2>/dev/null || echo 404)
+    if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+      COMMENT_ID="$CACHED_COMMENT_ID"
+      PATCH_USED=true
+    fi
+  fi
+fi
 
-if [ -n "$COMMENT_ID" ]; then
-  gh api -X PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" -f body="$BODY" >/dev/null
+if [ -z "$COMMENT_ID" ]; then
+  if [ "${MOCK_GITHUB_SYNC:-}" = "1" ]; then
+    COMMENT_ID="${MOCK_NEW_COMMENT_ID:-999001}"
+    echo "MOCK LIST+CREATE comment ${COMMENT_ID}" >&2
+  else
+    COMMENT_ID=$(gh api "repos/${REPO}/issues/${ISSUE}/comments" --paginate \
+      | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id' | head -n1)
+    COMMENT_ID="${COMMENT_ID%%$'\n'*}"
+    if [ -n "$COMMENT_ID" ]; then
+      gh api -X PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" -f body="$BODY" >/dev/null
+      PATCH_USED=true
+    else
+      gh issue comment "$ISSUE" --repo "$REPO" --body "$BODY" >/dev/null
+      COMMENT_ID=$(gh api "repos/${REPO}/issues/${ISSUE}/comments" --paginate \
+        | jq -r --arg m "$MARKER" '.[] | select(.body != null and (.body | contains($m))) | .id' | head -n1)
+      COMMENT_ID="${COMMENT_ID%%$'\n'*}"
+    fi
+  fi
+fi
+
+export CURSOR_WORKFLOW_SYNCED=1
+if [ -n "$COMMENT_ID" ] && [ "$COMMENT_ID" != "null" ]; then
+  export CURSOR_WORKFLOW_STATUS_COMMENT_ID="$COMMENT_ID"
+fi
+
+if [ "$PATCH_USED" = "true" ]; then
   echo "Updated status comment ${COMMENT_ID} on issue #${ISSUE} (label: ${NEW_LABEL:-none})"
 else
-  gh issue comment "$ISSUE" --repo "$REPO" --body "$BODY" >/dev/null
   echo "Created status comment on issue #${ISSUE} (label: ${NEW_LABEL:-none})"
 fi

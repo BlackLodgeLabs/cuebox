@@ -6,8 +6,9 @@ set -euo pipefail
 
 STATE_FILE="${1:?usage: cursor-workflow-discover-agents.sh <state-file> <branch>}"
 BRANCH="${2:?}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [ -z "${CURSOR_API_KEY:-}" ]; then
+if [ -z "${CURSOR_API_KEY:-}" ] && [ "${MOCK_CURSOR_API:-}" != "1" ]; then
   exit 0
 fi
 
@@ -19,6 +20,11 @@ if [ ! -f "$STATE_FILE" ]; then
   exit 1
 fi
 
+if "$SCRIPT_DIR/cursor-workflow-should-discover-agents.sh" "$STATE_FILE"; then
+  echo "Discovery skipped (stage or agents already satisfied)"
+  exit 0
+fi
+
 agent_id_from_state() {
   jq -r --arg k "$1" '
     ((.agents // {})[$k] // empty)
@@ -28,22 +34,23 @@ agent_id_from_state() {
 
 need_spec=$(agent_id_from_state review-and-spec "$STATE_FILE")
 need_continued=$(agent_id_from_state review-and-spec-continued "$STATE_FILE")
-if [ -n "$need_spec" ] && [ "$need_spec" != "null" ] && [ -n "$need_continued" ] && [ "$need_continued" != "null" ]; then
-  exit 0
-fi
 
 ISSUE=$(jq -r '.issue // empty' "$STATE_FILE")
 REL_PATH="workflow/issues/issue-${ISSUE}/workflow.state.json"
 
-git config user.name "github-actions[bot]"
-git config user.email "github-actions[bot]@users.noreply.github.com"
-git fetch origin "$BRANCH"
-git checkout -B "$BRANCH" "origin/$BRANCH"
+if [ "${MOCK_CURSOR_API:-}" != "1" ]; then
+  git config user.name "github-actions[bot]"
+  git config user.email "github-actions[bot]@users.noreply.github.com"
+  git fetch origin "$BRANCH"
+  git checkout -B "$BRANCH" "origin/$BRANCH"
 
-need_spec=$(agent_id_from_state review-and-spec "$REL_PATH")
-need_continued=$(agent_id_from_state review-and-spec-continued "$REL_PATH")
-if [ -n "$need_spec" ] && [ "$need_spec" != "null" ] && [ -n "$need_continued" ] && [ "$need_continued" != "null" ]; then
-  exit 0
+  need_spec=$(agent_id_from_state review-and-spec "$REL_PATH")
+  need_continued=$(agent_id_from_state review-and-spec-continued "$REL_PATH")
+  if [ -n "$need_spec" ] && [ "$need_spec" != "null" ] && [ -n "$need_continued" ] && [ "$need_continued" != "null" ]; then
+    exit 0
+  fi
+else
+  REL_PATH="$STATE_FILE"
 fi
 
 known_ids=$(jq -r '
@@ -54,12 +61,15 @@ known_ids=$(jq -r '
 ' "$REL_PATH")
 
 branch_matches() {
-  local agent_id="$1"
-  local agent_json run_id
-  agent_json=$(curl -sS -u "${CURSOR_API_KEY}:" \
-    "https://api.cursor.com/v1/agents/${agent_id}")
-  run_id=$(echo "$agent_json" | jq -r '.latestRunId // empty')
+  local agent_id="$1" run_id="$2" created_at="$3"
   if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+    return 1
+  fi
+  if [ "${MOCK_CURSOR_API:-}" = "1" ]; then
+    if [ -n "${MOCK_BRANCH_MATCH_AGENT:-}" ] && [ "$agent_id" = "${MOCK_BRANCH_MATCH_AGENT}" ]; then
+      MATCHED_CREATED_AT="${created_at:-1970-01-01T00:00:00Z}"
+      return 0
+    fi
     return 1
   fi
   if curl -sS -u "${CURSOR_API_KEY}:" \
@@ -68,7 +78,7 @@ branch_matches() {
         .git.branches // []
         | any(.repoUrl == $repo and .branch == $branch)
       ' >/dev/null; then
-    MATCHED_CREATED_AT=$(echo "$agent_json" | jq -r '.createdAt // empty')
+    MATCHED_CREATED_AT="${created_at:-1970-01-01T00:00:00Z}"
     return 0
   fi
   return 1
@@ -88,29 +98,23 @@ is_known() {
 CANDIDATES_FILE=$(mktemp)
 trap 'rm -f "$CANDIDATES_FILE"' EXIT
 
-cursor=""
-while true; do
-  url="https://api.cursor.com/v1/agents?limit=50&includeArchived=false"
-  if [ -n "$cursor" ]; then
-    url="${url}&cursor=${cursor}"
-  fi
-  response=$(curl -sS -u "${CURSOR_API_KEY}:" "$url")
-  while IFS= read -r agent_id; do
-    [ -z "$agent_id" ] && continue
-    if is_known "$agent_id"; then
-      continue
-    fi
-    MATCHED_CREATED_AT=""
-    if branch_matches "$agent_id"; then
-      printf '%s\t%s\n' "${MATCHED_CREATED_AT:-1970-01-01T00:00:00Z}" "$agent_id" >> "$CANDIDATES_FILE"
-    fi
-  done < <(echo "$response" | jq -r '.items[]?.id // empty')
+export CURSOR_AGENTS_STATE_FILE="$STATE_FILE"
+CACHE=$("$SCRIPT_DIR/cursor-workflow-fetch-agents-list.sh")
 
-  cursor=$(echo "$response" | jq -r '.nextCursor // empty')
-  if [ -z "$cursor" ] || [ "$cursor" = "null" ]; then
-    break
+while IFS=$'\t' read -r agent_id run_id created_at; do
+  [ -z "$agent_id" ] && continue
+  if is_known "$agent_id"; then
+    continue
   fi
-done
+  MATCHED_CREATED_AT=""
+  if branch_matches "$agent_id" "$run_id" "$created_at"; then
+    printf '%s\t%s\n' "${MATCHED_CREATED_AT:-1970-01-01T00:00:00Z}" "$agent_id" >> "$CANDIDATES_FILE"
+  fi
+done < <(jq -r '
+    .items[]?
+    | [.id, (.latestRunId // ""), (.createdAt // "1970-01-01T00:00:00Z")]
+    | @tsv
+  ' "$CACHE" | tr -d '\r')
 
 if [ ! -s "$CANDIDATES_FILE" ]; then
   exit 0
@@ -145,6 +149,11 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
    | if $cont != "" and $cont != "null" then .agents["review-and-spec-continued"] = $cont else . end
    | .updated_at = $ts' \
   "$REL_PATH" > "${REL_PATH}.tmp" && mv "${REL_PATH}.tmp" "$REL_PATH"
+
+if [ "${MOCK_CURSOR_API:-}" = "1" ]; then
+  cp "$REL_PATH" "$STATE_FILE"
+  exit 0
+fi
 
 git add "$REL_PATH"
 git diff --staged --quiet && exit 0

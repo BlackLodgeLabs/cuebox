@@ -66,6 +66,17 @@ mock_curl_post() {
   echo "$code"
 }
 
+sync_after_spawn() {
+  if [ "${CURSOR_WORKFLOW_SYNCED:-}" = "1" ] && [ -z "${HANDOFF_PROGRESS_STAGE:-}" ]; then
+    echo "Post-spawn sync skipped — already synced this job"
+    return 0
+  fi
+  HANDOFF_PROGRESS_STAGE="$PROGRESS_STAGE" \
+  HANDOFF_ACTIVE_SKILL="$SKILL" \
+  HANDOFF_ACTIVE_AGENT="${agent_id:-}" \
+    "$WF/cursor-workflow-sync-github-status.sh" "$STATE_FILE" || true
+}
+
 do_post_agent() {
   local agent_name payload http_code agent_id
 
@@ -92,28 +103,16 @@ do_post_agent() {
   if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
     agent_id=$(jq -r '.agent.id // .id // .agentId // empty' /tmp/cursor-agent.json)
     echo "Cursor agent created: ${agent_id:-unknown}"
-    if [ -n "$agent_id" ]; then
-      jq --arg key "$SKILL" --arg id "$agent_id" \
-        '.agents //= {} | .agents[$key] = $id | .active_agent_id = $id | .active_skill = $key' \
-        "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
-      if [ "${MOCK_CURSOR_API:-}" != "1" ]; then
-        "$WF/cursor-workflow-record-agent-on-branch.sh" "$STATE_FILE" "$SKILL" "$agent_id" "$BRANCH" || true
+      if [ -n "$agent_id" ]; then
+        "$WF/cursor-workflow-record-spawn-on-branch.sh" "$STATE_FILE" "$SKILL" "$agent_id" "$BRANCH" || true
       fi
-    fi
-    if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" != "1" ] && [ "${MOCK_CURSOR_API:-}" != "1" ]; then
-      "$WF/cursor-workflow-record-handoff-pending.sh" "$STATE_FILE" "$BRANCH" clear || true
-    elif [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ]; then
-      jq '.handoff_pending = null' "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
-    fi
-    HANDOFF_PROGRESS_STAGE="$PROGRESS_STAGE" \
-    HANDOFF_ACTIVE_SKILL="$SKILL" \
-    HANDOFF_ACTIVE_AGENT="${agent_id:-}" \
-      "$WF/cursor-workflow-sync-github-status.sh" "$STATE_FILE" || true
+    sync_after_spawn
     return 0
   fi
 
   if [ "$http_code" = "400" ]; then
     echo "Cursor API returned 400 (quota/plan limit): $(cat /tmp/cursor-agent.json 2>/dev/null || true)"
+    unset CURSOR_WORKFLOW_PENDING_SKILL
     if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ]; then
       jq '.handoff_pending = null' "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
     elif [ "${MOCK_CURSOR_API:-}" != "1" ]; then
@@ -167,16 +166,19 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
     proceed)
       if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ]; then
         "$WF/cursor-workflow-record-handoff-pending.sh" "$STATE_FILE" "$BRANCH" set "$SKILL" "$attempt" >/dev/null
+        export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
       elif [ "${MOCK_CURSOR_API:-}" != "1" ]; then
-        "$WF/cursor-workflow-record-handoff-pending.sh" "$STATE_FILE" "$BRANCH" set "$SKILL" "$attempt" || true
+        export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
       else
         jq --arg skill "$SKILL" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson attempt "$attempt" \
           '.handoff_pending = {skill: $skill, started_at: $ts, attempt: $attempt}' \
           "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
+        export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
       fi
 
       if ! do_post_agent; then
         post_rc=$?
+        unset CURSOR_WORKFLOW_PENDING_SKILL
         if [ "$post_rc" -eq 2 ]; then
           attempt=$((attempt + 1))
           if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
@@ -199,6 +201,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
         pat_fallback || true
         exit 0
       fi
+      unset CURSOR_WORKFLOW_PENDING_SKILL
       exit 0
       ;;
     *)

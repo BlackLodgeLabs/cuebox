@@ -19,6 +19,11 @@ on:
         required: false
         type: boolean
         default: true
+      discover:
+        description: Run agent discovery during resync (default false — labels/comment only)
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   issues: write
@@ -36,28 +41,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4.3.1
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y jq gh
+        run: |
+          command -v jq >/dev/null || sudo apt-get update -qq && sudo apt-get install -y jq
+          command -v gh >/dev/null || sudo apt-get update -qq && sudo apt-get install -y gh
 
       - name: Load workflow scripts from main
         run: |
           set -euo pipefail
-          git fetch origin main
-          mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-record-loops-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh cursor-workflow-stage-rank.sh cursor-workflow-count-active-agents.sh cursor-workflow-admission-gate.sh cursor-workflow-record-handoff-pending.sh cursor-workflow-spawn-agent.sh cursor-workflow-babysit-recovery.sh cursor-workflow-post-deferral-comment.sh; do
-            if git cat-file -e "origin/main:scripts/${script}" 2>/dev/null; then
-              git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
-            elif git cat-file -e "HEAD:scripts/${script}" 2>/dev/null; then
-              git show "HEAD:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
-            else
-              echo "::error::Missing workflow script: scripts/${script}"
-              exit 1
-            fi
-            chmod +x "/tmp/cursor-workflow-scripts/${script}"
-          done
-          echo "SCRIPTS_DIR=/tmp/cursor-workflow-scripts" >> "$GITHUB_ENV"
+          SCRIPTS_DIR=$(bash scripts/cursor-workflow-load-scripts.sh /tmp/cursor-workflow-scripts handoff)
+          echo "SCRIPTS_DIR=${SCRIPTS_DIR}" >> "$GITHUB_ENV"
 
       - name: Sync status, ensure PR, dispatch agents
         env:
@@ -129,7 +124,6 @@ jobs:
             case "$stage" in
               spec-ready)
                 ensure_pr_on_branch "$issue" "$branch" "$state_file"
-                "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
                 prompt="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — do not create a PR. Read workflow/cursor-workflow/WORKFLOW.md and workflow/issues/issue-${issue}/workflow.state.json."
                 skill="planning"
                 progress_stage="plan-in-progress"
@@ -277,8 +271,8 @@ jobs:
             exit 0
           fi
 
-          # Always sync labels + status comment on every cloud-agent push
-          if [ -n "${CURSOR_API_KEY:-}" ]; then
+          # Sync labels + status comment; discovery only when early spec stages need backfill
+          if [ -n "${CURSOR_API_KEY:-}" ] && ! "$WF/cursor-workflow-should-discover-agents.sh" /tmp/workflow.state.json; then
             "$WF/cursor-workflow-discover-agents.sh" /tmp/workflow.state.json "$branch" || true
             git fetch origin "$branch" --quiet 2>/dev/null || true
             if git cat-file -e "origin/${branch}:${STATE_FILE}" 2>/dev/null; then
@@ -361,28 +355,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4.3.1
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y jq gh
+        run: |
+          command -v jq >/dev/null || sudo apt-get update -qq && sudo apt-get install -y jq
+          command -v gh >/dev/null || sudo apt-get update -qq && sudo apt-get install -y gh
 
       - name: Load workflow scripts from main
         run: |
           set -euo pipefail
-          git fetch origin main
-          mkdir -p /tmp/cursor-workflow-scripts
-          for script in cursor-workflow-sync-github-status.sh cursor-workflow-ensure-draft-pr.sh cursor-workflow-record-pr-on-branch.sh cursor-workflow-record-agent-on-branch.sh cursor-workflow-record-loops-on-branch.sh cursor-workflow-discover-agents.sh cursor-workflow-notify-complete.sh cursor-workflow-update-pr-body.sh cursor-workflow-merge-state.sh cursor-workflow-stage-rank.sh cursor-workflow-count-active-agents.sh cursor-workflow-admission-gate.sh cursor-workflow-record-handoff-pending.sh cursor-workflow-spawn-agent.sh cursor-workflow-babysit-recovery.sh cursor-workflow-post-deferral-comment.sh; do
-            if git cat-file -e "origin/main:scripts/${script}" 2>/dev/null; then
-              git show "origin/main:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
-            elif git cat-file -e "HEAD:scripts/${script}" 2>/dev/null; then
-              git show "HEAD:scripts/${script}" > "/tmp/cursor-workflow-scripts/${script}"
-            else
-              echo "::error::Missing workflow script: scripts/${script}"
-              exit 1
-            fi
-            chmod +x "/tmp/cursor-workflow-scripts/${script}"
-          done
-          echo "SCRIPTS_DIR=/tmp/cursor-workflow-scripts" >> "$GITHUB_ENV"
+          SCRIPTS_DIR=$(bash scripts/cursor-workflow-load-scripts.sh /tmp/cursor-workflow-scripts handoff)
+          echo "SCRIPTS_DIR=${SCRIPTS_DIR}" >> "$GITHUB_ENV"
 
       - name: Resync issue status and ensure draft PR
         env:
@@ -390,6 +374,7 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           ISSUE: ${{ github.event.inputs.issue_number }}
           ENSURE_PR: ${{ github.event.inputs.ensure_draft_pr }}
+          RESYNC_DISCOVER: ${{ github.event.inputs.discover }}
         run: |
           set -euo pipefail
           WF="${SCRIPTS_DIR:-/tmp/cursor-workflow-scripts}"
@@ -402,7 +387,7 @@ jobs:
           fi
           git fetch origin "$BRANCH"
           git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
-          if [ -n "${CURSOR_API_KEY:-}" ]; then
+          if [ -n "${CURSOR_API_KEY:-}" ] && [ "${RESYNC_DISCOVER}" = "true" ] && ! "$WF/cursor-workflow-should-discover-agents.sh" /tmp/workflow.state.json; then
             "$WF/cursor-workflow-discover-agents.sh" /tmp/workflow.state.json "$BRANCH" || true
             git fetch origin "$BRANCH" --quiet 2>/dev/null || true
             if git cat-file -e "origin/${BRANCH}:${STATE}" 2>/dev/null; then
