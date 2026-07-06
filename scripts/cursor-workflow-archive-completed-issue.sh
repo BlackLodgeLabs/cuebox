@@ -86,7 +86,9 @@ git rm -rf "$SRC"
 echo "Removed $SRC from branch ${CURRENT_BRANCH}"
 
 if [[ "$NO_COMMIT" == false ]]; then
-  git -c user.name="${GIT_AUTHOR_NAME:-github-actions[bot]}" \
-      -c user.email="${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}" \
-      commit -m "chore(workflow): remove archived issue #${ISSUE} from main"
+  if ! git diff --quiet --cached; then
+    git -c user.name="${GIT_AUTHOR_NAME:-github-actions[bot]}" \
+        -c user.email="${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}" \
+        commit -m "chore(workflow): remove archived issue #${ISSUE} from main"
+  fi
 fi

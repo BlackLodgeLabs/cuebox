@@ -33,10 +33,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          CURSOR_LABELS="cursor:spec-needs-info cursor:spec-in-progress cursor:spec-ready cursor:plan-needs-info cursor:plan-in-progress cursor:plan-ready cursor:execute-in-progress cursor:execute-ready cursor:execute-passback cursor:changes-requested cursor:demo-in-progress cursor:demo-ready cursor:create-pr-in-progress cursor:create-pr-ready cursor:babysit-in-progress cursor:complete cursor:blocked"
+          LABELS_CSV="cursor:spec-needs-info,cursor:spec-in-progress,cursor:spec-ready,cursor:plan-needs-info,cursor:plan-in-progress,cursor:plan-ready,cursor:execute-in-progress,cursor:execute-ready,cursor:execute-passback,cursor:changes-requested,cursor:demo-in-progress,cursor:demo-ready,cursor:create-pr-in-progress,cursor:create-pr-ready,cursor:babysit-in-progress,cursor:complete,cursor:blocked"
           gh issue list --repo "$GITHUB_REPOSITORY" --state closed --limit 100 --json number -q '.[].number' | while read -r n; do
-            for label in $CURSOR_LABELS; do
-              gh issue edit "$n" --repo "$GITHUB_REPOSITORY" --remove-label "$label" 2>/dev/null || true
-            done
+            gh issue edit "$n" --repo "$GITHUB_REPOSITORY" --remove-label "$LABELS_CSV" 2>/dev/null || true
           done
           echo "Stripped cursor labels from closed issues"

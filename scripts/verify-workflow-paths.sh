@@ -116,6 +116,7 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-record-spawn-on-branch.sh
   cursor-workflow-load-scripts.sh
   cursor-workflow-archive-completed-issue.sh
+  cursor-workflow-linked-issues-from-text.sh
   cursor-workflow-post-merge.sh
   cursor-workflow-housekeeping.sh
   test-cursor-workflow-handoff.sh
@@ -223,6 +224,7 @@ fi
 # --- Shell tests for handoff hardening ---
 bash scripts/test-cursor-workflow-handoff.sh
 bash scripts/test-cursor-workflow-record-agent.sh
+bash scripts/test-cursor-workflow-linked-issues.sh
 
 if [[ "$fail" -ne 0 ]]; then
   exit 1

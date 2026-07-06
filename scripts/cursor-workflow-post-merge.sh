@@ -12,7 +12,7 @@ bash "$ROOT/scripts/cursor-workflow-strip-labels-from-pr.sh" "$PR"
 REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 BODY="$(gh pr view "$PR" --repo "$REPO" --json body -q .body 2>/dev/null || echo "")"
 
-mapfile -t ISSUES < <(printf '%s\n' "$BODY" | grep -oiE '(close[sd]?|fixe[sd]?)\s+#([0-9]+)' | grep -oiE '#[0-9]+' | tr -d '#' | sort -nu)
+mapfile -t ISSUES < <(printf '%s\n' "$BODY" | bash "$ROOT/scripts/cursor-workflow-linked-issues-from-text.sh")
 
 if [[ ${#ISSUES[@]} -eq 0 ]]; then
   echo "No issues to archive for PR #${PR}"
@@ -28,11 +28,15 @@ for issue in "${ISSUES[@]}"; do
 done
 
 if [[ "$ARCHIVED" -gt 0 ]]; then
-  git -c user.name="${GIT_AUTHOR_NAME:-github-actions[bot]}" \
-      -c user.email="${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}" \
-      commit -m "chore(workflow): archive artifacts for PR #${PR} post-merge"
-  git push origin HEAD
-  echo "Archived ${ARCHIVED} issue folder(s) from PR #${PR}"
+  if ! git diff --quiet --cached; then
+    git -c user.name="${GIT_AUTHOR_NAME:-github-actions[bot]}" \
+        -c user.email="${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}" \
+        commit -m "chore(workflow): archive artifacts for PR #${PR} post-merge"
+    git push origin HEAD
+    echo "Archived ${ARCHIVED} issue folder(s) from PR #${PR}"
+  else
+    echo "No changes staged to commit for PR #${PR}"
+  fi
 else
   echo "No workflow folders to archive for PR #${PR}"
 fi

@@ -4,6 +4,7 @@
 set -euo pipefail
 
 PR="${1:?usage: cursor-workflow-strip-labels-from-pr.sh <pr-number>}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 
 GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
@@ -15,7 +16,7 @@ export GH_TOKEN
 
 BODY="$(gh pr view "$PR" --repo "$REPO" --json body -q .body 2>/dev/null || echo "")"
 
-mapfile -t ISSUES < <(printf '%s\n' "$BODY" | grep -oiE '(close[sd]?|fixe[sd]?)\s+#([0-9]+)' | grep -oiE '#[0-9]+' | tr -d '#' | sort -nu)
+mapfile -t ISSUES < <(printf '%s\n' "$BODY" | bash "$ROOT/scripts/cursor-workflow-linked-issues-from-text.sh")
 
 if [[ ${#ISSUES[@]} -eq 0 ]]; then
   echo "No Closes/Fixes issue references in PR #${PR}"
@@ -30,12 +31,11 @@ CURSOR_LABELS=(
   cursor:create-pr-in-progress cursor:create-pr-ready cursor:babysit-in-progress
   cursor:complete cursor:blocked
 )
+LABELS_CSV="$(IFS=,; echo "${CURSOR_LABELS[*]}")"
 
 for issue in "${ISSUES[@]}"; do
   echo "Stripping cursor labels from issue #${issue} (PR #${PR})"
-  for label in "${CURSOR_LABELS[@]}"; do
-    gh issue edit "$issue" --repo "$REPO" --remove-label "$label" 2>/dev/null || true
-  done
+  gh issue edit "$issue" --repo "$REPO" --remove-label "$LABELS_CSV" 2>/dev/null || true
 done
 
 echo "Done."
