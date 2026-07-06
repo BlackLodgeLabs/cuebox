@@ -15,22 +15,16 @@ export GH_TOKEN
 
 REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 
-CURSOR_LABELS=(
-  cursor:spec-needs-info cursor:spec-in-progress cursor:spec-ready
-  cursor:plan-needs-info cursor:plan-in-progress cursor:plan-ready
-  cursor:execute-in-progress cursor:execute-ready cursor:execute-passback
-  cursor:changes-requested cursor:demo-in-progress cursor:demo-ready
-  cursor:create-pr-in-progress cursor:create-pr-ready cursor:babysit-in-progress
-  cursor:complete cursor:blocked
-)
+mapfile -t ON_ISSUE < <(gh issue view "$ISSUE" --repo "$REPO" --json labels -q '.labels[].name' | grep '^cursor:' || true)
 
-remove_args=()
-for label in "${CURSOR_LABELS[@]}"; do
-  remove_args+=(--remove-label "$label")
-done
-
-# gh issue edit accepts only one --remove-label per flag; comma-separated values do not work.
-if ! gh issue edit "$ISSUE" --repo "$REPO" "${remove_args[@]}"; then
-  echo "Warning: could not strip all cursor labels from issue #${ISSUE}" >&2
+if [[ ${#ON_ISSUE[@]} -eq 0 ]]; then
+  echo "No cursor labels on issue #${ISSUE}"
+  exit 0
 fi
+
+for label in "${ON_ISSUE[@]}"; do
+  if ! gh issue edit "$ISSUE" --repo "$REPO" --remove-label "$label"; then
+    echo "Warning: could not remove ${label} from issue #${ISSUE}" >&2
+  fi
+done
 echo "Stripped cursor labels from issue #${ISSUE}"
