@@ -5,7 +5,6 @@
 set -euo pipefail
 
 ISSUE="${1:?usage: cursor-workflow-strip-cursor-labels.sh <issue-number>}"
-REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 
 GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 if [[ -z "$GH_TOKEN" ]]; then
@@ -13,6 +12,8 @@ if [[ -z "$GH_TOKEN" ]]; then
   exit 1
 fi
 export GH_TOKEN
+
+REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 
 CURSOR_LABELS=(
   cursor:spec-needs-info cursor:spec-in-progress cursor:spec-ready
@@ -29,5 +30,7 @@ for label in "${CURSOR_LABELS[@]}"; do
 done
 
 # gh issue edit accepts only one --remove-label per flag; comma-separated values do not work.
-gh issue edit "$ISSUE" --repo "$REPO" "${remove_args[@]}" 2>/dev/null || true
+if ! gh issue edit "$ISSUE" --repo "$REPO" "${remove_args[@]}"; then
+  echo "Warning: could not strip all cursor labels from issue #${ISSUE}" >&2
+fi
 echo "Stripped cursor labels from issue #${ISSUE}"

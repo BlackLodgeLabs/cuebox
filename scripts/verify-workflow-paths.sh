@@ -122,6 +122,7 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-housekeeping.sh
   test-cursor-workflow-handoff.sh
   test-cursor-workflow-record-agent.sh
+  test-cursor-workflow-strip-cursor-labels.sh
 )
 for script in "${HANDOFF_SCRIPTS[@]}"; do
   if [ ! -x "scripts/${script}" ]; then
