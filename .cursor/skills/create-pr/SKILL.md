@@ -43,7 +43,7 @@ Fill every section in the template with **concrete** content from the sources ab
 
 | Section | Sources |
 |---------|---------|
-| Related Issue | Link to `https://github.com/{owner}/{repo}/issues/{NNN}` |
+| Related Issue | `Closes #{NNN}` on its own line (auto-closes issue on merge) + link to `https://github.com/{owner}/{repo}/issues/{NNN}` |
 | Description — what / why | SPEC summary + PLAN architectural choices |
 | Changes Proposed | Commit subjects + PLAN file list; bullet per meaningful change |
 | Scenario Results | Embed demo screenshots/recordings using **absolute** `raw.githubusercontent.com` URLs (see below); copy pass/fail table from `demo-notes.md` |
@@ -56,19 +56,19 @@ Fill every section in the template with **concrete** content from the sources ab
 
 `PR.md` is synced to the GitHub **PR description** via `gh pr edit --body-file`. Relative paths such as `demo/scenario-1.png` resolve against the PR page URL (`/pull/demo/...`) and **break**.
 
-Use absolute raw URLs with the issue branch and full repo path from `workflow.state.json`:
+Use absolute `raw.githubusercontent.com` URLs. Prefer the **current commit SHA** so images survive post-merge archive (workflow folders move off `main`):
+
+```text
+https://raw.githubusercontent.com/{owner}/{repo}/{commit-sha}/workflow/issues/issue-{NNN}/demo/{filename}
+```
+
+Fall back to the issue **branch** name if SHA is unavailable:
 
 ```text
 https://raw.githubusercontent.com/{owner}/{repo}/{branch}/workflow/issues/issue-{NNN}/demo/{filename}
 ```
 
-Example (issue 62, branch `cursor/issue-62-harden-cursor-workflow-state-pass-back`):
-
-```markdown
-![Scenario 1 gates pass](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/cursor/issue-62-harden-cursor-workflow-state-pass-back/workflow/issues/issue-62/demo/scenario-1-gates-pass.png)
-```
-
-Derive `{owner}/{repo}` from `git remote get-url origin`; `{branch}` from `workflow.state.json` → `branch`; `{NNN}` from `issue`. Do **not** use short relative paths like `demo/foo.png` or `workflow/issues/issue-NNN/demo/foo.png` without the `https://raw.githubusercontent.com/...` prefix.
+Get SHA: `git rev-parse HEAD`. Derive `{owner}/{repo}` from `git remote get-url origin`; `{NNN}` from `issue`. Do **not** use `main` in demo URLs. Do **not** use short relative paths like `demo/foo.png`.
 
 Quality bar:
 
