@@ -1,0 +1,16 @@
+{
+  "issue": 77,
+  "branch": "cursor/issue-77-optimize-handoff-actions-perf-e7b1",
+  "stage": "plan-in-progress",
+  "pr": 78,
+  "agents": {
+    "review-and-spec": "bc-spec-agent",
+    "planning": "bc-planning-agent"
+  },
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}

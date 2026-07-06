@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "id": "bc-mock-spec-1",
+      "status": "ACTIVE",
+      "latestRunId": "run-1",
+      "createdAt": "2026-01-01T00:00:00Z"
+    }
+  ]
+}
