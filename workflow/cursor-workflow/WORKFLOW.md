@@ -99,6 +99,60 @@ The handoff Action enforces a maximum of **8** concurrent in-flight Cloud Agent 
 
 When `stage` is `create-pr-ready`, the linked PR is still draft, and `agents.babysit-pr` is null, the Action spawns babysit even on **sync-only** pushes (no `workflow.state.json` change). Self-heals missed handoffs from quota exhaustion or lost transitions.
 
+## Performance optimizations (issue #77)
+
+Handoff Actions run time is reduced by skipping redundant Cursor API scans, deduplicating status syncs, and batching git state writes.
+
+### Skip discovery
+
+`cursor-workflow-should-discover-agents.sh` skips `cursor-workflow-discover-agents.sh` when:
+
+- `agents.review-and-spec` and `agents.review-and-spec-continued` are both set, **or**
+- `stage` rank is **≥ `plan-in-progress`** (25) — handoff-recorded agents do not need API backfill.
+
+Discovery still runs for early spec stages missing `review-and-spec`. When `pr` is known, the agents list may include a `prUrl` filter.
+
+**Resync** (`workflow_dispatch`) skips discovery by default. Enable the **discover** input to force backfill.
+
+### Shared agents list cache
+
+| Env / file | Purpose |
+|------------|---------|
+| `CURSOR_AGENTS_LIST_CACHE` | Path to JSON written once per job (default `$RUNNER_TEMP/cursor-agents-list.json`) |
+| Written by | `cursor-workflow-fetch-agents-list.sh` on first list need |
+| Read by | `count-active-agents`, `discover-agents` (when run) |
+
+### Batched spawn writes
+
+Successful spawns use `cursor-workflow-record-spawn-on-branch.sh` — one branch push records `agents.<skill>`, `active_agent_id`, `active_skill`, `handoff_pending: null`, optional `status_comment_id`, and `updated_at`.
+
+In-job pending lock: `CURSOR_WORKFLOW_PENDING_SKILL` env (not a branch push) blocks duplicate POST within the same job.
+
+### Status comment ID (`status_comment_id`)
+
+After the first status comment create, `status_comment_id` is stored in `workflow.state.json`. Subsequent syncs use `PATCH /issues/comments/{id}`; paginated search runs only on PATCH 404.
+
+### Sync dedup
+
+`CURSOR_WORKFLOW_SYNCED=1` after the first successful sync in a job. Callers skip redundant syncs unless `HANDOFF_PROGRESS_STAGE` (or other `HANDOFF_*` overrides) require a refresh. The duplicate `spec-ready` sync in the handoff YAML was removed.
+
+### Cap count cache
+
+`CURSOR_WORKFLOW_IN_FLIGHT_COUNT` / `CURSOR_WORKFLOW_IN_FLIGHT_COUNT_FILE` is set on the first admission-gate cap check per job (effective TTL: job lifetime). Deferral retries reuse the cached count instead of re-paginating agents.
+
+### Checkout and setup
+
+- Shallow checkout (`fetch-depth: 2`) for push/resync jobs; scripts load from `origin/main` via `cursor-workflow-load-scripts.sh`.
+- `apt-get install` runs only when `jq` or `gh` is missing on the runner.
+
+### Expected run-time targets
+
+| Scenario | Target |
+|----------|--------|
+| Sync-only push (no stage change) | &lt; 2 min (often &lt; 60s excluding queue) |
+| Handoff spawn | Dominated by Cursor API POST + one push |
+| Resync dispatch (no discover) | &lt; 60s |
+
 ### Agent conversation links
 
 `workflow.state.json` includes an `agents` object with one entry per workflow stage:
@@ -224,6 +278,7 @@ Use when labels or the status comment are out of date, or a draft PR was never l
 1. Actions → **Cursor workflow handoff** → **Run workflow**
 2. Enter the issue number
 3. Optionally enable **ensure draft PR**
+4. Optionally enable **discover** to backfill spec agent links (default: labels/comment only)
 
 The resync job loads `workflow.state.json` from the remote issue branch and runs the same label/comment sync.
 
