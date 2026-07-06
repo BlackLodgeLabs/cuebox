@@ -36,6 +36,11 @@ if [ -n "$agent_recorded" ] && [ "$agent_recorded" != "null" ] && [ "$PASSBACK" 
   exit 0
 fi
 
+if [ -n "${CURSOR_WORKFLOW_PENDING_SKILL:-}" ] && [ "${CURSOR_WORKFLOW_PENDING_SKILL}" = "$TARGET_SKILL" ]; then
+  echo "defer:pending-lock"
+  exit 0
+fi
+
 pending_skill=$(jq -r '.handoff_pending.skill // empty' "$STATE_FILE")
 pending_started=$(jq -r '.handoff_pending.started_at // empty' "$STATE_FILE")
 
@@ -49,8 +54,19 @@ if [ -n "$pending_skill" ] && [ "$pending_skill" != "null" ] && [ -n "$pending_s
   fi
 fi
 
-# In-flight runs (RUNNING/CREATING) targeting this repo — not durable ACTIVE workspaces.
-in_flight_count=$("$SCRIPT_DIR/cursor-workflow-count-active-agents.sh")
+if [ -n "${CURSOR_WORKFLOW_IN_FLIGHT_COUNT:-}" ]; then
+  in_flight_count="${CURSOR_WORKFLOW_IN_FLIGHT_COUNT}"
+else
+  IN_FLIGHT_CACHE="${CURSOR_WORKFLOW_IN_FLIGHT_COUNT_FILE:-${RUNNER_TEMP:-/tmp}/cursor-in-flight-count}"
+  if [ -f "$IN_FLIGHT_CACHE" ]; then
+    in_flight_count=$(cat "$IN_FLIGHT_CACHE")
+  else
+    in_flight_count=$("$SCRIPT_DIR/cursor-workflow-count-active-agents.sh")
+    echo "$in_flight_count" > "$IN_FLIGHT_CACHE"
+  fi
+  export CURSOR_WORKFLOW_IN_FLIGHT_COUNT="$in_flight_count"
+fi
+
 if [ "$in_flight_count" -ge "$MAX_ACTIVE" ]; then
   echo "defer:at-cap"
   exit 0
