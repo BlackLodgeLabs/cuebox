@@ -3,7 +3,7 @@
   "branch": "cursor/issue-77-optimize-handoff-actions-perf-e7b1",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-06T07:15:00Z",
+  "updated_at": "2026-07-06T07:07:51Z",
   "agents": {
     "planning": "bc-d59538c6-7c05-471e-be82-90fd14fe0e19"
   },
@@ -11,7 +11,11 @@
   "active_agent_id": "bc-d59538c6-7c05-471e-be82-90fd14fe0e19",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-06T07:07:51Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
