@@ -1,9 +1,9 @@
 {
   "issue": 77,
   "branch": "cursor/issue-77-optimize-handoff-actions-perf-e7b1",
-  "stage": "demo-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-06T07:40:19Z",
+  "stage": "create-pr-in-progress",
+  "active_skill": "create-pr",
+  "updated_at": "2026-07-06T07:45:00Z",
   "agents": {
     "execute": "bc-60ba6e38-94e8-45b0-a1c2-5e2ae6225690",
     "planning": "bc-d59538c6-7c05-471e-be82-90fd14fe0e19",
