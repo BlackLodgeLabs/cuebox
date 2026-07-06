@@ -1,0 +1,25 @@
+{
+  "issue": 28,
+  "branch": "cursor/issue-28-hard-delete-past-recommendations",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-06T00:00:00Z",
+  "agents": {
+    "babysit-pr": null,
+    "create-pr": "bc-7ac76c63-0f1c-4b8f-a622-303b84847772",
+    "demo": "bc-7e67995a-ac9c-4159-9192-00535bd9a83f",
+    "execute": "bc-b341671c-e127-4b03-be94-8d732f4da013",
+    "planning": "bc-70e8bf39-267e-4f87-b08c-4f8571cff09a",
+    "review-and-spec": null,
+    "review-and-spec-continued": null
+  },
+  "pr": 67,
+  "active_agent_id": null,
+  "passback_to": null,
+  "passback_reason": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 6
+  }
+}
