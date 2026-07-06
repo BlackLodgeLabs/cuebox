@@ -1,0 +1,7 @@
+=== Scenario 2: skip-discovery predicate ===
+
+--- Test A: plan-in-progress (expect exit 0 = skip) ---
+exit code: 0
+
+--- Test B: spec-ready without review-and-spec agent (expect exit 1 = discover) ---
+exit code: 1

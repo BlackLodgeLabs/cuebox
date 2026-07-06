@@ -1,0 +1,87 @@
+=== Scenario 1: test-cursor-workflow-handoff.sh ===
+PASS: dedup admission skip
+PASS: dedup spawn skipped
+PASS: at-cap admission defer
+PASS: api-400 exit 0
+PASS: api-400 logged
+PASS: fresh pending lock defer
+PASS: babysit recovery spawned
+PASS: babysit agent recorded in state
+PASS: stage merge keeps higher rank (create-pr-ready)
+PASS: stage merge preserves remote pr
+PASS: stage rank ordering
+PASS: plan-ready ranks above spec-ready
+PASS: plan-needs-info ranks above plan-in-progress
+PASS: changes-requested ranks above complete
+PASS: stage merge keeps plan-ready over spec-ready
+PASS: should-discover skips plan-in-progress
+PASS: discover makes 0 list fetches when skipped
+PASS: should-discover runs at spec-ready
+PASS: shared list cache single fetch
+PASS: batched spawn clears pending and records agent
+PASS: duplicate sync skipped when already synced
+PASS: comment id cache uses PATCH not list
+PASS: cap count cached across admission gate calls
+test-cursor-workflow-handoff.sh: all cases passed
+EXIT: 0
+
+=== test-cursor-workflow-record-agent.sh ===
+Switched to a new branch 'main'
+To /tmp/tmp.y6wTfw0BsW/remote-push.git
+ * [new branch]      main -> main
+ * [new branch]      cursor/issue-99-test -> cursor/issue-99-test
+From /tmp/tmp.y6wTfw0BsW/remote-push
+ * branch            cursor/issue-99-test -> FETCH_HEAD
+PASS: record-agent pushes ID when remote slot is null but local pre-updated
+Switched to a new branch 'main'
+To /tmp/tmp.y6wTfw0BsW/remote-idempotent.git
+ * [new branch]      main -> main
+ * [new branch]      cursor/issue-99-test -> cursor/issue-99-test
+To /tmp/tmp.y6wTfw0BsW/remote-idempotent.git
+   ff9efa6..76c602f  cursor/issue-99-test -> cursor/issue-99-test
+PASS: record-agent idempotent when remote already has agent ID
+test-cursor-workflow-record-agent.sh: all cases passed
+EXIT: 0
+
+=== verify-workflow-paths.sh ===
+PASS: dedup admission skip
+PASS: dedup spawn skipped
+PASS: at-cap admission defer
+PASS: api-400 exit 0
+PASS: api-400 logged
+PASS: fresh pending lock defer
+PASS: babysit recovery spawned
+PASS: babysit agent recorded in state
+PASS: stage merge keeps higher rank (create-pr-ready)
+PASS: stage merge preserves remote pr
+PASS: stage rank ordering
+PASS: plan-ready ranks above spec-ready
+PASS: plan-needs-info ranks above plan-in-progress
+PASS: changes-requested ranks above complete
+PASS: stage merge keeps plan-ready over spec-ready
+PASS: should-discover skips plan-in-progress
+PASS: discover makes 0 list fetches when skipped
+PASS: should-discover runs at spec-ready
+PASS: shared list cache single fetch
+PASS: batched spawn clears pending and records agent
+PASS: duplicate sync skipped when already synced
+PASS: comment id cache uses PATCH not list
+PASS: cap count cached across admission gate calls
+test-cursor-workflow-handoff.sh: all cases passed
+Switched to a new branch 'main'
+To /tmp/tmp.5G4CT3tAqB/remote-push.git
+ * [new branch]      main -> main
+ * [new branch]      cursor/issue-99-test -> cursor/issue-99-test
+From /tmp/tmp.5G4CT3tAqB/remote-push
+ * branch            cursor/issue-99-test -> FETCH_HEAD
+PASS: record-agent pushes ID when remote slot is null but local pre-updated
+Switched to a new branch 'main'
+To /tmp/tmp.5G4CT3tAqB/remote-idempotent.git
+ * [new branch]      main -> main
+ * [new branch]      cursor/issue-99-test -> cursor/issue-99-test
+To /tmp/tmp.5G4CT3tAqB/remote-idempotent.git
+   800b065..11f9d7e  cursor/issue-99-test -> cursor/issue-99-test
+PASS: record-agent idempotent when remote already has agent ID
+test-cursor-workflow-record-agent.sh: all cases passed
+PASS: no legacy workflow paths found
+EXIT: 0
