@@ -3,14 +3,15 @@
   "branch": "cursor/issue-77-optimize-handoff-actions-perf-e7b1",
   "stage": "create-pr-ready",
   "active_skill": null,
-  "updated_at": "2026-07-06T07:43:50Z",
+  "updated_at": "2026-07-06T07:43:54Z",
   "agents": {
     "execute": "bc-60ba6e38-94e8-45b0-a1c2-5e2ae6225690",
     "planning": "bc-d59538c6-7c05-471e-be82-90fd14fe0e19",
-    "create-pr": "bc-1eb53eef-fcb5-48b0-882e-58430b16a153"
+    "create-pr": "bc-1eb53eef-fcb5-48b0-882e-58430b16a153",
+    "babysit-pr": "bc-bbb22800-5c81-487a-b6fb-1f8daa857124"
   },
   "pr": 78,
-  "active_agent_id": "bc-1eb53eef-fcb5-48b0-882e-58430b16a153",
+  "active_agent_id": "bc-bbb22800-5c81-487a-b6fb-1f8daa857124",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": {
