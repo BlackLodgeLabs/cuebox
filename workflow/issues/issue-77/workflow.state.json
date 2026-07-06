@@ -1,9 +1,9 @@
 {
   "issue": 77,
   "branch": "cursor/issue-77-optimize-handoff-actions-perf-e7b1",
-  "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-06T07:02:30Z",
+  "stage": "plan-in-progress",
+  "active_skill": "planning",
+  "updated_at": "2026-07-06T07:10:00Z",
   "agents": {
     "planning": "bc-d59538c6-7c05-471e-be82-90fd14fe0e19"
   },
