@@ -27,6 +27,14 @@ vi.mock("@/components/film-poster", () => ({
   FilmPoster: ({ alt }: { alt: string }) => <div>{alt}</div>,
 }));
 
+const { useFilmsWatchProvidersMock } = vi.hoisted(() => ({
+  useFilmsWatchProvidersMock: vi.fn(() => new Map()),
+}));
+
+vi.mock("@/hooks/use-watch-providers", () => ({
+  useFilmsWatchProviders: useFilmsWatchProvidersMock,
+}));
+
 const recommendation: RecommendationResponse = {
   session_id: "session-1",
   profile_id: "profile-1",
@@ -78,25 +86,6 @@ describe("ResultsView", () => {
     cleanup();
   });
 
-  it("renders TMDB and RT scores without Letterboxd and links cards to watchlist detail", () => {
-    render(<ResultsView data={recommendation} showActions={false} />);
-
-    expect(screen.getByText("TMDB: 7.8")).toBeInTheDocument();
-    expect(screen.getByText("RT: 92%")).toBeInTheDocument();
-    expect(screen.getByText("TMDB: 6.5")).toBeInTheDocument();
-    expect(screen.getByText("RT: 80%")).toBeInTheDocument();
-    expect(screen.queryByText(/LBX:/i)).not.toBeInTheDocument();
-
-    expect(screen.getByRole("link", { name: /view winner film \(1999\) in watchlist/i })).toHaveAttribute(
-      "href",
-      "/watchlist/winner-1",
-    );
-    expect(screen.getByRole("link", { name: /view runner film \(2001\) in watchlist/i })).toHaveAttribute(
-      "href",
-      "/watchlist/runner-1",
-    );
-  });
-
   it("shows winner synopsis, key factors before why it matches, and extra winner sections", () => {
     render(<ResultsView data={recommendation} showActions={false} />);
 
@@ -127,5 +116,63 @@ describe("ResultsView", () => {
     expect(
       screen.queryByText("Should not appear on runner-up card."),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders TMDB and RT scores without Letterboxd and links cards to watchlist detail", () => {
+    render(<ResultsView data={recommendation} showActions={false} />);
+
+    expect(screen.getByText("TMDB: 7.8")).toBeInTheDocument();
+    expect(screen.getByText("RT: 92%")).toBeInTheDocument();
+    expect(screen.getByText("TMDB: 6.5")).toBeInTheDocument();
+    expect(screen.getByText("RT: 80%")).toBeInTheDocument();
+    expect(screen.queryByText(/LBX:/i)).not.toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: /view winner film \(1999\) in watchlist/i })).toHaveAttribute(
+      "href",
+      "/watchlist/winner-1",
+    );
+    expect(screen.getByRole("link", { name: /view runner film \(2001\) in watchlist/i })).toHaveAttribute(
+      "href",
+      "/watchlist/runner-1",
+    );
+  });
+
+  it("renders provider icons when watch-provider data is available", () => {
+    useFilmsWatchProvidersMock.mockReturnValue(
+      new Map([
+        [
+          "winner-1",
+          {
+            data: {
+              film_id: "winner-1",
+              tmdb_id: 1,
+              country_code: "GB",
+              link: null,
+              categories: [
+                {
+                  type: "flatrate",
+                  label: "Stream",
+                  providers: [
+                    {
+                      provider_id: 8,
+                      provider_name: "Netflix",
+                      logo_url: "https://image.tmdb.org/t/p/w92/netflix.jpg",
+                      display_priority: 1,
+                    },
+                  ],
+                },
+              ],
+            },
+            isLoading: false,
+            isError: false,
+          },
+        ],
+      ]),
+    );
+
+    render(<ResultsView data={recommendation} showActions={false} />);
+
+    expect(screen.getByTestId("watch-provider-icons")).toBeInTheDocument();
+    expect(screen.getByLabelText("Netflix")).toBeInTheDocument();
   });
 });

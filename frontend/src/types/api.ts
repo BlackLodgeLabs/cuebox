@@ -8,6 +8,7 @@ export type ErrorCode =
   | "ENRICHMENT_NOT_READY"
   | "INSUFFICIENT_CANDIDATES"
   | "PROVIDER_ERROR"
+  | "UNPROCESSABLE"
   | "INTERNAL_ERROR";
 
 export interface ErrorDetail {
@@ -142,6 +143,29 @@ export interface FilmDetail {
   semantic_profile: SemanticProfileBlock | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface WatchProviderItem {
+  provider_id: number;
+  provider_name: string;
+  logo_url: string | null;
+  display_priority: number;
+}
+
+export type WatchProviderCategoryType = "flatrate" | "rent" | "buy" | "ads";
+
+export interface WatchProviderCategory {
+  type: WatchProviderCategoryType;
+  label: "Stream" | "Rent" | "Buy" | "Free with Ads";
+  providers: WatchProviderItem[];
+}
+
+export interface FilmWatchProvidersResponse {
+  film_id: string;
+  tmdb_id: number;
+  country_code: string;
+  link: string | null;
+  categories: WatchProviderCategory[];
 }
 
 export interface CandidatePayload {

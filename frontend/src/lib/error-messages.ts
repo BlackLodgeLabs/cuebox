@@ -16,6 +16,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "No films in your watchlist match these preferences. Try relaxing your choices or importing more films.",
   PROVIDER_ERROR:
     "An external service failed. Please wait a moment and try again.",
+  UNPROCESSABLE:
+    "This film needs a TMDB match before streaming options can be shown.",
   INTERNAL_ERROR: "Something went wrong on our end. Please try again.",
 };
 

@@ -1,0 +1,26 @@
+{
+  "issue": 72,
+  "branch": "cursor/issue-72-tmdb-watch-providers-real-time",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-05T14:30:00Z",
+  "agents": {
+    "babysit-pr": null,
+    "create-pr": null,
+    "demo": null,
+    "execute": null,
+    "planning": "bc-b94d1afc-8993-4227-8a80-e34e074b8f5a",
+    "review-and-spec": "bc-162a6951-4b41-4492-92d7-c27a4204b7df",
+    "review-and-spec-continued": null
+  },
+  "pr": 73,
+  "active_agent_id": null,
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 8
+  }
+}

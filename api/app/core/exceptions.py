@@ -60,3 +60,11 @@ def conflict(message: str) -> AppError:
         message=message,
         status_code=409,
     )
+
+
+def unprocessable(message: str) -> AppError:
+    return AppError(
+        code=ErrorCode.UNPROCESSABLE,
+        message=message,
+        status_code=422,
+    )

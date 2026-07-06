@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FilmPoster } from "@/components/film-poster";
+import { WatchProviderIcons } from "@/components/watch-provider-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useFilmsWatchProviders } from "@/hooks/use-watch-providers";
 import { cn } from "@/lib/utils";
 import type {
   ConstraintRelaxation,
@@ -27,6 +29,7 @@ import type {
   ProfileSummary,
   RecommendationResponse,
 } from "@/types/api";
+import type { FilmWatchProvidersLookup } from "@/hooks/use-watch-providers";
 
 interface ResultsViewProps {
   data: RecommendationResponse & { profile_summary?: ProfileSummary };
@@ -110,7 +113,13 @@ function CardWatchlistLink({
   );
 }
 
-function WinnerResultCard({ film }: { film: FilmResult }) {
+function WinnerResultCard({
+  film,
+  watchProviders,
+}: {
+  film: FilmResult;
+  watchProviders?: FilmWatchProvidersLookup;
+}) {
   const filmTitle = formatFilmTitle(film);
   const directorRuntime = formatDirectorRuntime(film);
 
@@ -143,6 +152,9 @@ function WinnerResultCard({ film }: { film: FilmResult }) {
             <p className="text-body-md text-muted-foreground">{directorRuntime}</p>
           )}
           <RatingsRow film={film} />
+          {watchProviders?.data && (
+            <WatchProviderIcons categories={watchProviders.data.categories} />
+          )}
           {film.synopsis && (
             <div>
               <p className="text-label-md normal-case tracking-normal">Synopsis</p>
@@ -176,7 +188,13 @@ function WinnerResultCard({ film }: { film: FilmResult }) {
   );
 }
 
-function RunnerResultCard({ film }: { film: FilmResult }) {
+function RunnerResultCard({
+  film,
+  watchProviders,
+}: {
+  film: FilmResult;
+  watchProviders?: FilmWatchProvidersLookup;
+}) {
   const filmTitle = formatFilmTitle(film);
 
   return (
@@ -189,6 +207,9 @@ function RunnerResultCard({ film }: { film: FilmResult }) {
             {formatDirectorRuntime(film) ?? ""}
           </CardDescription>
           <RatingsRow film={film} />
+          {watchProviders?.data && (
+            <WatchProviderIcons categories={watchProviders.data.categories} />
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -238,20 +259,30 @@ function ConstraintRelaxationBanner({
 }
 
 export function ResultsView({ data, showActions = true }: ResultsViewProps) {
+  const filmIds = [data.winner.film_id, ...data.runners_up.map((film) => film.film_id)];
+  const watchProvidersByFilm = useFilmsWatchProviders(filmIds);
+
   return (
     <div className="space-y-8">
       {data.constraint_relaxation && (
         <ConstraintRelaxationBanner relaxation={data.constraint_relaxation} />
       )}
 
-      <WinnerResultCard film={data.winner} />
+      <WinnerResultCard
+        film={data.winner}
+        watchProviders={watchProvidersByFilm.get(data.winner.film_id)}
+      />
 
       {data.runners_up.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-h2">Runners-up</h2>
           <div className="grid gap-4 lg:grid-cols-2">
             {data.runners_up.map((film) => (
-              <RunnerResultCard key={film.film_id} film={film} />
+              <RunnerResultCard
+                key={film.film_id}
+                film={film}
+                watchProviders={watchProvidersByFilm.get(film.film_id)}
+              />
             ))}
           </div>
         </section>
