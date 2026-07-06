@@ -23,19 +23,9 @@ if [[ ${#ISSUES[@]} -eq 0 ]]; then
   exit 0
 fi
 
-CURSOR_LABELS=(
-  cursor:spec-needs-info cursor:spec-in-progress cursor:spec-ready
-  cursor:plan-needs-info cursor:plan-in-progress cursor:plan-ready
-  cursor:execute-in-progress cursor:execute-ready cursor:execute-passback
-  cursor:changes-requested cursor:demo-in-progress cursor:demo-ready
-  cursor:create-pr-in-progress cursor:create-pr-ready cursor:babysit-in-progress
-  cursor:complete cursor:blocked
-)
-LABELS_CSV="$(IFS=,; echo "${CURSOR_LABELS[*]}")"
-
 for issue in "${ISSUES[@]}"; do
   echo "Stripping cursor labels from issue #${issue} (PR #${PR})"
-  gh issue edit "$issue" --repo "$REPO" --remove-label "$LABELS_CSV" 2>/dev/null || true
+  bash "$ROOT/scripts/cursor-workflow-strip-cursor-labels.sh" "$issue"
 done
 
 echo "Done."
