@@ -1,0 +1,36 @@
+name: Cursor workflow post-merge
+
+# After a PR merges to main: strip cursor:* labels from linked issues and archive
+# workflow/issues/issue-N/ to the workflow/archive branch.
+# Issue auto-close is handled by GitHub when the PR body contains Closes/Fixes #N.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.3.1
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post-merge workflow cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+        run: |
+          bash scripts/cursor-workflow-load-scripts.sh
+          bash scripts/cursor-workflow-post-merge.sh "${{ github.event.pull_request.number }}"

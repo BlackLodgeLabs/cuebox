@@ -267,6 +267,20 @@ When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action set
 
 When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` also @mentions the issue author (once) and assigns the linked PR to them. Babysit agents do not post issue comments.
 
+### Post-merge cleanup (automated)
+
+When a PR with `Closes #NNN` / `Fixes #NNN` merges to `main`, [`.github/workflows/cursor-workflow-post-merge.yml`](../../.github/workflows/cursor-workflow-post-merge.yml):
+
+1. GitHub auto-closes the linked issue (from `Closes`/`Fixes` in the PR body)
+2. Strips all `cursor:*` labels from linked issues
+3. Moves `workflow/issues/issue-N/` to `issue-N/` on the [`workflow/archive`](https://github.com/BlackLodgeLabs/cuebox/tree/workflow/archive) branch
+
+`PR.md` must include `Closes #NNN` (see create-pr skill). Demo image URLs should use **commit SHA** so PR embeds survive archive.
+
+### Optional workflow review (human-triggered)
+
+After babysit completes, comment **`@cursoragent workflow-review`** on the issue to produce `WORKFLOW-REVIEW.md` and update [RETROSPECTIVES.md](RETROSPECTIVES.md). Not spawned by the handoff Action in v1 — see [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79).
+
 ### Draft PR creation
 
 At `spec-ready`, the Action creates a draft PR (if none exists) using `GITHUB_TOKEN`. Cloud agents cannot create PRs; they push commits and the open draft PR updates automatically. The PR number is written back to `workflow.state.json` on the branch.

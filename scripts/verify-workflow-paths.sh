@@ -115,6 +115,9 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-should-discover-agents.sh
   cursor-workflow-record-spawn-on-branch.sh
   cursor-workflow-load-scripts.sh
+  cursor-workflow-archive-completed-issue.sh
+  cursor-workflow-post-merge.sh
+  cursor-workflow-housekeeping.sh
   test-cursor-workflow-handoff.sh
   test-cursor-workflow-record-agent.sh
 )
@@ -181,6 +184,29 @@ fi
 CREATE_PR_SKILL=".cursor/skills/create-pr/SKILL.md"
 if ! grep -qF "Gate evidence" "$CREATE_PR_SKILL"; then
   echo "FAIL: ${CREATE_PR_SKILL} must reference Gate evidence" >&2
+  fail=1
+fi
+
+if ! grep -qF "Closes #NNN" "$PR_TEMPLATE"; then
+  echo "FAIL: ${PR_TEMPLATE} must include Closes #NNN for auto-close on merge" >&2
+  fail=1
+fi
+
+if [ ! -f "workflow/cursor-workflow/RETROSPECTIVES.md" ]; then
+  echo "FAIL: missing workflow/cursor-workflow/RETROSPECTIVES.md" >&2
+  fail=1
+fi
+
+for doc in documents/cloud-agent-part2-test-data.md documents/cloud-agent-tier3-fixture-import-plan.md; do
+  if [ ! -f "$doc" ]; then
+    echo "FAIL: missing ${doc}" >&2
+    fail=1
+  fi
+done
+
+POST_MERGE_YML=".github/workflows/cursor-workflow-post-merge.yml"
+if [ ! -f "$POST_MERGE_YML" ]; then
+  echo "FAIL: missing ${POST_MERGE_YML}" >&2
   fail=1
 fi
 

@@ -1,5 +1,7 @@
 ## Related Issue
 
+Closes #NNN
+
 [Link to GitHub Issue](https://github.com/OWNER/REPO/issues/NNN)
 
 ## Description
