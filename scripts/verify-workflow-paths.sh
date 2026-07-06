@@ -117,6 +117,7 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-load-scripts.sh
   cursor-workflow-archive-completed-issue.sh
   cursor-workflow-linked-issues-from-text.sh
+  cursor-workflow-strip-cursor-labels.sh
   cursor-workflow-post-merge.sh
   cursor-workflow-housekeeping.sh
   test-cursor-workflow-handoff.sh
@@ -225,6 +226,7 @@ fi
 bash scripts/test-cursor-workflow-handoff.sh
 bash scripts/test-cursor-workflow-record-agent.sh
 bash scripts/test-cursor-workflow-linked-issues.sh
+bash scripts/test-cursor-workflow-strip-cursor-labels.sh
 
 if [[ "$fail" -ne 0 ]]; then
   exit 1
