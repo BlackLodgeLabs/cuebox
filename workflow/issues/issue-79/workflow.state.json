@@ -1,9 +1,9 @@
 {
   "issue": 79,
   "branch": "cursor/issue-79-workflow-review-skill",
-  "stage": "spec-ready",
+  "stage": "plan-in-progress",
   "active_skill": "planning",
-  "updated_at": "2026-07-07T06:31:44Z",
+  "updated_at": "2026-07-07T06:32:40Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
