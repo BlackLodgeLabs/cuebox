@@ -2,7 +2,7 @@
   "issue": 79,
   "branch": "cursor/issue-79-workflow-review-skill",
   "stage": "complete",
-  "active_skill": null,
+  "active_skill": "workflow-review",
   "updated_at": "2026-07-07T07:35:00Z",
   "agents": {
     "babysit-pr": "bc-b906be30-9300-46e5-b677-124ee8ccefd8",
