@@ -1,8 +1,8 @@
 {
   "issue": 83,
   "branch": "cursor/issue-83-harden-fetch-depth-before-sha",
-  "stage": "babysit-in-progress",
-  "updated_at": "2026-07-07T19:20:00Z",
+  "stage": "complete",
+  "updated_at": "2026-07-07T19:22:00Z",
   "agents": {
     "babysit-pr": "bc-c83df549-97d4-49b5-800b-00873735b0f9",
     "create-pr": "bc-37fc3a63-d12d-4bfe-b053-1a42815a099c",
@@ -22,5 +22,5 @@
     "ci_autofix": 0,
     "total_runs": 6
   },
-  "active_skill": "babysit-pr"
+  "active_skill": null
 }
