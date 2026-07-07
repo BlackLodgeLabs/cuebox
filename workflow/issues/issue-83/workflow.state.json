@@ -1,8 +1,8 @@
 {
   "issue": 83,
   "branch": "cursor/issue-83-harden-fetch-depth-before-sha",
-  "stage": "plan-ready",
-  "updated_at": "2026-07-07T18:47:26Z",
+  "stage": "execute-ready",
+  "updated_at": "2026-07-07T19:10:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,14 +13,14 @@
     "review-and-spec-continued": null
   },
   "pr": 87,
-  "active_agent_id": "bc-efc1212c-a59e-439b-9a40-32b6d8cb7f30",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   },
-  "active_skill": "execute"
+  "active_skill": null
 }
