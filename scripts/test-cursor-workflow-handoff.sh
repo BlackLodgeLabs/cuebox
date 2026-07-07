@@ -133,11 +133,11 @@ test_babysit_recovery() {
   export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
   unset CURSOR_API_KEY
 
-  WF="$WF" "$SCRIPT_DIR/cursor-workflow-babysit-recovery.sh" \
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
     70 "cursor/issue-70-test" "$state" >/tmp/babysit-recovery.log 2>&1
 
   babysit=$("$SCRIPT_DIR/cursor-workflow-admission-gate.sh" "$state" "babysit-pr")
-  if grep -q "Babysit recovery: spawning" /tmp/babysit-recovery.log; then
+  if grep -q "Handoff recovery: spawning babysit-pr" /tmp/babysit-recovery.log; then
     pass "babysit recovery spawned"
   else
     fail_test "babysit recovery did not spawn"
@@ -147,6 +147,35 @@ test_babysit_recovery() {
     pass "babysit agent recorded in state"
   else
     fail_test "babysit agent not recorded"
+  fi
+  rm -f "$state"
+}
+
+# --- Plan-ready recovery: no execute agent ---
+test_plan_ready_recovery() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":79,"branch":"cursor/issue-79-test","stage":"plan-ready","agents":{"planning":"bc-plan"},"pr":82,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    79 "cursor/issue-79-test" "$state" >/tmp/plan-recovery.log 2>&1
+
+  if grep -q "Handoff recovery: spawning execute" /tmp/plan-recovery.log; then
+    pass "plan-ready recovery spawned execute"
+  else
+    fail_test "plan-ready recovery did not spawn execute"
+  fi
+  recorded=$(jq -r '.agents.execute // empty' "$state")
+  if [ -n "$recorded" ] && [ "$recorded" != "null" ]; then
+    pass "execute agent recorded in plan-ready recovery"
+  else
+    fail_test "execute agent not recorded in plan-ready recovery"
   fi
   rm -f "$state"
 }
@@ -392,6 +421,7 @@ test_at_cap
 test_api_400
 test_fresh_pending
 test_babysit_recovery
+test_plan_ready_recovery
 test_stage_merge
 test_stage_rank
 test_plan_ready_merge
