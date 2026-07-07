@@ -416,6 +416,95 @@ test_cap_count_cache() {
   rm -f "$state" "$CURSOR_WORKFLOW_IN_FLIGHT_COUNT_FILE"
 }
 
+# --- Multi-commit push: state change on non-tip commit (issue #83) ---
+test_push_diff_non_tip_state_change() {
+  local repo state_file c1 c2 c3 pattern bogus_sha
+  repo=$(mktemp -d)
+  state_file="workflow/issues/issue-83/workflow.state.json"
+  pattern='workflow/issues/issue-[0-9]+/workflow\.state\.json'
+
+  git -C "$repo" init -q
+  git -C "$repo" config user.email "test@example.com"
+  git -C "$repo" config user.name "Test User"
+
+  mkdir -p "$repo/$(dirname "$state_file")"
+  echo '{"issue":83,"stage":"spec-in-progress"}' > "$repo/$state_file"
+  git -C "$repo" add "$state_file"
+  git -C "$repo" commit -q -m "C1: initial state"
+  c1=$(git -C "$repo" rev-parse HEAD)
+
+  echo '{"issue":83,"stage":"spec-ready"}' > "$repo/$state_file"
+  git -C "$repo" add "$state_file"
+  git -C "$repo" commit -q -m "C2: state change"
+  c2=$(git -C "$repo" rev-parse HEAD)
+
+  echo "# unrelated" > "$repo/README.md"
+  git -C "$repo" add README.md
+  git -C "$repo" commit -q -m "C3: unrelated"
+  c3=$(git -C "$repo" rev-parse HEAD)
+
+  pushd "$repo" >/dev/null
+  if "$SCRIPT_DIR/cursor-workflow-push-diff-includes.sh" "$c1" "$c3" -E "$pattern"; then
+    pass "push diff detects non-tip state change across full range"
+  else
+    fail_test "push diff should detect state change on commit 2 (C1=$c1 C2=$c2 C3=$c3)"
+  fi
+
+  bogus_sha="0000000000000000000000000000000000000001"
+  if "$SCRIPT_DIR/cursor-workflow-push-diff-includes.sh" "$bogus_sha" "$c3" -E "$pattern" 2>/dev/null; then
+    fail_test "tip-only fallback should not match when state changed only on non-tip commit"
+  else
+    pass "tip-only fallback misses non-tip state change when BEFORE_SHA unavailable"
+  fi
+  popd >/dev/null
+
+  rm -rf "$repo"
+}
+
+# --- Multi-commit push: PR.md change on non-tip commit (issue #83) ---
+test_push_diff_non_tip_pr_md() {
+  local repo pr_file c1 c2 c3 bogus_sha
+  repo=$(mktemp -d)
+  pr_file="workflow/issues/issue-83/PR.md"
+
+  git -C "$repo" init -q
+  git -C "$repo" config user.email "test@example.com"
+  git -C "$repo" config user.name "Test User"
+
+  mkdir -p "$repo/$(dirname "$pr_file")"
+  echo "# Draft PR" > "$repo/$pr_file"
+  git -C "$repo" add "$pr_file"
+  git -C "$repo" commit -q -m "C1: initial PR.md"
+  c1=$(git -C "$repo" rev-parse HEAD)
+
+  echo "# Updated PR body" > "$repo/$pr_file"
+  git -C "$repo" add "$pr_file"
+  git -C "$repo" commit -q -m "C2: PR.md change"
+  c2=$(git -C "$repo" rev-parse HEAD)
+
+  echo "# unrelated" > "$repo/README.md"
+  git -C "$repo" add README.md
+  git -C "$repo" commit -q -m "C3: unrelated"
+  c3=$(git -C "$repo" rev-parse HEAD)
+
+  pushd "$repo" >/dev/null
+  if "$SCRIPT_DIR/cursor-workflow-push-diff-includes.sh" "$c1" "$c3" -F "$pr_file"; then
+    pass "push diff detects non-tip PR.md change across full range"
+  else
+    fail_test "push diff should detect PR.md change on commit 2 (C1=$c1 C2=$c2 C3=$c3)"
+  fi
+
+  bogus_sha="0000000000000000000000000000000000000001"
+  if "$SCRIPT_DIR/cursor-workflow-push-diff-includes.sh" "$bogus_sha" "$c3" -F "$pr_file" 2>/dev/null; then
+    fail_test "tip-only fallback should not match when PR.md changed only on non-tip commit"
+  else
+    pass "tip-only fallback misses non-tip PR.md change when BEFORE_SHA unavailable"
+  fi
+  popd >/dev/null
+
+  rm -rf "$repo"
+}
+
 test_dedup
 test_at_cap
 test_api_400
@@ -432,6 +521,8 @@ test_batched_spawn_writes
 test_no_duplicate_sync
 test_comment_id_cache
 test_cap_count_cache
+test_push_diff_non_tip_state_change
+test_push_diff_non_tip_pr_md
 
 if [ "$fail" -ne 0 ]; then
   echo "test-cursor-workflow-handoff.sh: FAILED" >&2
