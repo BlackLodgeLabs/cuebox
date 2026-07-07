@@ -43,6 +43,7 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-babysit-recovery.sh
   cursor-workflow-handoff-recovery.sh
   cursor-workflow-ensure-before-sha.sh
+  cursor-workflow-push-diff-includes.sh
   cursor-workflow-post-deferral-comment.sh
   cursor-workflow-fetch-agents-list.sh
   cursor-workflow-should-discover-agents.sh

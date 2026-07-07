@@ -22,5 +22,5 @@
     "ci_autofix": 0,
     "total_runs": 6
   },
-  "active_skill": null
+  "active_skill": "workflow-review"
 }
