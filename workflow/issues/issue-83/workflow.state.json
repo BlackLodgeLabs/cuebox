@@ -1,9 +1,9 @@
 {
   "issue": 83,
   "branch": "cursor/issue-83-harden-fetch-depth-before-sha",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-07T18:45:00Z",
+  "updated_at": "2026-07-07T18:50:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
