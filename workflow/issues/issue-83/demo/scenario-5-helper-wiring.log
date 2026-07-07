@@ -1,3 +1,0 @@
-OK
-          if "$WF/cursor-workflow-push-diff-includes.sh" "$BEFORE_SHA" "$AFTER_SHA" -F "$PR_MD_FILE"; then
-          if "$WF/cursor-workflow-push-diff-includes.sh" "$BEFORE_SHA" "$AFTER_SHA" -E "$STATE_PATH_PATTERN"; then
