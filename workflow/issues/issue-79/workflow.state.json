@@ -2,11 +2,11 @@
   "issue": 79,
   "branch": "cursor/issue-79-workflow-review-skill",
   "stage": "demo-ready",
-  "active_skill": "demo",
-  "updated_at": "2026-07-07T07:10:00Z",
+  "active_skill": "create-pr",
+  "updated_at": "2026-07-07T07:07:50Z",
   "agents": {
     "babysit-pr": null,
-    "create-pr": null,
+    "create-pr": "bc-41147efe-1dc7-4572-a154-2816b55bf86a",
     "demo": "bc-2a4cacba-4617-4ad9-8936-3e2c4d5f8b78",
     "execute": "bc-e3842ec9-24af-4f7d-b393-e82cde16bfd5",
     "planning": "bc-50cb7402-9ebf-4027-9564-730fa8bf0782",
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 82,
-  "active_agent_id": "bc-2a4cacba-4617-4ad9-8936-3e2c4d5f8b78",
+  "active_agent_id": "bc-41147efe-1dc7-4572-a154-2816b55bf86a",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
