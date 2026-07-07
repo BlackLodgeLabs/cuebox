@@ -43,6 +43,21 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Ensure push base commit is available
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -f scripts/cursor-workflow-ensure-before-sha.sh ]; then
+            bash scripts/cursor-workflow-ensure-before-sha.sh "${BEFORE_SHA}"
+          elif [ "${BEFORE_SHA}" != "0000000000000000000000000000000000000000" ] && \
+               ! git cat-file -e "${BEFORE_SHA}" 2>/dev/null; then
+            echo "Fetching missing BEFORE_SHA ${BEFORE_SHA} (shallow checkout)"
+            git fetch --depth=1 origin "${BEFORE_SHA}" 2>/dev/null || \
+              git fetch origin "${BEFORE_SHA}" 2>/dev/null || \
+              echo "::warning::Could not fetch BEFORE_SHA ${BEFORE_SHA}"
+          fi
+
       - name: Install dependencies
         run: |
           command -v jq >/dev/null || sudo apt-get update -qq && sudo apt-get install -y jq
@@ -301,9 +316,20 @@ jobs:
           fi
 
           state_changed=false
+          prev_stage=""
+          if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}:${STATE_FILE}" 2>/dev/null; then
+            prev_stage=$(git show "${BEFORE_SHA}:${STATE_FILE}" | jq -r '.stage // empty')
+          fi
           if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
-            if git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE "$STATE_PATH_PATTERN"; then
-              state_changed=true
+            if git cat-file -e "${BEFORE_SHA}" 2>/dev/null; then
+              if git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE "$STATE_PATH_PATTERN"; then
+                state_changed=true
+              fi
+            else
+              echo "::warning::BEFORE_SHA ${BEFORE_SHA} unavailable — checking AFTER_SHA commit only"
+              if git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" | grep -qE "$STATE_PATH_PATTERN"; then
+                state_changed=true
+              fi
             fi
           else
             if git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" | grep -qE "$STATE_PATH_PATTERN"; then
@@ -313,18 +339,13 @@ jobs:
 
           if [ "$state_changed" != "true" ]; then
             echo "workflow.state.json unchanged — sync only (stage=${stage})"
-            "$WF/cursor-workflow-babysit-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json || true
+            "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json "$prev_stage" || true
             exit 0
-          fi
-
-          prev_stage=""
-          if [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}:${STATE_FILE}" 2>/dev/null; then
-            prev_stage=$(git show "${BEFORE_SHA}:${STATE_FILE}" | jq -r '.stage // empty')
           fi
 
           if [ "$stage" = "$prev_stage" ]; then
             echo "Stage unchanged ($stage) — no handoff"
-            "$WF/cursor-workflow-babysit-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json || true
+            "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json "$prev_stage" || true
             exit 0
           fi
 

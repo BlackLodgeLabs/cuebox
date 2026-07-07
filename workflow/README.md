@@ -13,7 +13,7 @@ Per-issue specs, plans, state, and demo evidence for **in-flight** work live und
 | `demo/demo-notes.md` | `demo` |
 | `demo/*.png`, `demo/*.mp4` | `demo` |
 | `PR.md` | `create-pr` |
-| `WORKFLOW-REVIEW.md` | `workflow-review` (human-triggered, [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79)) |
+| `WORKFLOW-REVIEW.md` | `workflow-review` (human-triggered) — after babysit `complete` or post-merge; invoke with **`@cursoragent workflow-review`** on the issue ([#79](https://github.com/BlackLodgeLabs/cuebox/issues/79)) |
 
 ## Completed issues (archive)
 

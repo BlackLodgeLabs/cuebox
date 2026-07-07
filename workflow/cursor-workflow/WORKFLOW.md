@@ -99,6 +99,14 @@ The handoff Action enforces a maximum of **8** concurrent in-flight Cloud Agent 
 
 When `stage` is `create-pr-ready`, the linked PR is still draft, and `agents.babysit-pr` is null, the Action spawns babysit even on **sync-only** pushes (no `workflow.state.json` change). Self-heals missed handoffs from quota exhaustion or lost transitions.
 
+### Handoff recovery
+
+When any handoff `stage` (`spec-ready` through `create-pr-ready`) has no recorded agent for the target skill, the Action spawns on **sync-only** pushes via `cursor-workflow-handoff-recovery.sh`. Covers shallow-checkout misses where `github.event.before` was not fetched and the state diff was skipped.
+
+### Shallow checkout and `BEFORE_SHA`
+
+Push jobs use `fetch-depth: 2`. Multi-commit pushes can leave `github.event.before` outside the shallow clone; `cursor-workflow-ensure-before-sha.sh` fetches that commit before diffing `workflow.state.json`.
+
 ## Performance optimizations (issue #77)
 
 Handoff Actions run time is reduced by skipping redundant Cursor API scans, deduplicating status syncs, and batching git state writes.
@@ -243,7 +251,7 @@ Cloud agents push to `cursor/issue-{NNN}-*` branches during every stage (spec, p
    - **Pass-back:** `execute-passback` with `passback_to` set calls `POST /v1/agents/{id}/runs` (not `POST /v1/agents`)
    - **Re-open:** `changes-requested` converts PR to draft and increments `loops.total_runs` — does **not** spawn an agent until a follow-up push sets `execute-ready`
    - **Admission gate:** dedup against `agents.<skill>`, `handoff_pending` lock, and global 8 in-flight run cap before `POST /v1/agents` (via `cursor-workflow-spawn-agent.sh`)
-   - **Babysit recovery:** on sync-only pushes, if `create-pr-ready` + draft PR + no `agents.babysit-pr` → spawn babysit (`cursor-workflow-babysit-recovery.sh`)
+   - **Handoff recovery:** on sync-only pushes, if a handoff `stage` has no recorded target agent → spawn via `cursor-workflow-handoff-recovery.sh` (includes babysit on `create-pr-ready`)
 5. **Update draft PR body** when `workflow/issues/issue-{NNN}/PR.md` changes in the push (`scripts/cursor-workflow-update-pr-body.sh`)
 
 Handoff uses `CURSOR_API_KEY` to call `POST https://api.cursor.com/v1/agents` with the next skill prompt via `cursor-workflow-spawn-agent.sh` (admission gate, pending lock, deferral on cap/API 400). Pass-back uses `POST https://api.cursor.com/v1/agents/{id}/runs` to continue the same agent conversation. If defer/retry exhausts, it falls back to `CURSOR_HANDOFF_GITHUB_TOKEN` posting an `@cursoragent` comment.
@@ -279,7 +287,19 @@ When a PR with `Closes #NNN` / `Fixes #NNN` merges to `main`, [`.github/workflow
 
 ### Optional workflow review (human-triggered)
 
-After babysit completes, comment **`@cursoragent workflow-review`** on the issue to produce `WORKFLOW-REVIEW.md` and update [RETROSPECTIVES.md](RETROSPECTIVES.md). Not spawned by the handoff Action in v1 — see [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79).
+After babysit completes (or post-merge on a closed issue), comment **`@cursoragent workflow-review`** to produce `WORKFLOW-REVIEW.md` and update [RETROSPECTIVES.md](RETROSPECTIVES.md). **Not** spawned by the handoff Action in v1.
+
+| Comment | Behavior |
+|---------|----------|
+| `@cursoragent workflow-review` | Review the issue the comment is on |
+| `@cursoragent workflow review for issue NNN` | Review issue NNN explicitly |
+| `@cursoragent use workflow-review skill for issue NNN` | Same as above |
+
+**Post-merge:** fetch `workflow/archive` and read `issue-N/` paths; index link targets `workflow/archive/issue-N/WORKFLOW-REVIEW.md`.
+
+**Link policy:** pre-merge reviews link via commit SHA; post-merge via `workflow/archive` branch — not `main` paths that will move on archive.
+
+Skill: [`.cursor/skills/workflow-review/SKILL.md`](../../.cursor/skills/workflow-review/SKILL.md). Index: [RETROSPECTIVES.md](RETROSPECTIVES.md).
 
 ### Draft PR creation
 
