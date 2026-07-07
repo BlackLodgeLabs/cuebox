@@ -78,6 +78,7 @@ No Docker stack, API, or frontend routes required — workflow and documentation
 - [x] Workflow regression: `verify-workflow-paths.sh` exit 0 at `71a26a8` (execute-ready)
 - [x] Workflow regression: `verify-workflow-paths.sh` exit 0 at `d68bb5b` (demo self-review)
 - [x] Workflow regression: `verify-workflow-paths.sh` exit 0 at `5d8e189` (demo-ready, re-verified at create-pr)
+- [x] Workflow regression: `verify-workflow-paths.sh` exit 0 at `db8d736` (babysit-complete)
 
 ## Checklist
 
