@@ -113,6 +113,7 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-babysit-recovery.sh
   cursor-workflow-handoff-recovery.sh
   cursor-workflow-ensure-before-sha.sh
+  cursor-workflow-push-diff-includes.sh
   cursor-workflow-post-deferral-comment.sh
   cursor-workflow-fetch-agents-list.sh
   cursor-workflow-should-discover-agents.sh
@@ -165,6 +166,15 @@ for keyword in CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS handoff_pending deferral "in fl
 done
 
 HANDOFF_YML=".github/workflows/cursor-workflow-handoff.yml"
+
+# --- load-scripts must list scripts referenced from handoff YAML via $WF/ ---
+LOAD_SCRIPTS="scripts/cursor-workflow-load-scripts.sh"
+while IFS= read -r script; do
+  if ! grep -qF "$script" "$LOAD_SCRIPTS"; then
+    echo "FAIL: ${LOAD_SCRIPTS} must list ${script} (referenced in ${HANDOFF_YML})" >&2
+    fail=1
+  fi
+done < <(grep -oE '\$WF/cursor-workflow-[a-z0-9-]+\.sh' "$HANDOFF_YML" | sed 's|^\$WF/||' | sort -u)
 for keyword in runs changes-requested execute-passback cursor-workflow-spawn-agent.sh cursor-workflow-handoff-recovery.sh cursor-workflow-ensure-before-sha.sh cursor-workflow-load-scripts.sh cursor-workflow-should-discover-agents.sh; do
   if ! grep -qF "$keyword" "$HANDOFF_YML"; then
     echo "FAIL: ${HANDOFF_YML} must reference ${keyword}" >&2

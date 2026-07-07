@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Ensure github.event.before is present in the checkout for shallow clones.
+# Defense-in-depth: ensure github.event.before is present when checkout depth is limited
+# or the runner state is unusual (force-push, partial fetch). Primary mitigation is
+# fetch-depth: 0 on handoff/resync jobs; this script remains for edge cases.
 # Usage: cursor-workflow-ensure-before-sha.sh <before-sha>
 set -euo pipefail
 

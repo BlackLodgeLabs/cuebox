@@ -1,0 +1,32 @@
+PASS: dedup admission skip
+PASS: dedup spawn skipped
+PASS: at-cap admission defer
+PASS: api-400 exit 0
+PASS: api-400 logged
+PASS: fresh pending lock defer
+PASS: babysit recovery spawned
+PASS: babysit agent recorded in state
+PASS: plan-ready recovery spawned execute
+PASS: execute agent recorded in plan-ready recovery
+PASS: stage merge keeps higher rank (create-pr-ready)
+PASS: stage merge preserves remote pr
+PASS: stage rank ordering
+PASS: plan-ready ranks above spec-ready
+PASS: plan-needs-info ranks above plan-in-progress
+PASS: changes-requested ranks above complete
+PASS: stage merge keeps plan-ready over spec-ready
+PASS: should-discover skips plan-in-progress
+PASS: discover makes 0 list fetches when skipped
+PASS: should-discover runs at spec-ready
+PASS: shared list cache single fetch
+PASS: batched spawn clears pending and records agent
+PASS: duplicate sync skipped when already synced
+PASS: comment id cache uses PATCH not list
+PASS: cap count cached across admission gate calls
+PASS: push diff detects non-tip state change across full range
+::warning::BEFORE_SHA 0000000000000000000000000000000000000001 unavailable — checking AFTER_SHA commit only
+PASS: tip-only fallback misses non-tip state change when BEFORE_SHA unavailable
+PASS: push diff detects non-tip PR.md change across full range
+::warning::BEFORE_SHA 0000000000000000000000000000000000000001 unavailable — checking AFTER_SHA commit only
+PASS: tip-only fallback misses non-tip PR.md change when BEFORE_SHA unavailable
+test-cursor-workflow-handoff.sh: all cases passed

@@ -103,9 +103,9 @@ When `stage` is `create-pr-ready`, the linked PR is still draft, and `agents.bab
 
 When any handoff `stage` (`spec-ready` through `create-pr-ready`) has no recorded agent for the target skill, the Action spawns on **sync-only** pushes via `cursor-workflow-handoff-recovery.sh`. Covers shallow-checkout misses where `github.event.before` was not fetched and the state diff was skipped.
 
-### Shallow checkout and `BEFORE_SHA`
+### Checkout depth and `BEFORE_SHA`
 
-Push jobs use `fetch-depth: 2`. Multi-commit pushes can leave `github.event.before` outside the shallow clone; `cursor-workflow-ensure-before-sha.sh` fetches that commit before diffing `workflow.state.json`.
+Push and resync jobs use `fetch-depth: 0` (full history) so `github.event.before` (`BEFORE_SHA`) and intermediate commits are available for `git diff` across multi-commit agent pushes. Shared detection lives in `cursor-workflow-push-diff-includes.sh` (used for both `state_changed` and `pr_md_changed`). `cursor-workflow-ensure-before-sha.sh` remains defense-in-depth for edge cases (force-push, unusual runner state).
 
 ## Performance optimizations (issue #77)
 
@@ -150,7 +150,7 @@ After the first status comment create, `status_comment_id` is stored in `workflo
 
 ### Checkout and setup
 
-- Shallow checkout (`fetch-depth: 2`) for push/resync jobs; scripts load from `origin/main` via `cursor-workflow-load-scripts.sh`.
+- Full checkout (`fetch-depth: 0`) for push/resync jobs; scripts load from `origin/main` via `cursor-workflow-load-scripts.sh`.
 - `apt-get install` runs only when `jq` or `gh` is missing on the runner.
 
 ### Expected run-time targets
