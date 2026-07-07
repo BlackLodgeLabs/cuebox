@@ -3,9 +3,9 @@
   "branch": "cursor/issue-79-workflow-review-skill",
   "stage": "create-pr-ready",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-07T07:11:09Z",
+  "updated_at": "2026-07-07T07:11:18Z",
   "agents": {
-    "babysit-pr": "bc-820ff152-e48d-4e5e-8454-a5a97ac66749",
+    "babysit-pr": "bc-9cef1e8f-1281-4623-a3fd-ff3e521d6f61",
     "create-pr": "bc-510752ca-4f39-4a38-a05b-8c8892d667d2",
     "demo": "bc-2a4cacba-4617-4ad9-8936-3e2c4d5f8b78",
     "execute": "bc-e3842ec9-24af-4f7d-b393-e82cde16bfd5",
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 82,
-  "active_agent_id": "bc-820ff152-e48d-4e5e-8454-a5a97ac66749",
+  "active_agent_id": "bc-9cef1e8f-1281-4623-a3fd-ff3e521d6f61",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
