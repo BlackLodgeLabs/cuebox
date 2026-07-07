@@ -3,7 +3,7 @@
   "branch": "cursor/issue-79-workflow-review-skill",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-07T06:30:15Z",
+  "updated_at": "2026-07-07T06:31:07Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 82,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
