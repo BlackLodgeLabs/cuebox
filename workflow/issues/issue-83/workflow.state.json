@@ -1,8 +1,8 @@
 {
   "issue": 83,
   "branch": "cursor/issue-83-harden-fetch-depth-before-sha",
-  "stage": "demo-ready",
-  "updated_at": "2026-07-07T18:53:57Z",
+  "stage": "create-pr-in-progress",
+  "updated_at": "2026-07-07T19:10:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-37fc3a63-d12d-4bfe-b053-1a42815a099c",
