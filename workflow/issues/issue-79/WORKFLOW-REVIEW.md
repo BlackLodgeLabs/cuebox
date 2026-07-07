@@ -178,11 +178,22 @@ Priority order aligns with [HANDOFF-HARDENING-NOTES.md](HANDOFF-HARDENING-NOTES.
 
 ## Follow-up issues
 
-Proposed titles (human opens):
+Created from this review and [HANDOFF-HARDENING-NOTES.md](HANDOFF-HARDENING-NOTES.md):
 
-- `Harden concurrent handoff spawn dedup from issue #79 workflow review`
-- `Harden fetch-depth / BEFORE_SHA from issue #79 workflow review`
-- `Harden execute-passback recovery from issue #79 workflow review`
+| Order | Issue | Title |
+|-------|-------|-------|
+| **1** | [#83](https://github.com/BlackLodgeLabs/cuebox/issues/83) | Harden fetch-depth / BEFORE_SHA |
+| **2** | [#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) | Harden concurrent handoff spawn dedup *(after #83)* |
+| **3** | [#86](https://github.com/BlackLodgeLabs/cuebox/issues/86) | Harden handoff recovery gaps *(after #83 and #84)* |
+| parallel | [#85](https://github.com/BlackLodgeLabs/cuebox/issues/85) | Document GitHub MCP for Cloud Agent issue comments |
+
+```
+#83 fetch-depth/BEFORE_SHA
+  └─► #84 cross-run spawn dedup
+        └─► #86 recovery gaps (passback, re-open, ensure-PR, resync)
+
+#85 MCP docs (independent)
+```
 
 ---
 
