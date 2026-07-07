@@ -287,7 +287,19 @@ When a PR with `Closes #NNN` / `Fixes #NNN` merges to `main`, [`.github/workflow
 
 ### Optional workflow review (human-triggered)
 
-After babysit completes, comment **`@cursoragent workflow-review`** on the issue to produce `WORKFLOW-REVIEW.md` and update [RETROSPECTIVES.md](RETROSPECTIVES.md). Not spawned by the handoff Action in v1 — see [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79).
+After babysit completes (or post-merge on a closed issue), comment **`@cursoragent workflow-review`** to produce `WORKFLOW-REVIEW.md` and update [RETROSPECTIVES.md](RETROSPECTIVES.md). **Not** spawned by the handoff Action in v1.
+
+| Comment | Behavior |
+|---------|----------|
+| `@cursoragent workflow-review` | Review the issue the comment is on |
+| `@cursoragent workflow review for issue NNN` | Review issue NNN explicitly |
+| `@cursoragent use workflow-review skill for issue NNN` | Same as above |
+
+**Post-merge:** fetch `workflow/archive` and read `issue-N/` paths; index link targets `workflow/archive/issue-N/WORKFLOW-REVIEW.md`.
+
+**Link policy:** pre-merge reviews link via commit SHA; post-merge via `workflow/archive` branch — not `main` paths that will move on archive.
+
+Skill: [`.cursor/skills/workflow-review/SKILL.md`](../../.cursor/skills/workflow-review/SKILL.md). Index: [RETROSPECTIVES.md](RETROSPECTIVES.md).
 
 ### Draft PR creation
 

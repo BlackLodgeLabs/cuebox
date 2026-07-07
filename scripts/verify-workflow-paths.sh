@@ -77,6 +77,7 @@ WORKFLOW_SKILLS=(
   demo
   create-pr
   babysit-pr
+  workflow-review
 )
 for skill in "${WORKFLOW_SKILLS[@]}"; do
   skill_file=".cursor/skills/${skill}/SKILL.md"
@@ -148,7 +149,7 @@ fi
 
 # --- Handoff docs and workflow ---
 WORKFLOW_MD="workflow/cursor-workflow/WORKFLOW.md"
-for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING status_comment_id CURSOR_AGENTS_LIST_CACHE skip discovery; do
+for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING status_comment_id CURSOR_AGENTS_LIST_CACHE skip discovery workflow-review @cursoragent workflow-review; do
   if ! grep -qF "$keyword" "$WORKFLOW_MD"; then
     echo "FAIL: ${WORKFLOW_MD} must mention ${keyword}" >&2
     fail=1
@@ -199,6 +200,33 @@ fi
 
 if [ ! -f "workflow/cursor-workflow/RETROSPECTIVES.md" ]; then
   echo "FAIL: missing workflow/cursor-workflow/RETROSPECTIVES.md" >&2
+  fail=1
+fi
+
+# --- WORKFLOW-REVIEW template and seed content ---
+WORKFLOW_REVIEW_TEMPLATE="workflow/cursor-workflow/templates/WORKFLOW-REVIEW.md"
+if [ ! -f "$WORKFLOW_REVIEW_TEMPLATE" ]; then
+  echo "FAIL: missing ${WORKFLOW_REVIEW_TEMPLATE}" >&2
+  fail=1
+else
+  for section in Summary "Expected workflow" timeline recommendations; do
+    if ! grep -qiF "$section" "$WORKFLOW_REVIEW_TEMPLATE"; then
+      echo "FAIL: ${WORKFLOW_REVIEW_TEMPLATE} must contain section: ${section}" >&2
+      fail=1
+    fi
+  done
+fi
+
+RETROSPECTIVES_MD="workflow/cursor-workflow/RETROSPECTIVES.md"
+for issue_num in 28 59; do
+  if ! grep -qF "issue-${issue_num}/WORKFLOW-REVIEW.md" "$RETROSPECTIVES_MD"; then
+    echo "FAIL: ${RETROSPECTIVES_MD} must index issue #${issue_num} with workflow/archive link" >&2
+    fail=1
+  fi
+done
+
+if ! grep -qF 'workflow-review' AGENTS.md || grep -qF 'when [#79]' AGENTS.md; then
+  echo "FAIL: AGENTS.md must list workflow-review in committed skills (no parenthetical deferral)" >&2
   fail=1
 fi
 

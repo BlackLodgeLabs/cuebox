@@ -166,7 +166,7 @@ GitHub issue → spec → plan → execute → demo → create-pr → babysit �
 | Handoff (automated) | `planning` → `execute` → `demo` → `create-pr` → `babysit-pr` |
 | `@cursoragent workflow-review` on issue (optional) | `workflow-review` ([#79](https://github.com/BlackLodgeLabs/cuebox/issues/79)) |
 
-- Skills: `.cursor/skills/{review-and-spec,planning,execute,demo,create-pr,babysit-pr,run-gate-scripts}/SKILL.md` (+ `workflow-review` when [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79) lands)
+- Skills: `.cursor/skills/{review-and-spec,planning,execute,demo,create-pr,babysit-pr,run-gate-scripts,workflow-review}/SKILL.md`
 - Retrospectives index: [workflow/cursor-workflow/RETROSPECTIVES.md](workflow/cursor-workflow/RETROSPECTIVES.md)
 - Specs: `workflow/issues/issue-NNN/SPEC.md`
 - Plans: `workflow/issues/issue-NNN/PLAN.md`
