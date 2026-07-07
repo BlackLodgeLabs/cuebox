@@ -1,9 +1,9 @@
 {
   "issue": 79,
   "branch": "cursor/issue-79-workflow-review-skill",
-  "stage": "demo-ready",
+  "stage": "create-pr-ready",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-07T07:08:15Z",
+  "updated_at": "2026-07-07T07:15:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-510752ca-4f39-4a38-a05b-8c8892d667d2",
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   }
 }
