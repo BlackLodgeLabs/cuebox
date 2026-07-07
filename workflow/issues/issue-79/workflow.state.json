@@ -1,9 +1,9 @@
 {
   "issue": 79,
   "branch": "cursor/issue-79-workflow-review-skill",
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-07T07:12:41Z",
+  "updated_at": "2026-07-07T07:29:34Z",
   "agents": {
     "babysit-pr": "bc-5a55e9b7-6e2b-4934-b43e-65aa65d0fcb3",
     "create-pr": "bc-510752ca-4f39-4a38-a05b-8c8892d667d2",
