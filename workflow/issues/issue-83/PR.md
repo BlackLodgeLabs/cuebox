@@ -82,13 +82,13 @@ No Docker stack, API keys, or application smoke tests required — workflow/shel
 
 ## Gate evidence
 
-- [ ] Workflow regression: `verify-workflow-paths.sh` exit 0 at `4d94b06`
-- [ ] `test-cursor-workflow-handoff.sh: all cases passed` at `4d94b06`
+- [x] Workflow regression: `verify-workflow-paths.sh` exit 0 at `0a6f6df`
+- [x] `test-cursor-workflow-handoff.sh: all cases passed` at `0a6f6df`
 
 ## Checklist
 
-- [ ] Code follows project conventions
-- [ ] Tests pass locally
-- [ ] Documentation updated where applicable
-- [ ] No secrets or credentials in commits or demo artifacts
-- [ ] Acceptance criteria from issue #83 met
+- [x] Code follows project conventions
+- [x] Tests pass locally
+- [x] Documentation updated where applicable
+- [x] No secrets or credentials in commits or demo artifacts
+- [x] Acceptance criteria from issue #83 met
