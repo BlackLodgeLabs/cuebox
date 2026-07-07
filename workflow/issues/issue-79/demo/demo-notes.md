@@ -1,7 +1,7 @@
 # Demo notes — Issue #79
 
 **Date:** 2026-07-07  
-**Commit SHA:** `f35a91bd6a1649159a4fb27062db26c469d3b9aa`  
+**Commit SHA:** `d68bb5ba2cb119d2b6f1081bffbb96c39c931ffe`  
 **Branch:** `cursor/issue-79-pr-82-demo-agent-be5c`  
 **Demo agent:** `bc-2a4cacba-4617-4ad9-8936-3e2c4d5f8b78`
 
