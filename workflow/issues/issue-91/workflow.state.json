@@ -2,26 +2,22 @@
   "issue": 91,
   "branch": "cursor/issue-91-prevent-demo-spawn-before-execute-ready",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-08T18:56:14Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-08T18:56:19Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-282e2bc4-965f-4610-ae41-34fa6dec33f0",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 98,
-  "active_agent_id": null,
+  "active_agent_id": "bc-282e2bc4-965f-4610-ae41-34fa6dec33f0",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-08T18:56:14Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
