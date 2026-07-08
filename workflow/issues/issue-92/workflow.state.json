@@ -8,19 +8,16 @@
     "ci_autofix": 0,
     "total_runs": 4
   },
-  "updated_at": "2026-07-08T19:15:13Z",
+  "updated_at": "2026-07-08T19:15:18Z",
   "agents": {
     "execute": "bc-78b1055d-7abd-47af-a2b7-c8786c7030f7",
     "planning": "bc-dd9f4b1e-c695-467a-8de4-f0799cae6561",
-    "demo": "bc-c8d10b76-6638-42b0-a537-0d605dc6838b"
+    "demo": "bc-c8d10b76-6638-42b0-a537-0d605dc6838b",
+    "create-pr": "bc-d6fd71b9-f9c2-493a-a463-17efda390af3"
   },
-  "active_agent_id": "bc-c8d10b76-6638-42b0-a537-0d605dc6838b",
+  "active_agent_id": "bc-d6fd71b9-f9c2-493a-a463-17efda390af3",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "create-pr",
-    "started_at": "2026-07-08T19:15:13Z",
-    "attempt": 0
-  },
-  "active_skill": "demo"
+  "handoff_pending": null,
+  "active_skill": "create-pr"
 }
