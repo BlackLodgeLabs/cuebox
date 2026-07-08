@@ -2,28 +2,25 @@
   "issue": 90,
   "branch": "cursor/issue-90-harden-record-spawn-toctou",
   "stage": "plan-ready",
-  "updated_at": "2026-07-08T12:08:42Z",
+  "updated_at": "2026-07-08T12:08:47Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
-    "execute": null,
+    "execute": "bc-c5fef33c-1702-4af1-8799-e85579bde568",
     "planning": "bc-cd5978f6-863a-4d2f-a76b-e374831890a9",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 94,
-  "active_agent_id": null,
+  "active_agent_id": "bc-c5fef33c-1702-4af1-8799-e85579bde568",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "execute",
-    "started_at": "2026-07-08T12:08:42Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "active_skill": "execute"
 }
