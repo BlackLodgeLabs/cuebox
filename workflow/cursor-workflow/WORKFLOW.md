@@ -303,6 +303,21 @@ Progress stages (`*-in-progress`), pass-back (`execute-passback`), re-open (`cha
 
 When `workflow/issues/issue-{NNN}/PR.md` is committed or updated, the Action sets the linked draft PR description from that file (requires `"pr"` in state). Demo screenshots in `PR.md` must use absolute `raw.githubusercontent.com` URLs — relative `demo/...` paths break when rendered on the PR page (see create-pr skill).
 
+### Create-pr push batching (issue #92)
+
+Each push to a `cursor/issue-*` branch with a handoff `stage` can trigger `.github/workflows/cursor-workflow-handoff.yml`. Rapid successive pushes at `create-pr-ready` widened the TOCTOU window for overlapping babysit spawns in [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79) and [#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) dogfood.
+
+**Expected push pattern:** 1–2 pushes total per create-pr run:
+
+1. Optional early `create-pr-in-progress` push (progress signal only; **no `PR.md`**).
+2. **One** handoff-triggering push with complete `PR.md` + `workflow.state.json` at `stage: create-pr-ready`.
+
+Agents must resolve demo image SHA URLs **before** that final push: draft `PR.md` locally → commit → `git rev-parse HEAD` → embed SHA in URLs → `git commit --amend` if URLs changed → single push. See the create-pr skill **batched final push** sequence. Do **not** push a follow-up commit to fix demo image SHAs after `create-pr-ready`.
+
+This complements [#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) / [#90](https://github.com/BlackLodgeLabs/cuebox/issues/90) spawn dedup and admission-gate hardening; it does not replace them.
+
+The `create-pr-ready` row in the stage table above expects a single batched push per agent run (not multiple `create-pr-ready` pushes within seconds).
+
 When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` also @mentions the issue author (once) and assigns the linked PR to them. Babysit agents do not post issue comments.
 
 ### Post-merge cleanup (automated)
