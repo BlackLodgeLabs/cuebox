@@ -1,7 +1,7 @@
 {
   "issue": 92,
   "branch": "cursor/issue-92-batch-create-pr-single-commit",
-  "pr": null,
+  "pr": 97,
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
   "loops": {
@@ -9,7 +9,7 @@
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-07-08T19:00:00Z",
+  "updated_at": "2026-07-08T18:55:05Z",
   "agents": {},
   "active_agent_id": null,
   "passback_to": null,
