@@ -76,7 +76,7 @@ Exit 0 — `cursor-workflow-refetch-state.sh` registered; final message: `PASS: 
 
 ### Scenario 3: Documentation
 
-![WORKFLOW.md cross-run spawn dedup section](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/0397155/workflow/issues/issue-84/demo/scenario-3-workflow-docs.png)
+![WORKFLOW.md cross-run spawn dedup section](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/88e945c/workflow/issues/issue-84/demo/scenario-3-workflow-docs.png)
 
 `WORKFLOW.md` documents re-fetch → gate → branch pending lock → re-fetch + second gate → POST. `RETROSPECTIVES.md` concurrent-handoff pattern row links landed mitigation instead of "proposed".
 
