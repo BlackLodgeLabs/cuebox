@@ -1,8 +1,8 @@
 {
   "issue": 84,
   "branch": "cursor/issue-84-harden-concurrent-handoff-spawn-dedup",
-  "stage": "execute-ready",
-  "updated_at": "2026-07-08T06:45:00Z",
+  "stage": "execute-passback",
+  "updated_at": "2026-07-08T06:44:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,10 +13,10 @@
     "review-and-spec-continued": null
   },
   "pr": 88,
-  "active_agent_id": "bc-5add15c4-eed3-4e94-a73d-1e1404c296fa",
-  "active_skill": "execute",
-  "passback_to": null,
-  "passback_reason": null,
+  "active_agent_id": "bc-e466e966-cd3f-4e9e-b0c0-76663f415084",
+  "active_skill": "demo",
+  "passback_to": "execute",
+  "passback_reason": "Demo failed: cross-run spawn dedup not implemented — missing refetch-state script, new handoff tests, and WORKFLOW/RETROSPECTIVES doc updates per PLAN.md",
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
