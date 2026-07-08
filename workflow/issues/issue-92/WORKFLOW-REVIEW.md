@@ -210,5 +210,5 @@ Proposed titles (human opens):
 - Artifacts: `workflow/issues/issue-92/` (pre-merge)
 - Source reviews: [#84 WORKFLOW-REVIEW](https://github.com/BlackLodgeLabs/cuebox/blob/cd62b3a/workflow/issues/issue-84/WORKFLOW-REVIEW.md), [#79 WORKFLOW-REVIEW](https://github.com/BlackLodgeLabs/cuebox/blob/a36d91eb0889f86f25e2a98f530a900c83ef4408/workflow/issues/issue-79/WORKFLOW-REVIEW.md)
 - Handoff runs: [28969396187](https://github.com/BlackLodgeLabs/cuebox/actions/runs/28969396187) (side branch), [28969481891](https://github.com/BlackLodgeLabs/cuebox/actions/runs/28969481891) (canonical)
-- Full review (this file): [WORKFLOW-REVIEW.md](https://github.com/BlackLodgeLabs/cuebox/blob/c2c3ffd/workflow/issues/issue-92/WORKFLOW-REVIEW.md)
+- Full review (this file): [WORKFLOW-REVIEW.md](https://github.com/BlackLodgeLabs/cuebox/blob/0c1aeae/workflow/issues/issue-92/WORKFLOW-REVIEW.md)
 - Related reviews: [RETROSPECTIVES.md](https://github.com/BlackLodgeLabs/cuebox/blob/main/workflow/cursor-workflow/RETROSPECTIVES.md)
