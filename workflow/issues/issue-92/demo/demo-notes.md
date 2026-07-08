@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-08  
 **Branch:** `cursor/issue-92-batch-create-pr-single-commit`  
-**Commit (pre-demo artifacts):** `5abcc4a`  
+**Commit:** `aabc0e3`  
 **Demo agent:** documentation-only workflow change (no product UI screenshots)
 
 ## Environment
