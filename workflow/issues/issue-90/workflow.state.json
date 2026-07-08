@@ -1,8 +1,8 @@
 {
   "issue": 90,
   "branch": "cursor/issue-90-harden-record-spawn-toctou",
-  "stage": "execute-ready",
-  "updated_at": "2026-07-08T12:14:19Z",
+  "stage": "demo-ready",
+  "updated_at": "2026-07-08T12:20:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -20,7 +20,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   },
   "active_skill": "demo"
 }
