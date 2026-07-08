@@ -14,7 +14,7 @@
   },
   "pr": 88,
   "active_agent_id": null,
-  "active_skill": null,
+  "active_skill": "workflow-review",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
