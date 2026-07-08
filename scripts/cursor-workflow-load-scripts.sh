@@ -43,6 +43,9 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-spawn-agent.sh
   cursor-workflow-babysit-recovery.sh
   cursor-workflow-handoff-recovery.sh
+  cursor-workflow-passback-run.sh
+  cursor-workflow-ensure-pr-on-branch.sh
+  cursor-workflow-infer-reopen.sh
   cursor-workflow-ensure-before-sha.sh
   cursor-workflow-push-diff-includes.sh
   cursor-workflow-post-deferral-comment.sh
