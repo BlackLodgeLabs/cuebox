@@ -993,7 +993,7 @@ test_execute_ready_forward() {
   local state post_count
   state=$(mktemp)
   post_count=$(mktemp)
-  echo '{"issue":86,"branch":"cursor/issue-86-test","stage":"execute-ready","agents":{"execute":"bc-exec"},"pr":96,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":3}}' > "$state"
+  echo '{"issue":86,"branch":"cursor/issue-86-test","stage":"execute-ready","active_skill":null,"agents":{"execute":"bc-exec"},"pr":96,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":3}}' > "$state"
   echo 0 > "$post_count"
   export MOCK_CURSOR_API=1
   export MOCK_ACTIVE_AGENT_COUNT=0
@@ -1009,6 +1009,137 @@ test_execute_ready_forward() {
     pass "execute-ready forward spawns demo"
   else
     fail_test "execute-ready forward did not spawn demo"
+  fi
+  if [ "$(cat "$post_count")" = "1" ]; then
+    pass "execute-ready forward 1 POST"
+  else
+    fail_test "execute-ready forward expected 1 POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+# --- Demo skip when execute-in-progress (issue #91) ---
+test_demo_skip_execute_in_progress() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  echo '{"issue":91,"branch":"cursor/issue-91-test","stage":"execute-in-progress","active_skill":"execute","agents":{"demo":null},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  unset CURSOR_API_KEY
+
+  decision=$("$SCRIPT_DIR/cursor-workflow-admission-gate.sh" "$state" "demo")
+  if [ "$decision" = "skip:execute-in-progress" ]; then
+    pass "demo skip execute-in-progress gate"
+  else
+    fail_test "demo skip execute-in-progress expected skip:execute-in-progress got $decision"
+  fi
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    91 "cursor/issue-91-test" "$state" "demo" "test prompt" "demo-in-progress" \
+    >/tmp/demo-skip-exec.log 2>&1 || true
+
+  if grep -q "Spawn skipped" /tmp/demo-skip-exec.log; then
+    pass "demo skip execute-in-progress spawn skipped"
+  else
+    fail_test "demo skip execute-in-progress did not log skip"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "demo skip execute-in-progress 0 POST"
+  else
+    fail_test "demo skip execute-in-progress expected 0 POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+# --- Demo defer when active_skill=execute at execute-ready (issue #91) ---
+test_demo_defer_execute_active() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  echo '{"issue":91,"branch":"cursor/issue-91-test","stage":"execute-ready","active_skill":"execute","agents":{"demo":null,"execute":"bc-exec"},"pr":98,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' > "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  unset CURSOR_API_KEY
+
+  decision=$("$SCRIPT_DIR/cursor-workflow-admission-gate.sh" "$state" "demo")
+  if [ "$decision" = "defer:execute-active" ]; then
+    pass "demo defer execute-active gate"
+  else
+    fail_test "demo defer execute-active expected defer:execute-active got $decision"
+  fi
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    91 "cursor/issue-91-test" "$state" "demo" "test prompt" "demo-in-progress" \
+    >/tmp/demo-defer-exec.log 2>&1 || true
+
+  if grep -q "defer:execute-active\|Spawn deferred" /tmp/demo-defer-exec.log; then
+    pass "demo defer execute-active spawn deferred"
+  else
+    fail_test "demo defer execute-active did not log defer"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "demo defer execute-active 0 POST"
+  else
+    fail_test "demo defer execute-active expected 0 POST got $(cat "$post_count")"
+  fi
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    91 "cursor/issue-91-test" "$state" "" >/tmp/demo-defer-recovery.log 2>&1 || true
+
+  if grep -q "Handoff recovery deferred.*defer:execute-active" /tmp/demo-defer-recovery.log \
+    && ! grep -q "Handoff recovery: spawning demo" /tmp/demo-defer-recovery.log; then
+    pass "demo defer execute-active recovery deferred"
+  else
+    fail_test "demo defer execute-active recovery should defer without spawn"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+# --- Demo proceed when execute-ready and active_skill cleared (issue #91) ---
+test_demo_proceed_execute_ready() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  echo '{"issue":91,"branch":"cursor/issue-91-test","stage":"execute-ready","active_skill":null,"agents":{"demo":null},"pr":98,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' > "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  unset CURSOR_API_KEY
+
+  decision=$("$SCRIPT_DIR/cursor-workflow-admission-gate.sh" "$state" "demo")
+  if [ "$decision" = "proceed" ]; then
+    pass "demo proceed execute-ready gate"
+  else
+    fail_test "demo proceed execute-ready expected proceed got $decision"
+  fi
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    91 "cursor/issue-91-test" "$state" "" >/tmp/demo-proceed.log 2>&1
+
+  if grep -q "Handoff recovery: spawning demo" /tmp/demo-proceed.log; then
+    pass "demo proceed execute-ready recovery spawned demo"
+  else
+    fail_test "demo proceed execute-ready recovery did not spawn demo"
+  fi
+  if [ "$(cat "$post_count")" = "1" ]; then
+    pass "demo proceed execute-ready 1 POST"
+  else
+    fail_test "demo proceed execute-ready expected 1 POST got $(cat "$post_count")"
   fi
   rm -f "$state" "$post_count"
 }
@@ -1109,6 +1240,9 @@ test_passback_recovery_409
 test_reopen_inference_agents_demo
 test_reopen_inference_prev_stage
 test_execute_ready_forward
+test_demo_skip_execute_in_progress
+test_demo_defer_execute_active
+test_demo_proceed_execute_ready
 test_spec_ready_ensure_pr
 test_plan_ready_ensure_pr
 

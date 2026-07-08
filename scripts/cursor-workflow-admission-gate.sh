@@ -74,4 +74,26 @@ if [ "$in_flight_count" -ge "$MAX_ACTIVE" ]; then
   exit 0
 fi
 
+if [ "$TARGET_SKILL" = "demo" ]; then
+  stage=$(jq -r '.stage // empty' "$STATE_FILE")
+  active_skill=$(jq -r '.active_skill // empty' "$STATE_FILE")
+
+  if [ "$stage" = "execute-in-progress" ]; then
+    echo "skip:execute-in-progress"
+    exit 0
+  fi
+
+  stage_rank=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "$stage")
+  execute_ready_rank=$("$SCRIPT_DIR/cursor-workflow-stage-rank.sh" "execute-ready")
+  if [ "$stage_rank" -lt "$execute_ready_rank" ]; then
+    echo "skip:stage-not-ready"
+    exit 0
+  fi
+
+  if [ "$active_skill" = "execute" ]; then
+    echo "defer:execute-active"
+    exit 0
+  fi
+fi
+
 echo "proceed"
