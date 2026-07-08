@@ -58,6 +58,12 @@ mock_curl_post() {
   local url="$1"
   local out_file="$2"
   local code="${MOCK_CURSOR_POST_CODE:-201}"
+  if [ -n "${MOCK_CURSOR_POST_COUNT_FILE:-}" ]; then
+    local count=0
+    [ -f "$MOCK_CURSOR_POST_COUNT_FILE" ] && count=$(cat "$MOCK_CURSOR_POST_COUNT_FILE")
+    count=$((count + 1))
+    echo "$count" > "$MOCK_CURSOR_POST_COUNT_FILE"
+  fi
   if [ -f "${MOCK_CURSOR_POST_RESPONSE:-}" ]; then
     cp "${MOCK_CURSOR_POST_RESPONSE}" "$out_file"
   else
@@ -104,7 +110,11 @@ do_post_agent() {
     agent_id=$(jq -r '.agent.id // .id // .agentId // empty' /tmp/cursor-agent.json)
     echo "Cursor agent created: ${agent_id:-unknown}"
       if [ -n "$agent_id" ]; then
-        "$WF/cursor-workflow-record-spawn-on-branch.sh" "$STATE_FILE" "$SKILL" "$agent_id" "$BRANCH" || true
+        if [ "${MOCK_RECORD_SPAWN_FAIL:-}" = "1" ]; then
+          echo "Mock record-spawn failure (MOCK_RECORD_SPAWN_FAIL=1)" >&2
+        else
+          "$WF/cursor-workflow-record-spawn-on-branch.sh" "$STATE_FILE" "$SKILL" "$agent_id" "$BRANCH" || true
+        fi
       fi
     sync_after_spawn
     return 0
@@ -144,7 +154,27 @@ if [ "$REOPEN" = "true" ]; then
   gate_args+=("--reopen")
 fi
 
+set_pending_lock() {
+  local attempt_num="$1"
+  if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ] || [ "${MOCK_CURSOR_API:-}" = "1" ]; then
+    if ! "$WF/cursor-workflow-record-handoff-pending.sh" "$STATE_FILE" "$BRANCH" set "$SKILL" "$attempt_num" 2>/dev/null; then
+      return 2
+    fi
+    export CURSOR_WORKFLOW_WE_HOLD_LOCK=1
+    export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
+    return 0
+  fi
+  if ! "$WF/cursor-workflow-record-handoff-pending.sh" "$STATE_FILE" "$BRANCH" set "$SKILL" "$attempt_num"; then
+    return 2
+  fi
+  export CURSOR_WORKFLOW_WE_HOLD_LOCK=1
+  export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
+  return 0
+}
+
 while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
+  "$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null
+
   decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}")
   case "$decision" in
     skip:*)
@@ -164,21 +194,54 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
       exit 0
       ;;
     proceed)
-      if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ]; then
-        "$WF/cursor-workflow-record-handoff-pending.sh" "$STATE_FILE" "$BRANCH" set "$SKILL" "$attempt" >/dev/null
-        export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
-      elif [ "${MOCK_CURSOR_API:-}" != "1" ]; then
-        export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
-      else
-        jq --arg skill "$SKILL" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson attempt "$attempt" \
-          '.handoff_pending = {skill: $skill, started_at: $ts, attempt: $attempt}' \
-          "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
-        export CURSOR_WORKFLOW_PENDING_SKILL="$SKILL"
+      pending_rc=0
+      set_pending_lock "$attempt" || pending_rc=$?
+      if [ "$pending_rc" -eq 2 ]; then
+        echo "Spawn deferred (pending-lock-race), attempt $((attempt + 1))/${MAX_ATTEMPTS}"
+        attempt=$((attempt + 1))
+        if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+          sleep "${BACKOFF[$((attempt - 1))]:-120}"
+          continue
+        fi
+        "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "pending-lock" || true
+        pat_fallback || true
+        exit 0
       fi
+
+      "$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null
+
+      decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}")
+      case "$decision" in
+        skip:*)
+          echo "Spawn skipped: ${decision#skip:}"
+          unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK
+          exit 0
+          ;;
+        defer:*)
+          reason="${decision#defer:}"
+          echo "Spawn deferred (${reason}), attempt $((attempt + 1))/${MAX_ATTEMPTS}"
+          unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK
+          attempt=$((attempt + 1))
+          if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+            sleep "${BACKOFF[$((attempt - 1))]:-120}"
+            continue
+          fi
+          "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "$reason" || true
+          pat_fallback || true
+          exit 0
+          ;;
+        proceed)
+          ;;
+        *)
+          echo "Unknown admission decision after pending lock: $decision"
+          unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK
+          exit 0
+          ;;
+      esac
 
       if ! do_post_agent; then
         post_rc=$?
-        unset CURSOR_WORKFLOW_PENDING_SKILL
+        unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK
         if [ "$post_rc" -eq 2 ]; then
           attempt=$((attempt + 1))
           if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
@@ -201,7 +264,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
         pat_fallback || true
         exit 0
       fi
-      unset CURSOR_WORKFLOW_PENDING_SKILL
+      unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK
       exit 0
       ;;
     *)

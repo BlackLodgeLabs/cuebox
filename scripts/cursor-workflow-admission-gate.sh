@@ -36,7 +36,8 @@ if [ -n "$agent_recorded" ] && [ "$agent_recorded" != "null" ] && [ "$PASSBACK" 
   exit 0
 fi
 
-if [ -n "${CURSOR_WORKFLOW_PENDING_SKILL:-}" ] && [ "${CURSOR_WORKFLOW_PENDING_SKILL}" = "$TARGET_SKILL" ]; then
+if [ -n "${CURSOR_WORKFLOW_PENDING_SKILL:-}" ] && [ "${CURSOR_WORKFLOW_PENDING_SKILL}" = "$TARGET_SKILL" ] \
+  && [ "${CURSOR_WORKFLOW_WE_HOLD_LOCK:-}" != "1" ]; then
   echo "defer:pending-lock"
   exit 0
 fi
@@ -48,7 +49,8 @@ if [ -n "$pending_skill" ] && [ "$pending_skill" != "null" ] && [ -n "$pending_s
   now_epoch=$(date -u +%s)
   started_epoch=$(date -u -d "$pending_started" +%s 2>/dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$pending_started" +%s 2>/dev/null || echo 0)
   age_minutes=$(( (now_epoch - started_epoch) / 60 ))
-  if [ "$age_minutes" -lt "$PENDING_STALE_MINUTES" ] && [ "$pending_skill" = "$TARGET_SKILL" ]; then
+  if [ "$age_minutes" -lt "$PENDING_STALE_MINUTES" ] && [ "$pending_skill" = "$TARGET_SKILL" ] \
+    && [ "${CURSOR_WORKFLOW_WE_HOLD_LOCK:-}" != "1" ]; then
     echo "defer:pending-lock"
     exit 0
   fi

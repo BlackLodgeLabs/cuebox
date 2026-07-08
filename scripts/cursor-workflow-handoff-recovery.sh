@@ -56,14 +56,6 @@ case "$stage" in
     ;;
 esac
 
-agent_recorded=$(jq -r --arg k "$skill" '
-  ((.agents // {})[$k] // empty)
-  | if type == "object" then .id // empty else . end
-' "$STATE_FILE")
-if [ -n "$agent_recorded" ] && [ "$agent_recorded" != "null" ]; then
-  exit 0
-fi
-
 if [ "$stage" = "create-pr-ready" ]; then
   if [ -z "$pr" ] || [ "$pr" = "null" ]; then
     exit 0
@@ -86,15 +78,20 @@ if [ "$stage" = "create-pr-ready" ]; then
   fi
 fi
 
-decision=$("$WF/cursor-workflow-admission-gate.sh" "$STATE_FILE" "$skill")
-if [ "$decision" != "proceed" ]; then
-  echo "Handoff recovery deferred (${stage} → ${skill}): $decision"
-  exit 0
-fi
-
 reopen_flag=""
 if [ "$stage" = "execute-ready" ] && [ "$PREV_STAGE" = "changes-requested" ]; then
   reopen_flag="--reopen"
+fi
+
+"$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null
+gate_args=("$STATE_FILE" "$skill")
+if [ "$reopen_flag" = "--reopen" ]; then
+  gate_args+=("--reopen")
+fi
+decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}")
+if [ "$decision" != "proceed" ]; then
+  echo "Handoff recovery deferred (${stage} → ${skill}): $decision"
+  exit 0
 fi
 
 echo "Handoff recovery: spawning ${skill} for issue #${ISSUE} (stage=${stage})"

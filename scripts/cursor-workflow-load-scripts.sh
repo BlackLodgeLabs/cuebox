@@ -39,6 +39,7 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-count-active-agents.sh
   cursor-workflow-admission-gate.sh
   cursor-workflow-record-handoff-pending.sh
+  cursor-workflow-refetch-state.sh
   cursor-workflow-spawn-agent.sh
   cursor-workflow-babysit-recovery.sh
   cursor-workflow-handoff-recovery.sh
