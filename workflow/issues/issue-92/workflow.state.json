@@ -8,7 +8,7 @@
     "ci_autofix": 0,
     "total_runs": 5
   },
-  "updated_at": "2026-07-08T19:22:00Z",
+  "updated_at": "2026-07-08T19:52:49Z",
   "agents": {
     "create-pr": "bc-d6fd71b9-f9c2-493a-a463-17efda390af3",
     "demo": "bc-c8d10b76-6638-42b0-a537-0d605dc6838b",
@@ -18,6 +18,10 @@
   "active_agent_id": "bc-d6fd71b9-f9c2-493a-a463-17efda390af3",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-08T19:52:49Z",
+    "attempt": 0
+  },
   "active_skill": "workflow-review"
 }
