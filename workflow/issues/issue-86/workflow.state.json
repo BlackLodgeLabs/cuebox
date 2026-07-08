@@ -2,7 +2,7 @@
   "issue": 86,
   "branch": "cursor/issue-86-handoff-recovery-gaps",
   "stage": "demo-ready",
-  "updated_at": "2026-07-08T13:12:00Z",
+  "updated_at": "2026-07-08T13:11:51Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_skill": "demo",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "create-pr",
+    "started_at": "2026-07-08T13:11:51Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
