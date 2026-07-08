@@ -1,9 +1,9 @@
 {
   "issue": 91,
   "branch": "cursor/issue-91-prevent-demo-spawn-before-execute-ready",
-  "stage": "execute-ready",
+  "stage": "demo-ready",
   "active_skill": "demo",
-  "updated_at": "2026-07-08T19:05:42Z",
+  "updated_at": "2026-07-08T19:20:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   }
 }
