@@ -2,13 +2,13 @@
   "issue": 92,
   "branch": "cursor/issue-92-batch-create-pr-single-commit",
   "pr": 97,
-  "stage": "execute-ready",
+  "stage": "demo-ready",
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   },
-  "updated_at": "2026-07-08T19:10:17Z",
+  "updated_at": "2026-07-08T19:18:00Z",
   "agents": {
     "execute": "bc-78b1055d-7abd-47af-a2b7-c8786c7030f7",
     "planning": "bc-dd9f4b1e-c695-467a-8de4-f0799cae6561",
