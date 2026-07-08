@@ -2,9 +2,9 @@
   "issue": 86,
   "branch": "cursor/issue-86-handoff-recovery-gaps",
   "stage": "create-pr-ready",
-  "updated_at": "2026-07-08T13:16:02Z",
+  "updated_at": "2026-07-08T13:16:08Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-f35c81ab-f14e-418f-9c5c-54e420ba4e9d",
     "create-pr": "bc-79eca783-a796-41d5-9f25-ec707bf3285e",
     "demo": "bc-a9565f99-2661-40a6-99ff-953a2ba78681",
     "execute": "bc-5867c957-5176-47ac-ae94-10737e8e20e5",
@@ -13,15 +13,11 @@
     "review-and-spec-continued": null
   },
   "pr": 96,
-  "active_agent_id": "bc-79eca783-a796-41d5-9f25-ec707bf3285e",
-  "active_skill": "create-pr",
+  "active_agent_id": "bc-f35c81ab-f14e-418f-9c5c-54e420ba4e9d",
+  "active_skill": "babysit-pr",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-08T13:16:02Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
