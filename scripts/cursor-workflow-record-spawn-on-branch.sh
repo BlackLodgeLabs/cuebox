@@ -24,6 +24,15 @@ REL_PATH="workflow/issues/issue-${ISSUE}/workflow.state.json"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ] || [ "${MOCK_CURSOR_API:-}" = "1" ]; then
+  CURRENT=$(jq -r --arg k "$AGENT_KEY" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$STATE_FILE")
+  if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" != "$AGENT_ID" ]; then
+    echo "Peer agent already recorded for ${AGENT_KEY} as ${CURRENT} (not ${AGENT_ID})" >&2
+    exit 0
+  fi
+  if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$AGENT_ID" ]; then
+    echo "Spawn state already recorded for ${AGENT_KEY} as ${AGENT_ID}" >&2
+    exit 0
+  fi
   jq --arg key "$AGENT_KEY" --arg id "$AGENT_ID" --arg ts "$TS" \
     --arg comment "${STATUS_COMMENT_ID}" \
     '.agents //= {}
@@ -34,6 +43,18 @@ if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ] || [ "${MOCK_CURSOR_API:-}" 
      | if $comment != "" and $comment != "null" then .status_comment_id = ($comment | tonumber? // $comment) else . end
      | .updated_at = $ts' \
     "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
+  if [ -n "${CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE:-}" ]; then
+    remote_base="{}"
+    if [ -f "$CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE" ]; then
+      remote_base=$(cat "$CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE")
+    fi
+    echo "$remote_base" | jq --arg key "$AGENT_KEY" --arg id "$AGENT_ID" --arg ts "$TS" \
+      '.agents //= {}
+       | .agents[$key] = $id
+       | .handoff_pending = null
+       | .updated_at = $ts' \
+      > "$CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE"
+  fi
   exit 0
 fi
 
@@ -50,6 +71,10 @@ fi
 
 CURRENT=$(jq -r --arg k "$AGENT_KEY" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$REL_PATH")
 PENDING=$(jq -r '.handoff_pending // empty' "$REL_PATH")
+if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" != "$AGENT_ID" ]; then
+  echo "Peer agent already recorded for ${AGENT_KEY} as ${CURRENT} (not ${AGENT_ID})" >&2
+  exit 0
+fi
 if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$AGENT_ID" ] \
   && { [ "$PENDING" = "null" ] || [ -z "$PENDING" ]; }; then
   echo "Spawn state already recorded for ${AGENT_KEY} as ${AGENT_ID}" >&2
