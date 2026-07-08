@@ -32,9 +32,9 @@ Workflow-script hardening only — no UI changes. Demo evidence is log-based.
 
 | Scenario | Result | Evidence |
 |----------|--------|----------|
-| 1. Workflow path gate (`verify-workflow-paths.sh`) | PASS | [scenario-1-verify-workflow-paths.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/af4348193cdeb3c97a487bd88821aad2631390ea/workflow/issues/issue-90/demo/scenario-1-verify-workflow-paths.log) |
-| 2. Handoff test suite incl. git-remote cases G–I | PASS | [scenario-2-handoff-tests.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/af4348193cdeb3c97a487bd88821aad2631390ea/workflow/issues/issue-90/demo/scenario-2-handoff-tests.log) |
-| 3. Record-spawn peer-abort spot check | PASS | [scenario-3-record-spawn-peer-abort.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/af4348193cdeb3c97a487bd88821aad2631390ea/workflow/issues/issue-90/demo/scenario-3-record-spawn-peer-abort.log) |
+| 1. Workflow path gate (`verify-workflow-paths.sh`) | PASS | [scenario-1-verify-workflow-paths.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/64ead09411b4f0181621749088404d6ce59c72ea/workflow/issues/issue-90/demo/scenario-1-verify-workflow-paths.log) |
+| 2. Handoff test suite incl. git-remote cases G–I | PASS | [scenario-2-handoff-tests.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/64ead09411b4f0181621749088404d6ce59c72ea/workflow/issues/issue-90/demo/scenario-2-handoff-tests.log) |
+| 3. Record-spawn peer-abort spot check | PASS | [scenario-3-record-spawn-peer-abort.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/64ead09411b4f0181621749088404d6ce59c72ea/workflow/issues/issue-90/demo/scenario-3-record-spawn-peer-abort.log) |
 
 Key assertions from scenario 2:
 
