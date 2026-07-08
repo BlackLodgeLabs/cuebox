@@ -2,18 +2,17 @@
   "issue": 92,
   "branch": "cursor/issue-92-batch-create-pr-single-commit",
   "pr": 97,
-  "stage": "plan-in-progress",
-  "active_skill": "planning",
+  "stage": "plan-ready",
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
-  "updated_at": "2026-07-08T19:00:00Z",
+  "updated_at": "2026-07-08T19:02:00Z",
   "agents": {
     "planning": "bc-dd9f4b1e-c695-467a-8de4-f0799cae6561"
   },
-  "active_agent_id": "bc-dd9f4b1e-c695-467a-8de4-f0799cae6561",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null
