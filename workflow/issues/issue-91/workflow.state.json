@@ -3,7 +3,7 @@
   "branch": "cursor/issue-91-prevent-demo-spawn-before-execute-ready",
   "stage": "demo-ready",
   "active_skill": "demo",
-  "updated_at": "2026-07-08T19:20:00Z",
+  "updated_at": "2026-07-08T19:11:13Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-5cfacf12-7f27-4308-a69e-d669ddad642b",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "create-pr",
+    "started_at": "2026-07-08T19:11:13Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
