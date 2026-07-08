@@ -8,7 +8,7 @@
     "ci_autofix": 0,
     "total_runs": 4
   },
-  "updated_at": "2026-07-08T19:18:00Z",
+  "updated_at": "2026-07-08T19:15:13Z",
   "agents": {
     "execute": "bc-78b1055d-7abd-47af-a2b7-c8786c7030f7",
     "planning": "bc-dd9f4b1e-c695-467a-8de4-f0799cae6561",
@@ -17,6 +17,10 @@
   "active_agent_id": "bc-c8d10b76-6638-42b0-a537-0d605dc6838b",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "create-pr",
+    "started_at": "2026-07-08T19:15:13Z",
+    "attempt": 0
+  },
   "active_skill": "demo"
 }
