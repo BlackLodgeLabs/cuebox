@@ -1,9 +1,8 @@
 {
   "issue": 84,
   "branch": "cursor/issue-84-harden-concurrent-handoff-spawn-dedup",
-  "stage": "plan-in-progress",
-  "active_skill": "planning",
-  "updated_at": "2026-07-08T06:00:00Z",
+  "stage": "plan-ready",
+  "updated_at": "2026-07-08T06:05:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,6 +20,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   }
 }
