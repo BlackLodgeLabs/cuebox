@@ -1,8 +1,8 @@
 {
   "issue": 90,
   "branch": "cursor/issue-90-harden-record-spawn-toctou",
-  "stage": "babysit-in-progress",
-  "updated_at": "2026-07-08T12:28:00Z",
+  "stage": "complete",
+  "updated_at": "2026-07-08T12:30:00Z",
   "agents": {
     "babysit-pr": "bc-f7cb2cf3-270d-49fc-928f-c0723da0ab24",
     "create-pr": "bc-dcf41520-12fe-4b60-9dbd-d74b1259b941",
