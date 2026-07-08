@@ -1,0 +1,19 @@
+{
+  "issue": 86,
+  "branch": "cursor/issue-86-test",
+  "stage": "execute-ready",
+  "agents": {
+    "execute": "bc-exec",
+    "demo": "bc-demo",
+    "planning": "bc-plan"
+  },
+  "pr": 96,
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 6
+  }
+}

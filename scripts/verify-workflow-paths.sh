@@ -113,6 +113,9 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-spawn-agent.sh
   cursor-workflow-babysit-recovery.sh
   cursor-workflow-handoff-recovery.sh
+  cursor-workflow-passback-run.sh
+  cursor-workflow-ensure-pr-on-branch.sh
+  cursor-workflow-infer-reopen.sh
   cursor-workflow-ensure-before-sha.sh
   cursor-workflow-push-diff-includes.sh
   cursor-workflow-post-deferral-comment.sh
@@ -176,12 +179,18 @@ while IFS= read -r script; do
     fail=1
   fi
 done < <(grep -oE '\$WF/cursor-workflow-[a-z0-9-]+\.sh' "$HANDOFF_YML" | sed 's|^\$WF/||' | sort -u)
-for keyword in runs changes-requested execute-passback cursor-workflow-spawn-agent.sh cursor-workflow-handoff-recovery.sh cursor-workflow-ensure-before-sha.sh cursor-workflow-load-scripts.sh cursor-workflow-should-discover-agents.sh; do
+for keyword in runs changes-requested execute-passback cursor-workflow-spawn-agent.sh cursor-workflow-handoff-recovery.sh cursor-workflow-ensure-before-sha.sh cursor-workflow-load-scripts.sh cursor-workflow-should-discover-agents.sh cursor-workflow-passback-run.sh cursor-workflow-ensure-pr-on-branch.sh cursor-workflow-infer-reopen.sh; do
   if ! grep -qF "$keyword" "$HANDOFF_YML"; then
     echo "FAIL: ${HANDOFF_YML} must reference ${keyword}" >&2
     fail=1
   fi
 done
+
+# --- resync-status invokes handoff recovery (issue #86) ---
+if ! grep -A5 'cursor-workflow-sync-github-status.sh' "$HANDOFF_YML" | grep -qF 'cursor-workflow-handoff-recovery.sh'; then
+  echo "FAIL: ${HANDOFF_YML} resync-status must invoke cursor-workflow-handoff-recovery.sh after sync" >&2
+  fail=1
+fi
 
 # --- PR template gate evidence ---
 PR_TEMPLATE="workflow/cursor-workflow/templates/PR.md"

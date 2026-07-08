@@ -17,7 +17,8 @@ cleanup_workflow_cache() {
     CURSOR_AGENTS_LIST_CACHE CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK \
     CURSOR_WORKFLOW_SYNCED CURSOR_WORKFLOW_SYNC_CALL_COUNT MOCK_CURSOR_LIST_FETCH_COUNT_FILE \
     CURSOR_WORKFLOW_REFETCH_REMOTE_JSON CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE \
-    MOCK_CURSOR_POST_COUNT_FILE MOCK_RECORD_SPAWN_FAIL MOCK_IN_FLIGHT_RUN_COUNT MOCK_ACTIVE_AGENT_COUNT
+    MOCK_CURSOR_POST_COUNT_FILE MOCK_RECORD_SPAWN_FAIL MOCK_IN_FLIGHT_RUN_COUNT MOCK_ACTIVE_AGENT_COUNT \
+    MOCK_CURSOR_RUNS_COUNT_FILE MOCK_ENSURE_DRAFT_PR
 }
 cleanup_workflow_cache
 
@@ -867,6 +868,215 @@ test_git_recovery_checkout_rewind() {
   git_remote_fixture_cleanup
 }
 
+# --- Pass-back recovery (issue #86) ---
+test_passback_recovery() {
+  cleanup_workflow_cache
+  local state runs_count post_count
+  state=$(mktemp)
+  runs_count=$(mktemp)
+  post_count=$(mktemp)
+  cp "$FIXTURES/state-passback-recovery.json" "$state"
+  echo 0 > "$runs_count"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export CURSOR_API_KEY=mock-key-for-test
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_RUNS_COUNT_FILE="$runs_count"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  export CURSOR_WORKFLOW_SYNCED=1
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    86 "cursor/issue-86-test" "$state" >/tmp/passback-recovery.log 2>&1
+  rc=$?
+
+  if [ "$rc" -eq 0 ] && grep -q "Pass-back run started on agent bc-exec" /tmp/passback-recovery.log; then
+    pass "passback recovery started run"
+  else
+    fail_test "passback recovery did not start run (rc=$rc log: $(cat /tmp/passback-recovery.log))"
+  fi
+  if [ "$(cat "$runs_count")" = "1" ]; then
+    pass "passback recovery 1 runs POST"
+  else
+    fail_test "passback recovery expected 1 runs POST got $(cat "$runs_count")"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "passback recovery 0 agent POST"
+  else
+    fail_test "passback recovery expected 0 agent POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$runs_count" "$post_count"
+}
+
+test_passback_recovery_409() {
+  cleanup_workflow_cache
+  local state runs_count
+  state=$(mktemp)
+  runs_count=$(mktemp)
+  cp "$FIXTURES/state-passback-recovery.json" "$state"
+  echo 0 > "$runs_count"
+  export MOCK_CURSOR_API=1
+  export CURSOR_API_KEY=mock-key-for-test
+  export MOCK_CURSOR_POST_CODE=409
+  export MOCK_CURSOR_RUNS_COUNT_FILE="$runs_count"
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    86 "cursor/issue-86-test" "$state" >/tmp/passback-409.log 2>&1
+  rc=$?
+
+  if [ "$rc" -eq 0 ] && grep -q "Pass-back agent busy (409)" /tmp/passback-409.log; then
+    pass "passback recovery 409 defer exit 0"
+  else
+    fail_test "passback recovery 409 expected exit 0 with defer (rc=$rc)"
+  fi
+  rm -f "$state" "$runs_count"
+}
+
+# --- Re-open inference (issue #86) ---
+test_reopen_inference_agents_demo() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  cp "$FIXTURES/state-reopen-recovery.json" "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    86 "cursor/issue-86-test" "$state" "" >/tmp/reopen-agents.log 2>&1
+
+  if grep -q "Handoff recovery: spawning execute" /tmp/reopen-agents.log \
+    && grep -q "reopen" /tmp/reopen-agents.log 2>/dev/null || grep -q "Handoff recovery: spawning execute" /tmp/reopen-agents.log; then
+    pass "reopen inference agents+demo spawns execute"
+  else
+    fail_test "reopen inference agents+demo did not spawn execute"
+  fi
+  if ! grep -q "Handoff recovery: spawning demo" /tmp/reopen-agents.log; then
+    pass "reopen inference agents+demo not demo"
+  else
+    fail_test "reopen inference agents+demo incorrectly spawned demo"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+test_reopen_inference_prev_stage() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  echo '{"issue":86,"branch":"cursor/issue-86-test","stage":"execute-ready","agents":{"execute":"bc-exec"},"pr":96,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":5}}' > "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    86 "cursor/issue-86-test" "$state" "changes-requested" >/tmp/reopen-prev.log 2>&1
+
+  if grep -q "Handoff recovery: spawning execute" /tmp/reopen-prev.log; then
+    pass "reopen inference prev_stage spawns execute"
+  else
+    fail_test "reopen inference prev_stage did not spawn execute"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+test_execute_ready_forward() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  echo '{"issue":86,"branch":"cursor/issue-86-test","stage":"execute-ready","agents":{"execute":"bc-exec"},"pr":96,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":3}}' > "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    86 "cursor/issue-86-test" "$state" "" >/tmp/execute-forward.log 2>&1
+
+  if grep -q "Handoff recovery: spawning demo" /tmp/execute-forward.log; then
+    pass "execute-ready forward spawns demo"
+  else
+    fail_test "execute-ready forward did not spawn demo"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+test_spec_ready_ensure_pr() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  cp "$FIXTURES/state-spec-ready-null-pr.json" "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  export MOCK_ENSURE_DRAFT_PR=99
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    86 "cursor/issue-86-test" "$state" >/tmp/spec-ensure-pr.log 2>&1
+
+  pr=$(jq -r '.pr' "$state")
+  if [ "$pr" = "99" ]; then
+    pass "spec-ready ensure pr updated state"
+  else
+    fail_test "spec-ready ensure pr expected 99 got $pr"
+  fi
+  if grep -q "Draft PR #99" /tmp/spec-ensure-pr.log || grep -q "Handoff recovery: spawning planning" /tmp/spec-ensure-pr.log; then
+    pass "spec-ready ensure pr recovery proceeded"
+  else
+    fail_test "spec-ready ensure pr recovery did not proceed"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+test_plan_ready_ensure_pr() {
+  cleanup_workflow_cache
+  local state post_count
+  state=$(mktemp)
+  post_count=$(mktemp)
+  echo '{"issue":86,"branch":"cursor/issue-86-test","stage":"plan-ready","agents":{"planning":"bc-plan"},"pr":null,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' > "$state"
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  export MOCK_ENSURE_DRAFT_PR=99
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    86 "cursor/issue-86-test" "$state" >/tmp/plan-ensure-pr.log 2>&1
+
+  pr=$(jq -r '.pr' "$state")
+  if [ "$pr" = "99" ]; then
+    pass "plan-ready ensure pr updated state"
+  else
+    fail_test "plan-ready ensure pr expected 99 got $pr"
+  fi
+  if grep -q "Handoff recovery: spawning execute" /tmp/plan-ensure-pr.log; then
+    pass "plan-ready ensure pr recovery spawned execute"
+  else
+    fail_test "plan-ready ensure pr recovery did not spawn execute"
+  fi
+  rm -f "$state" "$post_count"
+}
+
 test_dedup
 test_at_cap
 test_api_400
@@ -894,6 +1104,13 @@ test_failed_record_spawn_pending_blocks
 test_git_parallel_pending_spawn_race
 test_git_record_spawn_toctou
 test_git_recovery_checkout_rewind
+test_passback_recovery
+test_passback_recovery_409
+test_reopen_inference_agents_demo
+test_reopen_inference_prev_stage
+test_execute_ready_forward
+test_spec_ready_ensure_pr
+test_plan_ready_ensure_pr
 
 if [ "$fail" -ne 0 ]; then
   echo "test-cursor-workflow-handoff.sh: FAILED" >&2
