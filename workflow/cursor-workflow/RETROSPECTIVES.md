@@ -28,7 +28,7 @@ Before workflow-hardening work, read this file and skim linked reviews. After ba
 | Post-`complete` scope bypasses execute | #59 | `changes-requested` stage ([#62](https://github.com/BlackLodgeLabs/cuebox/issues/62)) |
 | Handoff never reaches babysit when final push doesn't change `stage` | #28 | Babysit recovery on `create-pr-ready` ([#70](https://github.com/BlackLodgeLabs/cuebox/issues/70)) |
 | Demo re-run fails without explicit seed steps | #59 | Demo-spec seed requirements in template ([#62](https://github.com/BlackLodgeLabs/cuebox/issues/62)) |
-| Concurrent handoff runs race admission gate before spawn record lands | [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79) | Cross-run re-fetch or lock before POST `/v1/agents` (proposed — see [HANDOFF-HARDENING-NOTES.md](https://github.com/BlackLodgeLabs/cuebox/blob/cursor/issue-79-workflow-review-skill/workflow/issues/issue-79/HANDOFF-HARDENING-NOTES.md)) |
+| Concurrent handoff runs race admission gate before spawn record lands | [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79) | Cross-run re-fetch + branch pending lock before POST `/v1/agents` ([#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) / [#88](https://github.com/BlackLodgeLabs/cuebox/pull/88)) |
 | Shallow checkout misses `BEFORE_SHA` on multi-commit pushes | [#79](https://github.com/BlackLodgeLabs/cuebox/issues/79) | `fetch-depth: 0` + `cursor-workflow-push-diff-includes.sh` ([#87](https://github.com/BlackLodgeLabs/cuebox/pull/87)); `cursor-workflow-ensure-before-sha.sh` + recovery ([#82](https://github.com/BlackLodgeLabs/cuebox/pull/82)) as defense-in-depth |
 
 ---

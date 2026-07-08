@@ -136,6 +136,18 @@ Successful spawns use `cursor-workflow-record-spawn-on-branch.sh` — one branch
 
 In-job pending lock: `CURSOR_WORKFLOW_PENDING_SKILL` env (not a branch push) blocks duplicate POST within the same job.
 
+### Cross-run spawn dedup (issue #84)
+
+Before `POST /v1/agents`, `cursor-workflow-spawn-agent.sh` orchestrates:
+
+1. **Re-fetch** remote `workflow.state.json` from `origin/<branch>` via `cursor-workflow-refetch-state.sh` (overlays `agents`, `handoff_pending`, `stage`, `pr`, `loops`).
+2. **Admission gate** — skip if peer recorded `agents.<skill>`; defer on fresh peer `handoff_pending`.
+3. **Branch pending lock** — `cursor-workflow-record-handoff-pending.sh set` pushes `handoff_pending` to the branch (production) or local state (mock/dry-run) **before** the API call.
+4. **Re-fetch + second gate** — peer wins (`skip:agent-already-recorded`) or holds lock (`defer:pending-lock`); holder proceeds with `CURSOR_WORKFLOW_WE_HOLD_LOCK=1`.
+5. **POST** once, then `record-spawn-on-branch.sh` clears pending and records `agents.<skill>` (first-wins if peer already recorded a different id).
+
+If `record-spawn-on-branch.sh` fails after a successful POST, branch `handoff_pending` remains until stale (15 minutes) or recovery re-records — subsequent spawns defer on `pending-lock`. Handoff recovery uses the same refetch + gate path (no local-only bypass).
+
 ### Status comment ID (`status_comment_id`)
 
 After the first status comment create, `status_comment_id` is stored in `workflow.state.json`. Subsequent syncs use `PATCH /issues/comments/{id}`; paginated search runs only on PATCH 404.

@@ -12,10 +12,12 @@ export CURSOR_WORKFLOW_TEST_MODE=1
 
 cleanup_workflow_cache() {
   rm -f /tmp/cursor-in-flight-count "${RUNNER_TEMP:-/tmp}/cursor-in-flight-count" \
-    "${CURSOR_AGENTS_LIST_CACHE:-}" 2>/dev/null || true
+    "${CURSOR_AGENTS_LIST_CACHE:-}" "${CURSOR_WORKFLOW_IN_FLIGHT_COUNT_FILE:-}" 2>/dev/null || true
   unset CURSOR_WORKFLOW_IN_FLIGHT_COUNT CURSOR_WORKFLOW_IN_FLIGHT_COUNT_FILE \
-    CURSOR_AGENTS_LIST_CACHE CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_SYNCED \
-    CURSOR_WORKFLOW_SYNC_CALL_COUNT MOCK_CURSOR_LIST_FETCH_COUNT_FILE
+    CURSOR_AGENTS_LIST_CACHE CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK \
+    CURSOR_WORKFLOW_SYNCED CURSOR_WORKFLOW_SYNC_CALL_COUNT MOCK_CURSOR_LIST_FETCH_COUNT_FILE \
+    CURSOR_WORKFLOW_REFETCH_REMOTE_JSON CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE \
+    MOCK_CURSOR_POST_COUNT_FILE MOCK_RECORD_SPAWN_FAIL MOCK_IN_FLIGHT_RUN_COUNT MOCK_ACTIVE_AGENT_COUNT
 }
 cleanup_workflow_cache
 
@@ -505,6 +507,213 @@ test_push_diff_non_tip_pr_md() {
   rm -rf "$repo"
 }
 
+# --- Case A: remote agent recorded → skip, no POST (issue #84) ---
+test_refetch_remote_agent_skip() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  cp "$FIXTURES/state-babysit-recovery.json" "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  post_count=$(mktemp)
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  echo 0 > "$post_count"
+  export CURSOR_WORKFLOW_REFETCH_REMOTE_JSON
+  CURSOR_WORKFLOW_REFETCH_REMOTE_JSON=$(cat "$FIXTURES/state-remote-babysit-agent.json")
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    70 "cursor/issue-70-test" "$state" "babysit-pr" "test prompt" "babysit-in-progress" \
+    >/tmp/spawn-remote-agent-skip.log 2>&1 || true
+
+  if grep -q "Spawn skipped" /tmp/spawn-remote-agent-skip.log; then
+    pass "refetch remote agent skip logged"
+  else
+    fail_test "refetch remote agent skip did not log Spawn skipped"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "refetch remote agent skip 0 POST"
+  else
+    fail_test "refetch remote agent skip expected 0 POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+# --- Case B: remote pending lock → defer, no POST (issue #84) ---
+test_refetch_remote_pending_defer() {
+  cleanup_workflow_cache
+  local state remote
+  state=$(mktemp)
+  remote=$(mktemp)
+  echo '{"issue":70,"branch":"cursor/issue-70-test","stage":"plan-ready","agents":{},"handoff_pending":{"skill":"execute","started_at":"2099-01-01T00:00:00Z","attempt":0},"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$remote"
+  echo '{"issue":70,"branch":"cursor/issue-70-test","stage":"plan-ready","agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_IN_FLIGHT_RUN_COUNT=0
+  export CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE="$remote"
+  post_count=$(mktemp)
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  echo 0 > "$post_count"
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    70 "cursor/issue-70-test" "$state" "execute" "test prompt" "execute-in-progress" \
+    >/tmp/spawn-remote-pending-defer.log 2>&1 || true
+
+  if grep -q "defer:pending-lock\|Spawn deferred (pending-lock" /tmp/spawn-remote-pending-defer.log; then
+    pass "refetch remote pending defer logged"
+  else
+    fail_test "refetch remote pending defer did not log defer"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "refetch remote pending defer 0 POST"
+  else
+    fail_test "refetch remote pending defer expected 0 POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$remote" "$post_count"
+}
+
+# --- Case C: concurrent race → exactly 1 POST (issue #84) ---
+test_concurrent_single_post() {
+  cleanup_workflow_cache
+  local state1 state2 remote post_count
+  state1=$(mktemp)
+  state2=$(mktemp)
+  remote=$(mktemp)
+  post_count=$(mktemp)
+  echo '{}' > "$remote"
+  echo '{"issue":84,"branch":"cursor/issue-84-test","stage":"create-pr-ready","agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state1"
+  cp "$state1" "$state2"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE="$remote"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  echo 0 > "$post_count"
+
+  WF="$WF" CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE="$remote" MOCK_CURSOR_POST_COUNT_FILE="$post_count" \
+    "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    84 "cursor/issue-84-test" "$state1" "babysit-pr" "race prompt 1" "babysit-in-progress" \
+    >/tmp/spawn-race-1.log 2>&1 &
+  pid1=$!
+  sleep 0.2
+  WF="$WF" CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE="$remote" MOCK_CURSOR_POST_COUNT_FILE="$post_count" \
+    "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    84 "cursor/issue-84-test" "$state2" "babysit-pr" "race prompt 2" "babysit-in-progress" \
+    >/tmp/spawn-race-2.log 2>&1 &
+  pid2=$!
+  wait "$pid1" "$pid2" || true
+
+  if [ "$(cat "$post_count")" = "1" ]; then
+    pass "concurrent race exactly 1 POST"
+  else
+    fail_test "concurrent race expected 1 POST got $(cat "$post_count")"
+  fi
+  rm -f "$state1" "$state2" "$remote" "$post_count"
+}
+
+# --- Case D: recovery respects remote agent → no spawn (issue #84) ---
+test_recovery_remote_agent_skip() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  cp "$FIXTURES/state-babysit-recovery.json" "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_PR_IS_DRAFT=true
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export CURSOR_WORKFLOW_REFETCH_REMOTE_JSON
+  CURSOR_WORKFLOW_REFETCH_REMOTE_JSON=$(cat "$FIXTURES/state-remote-babysit-agent.json")
+  post_count=$(mktemp)
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  echo 0 > "$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    70 "cursor/issue-70-test" "$state" >/tmp/recovery-remote-skip.log 2>&1 || true
+
+  if grep -q "Handoff recovery deferred.*skip:agent-already-recorded" /tmp/recovery-remote-skip.log \
+    && ! grep -q "Handoff recovery: spawning babysit-pr" /tmp/recovery-remote-skip.log; then
+    pass "recovery remote agent skip no spawn log"
+  else
+    fail_test "recovery should defer on remote agent without spawning"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "recovery remote agent skip 0 POST"
+  else
+    fail_test "recovery remote agent skip expected 0 POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+# --- Case E: record-spawn first-wins when different id (issue #84) ---
+test_record_spawn_first_wins() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":84,"branch":"cursor/issue-84-test","stage":"execute-in-progress","agents":{"execute":"bc-first"},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' > "$state"
+  export MOCK_CURSOR_API=1
+
+  "$SCRIPT_DIR/cursor-workflow-record-spawn-on-branch.sh" \
+    "$state" "execute" "bc-second" "cursor/issue-84-test" >/tmp/record-first-wins.log 2>&1
+
+  recorded=$(jq -r '.agents.execute // empty' "$state")
+  if [ "$recorded" = "bc-first" ]; then
+    pass "record-spawn first-wins preserves bc-first"
+  else
+    fail_test "record-spawn first-wins expected bc-first got $recorded"
+  fi
+  if grep -q "Peer agent already recorded" /tmp/record-first-wins.log; then
+    pass "record-spawn first-wins logged peer"
+  else
+    fail_test "record-spawn first-wins did not log peer message"
+  fi
+  rm -f "$state"
+}
+
+# --- Case F: failed record-spawn leaves pending; next spawn defers (issue #84) ---
+test_failed_record_spawn_pending_blocks() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":84,"branch":"cursor/issue-84-test","stage":"plan-ready","agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_RECORD_SPAWN_FAIL=1
+  post_count=$(mktemp)
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  echo 0 > "$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    84 "cursor/issue-84-test" "$state" "execute" "first prompt" "execute-in-progress" \
+    >/tmp/spawn-fail-record.log 2>&1 || true
+
+  pending=$(jq -r '.handoff_pending.skill // empty' "$state")
+  if [ "$pending" = "execute" ]; then
+    pass "failed record-spawn leaves pending lock"
+  else
+    fail_test "failed record-spawn expected pending=execute got $pending"
+  fi
+  first_posts=$(cat "$post_count")
+
+  unset MOCK_RECORD_SPAWN_FAIL
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    84 "cursor/issue-84-test" "$state" "execute" "second prompt" "execute-in-progress" \
+    >/tmp/spawn-fail-record-2.log 2>&1 || true
+
+  if [ "$(cat "$post_count")" = "$first_posts" ]; then
+    pass "failed record-spawn blocks second POST"
+  else
+    fail_test "failed record-spawn expected no second POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$post_count"
+}
+
 test_dedup
 test_at_cap
 test_api_400
@@ -523,6 +732,12 @@ test_comment_id_cache
 test_cap_count_cache
 test_push_diff_non_tip_state_change
 test_push_diff_non_tip_pr_md
+test_refetch_remote_agent_skip
+test_refetch_remote_pending_defer
+test_concurrent_single_post
+test_recovery_remote_agent_skip
+test_record_spawn_first_wins
+test_failed_record_spawn_pending_blocks
 
 if [ "$fail" -ne 0 ]; then
   echo "test-cursor-workflow-handoff.sh: FAILED" >&2
