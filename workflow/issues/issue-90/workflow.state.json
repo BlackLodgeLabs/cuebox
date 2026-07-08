@@ -6,7 +6,7 @@
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
-    "demo": null,
+    "demo": "bc-507a4d91-6fd1-4365-8102-989ffeea9cfc",
     "execute": "bc-c5fef33c-1702-4af1-8799-e85579bde568",
     "planning": "bc-cd5978f6-863a-4d2f-a76b-e374831890a9",
     "review-and-spec": null,
