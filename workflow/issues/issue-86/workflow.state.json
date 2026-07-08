@@ -1,8 +1,8 @@
 {
   "issue": 86,
   "branch": "cursor/issue-86-handoff-recovery-gaps",
-  "stage": "execute-ready",
-  "updated_at": "2026-07-08T13:06:28Z",
+  "stage": "demo-in-progress",
+  "updated_at": "2026-07-08T13:07:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
