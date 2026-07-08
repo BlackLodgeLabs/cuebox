@@ -8,12 +8,16 @@
     "ci_autofix": 0,
     "total_runs": 2
   },
-  "updated_at": "2026-07-08T19:02:00Z",
+  "updated_at": "2026-07-08T19:06:15Z",
   "agents": {
     "planning": "bc-dd9f4b1e-c695-467a-8de4-f0799cae6561"
   },
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-08T19:06:15Z",
+    "attempt": 0
+  }
 }
