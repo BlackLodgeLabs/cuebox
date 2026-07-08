@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 # Re-fetch remote workflow.state.json from origin/<branch> and overlay admission fields.
-# Usage: cursor-workflow-refetch-state.sh <state-file> <branch>
+# Usage: cursor-workflow-refetch-state.sh <state-file> <branch> [--agents-from-tip]
 # Env: CURSOR_WORKFLOW_REFETCH_REMOTE_JSON — test hook bypassing git fetch
 set -euo pipefail
 
-STATE_FILE="${1:?usage: cursor-workflow-refetch-state.sh <state-file> <branch>}"
-BRANCH="${2:?usage: cursor-workflow-refetch-state.sh <state-file> <branch>}"
+STATE_FILE="${1:?usage: cursor-workflow-refetch-state.sh <state-file> <branch> [--agents-from-tip]}"
+BRANCH="${2:?usage: cursor-workflow-refetch-state.sh <state-file> <branch> [--agents-from-tip]}"
+shift 2 || true
+
+AGENTS_FROM_TIP=false
+for arg in "$@"; do
+  case "$arg" in
+    --agents-from-tip) AGENTS_FROM_TIP=true ;;
+  esac
+done
 
 if [ ! -f "$STATE_FILE" ]; then
   echo "State file not found: $STATE_FILE" >&2
@@ -27,13 +35,14 @@ REL_PATH="workflow/issues/issue-${ISSUE}/workflow.state.json"
 PENDING_STALE_MINUTES="${CURSOR_WORKFLOW_PENDING_STALE_MINUTES:-15}"
 
 REMOTE_JSON="{}"
+FETCH_OK=false
 if [ -n "${CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE:-}" ] && [ -f "$CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE" ]; then
   REMOTE_JSON=$(cat "$CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE")
 elif [ -n "${CURSOR_WORKFLOW_REFETCH_REMOTE_JSON:-}" ]; then
   REMOTE_JSON="$CURSOR_WORKFLOW_REFETCH_REMOTE_JSON"
 elif git rev-parse --git-dir >/dev/null 2>&1; then
   if git fetch origin "$BRANCH" --quiet 2>/dev/null; then
-    :
+    FETCH_OK=true
   else
     echo "Warning: could not fetch origin/${BRANCH} — refetch with empty remote" >&2
   fi
@@ -43,6 +52,8 @@ elif git rev-parse --git-dir >/dev/null 2>&1; then
       echo "Invalid remote JSON at origin/${BRANCH}:${REL_PATH}" >&2
       exit 0
     fi
+  elif [ "$AGENTS_FROM_TIP" = "true" ]; then
+    echo "Warning: origin/${BRANCH}:${REL_PATH} not found after fetch" >&2
   fi
 fi
 
@@ -91,6 +102,29 @@ OVERLAYED=$(jq -n \
   ')
 
 printf '%s\n' "$OVERLAYED" > "$STATE_FILE"
+
+# Branch-tip agents overlay: never trust trigger-SHA local agents when tip has records (issue #90).
+if [ "$AGENTS_FROM_TIP" = "true" ] && [ -z "${CURSOR_WORKFLOW_REFETCH_REMOTE_JSON:-}" ] \
+  && [ -z "${CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE:-}" ] \
+  && git rev-parse --git-dir >/dev/null 2>&1; then
+  if git cat-file -e "origin/${BRANCH}:${REL_PATH}" 2>/dev/null; then
+    TIP_JSON=$(git show "origin/${BRANCH}:${REL_PATH}")
+    if jq empty <<<"$TIP_JSON" 2>/dev/null; then
+      jq --argjson tip "$TIP_JSON" '
+        .agents = (
+          (($tip.agents // {}) + (.agents // {}) | keys | unique) as $keys |
+          ($tip.agents // {}) as $ta |
+          (.agents // {}) as $la |
+          reduce $keys[] as $k ({}; .[$k] = if ($ta[$k] // null) != null then $ta[$k] else ($la[$k] // null) end)
+        )
+        | .stage = (if ($tip.stage // null) != null then $tip.stage else (.stage // null) end)
+        | .pr = (if ($tip.pr // null) != null then $tip.pr else (.pr // null) end)
+      ' "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
+    fi
+  elif [ "$FETCH_OK" != "true" ]; then
+    echo "Warning: --agents-from-tip but fetch failed; admission may use stale local agents" >&2
+  fi
+fi
 
 AFTER_HASH=$(cat "$STATE_FILE" | jq -c '{agents, handoff_pending, stage, pr, loops}')
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then

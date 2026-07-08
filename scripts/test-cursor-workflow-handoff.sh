@@ -714,6 +714,159 @@ test_failed_record_spawn_pending_blocks() {
   rm -f "$state" "$post_count"
 }
 
+# --- Case G: parallel pending + spawn race with real git (issue #90) ---
+test_git_parallel_pending_spawn_race() {
+  cleanup_workflow_cache
+  # shellcheck source=fixtures/cursor-workflow/git-remote-test-lib.sh
+  source "$FIXTURES/git-remote-test-lib.sh"
+
+  local seed_state post_count local_state pid1 pid2 tip_agent
+  git_remote_fixture_init 90
+
+  seed_state='{"issue":90,"branch":"cursor/issue-90-test","stage":"create-pr-ready","agents":{},"pr":94,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}'
+  git_remote_fixture_push_state "$seed_state" "seed create-pr-ready"
+
+  post_count=$(mktemp)
+  echo 0 > "$post_count"
+  local_state="$GIT_CLONE_DIR/$GIT_REMOTE_STATE_REL"
+
+  pushd "$GIT_CLONE_DIR" >/dev/null
+  (
+    unset CURSOR_WORKFLOW_PENDING_DRY_RUN MOCK_CURSOR_API
+    if WF="$WF" "$SCRIPT_DIR/cursor-workflow-record-handoff-pending.sh" \
+      "$local_state" "$GIT_REMOTE_BRANCH" set babysit-pr 0; then
+      count=$(cat "$post_count")
+      echo $((count + 1)) > "$post_count"
+      WF="$WF" "$SCRIPT_DIR/cursor-workflow-record-spawn-on-branch.sh" \
+        "$local_state" "babysit-pr" "bc-git-race-1" "$GIT_REMOTE_BRANCH"
+    fi
+  ) >/tmp/git-race-1.log 2>&1 &
+  pid1=$!
+  sleep 0.15
+  (
+    unset CURSOR_WORKFLOW_PENDING_DRY_RUN MOCK_CURSOR_API
+    if WF="$WF" "$SCRIPT_DIR/cursor-workflow-record-handoff-pending.sh" \
+      "$local_state" "$GIT_REMOTE_BRANCH" set babysit-pr 0; then
+      count=$(cat "$post_count")
+      echo $((count + 1)) > "$post_count"
+      WF="$WF" "$SCRIPT_DIR/cursor-workflow-record-spawn-on-branch.sh" \
+        "$local_state" "babysit-pr" "bc-git-race-2" "$GIT_REMOTE_BRANCH"
+    fi
+  ) >/tmp/git-race-2.log 2>&1 &
+  pid2=$!
+  wait "$pid1" "$pid2" || true
+  popd >/dev/null
+
+  if [ "$(cat "$post_count")" = "1" ]; then
+    pass "git parallel pending+spawn exactly 1 POST"
+  else
+    fail_test "git parallel pending+spawn expected 1 POST got $(cat "$post_count")"
+  fi
+  tip_agent=$(git_remote_fixture_tip_agent babysit-pr)
+  if [ -n "$tip_agent" ] && [ "$tip_agent" != "null" ]; then
+    if [ "$tip_agent" = "bc-git-race-1" ] || [ "$tip_agent" = "bc-git-race-2" ]; then
+      pass "git parallel pending+spawn one agent at tip"
+    else
+      fail_test "git parallel pending+spawn unexpected agent $tip_agent"
+    fi
+  else
+    fail_test "git parallel pending+spawn no agent at branch tip"
+  fi
+
+  rm -f "$post_count"
+  git_remote_fixture_cleanup
+}
+
+# --- Case H: record-spawn TOCTOU with real git (issue #90) ---
+test_git_record_spawn_toctou() {
+  cleanup_workflow_cache
+  # shellcheck source=fixtures/cursor-workflow/git-remote-test-lib.sh
+  source "$FIXTURES/git-remote-test-lib.sh"
+
+  local seed_state local_state pid1 pid2 tip
+  git_remote_fixture_init 90
+
+  seed_state='{"issue":90,"branch":"cursor/issue-90-test","stage":"execute-in-progress","agents":{"execute":"bc-first"},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}'
+  git_remote_fixture_push_state "$seed_state" "seed bc-first"
+
+  local_state="$GIT_CLONE_DIR/$GIT_REMOTE_STATE_REL"
+  pushd "$GIT_CLONE_DIR" >/dev/null
+  unset CURSOR_WORKFLOW_PENDING_DRY_RUN MOCK_CURSOR_API
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-record-spawn-on-branch.sh" \
+    "$local_state" execute bc-second "$GIT_REMOTE_BRANCH" >/tmp/git-toctou-2.log 2>&1 &
+  pid1=$!
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-record-spawn-on-branch.sh" \
+    "$local_state" execute bc-third "$GIT_REMOTE_BRANCH" >/tmp/git-toctou-3.log 2>&1 &
+  pid2=$!
+  wait "$pid1" "$pid2" || true
+  popd >/dev/null
+
+  tip=$(git_remote_fixture_tip_agent execute)
+  if [ "$tip" = "bc-first" ]; then
+    pass "git record-spawn TOCTOU preserves bc-first"
+  else
+    fail_test "git record-spawn TOCTOU expected bc-first got $tip"
+  fi
+  if grep -q "Peer agent already recorded" /tmp/git-toctou-2.log /tmp/git-toctou-3.log; then
+    pass "git record-spawn TOCTOU logged peer"
+  else
+    fail_test "git record-spawn TOCTOU missing peer log"
+  fi
+
+  git_remote_fixture_cleanup
+}
+
+# --- Case I: recovery checkout rewind with real git (issue #90) ---
+test_git_recovery_checkout_rewind() {
+  cleanup_workflow_cache
+  # shellcheck source=fixtures/cursor-workflow/git-remote-test-lib.sh
+  source "$FIXTURES/git-remote-test-lib.sh"
+
+  local state_a state_b sha_a local_copy post_count
+  git_remote_fixture_init 90
+
+  state_a='{"issue":90,"branch":"cursor/issue-90-test","stage":"create-pr-ready","agents":{},"pr":94,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}'
+  git_remote_fixture_push_state "$state_a" "commit A no babysit"
+  sha_a=$(git -C "$GIT_CLONE_DIR" rev-parse HEAD)
+
+  state_b='{"issue":90,"branch":"cursor/issue-90-test","stage":"create-pr-ready","agents":{"babysit-pr":"bc-remote-winner"},"pr":94,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}'
+  git_remote_fixture_push_state "$state_b" "commit B babysit recorded"
+
+  git -C "$GIT_CLONE_DIR" checkout -q "$sha_a"
+  local_copy=$(mktemp)
+  cp "$GIT_CLONE_DIR/$GIT_REMOTE_STATE_REL" "$local_copy"
+
+  post_count=$(mktemp)
+  echo 0 > "$post_count"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_PR_IS_DRAFT=true
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  unset CURSOR_API_KEY CURSOR_WORKFLOW_REFETCH_REMOTE_JSON CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE
+
+  pushd "$GIT_CLONE_DIR" >/dev/null
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    90 "$GIT_REMOTE_BRANCH" "$local_copy" >/tmp/git-recovery-rewind.log 2>&1 || true
+  popd >/dev/null
+
+  if grep -q "Handoff recovery deferred.*skip:agent-already-recorded" /tmp/git-recovery-rewind.log \
+    && ! grep -q "Handoff recovery: spawning babysit-pr" /tmp/git-recovery-rewind.log; then
+    pass "git recovery rewind deferred spawn"
+  else
+    fail_test "git recovery rewind should defer without spawn (log: $(cat /tmp/git-recovery-rewind.log))"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "git recovery rewind 0 POST"
+  else
+    fail_test "git recovery rewind expected 0 POST got $(cat "$post_count")"
+  fi
+
+  rm -f "$local_copy" "$post_count"
+  git_remote_fixture_cleanup
+}
+
 test_dedup
 test_at_cap
 test_api_400
@@ -738,6 +891,9 @@ test_concurrent_single_post
 test_recovery_remote_agent_skip
 test_record_spawn_first_wins
 test_failed_record_spawn_pending_blocks
+test_git_parallel_pending_spawn_race
+test_git_record_spawn_toctou
+test_git_recovery_checkout_rewind
 
 if [ "$fail" -ne 0 ]; then
   echo "test-cursor-workflow-handoff.sh: FAILED" >&2
