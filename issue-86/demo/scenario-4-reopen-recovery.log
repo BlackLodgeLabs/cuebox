@@ -1,0 +1,13 @@
+Warning: recovery fetch origin/cursor/issue-86-test failed
+Warning: could not fetch origin/cursor/issue-86-test — refetch with empty remote
+Warning: origin/cursor/issue-86-test:workflow/issues/issue-86/workflow.state.json not found after fetch
+Warning: --agents-from-tip but fetch failed; admission may use stale local agents
+Handoff recovery: spawning execute for issue #86 (stage=execute-ready)
+Warning: could not fetch origin/cursor/issue-86-test — refetch with empty remote
+Spawn deferred (pending-lock-race), attempt 1/3
+Warning: could not fetch origin/cursor/issue-86-test — refetch with empty remote
+Spawn deferred (pending-lock-race), attempt 2/3
+Warning: could not fetch origin/cursor/issue-86-test — refetch with empty remote
+Spawn deferred (pending-lock-race), attempt 3/3
+No GitHub token available for deferral comment
+::warning::Set CURSOR_API_KEY or CURSOR_HANDOFF_GITHUB_TOKEN
