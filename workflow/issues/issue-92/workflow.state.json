@@ -9,10 +9,14 @@
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-07-08T18:55:05Z",
+  "updated_at": "2026-07-08T18:56:16Z",
   "agents": {},
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null
+  "handoff_pending": {
+    "skill": "planning",
+    "started_at": "2026-07-08T18:56:16Z",
+    "attempt": 0
+  }
 }
