@@ -29,20 +29,31 @@ PASS: tip-only fallback misses non-tip state change when BEFORE_SHA unavailable
 PASS: push diff detects non-tip PR.md change across full range
 ::warning::BEFORE_SHA 0000000000000000000000000000000000000001 unavailable — checking AFTER_SHA commit only
 PASS: tip-only fallback misses non-tip PR.md change when BEFORE_SHA unavailable
+PASS: refetch remote agent skip logged
+PASS: refetch remote agent skip 0 POST
+PASS: refetch remote pending defer logged
+PASS: refetch remote pending defer 0 POST
+PASS: concurrent race exactly 1 POST
+PASS: recovery remote agent skip no spawn log
+PASS: recovery remote agent skip 0 POST
+PASS: record-spawn first-wins preserves bc-first
+PASS: record-spawn first-wins logged peer
+PASS: failed record-spawn leaves pending lock
+PASS: failed record-spawn blocks second POST
 test-cursor-workflow-handoff.sh: all cases passed
 Switched to a new branch 'main'
-To /tmp/tmp.oR2IGoRCu0/remote-push.git
+To /tmp/tmp.PTUwtvFd5d/remote-push.git
  * [new branch]      main -> main
  * [new branch]      cursor/issue-99-test -> cursor/issue-99-test
-From /tmp/tmp.oR2IGoRCu0/remote-push
+From /tmp/tmp.PTUwtvFd5d/remote-push
  * branch            cursor/issue-99-test -> FETCH_HEAD
 PASS: record-agent pushes ID when remote slot is null but local pre-updated
 Switched to a new branch 'main'
-To /tmp/tmp.oR2IGoRCu0/remote-idempotent.git
+To /tmp/tmp.PTUwtvFd5d/remote-idempotent.git
  * [new branch]      main -> main
  * [new branch]      cursor/issue-99-test -> cursor/issue-99-test
-To /tmp/tmp.oR2IGoRCu0/remote-idempotent.git
-   68e8c80..619691b  cursor/issue-99-test -> cursor/issue-99-test
+To /tmp/tmp.PTUwtvFd5d/remote-idempotent.git
+   ec6eda4..2ab2b9f  cursor/issue-99-test -> cursor/issue-99-test
 PASS: record-agent idempotent when remote already has agent ID
 test-cursor-workflow-record-agent.sh: all cases passed
 PASS: extracts Closes/Fixes issue numbers

@@ -1,48 +1,47 @@
 # Demo notes — issue #84
 
 **Date:** 2026-07-08  
-**Commit:** `3565599d6a93d5295b77701ae8460aedd474ea0e`  
+**Commit:** `2da7651` (demo artifacts; implementation at `6735ffa` / `b03b5f1`)  
 **Branch:** `cursor/issue-84-harden-concurrent-handoff-spawn-dedup`  
 **Docker stack:** All four containers Up; health endpoints returned `status: ok`, `database: ok`.
 
 ## Summary
 
-Demo ran against the plan-only branch. Execute has not yet landed the cross-run spawn dedup implementation from `PLAN.md`. Scenarios 1 and 3 fail demo-spec pass criteria; scenario 2 exits 0 but does not yet exercise the planned `cursor-workflow-refetch-state.sh` registration.
+All three demo scenarios **pass**. Cross-run handoff spawn dedup is implemented: `cursor-workflow-refetch-state.sh`, hardened spawn/recovery paths, extended handoff tests (cases A–F), and WORKFLOW/RETROSPECTIVES documentation updates.
 
-**Result:** Pass-back to execute (code defect — implementation missing).
-
-## Scenario 1: Workflow handoff tests — FAIL
+## Scenario 1: Workflow handoff tests — PASS
 
 **Command:** `bash scripts/test-cursor-workflow-handoff.sh`  
 **Exit code:** 0  
 **Log:** [scenario-1-handoff-tests.log](./scenario-1-handoff-tests.log)
 
-Existing regression cases pass (`test-cursor-workflow-handoff.sh: all cases passed`). Demo-spec requires **new** cross-run PASS markers that are not present in the test suite yet:
+New cross-run regression cases present and passing:
 
-| Expected marker | Present |
-|-----------------|---------|
-| remote agent skip | No |
-| remote pending defer | No |
-| single POST under race | No |
-| recovery remote skip | No |
-| record-spawn first-wins | No |
+| Marker | Result |
+|--------|--------|
+| refetch remote agent skip | PASS |
+| refetch remote pending defer | PASS |
+| concurrent race exactly 1 POST | PASS |
+| recovery remote agent skip | PASS |
+| record-spawn first-wins | PASS |
+| failed record-spawn pending lock | PASS |
 
-No `FAIL:` lines appeared, but the new issue #84 cases from the plan are not implemented.
+Final line: `test-cursor-workflow-handoff.sh: all cases passed`. No `FAIL:` lines.
 
-## Scenario 2: Workflow paths gate — PARTIAL FAIL
+## Scenario 2: Workflow paths gate — PASS
 
 **Command:** `bash scripts/verify-workflow-paths.sh`  
 **Exit code:** 0  
 **Log:** [scenario-2-verify-workflow-paths.log](./scenario-2-verify-workflow-paths.log)
 
-Gate passes on current branch, but `scripts/cursor-workflow-refetch-state.sh` does not exist and is not listed in `scripts/cursor-workflow-load-scripts.sh` or `verify-workflow-paths.sh` `HANDOFF_SCRIPTS` (planned in PLAN.md Step 1).
+`cursor-workflow-refetch-state.sh` registered in `cursor-workflow-load-scripts.sh` and `verify-workflow-paths.sh` `HANDOFF_SCRIPTS`. Final message: `PASS: no legacy workflow paths found`.
 
-## Scenario 3: Spawn flow documentation — FAIL
+## Scenario 3: Spawn flow documentation — PASS
 
 **Capture:** [scenario-3-workflow-docs.png](./scenario-3-workflow-docs.png)
 
-- `WORKFLOW.md` has no cross-run spawn dedup section (refetch before POST, branch `handoff_pending` before API call, second admission check).
-- `RETROSPECTIVES.md` concurrent-handoff pattern row still says **(proposed)** and links to HANDOFF-HARDENING-NOTES — not a landed #84 mitigation.
+- `WORKFLOW.md` § "Cross-run spawn dedup (issue #84)" documents re-fetch → gate → branch pending lock → re-fetch + second gate → POST.
+- `RETROSPECTIVES.md` concurrent-handoff pattern row links landed mitigation ([#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) / [#88](https://github.com/BlackLodgeLabs/cuebox/pull/88)) — no longer "proposed".
 
 ## Artifacts
 
@@ -51,13 +50,3 @@ Gate passes on current branch, but `scripts/cursor-workflow-refetch-state.sh` do
 - [x] `scenario-3-workflow-docs.png`
 - [x] `demo-notes.md`
 - [x] No secrets in logs or screenshots
-
-## Pass-back to execute
-
-Execute must implement `PLAN.md` before demo can pass:
-
-1. Add `scripts/cursor-workflow-refetch-state.sh` and register in load-scripts + verify-workflow-paths.
-2. Harden `cursor-workflow-spawn-agent.sh` (refetch → gate → branch pending → refetch → re-gate → POST).
-3. Update recovery path and `record-spawn-on-branch.sh` first-wins semantics.
-4. Extend `test-cursor-workflow-handoff.sh` with concurrent/overlapping spawn regression cases (expected PASS markers in demo-spec).
-5. Document cross-run dedup in `WORKFLOW.md`; update `RETROSPECTIVES.md` pattern row to reference landed #84 mitigation (remove "proposed").
