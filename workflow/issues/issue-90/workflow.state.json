@@ -2,7 +2,7 @@
   "issue": 90,
   "branch": "cursor/issue-90-harden-record-spawn-toctou",
   "stage": "create-pr-ready",
-  "updated_at": "2026-07-08T12:22:00Z",
+  "updated_at": "2026-07-08T12:22:24Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-dcf41520-12fe-4b60-9dbd-d74b1259b941",
@@ -16,7 +16,11 @@
   "active_agent_id": "bc-dcf41520-12fe-4b60-9dbd-d74b1259b941",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-08T12:22:24Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
