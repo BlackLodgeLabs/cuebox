@@ -1,9 +1,9 @@
 {
   "issue": 86,
   "branch": "cursor/issue-86-handoff-recovery-gaps",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-08T12:55:00Z",
+  "updated_at": "2026-07-08T13:00:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
