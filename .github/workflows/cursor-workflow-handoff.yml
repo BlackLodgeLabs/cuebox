@@ -99,15 +99,6 @@ jobs:
 
           git show "${AFTER_SHA}:${STATE_FILE}" > /tmp/workflow.state.json
 
-          ensure_pr_on_branch() {
-            local issue="$1" branch="$2" state_file="$3"
-            local pr
-            pr=$("$WF/cursor-workflow-ensure-draft-pr.sh" "$issue" "$branch")
-            "$WF/cursor-workflow-record-pr-on-branch.sh" "$state_file" "$pr" "$branch"
-            jq --argjson pr "$pr" '.pr = $pr' "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
-            echo "Draft PR #${pr} linked for issue #${issue}"
-          }
-
           skill_agent_label() {
             case "$1" in
               planning) echo "Plan Agent" ;;
@@ -134,25 +125,26 @@ jobs:
 
           handoff() {
             local stage="$1" issue="$2" branch="$3" state_file="$4" prev_stage="${5:-}"
-            local prompt skill progress_stage agent_id="" agent_name=""
+            local prompt skill progress_stage agent_id="" agent_name="" reopen_decision=""
 
             case "$stage" in
               spec-ready)
-                ensure_pr_on_branch "$issue" "$branch" "$state_file"
+                "$WF/cursor-workflow-ensure-pr-on-branch.sh" "$issue" "$branch" "$state_file"
                 prompt="Use the planning skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — do not create a PR. Read workflow/cursor-workflow/WORKFLOW.md and workflow/issues/issue-${issue}/workflow.state.json."
                 skill="planning"
                 progress_stage="plan-in-progress"
                 ;;
               plan-ready)
                 if [ "$(jq -r '.pr // empty' "$state_file")" = "" ] || [ "$(jq -r '.pr' "$state_file")" = "null" ]; then
-                  ensure_pr_on_branch "$issue" "$branch" "$state_file"
+                  "$WF/cursor-workflow-ensure-pr-on-branch.sh" "$issue" "$branch" "$state_file"
                 fi
                 prompt="Use the execute skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — push commits only; do not create a PR. Run all tests and gate scripts before pushing."
                 skill="execute"
                 progress_stage="execute-in-progress"
                 ;;
               execute-ready)
-                if [ "$prev_stage" = "changes-requested" ]; then
+                reopen_decision=$("$WF/cursor-workflow-infer-reopen.sh" "$state_file" "$prev_stage")
+                if [ "$reopen_decision" = "reopen" ]; then
                   prompt="Use the execute skill for GitHub issue #${issue}. Branch: ${branch}. Draft PR #$(jq -r '.pr' "$state_file") already exists — push commits only; do not create a PR. Post-complete scope changes requested; read SPEC.md and PLAN.md for updates. Run all tests and gate scripts before pushing."
                   skill="execute"
                   progress_stage="execute-in-progress"
@@ -183,7 +175,7 @@ jobs:
             echo "Handoff: issue #${issue} stage=${stage} branch=${branch} name=${agent_name}"
 
             local reopen_flag=""
-            if [ "$stage" = "execute-ready" ] && [ "$prev_stage" = "changes-requested" ]; then
+            if [ "$stage" = "execute-ready" ] && [ "$reopen_decision" = "reopen" ]; then
               reopen_flag="--reopen"
             fi
 
@@ -214,54 +206,7 @@ jobs:
           }
 
           handle_passback() {
-            local issue="$1" branch="$2" state_file="$3"
-            local passback_to passback_reason agent_id prompt http_code
-            passback_to=$(jq -r '.passback_to // empty' "$state_file")
-            passback_reason=$(jq -r '.passback_reason // empty' "$state_file")
-            agent_id=$(jq -r --arg k "$passback_to" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$state_file")
-
-            if [ -z "$passback_to" ] || [ "$passback_to" = "null" ] || [ -z "$agent_id" ] || [ "$agent_id" = "null" ]; then
-              echo "Pass-back skipped — missing passback_to or agents.${passback_to}"
-              return 1
-            fi
-
-            prompt="Resume execute for GitHub issue #${issue} on branch ${branch}. Pass-back reason: ${passback_reason}. Read workflow/issues/issue-${issue}/demo/demo-notes.md section 'Pass-back to execute' and use the execute skill. Draft PR #$(jq -r '.pr // empty' "$state_file") already exists — push commits only."
-
-            if [ -n "${CURSOR_API_KEY:-}" ]; then
-              payload=$(jq -n --arg text "$prompt" '{prompt: {text: $text}}')
-              http_code=$(curl -sS -o /tmp/cursor-passback.json -w "%{http_code}" \
-                -X POST "https://api.cursor.com/v1/agents/${agent_id}/runs" \
-                -u "${CURSOR_API_KEY}:" \
-                -H "Content-Type: application/json" \
-                -d "$payload")
-              if [ "$http_code" = "409" ]; then
-                echo "::warning::Pass-back agent busy (409) — re-push after current run completes"
-                return 0
-              fi
-              if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-                echo "Pass-back run started on agent ${agent_id}"
-                HANDOFF_PROGRESS_STAGE="execute-in-progress" \
-                HANDOFF_ACTIVE_SKILL="execute" \
-                HANDOFF_ACTIVE_AGENT="$agent_id" \
-                  "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
-                return 0
-              fi
-              echo "Pass-back API returned ${http_code}: $(cat /tmp/cursor-passback.json)"
-            fi
-
-            if [ -n "${CURSOR_HANDOFF_GITHUB_TOKEN:-}" ]; then
-              echo "${CURSOR_HANDOFF_GITHUB_TOKEN}" | gh auth login --with-token
-              gh issue comment "$issue" --repo "${GITHUB_REPOSITORY}" \
-                --body "@cursoragent ${prompt}"
-              HANDOFF_PROGRESS_STAGE="execute-in-progress" \
-              HANDOFF_ACTIVE_SKILL="execute" \
-              HANDOFF_ACTIVE_AGENT="$agent_id" \
-                "$WF/cursor-workflow-sync-github-status.sh" "$state_file"
-              return 0
-            fi
-
-            echo "::warning::Pass-back failed — set CURSOR_API_KEY or CURSOR_HANDOFF_GITHUB_TOKEN"
-            return 1
+            "$WF/cursor-workflow-passback-run.sh" "$1" "$2" "$3"
           }
 
           is_handoff_stage() {
@@ -403,6 +348,7 @@ jobs:
             git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
           fi
           "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
+          "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$BRANCH" /tmp/workflow.state.json "" || true
           STAGE=$(jq -r '.stage // empty' /tmp/workflow.state.json)
           if [ "$STAGE" = "complete" ]; then
             "$WF/cursor-workflow-notify-complete.sh" /tmp/workflow.state.json || true

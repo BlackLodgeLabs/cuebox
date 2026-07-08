@@ -26,7 +26,7 @@ Automated handoffs: stages 3–7 via `.github/workflows/cursor-workflow-handoff.
 
 **Agent cap:** The handoff Action never spawns when **8** or more Cloud Agent runs are already **in flight** (`RUNNING`/`CREATING`) for this repo (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`). Finished runs (`FINISHED`) do not count — agent workspaces may stay `ACTIVE` in the Cursor API after work completes. At cap or on API 400, it defers with backoff and posts a single deferral comment per 30 minutes — the Action does not exit with failure.
 
-**Babysit recovery:** If a branch is stuck at `create-pr-ready` with a draft PR but no `agents.babysit-pr`, the next push (even sync-only) self-heals by spawning babysit. See [WORKFLOW.md](WORKFLOW.md#babysit-recovery).
+**Babysit recovery:** If a branch is stuck at `create-pr-ready` with a draft PR but no `agents.babysit-pr`, the next push (even sync-only) self-heals by spawning babysit. Pass-back (`execute-passback`) and manual **Resync** (Actions → Cursor workflow handoff) also run recovery — see [WORKFLOW.md](WORKFLOW.md#handoff-recovery).
 
 **`handoff_pending`:** Per-issue spawn lock in `workflow.state.json`; prevents duplicate forward spawns. Stale after 15 minutes.
 
@@ -69,6 +69,7 @@ Cloud agents **cannot** open PRs (`gh pr create` fails in the VM). **GitHub Acti
 - Execute and later agents **push commits only** to the linked branch
 - `workflow.state.json` → `"pr"` is set by the Action
 - **Stuck without a PR?** Actions → **Cursor workflow handoff** → Run workflow → issue number → enable **ensure draft PR**
+- **Stuck mid-flight?** Same manual resync also runs handoff recovery (spawn retry) after syncing labels/comments
 
 Workflow scripts are always loaded from `main` in Actions (into `/tmp/cursor-workflow-scripts`), so issue branches created before #48 still work.
 

@@ -15,44 +15,79 @@ REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 stage=$(jq -r '.stage // empty' "$STATE_FILE")
 pr=$(jq -r '.pr // empty' "$STATE_FILE")
 
+case "$stage" in
+  execute-passback)
+    "$WF/cursor-workflow-passback-run.sh" "$ISSUE" "$BRANCH" "$STATE_FILE"
+    exit $?
+    ;;
+esac
+
 skill=""
 progress_stage=""
 prompt=""
+reopen_decision=""
 
 case "$stage" in
   spec-ready)
     skill="planning"
     progress_stage="plan-in-progress"
-    prompt="Use the planning skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — do not create a PR. Read workflow/cursor-workflow/WORKFLOW.md and workflow/issues/issue-${ISSUE}/workflow.state.json."
     ;;
   plan-ready)
     skill="execute"
     progress_stage="execute-in-progress"
-    prompt="Use the execute skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — push commits only; do not create a PR. Run all tests and gate scripts before pushing."
     ;;
   execute-ready)
-    if [ "$PREV_STAGE" = "changes-requested" ]; then
+    reopen_decision=$("$WF/cursor-workflow-infer-reopen.sh" "$STATE_FILE" "$PREV_STAGE")
+    if [ "$reopen_decision" = "reopen" ]; then
       skill="execute"
       progress_stage="execute-in-progress"
-      prompt="Use the execute skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — push commits only; do not create a PR. Post-complete scope changes requested; read SPEC.md and PLAN.md for updates. Run all tests and gate scripts before pushing."
     else
       skill="demo"
       progress_stage="demo-in-progress"
-      prompt="Use the demo skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Full Docker stack must be running. Follow workflow/issues/issue-${ISSUE}/demo/demo-spec.md."
     fi
     ;;
   demo-ready)
     skill="create-pr"
     progress_stage="create-pr-in-progress"
-    prompt="Use the create-pr skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — write workflow/issues/issue-${ISSUE}/PR.md from spec, plan, commits, and demo notes; do not create a PR."
     ;;
   create-pr-ready)
     skill="babysit-pr"
     progress_stage="babysit-in-progress"
-    prompt="Use the babysit-pr skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Loop limits: bugbot 3, ci_autofix 2, total 10. Mark PR ready for review when clean."
     ;;
   *)
     exit 0
+    ;;
+esac
+
+if [ "$stage" = "spec-ready" ]; then
+  "$WF/cursor-workflow-ensure-pr-on-branch.sh" "$ISSUE" "$BRANCH" "$STATE_FILE"
+  pr=$(jq -r '.pr' "$STATE_FILE")
+elif [ "$stage" = "plan-ready" ]; then
+  if [ -z "$pr" ] || [ "$pr" = "null" ]; then
+    "$WF/cursor-workflow-ensure-pr-on-branch.sh" "$ISSUE" "$BRANCH" "$STATE_FILE"
+    pr=$(jq -r '.pr' "$STATE_FILE")
+  fi
+fi
+
+case "$stage" in
+  spec-ready)
+    prompt="Use the planning skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — do not create a PR. Read workflow/cursor-workflow/WORKFLOW.md and workflow/issues/issue-${ISSUE}/workflow.state.json."
+    ;;
+  plan-ready)
+    prompt="Use the execute skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — push commits only; do not create a PR. Run all tests and gate scripts before pushing."
+    ;;
+  execute-ready)
+    if [ "$skill" = "execute" ]; then
+      prompt="Use the execute skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — push commits only; do not create a PR. Post-complete scope changes requested; read SPEC.md and PLAN.md for updates. Run all tests and gate scripts before pushing."
+    else
+      prompt="Use the demo skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Full Docker stack must be running. Follow workflow/issues/issue-${ISSUE}/demo/demo-spec.md."
+    fi
+    ;;
+  demo-ready)
+    prompt="Use the create-pr skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Draft PR #${pr} already exists — write workflow/issues/issue-${ISSUE}/PR.md from spec, plan, commits, and demo notes; do not create a PR."
+    ;;
+  create-pr-ready)
+    prompt="Use the babysit-pr skill for GitHub issue #${ISSUE}. Branch: ${BRANCH}. Loop limits: bugbot 3, ci_autofix 2, total 10. Mark PR ready for review when clean."
     ;;
 esac
 
@@ -79,7 +114,7 @@ if [ "$stage" = "create-pr-ready" ]; then
 fi
 
 reopen_flag=""
-if [ "$stage" = "execute-ready" ] && [ "$PREV_STAGE" = "changes-requested" ]; then
+if [ "$stage" = "execute-ready" ] && [ "$reopen_decision" = "reopen" ]; then
   reopen_flag="--reopen"
 fi
 

@@ -1,0 +1,15 @@
+{
+  "issue": 86,
+  "branch": "cursor/issue-86-test",
+  "stage": "spec-ready",
+  "agents": {
+    "review-and-spec": "bc-spec"
+  },
+  "pr": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}

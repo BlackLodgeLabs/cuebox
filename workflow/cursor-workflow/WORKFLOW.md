@@ -103,6 +103,20 @@ When `stage` is `create-pr-ready`, the linked PR is still draft, and `agents.bab
 
 When any handoff `stage` (`spec-ready` through `create-pr-ready`) has no recorded agent for the target skill, the Action spawns on **sync-only** pushes via `cursor-workflow-handoff-recovery.sh`. Covers shallow-checkout misses where `github.event.before` was not fetched and the state diff was skipped.
 
+**Handoff recovery coverage:**
+
+| Stage | Recovery action | Notes |
+|-------|-----------------|-------|
+| `spec-ready` | Spawn planning; **ensure draft PR** | |
+| `plan-ready` | Spawn execute; **ensure draft PR if null** | |
+| `execute-ready` | Spawn demo **or** execute (`--reopen`) | Re-open inferred via `cursor-workflow-infer-reopen.sh` |
+| `demo-ready` | Spawn create-pr | |
+| `create-pr-ready` | Spawn babysit-pr (draft PR check) | |
+| `execute-passback` | **`POST /v1/agents/{id}/runs`** | No new agent; uses `cursor-workflow-passback-run.sh` |
+| Manual resync | Same as above | After label/comment sync in `resync-status` job |
+
+Pass-back recovery reuses the existing execute agent (`POST /v1/agents/{id}/runs`), not `POST /v1/agents`. Re-open after `changes-requested` is inferred from `prev_stage`, prior cycle agents (`agents.demo` + `agents.execute`), or recent git history of `workflow.state.json`.
+
 ### Checkout depth and `BEFORE_SHA`
 
 Push and resync jobs use `fetch-depth: 0` (full history) so `github.event.before` (`BEFORE_SHA`) and intermediate commits are available for `git diff` across multi-commit agent pushes. Shared detection lives in `cursor-workflow-push-diff-includes.sh` (used for both `state_changed` and `pr_md_changed`). `cursor-workflow-ensure-before-sha.sh` remains defense-in-depth for edge cases (force-push, unusual runner state).

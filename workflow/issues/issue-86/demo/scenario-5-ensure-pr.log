@@ -1,0 +1,11 @@
+Draft PR #99 linked for issue #86
+Warning: recovery fetch origin/cursor/issue-86-test failed
+Warning: could not fetch origin/cursor/issue-86-test — refetch with empty remote
+Warning: origin/cursor/issue-86-test:workflow/issues/issue-86/workflow.state.json not found after fetch
+Warning: --agents-from-tip but fetch failed; admission may use stale local agents
+Handoff recovery: spawning planning for issue #86 (stage=spec-ready)
+Warning: could not fetch origin/cursor/issue-86-test — refetch with empty remote
+Warning: could not fetch origin/cursor/issue-86-test — refetch with empty remote
+Cursor agent created: bc-mock-agent-id
+GH_TOKEN or GITHUB_TOKEN not set
+PR_VALUE:99

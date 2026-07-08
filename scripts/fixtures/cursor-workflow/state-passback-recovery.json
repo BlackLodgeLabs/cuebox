@@ -1,0 +1,19 @@
+{
+  "issue": 86,
+  "branch": "cursor/issue-86-test",
+  "stage": "execute-passback",
+  "agents": {
+    "execute": "bc-exec",
+    "demo": null,
+    "planning": "bc-plan"
+  },
+  "pr": 96,
+  "passback_to": "execute",
+  "passback_reason": "Demo found defect in recommendation flow",
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 4
+  }
+}
