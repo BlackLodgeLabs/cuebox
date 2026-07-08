@@ -1,0 +1,13 @@
+{
+  "issue": 92,
+  "branch": "cursor/issue-92-batch-create-pr-single-commit",
+  "pr": null,
+  "stage": "spec-in-progress",
+  "active_skill": "review-and-spec",
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  },
+  "updated_at": "2026-07-08T18:55:00Z"
+}
