@@ -2,10 +2,10 @@
   "issue": 91,
   "branch": "cursor/issue-91-prevent-demo-spawn-before-execute-ready",
   "stage": "demo-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-08T19:13:42Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-08T19:13:46Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-9d86d6b6-c168-4eea-89ae-fa2fc34dd412",
     "create-pr": "bc-93d10464-f79e-4276-a1a3-daad99547ea9",
     "demo": "bc-5cfacf12-7f27-4308-a69e-d669ddad642b",
     "execute": "bc-7fe98e94-fe1c-41e9-acb8-40f67debb7c0",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 98,
-  "active_agent_id": "bc-93d10464-f79e-4276-a1a3-daad99547ea9",
+  "active_agent_id": "bc-9d86d6b6-c168-4eea-89ae-fa2fc34dd412",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-08T19:13:42Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
