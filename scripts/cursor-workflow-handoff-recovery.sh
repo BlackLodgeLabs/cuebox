@@ -83,7 +83,10 @@ if [ "$stage" = "execute-ready" ] && [ "$PREV_STAGE" = "changes-requested" ]; th
   reopen_flag="--reopen"
 fi
 
-"$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  git fetch origin "$BRANCH" --quiet 2>/dev/null || echo "Warning: recovery fetch origin/${BRANCH} failed" >&2
+fi
+"$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" --agents-from-tip >/dev/null
 gate_args=("$STATE_FILE" "$skill")
 if [ "$reopen_flag" = "--reopen" ]; then
   gate_args+=("--reopen")

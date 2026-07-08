@@ -81,6 +81,22 @@ if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$AGENT_ID" ]
   exit 0
 fi
 
+# Pre-write refetch: close TOCTOU between initial read and jq write (issue #90).
+git fetch origin "$BRANCH"
+git checkout -B "$BRANCH" "origin/$BRANCH"
+
+CURRENT=$(jq -r --arg k "$AGENT_KEY" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$REL_PATH")
+PENDING=$(jq -r '.handoff_pending // empty' "$REL_PATH")
+if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" != "$AGENT_ID" ]; then
+  echo "Peer agent already recorded for ${AGENT_KEY} as ${CURRENT} (not ${AGENT_ID})" >&2
+  exit 0
+fi
+if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ] && [ "$CURRENT" = "$AGENT_ID" ] \
+  && { [ "$PENDING" = "null" ] || [ -z "$PENDING" ]; }; then
+  echo "Spawn state already recorded for ${AGENT_KEY} as ${AGENT_ID}" >&2
+  exit 0
+fi
+
 jq --arg key "$AGENT_KEY" --arg id "$AGENT_ID" --arg ts "$TS" \
   --arg comment "${STATUS_COMMENT_ID}" \
   '.agents //= {}
@@ -96,5 +112,23 @@ git add "$REL_PATH"
 git diff --staged --quiet && exit 0
 
 git commit -m "chore(workflow): record ${AGENT_KEY} spawn for issue #${ISSUE}"
-git push origin "$BRANCH"
+if ! git push origin "$BRANCH" 2>/tmp/record-spawn-push.err; then
+  if grep -qiE 'non-fast-forward|fetch first|rejected' /tmp/record-spawn-push.err; then
+    git fetch origin "$BRANCH"
+    git checkout -B "$BRANCH" "origin/$BRANCH"
+    CURRENT=$(jq -r --arg k "$AGENT_KEY" '((.agents // {})[$k] // empty) | if type == "object" then .id // empty else . end' "$REL_PATH")
+    if [ -n "$CURRENT" ] && [ "$CURRENT" != "null" ]; then
+      if [ "$CURRENT" != "$AGENT_ID" ]; then
+        echo "Peer agent already recorded for ${AGENT_KEY} as ${CURRENT} (not ${AGENT_ID})" >&2
+      else
+        echo "Spawn state already recorded for ${AGENT_KEY} as ${AGENT_ID}" >&2
+      fi
+      exit 0
+    fi
+    echo "Push rejected after pre-write refetch; peer may have won the race" >&2
+    exit 0
+  fi
+  cat /tmp/record-spawn-push.err >&2
+  exit 1
+fi
 echo "Updated ${REL_PATH} with batched spawn record for ${AGENT_KEY}=${AGENT_ID}"

@@ -146,6 +146,10 @@ Before `POST /v1/agents`, `cursor-workflow-spawn-agent.sh` orchestrates:
 4. **Re-fetch + second gate** — peer wins (`skip:agent-already-recorded`) or holds lock (`defer:pending-lock`); holder proceeds with `CURSOR_WORKFLOW_WE_HOLD_LOCK=1`.
 5. **POST** once, then `record-spawn-on-branch.sh` clears pending and records `agents.<skill>` (first-wins if peer already recorded a different id).
 
+**Pre-write refetch (issue #90):** In production, `record-spawn-on-branch.sh` re-fetches `origin/<branch>` and re-reads `agents.<skill>` immediately before the jq write. If a peer recorded a different id during the write window, the run logs and exits 0 without overwrite. Push non-fast-forward is treated as a lost race (re-fetch, abort if peer won).
+
+**Recovery branch-tip refetch (issue #90):** `cursor-workflow-handoff-recovery.sh` force-fetches `origin/<branch>` and calls `refetch-state.sh --agents-from-tip` before admission. Recovery never spawns when branch tip already records the target skill, even if the job's checked-out `workflow.state.json` (trigger SHA) lacks it.
+
 If `record-spawn-on-branch.sh` fails after a successful POST, branch `handoff_pending` remains until stale (15 minutes) or recovery re-records — subsequent spawns defer on `pending-lock`. Handoff recovery uses the same refetch + gate path (no local-only bypass).
 
 ### Status comment ID (`status_comment_id`)
