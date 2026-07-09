@@ -2,26 +2,22 @@
   "issue": 99,
   "branch": "cursor/issue-99-add-film-to-watch-list",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-09T22:54:02Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-09T22:54:08Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-091d1673-f7d9-4a29-b991-8f7140e5bbbf",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 100,
-  "active_agent_id": null,
+  "active_agent_id": "bc-091d1673-f7d9-4a29-b991-8f7140e5bbbf",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-09T22:54:02Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
