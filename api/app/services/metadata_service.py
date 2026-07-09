@@ -13,18 +13,20 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppError, conflict, not_found
-from app.database.enums import EnrichmentStatus, ReviewStatus
+from app.database.enums import EnrichmentStatus, FilmStatus, ReviewStatus, ReviewType
 from app.database.models import Film
 from app.providers.tmdb import TMDB_SEARCH_PAGE_SIZE, TmdbClient, TmdbMovieDetails, TmdbSearchResult
 from app.repositories import (
     film_metadata_repository,
     film_repository,
     metadata_review_repository,
+    watchlist_repository,
 )
 from app.schemas.errors import ErrorCode
 from app.schemas.film_schemas import PaginationMeta, TmdbSearchResultItem
 from app.services.confidence import compute_confidence, confidence_action
 from app.services.enrichment_pipeline import mark_film_failed, sync_import_job_progress
+from app.services.letterboxd_uri import normalize_pasted_uri
 from app.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
@@ -197,7 +199,26 @@ class MetadataService:
         film = film_repository.get_by_id(db, film_id)
         if film is None:
             raise not_found("Film")
+        return await self.search_tmdb_global(q=q, year=year, page=page, limit=limit)
 
+    async def search_tmdb_global(
+        self,
+        *,
+        q: str,
+        year: int | None,
+        page: int,
+        limit: int,
+    ) -> tuple[list[TmdbSearchResultItem], PaginationMeta]:
+        return await self._search_tmdb_results(q=q, year=year, page=page, limit=limit)
+
+    async def _search_tmdb_results(
+        self,
+        *,
+        q: str,
+        year: int | None,
+        page: int,
+        limit: int,
+    ) -> tuple[list[TmdbSearchResultItem], PaginationMeta]:
         capped_limit = min(max(limit, 1), TMDB_SEARCH_PAGE_SIZE)
         offset = (page - 1) * capped_limit
 
@@ -259,6 +280,60 @@ class MetadataService:
             has_more=has_more,
         )
         return items, pagination
+
+    async def resolve_letterboxd_review(
+        self,
+        db: Session,
+        review_id: uuid.UUID,
+        letterboxd_uri: str,
+    ) -> Film:
+        review = metadata_review_repository.get_by_id(db, review_id)
+        if review is None:
+            raise not_found("Review")
+        if review.review_type != ReviewType.LETTERBOXD_URI:
+            raise conflict("Review is not a Letterboxd URI resolution review")
+        if review.review_status != ReviewStatus.PENDING:
+            raise conflict("Review is already accepted or rejected")
+
+        film = film_repository.get_by_id(db, review.film_id)
+        if film is None:
+            raise not_found("Film")
+        if film.enrichment_status != EnrichmentStatus.REVIEW_REQUIRED:
+            raise conflict("Film is not awaiting Letterboxd URI resolution")
+
+        normalized = await normalize_pasted_uri(letterboxd_uri)
+        existing = film_repository.get_by_letterboxd_uri(db, normalized)
+        if existing is not None and existing.id != film.id:
+            active_entry = watchlist_repository.get_active_by_film_id(db, existing.id)
+            if active_entry is not None and existing.status == FilmStatus.ACTIVE:
+                raise conflict("This film is already on your watchlist")
+            raise conflict("Letterboxd URI is already linked to another film")
+
+        film_repository.update_letterboxd_uri(db, film, normalized)
+        watchlist_repository.ensure_active_entry(
+            db, film_id=film.id, letterboxd_uri=normalized
+        )
+
+        tmdb = self._providers.get_tmdb_client()
+        details = await tmdb.get_movie_details(review.candidate_tmdb_id)
+        keywords = await tmdb.get_movie_keywords(review.candidate_tmdb_id)
+        try:
+            await self._persist_metadata(
+                db,
+                film,
+                details,
+                keywords,
+                tmdb,
+                metadata_source="tmdb_manual_add",
+                match_confidence=1.0,
+            )
+        except IntegrityError as exc:
+            db.rollback()
+            raise conflict("Duplicate TMDB metadata record") from exc
+
+        metadata_review_repository.update_status(db, review, ReviewStatus.ACCEPTED)
+        film_repository.update_enrichment_status(db, film, EnrichmentStatus.ENRICHING)
+        return film
 
     async def rematch_film(self, db: Session, film_id: uuid.UUID, tmdb_id: int) -> Film:
         film = film_repository.get_by_id(db, film_id)

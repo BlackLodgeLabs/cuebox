@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.database.enums import EnrichmentStatus, FilmStatus
+from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus
 from app.services.csv_parser import ParsedWatchlistRow
 from app.services.sync_service import SyncService
 
@@ -13,11 +13,12 @@ def _row(title: str, uri: str, year: int = 2000) -> ParsedWatchlistRow:
     return ParsedWatchlistRow(date="2024-01-01", title=title, year=year, letterboxd_uri=uri)
 
 
-def _film(uri: str, *, status=FilmStatus.ACTIVE):
+def _film(uri: str, *, status=FilmStatus.ACTIVE, add_source=None):
     film = MagicMock()
     film.letterboxd_uri = uri
     film.status = status
     film.enrichment_status = EnrichmentStatus.READY
+    film.add_source = add_source
     return film
 
 
@@ -70,6 +71,28 @@ def test_csv_diff_added_removed_unchanged(monkeypatch):
     assert diff.added[0].letterboxd_uri == added_uri
     assert len(diff.removed) == 1
     assert diff.removed[0].letterboxd_uri == removed_uri
+
+
+def test_csv_diff_skips_manual_add_films(monkeypatch):
+    service = SyncService(MagicMock())
+    db = MagicMock()
+    manual_uri = "https://letterboxd.com/film/manual-only/"
+
+    monkeypatch.setattr(
+        "app.services.sync_service.watchlist_repository.list_active_entries",
+        lambda _db: [_entry(manual_uri, _film(manual_uri, add_source=FilmAddSource.MANUAL))],
+    )
+    monkeypatch.setattr(
+        "app.services.sync_service.watchlist_repository.count_active",
+        lambda _db: 1,
+    )
+    monkeypatch.setattr(
+        "app.services.sync_service.rss_sync_repository.has_watched_event_for_uri",
+        lambda _db, uri: False,
+    )
+
+    diff = service.csv_diff(db, [])
+    assert diff.removed == []
 
 
 def test_csv_diff_watched_when_rss_event_exists(monkeypatch):

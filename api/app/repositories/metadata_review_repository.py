@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.database.enums import EnrichmentStatus, ReviewStatus
+from app.database.enums import EnrichmentStatus, ReviewStatus, ReviewType
 from app.database.models import Film, MetadataMatchReview
 
 
@@ -23,6 +23,7 @@ def create(
     candidate_tmdb_id: int,
     confidence_score: float | Decimal,
     candidate_payload: dict[str, Any] | None = None,
+    review_type: ReviewType = ReviewType.TMDB_MATCH,
 ) -> MetadataMatchReview:
     review = MetadataMatchReview(
         film_id=film_id,
@@ -30,6 +31,7 @@ def create(
         confidence_score=Decimal(str(confidence_score)),
         candidate_payload=candidate_payload,
         review_status=ReviewStatus.PENDING,
+        review_type=review_type,
     )
     db.add(review)
     db.flush()

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import get_db, get_metadata_service, get_provider_service
 from app.repositories import metadata_review_repository
-from app.schemas.review_schemas import ReviewActionResponse
+from app.schemas.review_schemas import ResolveLetterboxdRequest, ReviewActionResponse
 from app.services.enrichment_pipeline import (
     run_semantic_pipeline_for_film,
     sync_import_job_progress,
@@ -60,5 +60,28 @@ def reject_review(
         review_id=review_id,
         film_id=film.id,
         review_status="rejected",
+        reviewed_at=review.reviewed_at if review and review.reviewed_at else datetime.now(UTC),
+    )
+
+
+@router.post("/{review_id}/resolve-letterboxd", response_model=ReviewActionResponse)
+async def resolve_letterboxd_review(
+    review_id: uuid.UUID,
+    body: ResolveLetterboxdRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    metadata_service: MetadataService = Depends(get_metadata_service),
+    provider_service: ProviderService = Depends(get_provider_service),
+) -> ReviewActionResponse:
+    film = await metadata_service.resolve_letterboxd_review(
+        db, review_id, body.letterboxd_uri
+    )
+    db.commit()
+    background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
+    review = metadata_review_repository.get_by_id(db, review_id)
+    return ReviewActionResponse(
+        review_id=review_id,
+        film_id=film.id,
+        review_status="accepted",
         reviewed_at=review.reviewed_at if review and review.reviewed_at else datetime.now(UTC),
     )

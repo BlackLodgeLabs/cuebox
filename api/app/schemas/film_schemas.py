@@ -91,6 +91,7 @@ class ReviewRequiredItem(BaseModel):
     year: int | None
     letterboxd_uri: str
     review_id: UUID
+    review_type: str = "tmdb_match"
     candidate_tmdb_id: int
     confidence_score: float
     candidate_payload: dict
@@ -123,3 +124,15 @@ class RematchRequest(BaseModel):
 class RematchResponse(BaseModel):
     film_id: UUID
     enrichment_status: str
+
+
+class WatchlistAddRequest(BaseModel):
+    tmdb_id: int
+
+
+class WatchlistAddResponse(BaseModel):
+    film_id: UUID
+    enrichment_status: str | None = None
+    already_on_watchlist: bool = False
+    restored: bool = False
+    review_id: UUID | None = None

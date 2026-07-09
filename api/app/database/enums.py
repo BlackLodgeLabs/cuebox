@@ -9,6 +9,15 @@ class FilmStatus(str, enum.Enum):
     ARCHIVED = "archived"
 
 
+class FilmAddSource(str, enum.Enum):
+    MANUAL = "manual"
+
+
+class ReviewType(str, enum.Enum):
+    TMDB_MATCH = "tmdb_match"
+    LETTERBOXD_URI = "letterboxd_uri"
+
+
 class EnrichmentStatus(str, enum.Enum):
     PENDING = "pending"
     MATCHING = "matching"

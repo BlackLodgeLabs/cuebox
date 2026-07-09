@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ReviewActionResponse(BaseModel):
@@ -13,3 +13,7 @@ class ReviewActionResponse(BaseModel):
     film_id: UUID
     review_status: str
     reviewed_at: datetime
+
+
+class ResolveLetterboxdRequest(BaseModel):
+    letterboxd_uri: str = Field(min_length=1)

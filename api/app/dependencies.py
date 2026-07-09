@@ -10,6 +10,7 @@ from app.services.provider_service import ProviderService
 from app.services.recommendation_service import RecommendationService
 from app.services.sync_service import SyncService
 from app.services.watch_provider_service import WatchProviderService
+from app.services.watchlist_add_service import WatchlistAddService
 
 
 def get_provider_service(request: Request) -> ProviderService:
@@ -40,6 +41,10 @@ def get_watch_provider_service(request: Request) -> WatchProviderService:
     return WatchProviderService(get_provider_service(request))
 
 
+def get_watchlist_add_service(request: Request) -> WatchlistAddService:
+    return WatchlistAddService(get_provider_service(request))
+
+
 __all__ = [
     "get_db",
     "get_developer_service",
@@ -49,4 +54,5 @@ __all__ = [
     "get_recommendation_service",
     "get_sync_service",
     "get_watch_provider_service",
+    "get_watchlist_add_service",
 ]
