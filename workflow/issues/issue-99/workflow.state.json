@@ -3,7 +3,7 @@
   "branch": "cursor/issue-99-add-film-to-watch-list",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-09T22:53:14Z",
+  "updated_at": "2026-07-09T22:54:02Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "planning",
+    "started_at": "2026-07-09T22:54:02Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
