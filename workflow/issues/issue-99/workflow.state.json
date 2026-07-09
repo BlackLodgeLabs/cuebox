@@ -3,7 +3,7 @@
   "branch": "cursor/issue-99-add-film-to-watch-list",
   "stage": "execute-ready",
   "active_skill": null,
-  "updated_at": "2026-07-09T23:12:30Z",
+  "updated_at": "2026-07-09T23:14:06Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-36603d68-858e-4bcc-91a4-d99db07a127a",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "demo",
+    "started_at": "2026-07-09T23:14:06Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
