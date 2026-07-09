@@ -22,11 +22,14 @@ import type {
   ReviewRequiredFilm,
   ReviewRequiredQueryParams,
   RematchResponse,
+  ResolveLetterboxdRequest,
   FilmSummary,
   FilmDetail,
   FilmWatchProvidersResponse,
   TmdbSearchParams,
   TmdbSearchResponse,
+  WatchlistAddRequest,
+  WatchlistAddResponse,
   HistoryCard,
   SyncCsvResponse,
   SyncRssConfigResponse,
@@ -180,6 +183,14 @@ export function rejectReview(reviewId: string): Promise<ReviewActionResponse> {
   });
 }
 
+export function searchTmdbGlobal(
+  params: TmdbSearchParams,
+): Promise<TmdbSearchResponse> {
+  return fetchApi<TmdbSearchResponse>(
+    `/films/tmdb-search${buildQuery(params)}`,
+  );
+}
+
 export function searchTmdb(
   filmId: string,
   params: TmdbSearchParams,
@@ -197,6 +208,28 @@ export function rematchFilm(
     method: "POST",
     body: JSON.stringify({ tmdb_id: tmdbId }),
   });
+}
+
+export function addToWatchlist(
+  body: WatchlistAddRequest,
+): Promise<WatchlistAddResponse> {
+  return fetchApi<WatchlistAddResponse>("/watchlist/films", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function resolveLetterboxdReview(
+  reviewId: string,
+  body: ResolveLetterboxdRequest,
+): Promise<ReviewActionResponse> {
+  return fetchApi<ReviewActionResponse>(
+    `/reviews/${reviewId}/resolve-letterboxd`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
 }
 
 export function postRecommendation(

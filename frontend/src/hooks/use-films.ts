@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getReviewRequired, rematchFilm, searchTmdb } from "@/lib/api-client";
+import { getFilm, getFilms, getReviewRequired, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist } from "@/lib/api-client";
 import type { FilmsQueryParams, ReviewRequiredQueryParams, TmdbSearchParams } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
@@ -37,6 +37,32 @@ export function useTmdbSearch(
     queryKey: ["films", filmId, "tmdb-search", params],
     queryFn: () => searchTmdb(filmId, params),
     enabled: Boolean(filmId) && Boolean(params.q.trim()) && (options?.enabled ?? true),
+  });
+}
+
+export function useGlobalTmdbSearch(
+  params: TmdbSearchParams,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["films", "tmdb-search", params],
+    queryFn: () => searchTmdbGlobal(params),
+    enabled: Boolean(params.q.trim()) && (options?.enabled ?? true),
+  });
+}
+
+export function useAddToWatchlist() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: addToWatchlist,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["films"] });
+      void queryClient.invalidateQueries({ queryKey: ["films", "watchlist-presence"] });
+      void queryClient.invalidateQueries({ queryKey: ["films", "review-required"] });
+    },
+    onError,
   });
 }
 

@@ -182,6 +182,7 @@ export interface ReviewRequiredFilm {
   year: number | null;
   letterboxd_uri: string;
   review_id: string;
+  review_type: "tmdb_match" | "letterboxd_uri";
   candidate_tmdb_id: number;
   confidence_score: number;
   candidate_payload: CandidatePayload;
@@ -219,6 +220,22 @@ export interface TmdbSearchParams {
 export interface RematchResponse {
   film_id: string;
   enrichment_status: string;
+}
+
+export interface WatchlistAddRequest {
+  tmdb_id: number;
+}
+
+export interface WatchlistAddResponse {
+  film_id: string;
+  enrichment_status?: string | null;
+  already_on_watchlist?: boolean;
+  restored?: boolean;
+  review_id?: string | null;
+}
+
+export interface ResolveLetterboxdRequest {
+  letterboxd_uri: string;
 }
 
 export interface SyncFilmSummary {
