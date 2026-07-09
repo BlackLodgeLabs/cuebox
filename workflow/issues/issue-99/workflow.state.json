@@ -1,9 +1,9 @@
 {
   "issue": 99,
   "branch": "cursor/issue-99-add-film-to-watch-list",
-  "stage": "spec-needs-info",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-09T06:30:00Z",
+  "updated_at": "2026-07-09T22:52:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
