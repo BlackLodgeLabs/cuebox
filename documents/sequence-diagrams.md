@@ -591,6 +591,43 @@ sequenceDiagram
 
 ---
 
+## 13. Manual Watchlist Add
+
+User searches TMDB on `/watchlist/add`, confirms a pick, and the backend resolves Letterboxd via the public TMDB shortcut.
+
+```mermaid
+sequenceDiagram
+    participant UI as /watchlist/add
+    participant API as FastAPI API
+    participant TMDB as TMDB API
+    participant LB as letterboxd.com/tmdb/{id}
+    participant DB as PostgreSQL
+    participant Pipe as Enrichment pipeline
+
+    UI->>API: GET /films/tmdb-search?q=...
+    API->>TMDB: search/movie
+    TMDB-->>API: results
+    API-->>UI: 200 search results
+
+    UI->>API: POST /watchlist/films { tmdb_id }
+    API->>TMDB: GET /movie/{tmdb_id}
+    API->>LB: GET (follow redirects)
+    alt Redirect to /film/{slug}/
+        API->>DB: create/restore film + watchlist entry (add_source=manual)
+        API->>DB: persist metadata (tmdb_manual_add)
+        API-->>UI: 202 enriching
+        API->>Pipe: background semantic + embedding
+        Pipe->>DB: enrichment_status = ready
+    else Redirect fails
+        API->>DB: stub film + letterboxd_uri review
+        API-->>UI: 202 review_required + review_id
+        UI->>API: POST /reviews/{id}/resolve-letterboxd
+        API->>DB: set letterboxd_uri, activate watchlist, enrich
+    end
+```
+
+---
+
 ## Diagram Index
 
 | Diagram | Primary Reference Docs | Key API Endpoints |
@@ -607,3 +644,4 @@ sequenceDiagram
 | §10 Developer Mode | Architecture §21, PRD §20, API §9 | `GET /dev/...` |
 | §11 First-Time User | PRD §4 | Multiple |
 | §12 Watch Provider Fetch | API §4.6, PRD §5 | `GET /films/{film_id}/watch-providers` |
+| §13 Manual Watchlist Add | API §4.7–4.8, PRD §5 | `GET /films/tmdb-search`, `POST /watchlist/films`, `POST /reviews/{id}/resolve-letterboxd` |

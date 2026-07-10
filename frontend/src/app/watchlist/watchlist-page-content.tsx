@@ -141,13 +141,18 @@ export function WatchlistPageContent() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-h1">Watchlist</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          {data
-            ? `${data.pagination.total} film${data.pagination.total === 1 ? "" : "s"} on your watchlist`
-            : "Browse films and enrichment data from your Letterboxd watchlist."}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-h1">Watchlist</h1>
+          <p className="mt-1 text-body-md text-muted-foreground">
+            {data
+              ? `${data.pagination.total} film${data.pagination.total === 1 ? "" : "s"} on your watchlist`
+              : "Browse films and enrichment data from your Letterboxd watchlist."}
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/watchlist/add">Add film</Link>
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-3">

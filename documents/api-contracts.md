@@ -463,6 +463,7 @@ GET /films/review-required
 |`year`             |integer, nullable|Year from Letterboxd CSV                   |
 |`letterboxd_uri`   |string           |Canonical Letterboxd URI                   |
 |`review_id`        |UUID             |ID of the `metadata_match_reviews` record  |
+|`review_type`      |string           |`tmdb_match` or `letterboxd_uri`           |
 |`candidate_tmdb_id`|integer          |TMDB ID of the proposed match              |
 |`confidence_score` |number           |Match confidence between 0 and 1           |
 |`candidate_payload`|object           |Snapshot of TMDB candidate data for display|
@@ -641,6 +642,53 @@ Empty category groups are omitted. When the country object exists but all moneti
 
 -----
 
+### 4.7 Global TMDB Search
+
+Proxy TMDB movie search without requiring an existing film row. Used by the `/watchlist/add` flow. Requires `TMDB_API_KEY`.
+
+Letterboxd identity for manual adds is resolved server-side via `https://letterboxd.com/tmdb/{id}` when reachable, with a slug-probe fallback against `/film/{slug}/` when Cloudflare blocks the shortcut.
+
+```
+GET /films/tmdb-search
+```
+
+Query parameters and response shape match §4.4. Errors: `PROVIDER_ERROR` (502) on TMDB HTTP failure.
+
+-----
+
+### 4.8 Add Film to Watchlist
+
+Manually add a film by user-selected TMDB ID. Resolves Letterboxd identity via `https://letterboxd.com/tmdb/{tmdb_id}`, creates or restores the film and active watchlist entry, persists TMDB metadata (`metadata_source: tmdb_manual_add`), and enqueues enrichment. Manual adds are exempt from the 500-film active watchlist cap.
+
+```
+POST /watchlist/films
+```
+
+#### Request Body
+
+```json
+{ "tmdb_id": 603 }
+```
+
+#### Response variants
+
+|Case                 |HTTP|Body highlights                                              |
+|---------------------|----|-------------------------------------------------------------|
+|New add, enriching   |202 |`film_id`, `enrichment_status: "enriching"`                  |
+|Already on watchlist |200 |`already_on_watchlist: true`, `film_id`                      |
+|Letterboxd unresolved|202 |`enrichment_status: "review_required"`, `review_id`          |
+|Restore archived/watched|202|`restored: true`, `film_id`                               |
+
+#### Errors
+
+|Code            |HTTP|Trigger                         |
+|----------------|----|--------------------------------|
+|`NOT_FOUND`     |404 |Invalid TMDB movie ID           |
+|`CONFLICT`      |409 |TMDB ID already linked to another film |
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure               |
+
+-----
+
 ## 5. Metadata Match Reviews
 
 ### 5.1 Accept a Match
@@ -708,6 +756,34 @@ POST /reviews/{review_id}/reject
 |-----------|----|------------------------------------------|
 |`NOT_FOUND`|404 |`review_id` not found                     |
 |`CONFLICT` |409 |Review is already `accepted` or `rejected`|
+
+-----
+
+### 5.3 Resolve Letterboxd URI
+
+Complete a manual watchlist add when Letterboxd redirect resolution failed. Validates the pasted film URL (including `boxd.it` short links), updates `letterboxd_uri`, activates the watchlist entry, persists TMDB metadata, and enqueues enrichment.
+
+```
+POST /reviews/{review_id}/resolve-letterboxd
+```
+
+#### Request Body
+
+```json
+{ "letterboxd_uri": "https://letterboxd.com/film/the-matrix/" }
+```
+
+#### Response `200 OK`
+
+Same shape as §5.1 (`review_status: accepted`).
+
+#### Errors
+
+|Code              |HTTP|Trigger                                      |
+|------------------|----|---------------------------------------------|
+|`NOT_FOUND`       |404 |`review_id` not found                        |
+|`CONFLICT`        |409 |Review is not `letterboxd_uri` or not pending|
+|`VALIDATION_ERROR`|400 |Invalid or unresolvable Letterboxd URL       |
 
 -----
 

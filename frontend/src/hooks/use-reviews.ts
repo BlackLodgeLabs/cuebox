@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { acceptReview, rejectReview } from "@/lib/api-client";
+import { acceptReview, rejectReview, resolveLetterboxdReview } from "@/lib/api-client";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useAcceptReview() {
@@ -25,6 +25,26 @@ export function useRejectReview() {
     mutationFn: rejectReview,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["films", "review-required"] });
+    },
+    onError,
+  });
+}
+
+export function useResolveLetterboxdReview() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({
+      reviewId,
+      letterboxdUri,
+    }: {
+      reviewId: string;
+      letterboxdUri: string;
+    }) => resolveLetterboxdReview(reviewId, { letterboxd_uri: letterboxdUri }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["films", "review-required"] });
+      void queryClient.invalidateQueries({ queryKey: ["films"] });
     },
     onError,
   });

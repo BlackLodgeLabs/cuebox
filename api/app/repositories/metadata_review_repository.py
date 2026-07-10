@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.database.enums import EnrichmentStatus, ReviewStatus
+from app.database.enums import EnrichmentStatus, ReviewStatus, ReviewType
 from app.database.models import Film, MetadataMatchReview
 
 
@@ -23,6 +23,7 @@ def create(
     candidate_tmdb_id: int,
     confidence_score: float | Decimal,
     candidate_payload: dict[str, Any] | None = None,
+    review_type: ReviewType = ReviewType.TMDB_MATCH,
 ) -> MetadataMatchReview:
     review = MetadataMatchReview(
         film_id=film_id,
@@ -30,6 +31,7 @@ def create(
         confidence_score=Decimal(str(confidence_score)),
         candidate_payload=candidate_payload,
         review_status=ReviewStatus.PENDING,
+        review_type=review_type,
     )
     db.add(review)
     db.flush()
@@ -64,6 +66,39 @@ def list_pending(
     )
     rows = db.execute(stmt).all()
     return list(rows), total
+
+
+def find_pending_letterboxd_for_film(
+    db: Session,
+    film_id: uuid.UUID,
+) -> MetadataMatchReview | None:
+    stmt = select(MetadataMatchReview).where(
+        MetadataMatchReview.film_id == film_id,
+        MetadataMatchReview.review_status == ReviewStatus.PENDING,
+        MetadataMatchReview.review_type == ReviewType.LETTERBOXD_URI,
+    )
+    return db.scalars(stmt).first()
+
+
+def find_pending_letterboxd_by_tmdb_id(
+    db: Session,
+    tmdb_id: int,
+) -> tuple[Film, MetadataMatchReview] | None:
+    stmt = (
+        select(Film, MetadataMatchReview)
+        .join(MetadataMatchReview, MetadataMatchReview.film_id == Film.id)
+        .where(
+            MetadataMatchReview.candidate_tmdb_id == tmdb_id,
+            MetadataMatchReview.review_status == ReviewStatus.PENDING,
+            MetadataMatchReview.review_type == ReviewType.LETTERBOXD_URI,
+            Film.enrichment_status == EnrichmentStatus.REVIEW_REQUIRED,
+        )
+        .order_by(MetadataMatchReview.created_at.desc())
+    )
+    row = db.execute(stmt).first()
+    if row is None:
+        return None
+    return row[0], row[1]
 
 
 def update_status(

@@ -1,6 +1,11 @@
 """Tests for Letterboxd URI normalization."""
 
-from app.services.letterboxd_uri import canonical_film_uri, extract_film_slug
+from unittest.mock import AsyncMock
+
+import httpx
+import pytest
+
+from app.services.letterboxd_uri import canonical_film_uri, extract_film_slug, normalize_pasted_uri
 
 
 def test_extract_film_slug_from_username_prefixed_url():
@@ -20,3 +25,24 @@ def test_canonical_film_uri_leaves_canonical_unchanged():
 
 def test_extract_film_slug_returns_none_for_short_url():
     assert extract_film_slug("https://boxd.it/mic8") is None
+
+
+@pytest.mark.asyncio
+async def test_normalize_boxd_it_short_link():
+    final_url = "https://letterboxd.com/film/stalker/"
+    request = httpx.Request("GET", final_url)
+    response = httpx.Response(200, request=request)
+
+    client = AsyncMock()
+    client.get = AsyncMock(return_value=response)
+
+    assert await normalize_pasted_uri("https://boxd.it/mic8", client=client) == (
+        "https://letterboxd.com/film/stalker/"
+    )
+
+
+@pytest.mark.asyncio
+async def test_normalize_pasted_uri_accepts_film_page():
+    assert await normalize_pasted_uri("https://letterboxd.com/film/the-matrix/") == (
+        "https://letterboxd.com/film/the-matrix/"
+    )

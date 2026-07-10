@@ -11,7 +11,7 @@ from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import watchlist_size_exceeded
-from app.database.enums import EnrichmentStatus, FilmStatus, RssEventType
+from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus, RssEventType
 from app.database.models import Film
 from app.repositories import (
     film_repository,
@@ -91,6 +91,8 @@ class SyncService:
 
         for uri, film in current_by_uri.items():
             if uri in csv_by_uri:
+                continue
+            if film.add_source == FilmAddSource.MANUAL:
                 continue
             if rss_sync_repository.has_watched_event_for_uri(db, uri):
                 result.watched.append(film)

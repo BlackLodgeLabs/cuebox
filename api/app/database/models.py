@@ -29,9 +29,11 @@ from app.database.enums import (
     ArtifactType,
     EmbeddingType,
     EnrichmentStatus,
+    FilmAddSource,
     FilmStatus,
     ImportJobStatus,
     ReviewStatus,
+    ReviewType,
     RssEventType,
 )
 
@@ -95,6 +97,10 @@ class Film(Base):
     )
     import_job_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("import_jobs.id", ondelete="SET NULL")
+    )
+    add_source: Mapped[FilmAddSource | None] = mapped_column(
+        SAEnum(FilmAddSource, native_enum=False, values_callable=_enum_values),
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -267,6 +273,11 @@ class MetadataMatchReview(Base):
     candidate_payload: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     review_status: Mapped[ReviewStatus] = mapped_column(
         ReviewStatusEnum, nullable=False, default=ReviewStatus.PENDING
+    )
+    review_type: Mapped[ReviewType] = mapped_column(
+        SAEnum(ReviewType, native_enum=False, values_callable=_enum_values),
+        nullable=False,
+        default=ReviewType.TMDB_MATCH,
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

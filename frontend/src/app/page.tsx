@@ -86,7 +86,7 @@ export default function HomePage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <Card className="hover-glow">
           <CardHeader>
             <CardTitle>New recommendation</CardTitle>
@@ -98,6 +98,21 @@ export default function HomePage() {
           <CardContent>
             <Button asChild className="w-full">
               <Link href="/recommend">Start questionnaire</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover-glow">
+          <CardHeader>
+            <CardTitle>Add film to watchlist</CardTitle>
+            <CardDescription>
+              Search TMDB and add a single film without re-exporting your
+              Letterboxd watchlist.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/watchlist/add">Add a film</Link>
             </Button>
           </CardContent>
         </Card>

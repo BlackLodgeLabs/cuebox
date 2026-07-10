@@ -132,6 +132,20 @@ def list_review_required(
     )
 
 
+@router.get("/tmdb-search", response_model=TmdbSearchResponse)
+async def tmdb_search_global(
+    q: str = Query(min_length=1),
+    year: int | None = None,
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=20),
+    metadata_service: MetadataService = Depends(get_metadata_service),
+) -> TmdbSearchResponse:
+    results, pagination = await metadata_service.search_tmdb_global(
+        q=q, year=year, page=page, limit=limit
+    )
+    return TmdbSearchResponse(data=results, pagination=pagination)
+
+
 @router.get("/{film_id}/tmdb-search", response_model=TmdbSearchResponse)
 async def tmdb_search(
     film_id: uuid.UUID,

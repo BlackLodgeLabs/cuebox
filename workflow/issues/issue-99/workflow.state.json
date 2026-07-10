@@ -1,0 +1,26 @@
+{
+  "issue": 99,
+  "branch": "cursor/issue-99-add-film-to-watch-list",
+  "stage": "complete",
+  "active_skill": "workflow-review",
+  "updated_at": "2026-07-10T15:15:00Z",
+  "agents": {
+    "babysit-pr": "bc-06ecb2b8-4363-4eda-a673-f3fb038346cc",
+    "create-pr": "bc-eea65507-1b04-4c95-be05-16849f2886ff",
+    "demo": "bc-04a3e9f3-0077-4b9e-9fa4-f08b041a3115",
+    "execute": "bc-36603d68-858e-4bcc-91a4-d99db07a127a",
+    "planning": "bc-091d1673-f7d9-4a29-b991-8f7140e5bbbf",
+    "review-and-spec": null,
+    "review-and-spec-continued": null
+  },
+  "pr": 100,
+  "active_agent_id": "bc-06ecb2b8-4363-4eda-a673-f3fb038346cc",
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 9
+  }
+}

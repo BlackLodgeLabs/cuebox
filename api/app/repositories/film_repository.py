@@ -9,7 +9,7 @@ from typing import Literal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.database.enums import EnrichmentStatus, FilmStatus
+from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus
 from app.database.models import Film, WatchlistEntry
 
 FilmSortField = Literal["title", "year", "created_at", "enrichment_status"]
@@ -107,6 +107,34 @@ def create(
         import_job_id=import_job_id,
     )
     db.add(film)
+    db.flush()
+    return film
+
+
+def create_manual(
+    db: Session,
+    *,
+    title: str,
+    letterboxd_uri: str,
+    year: int | None,
+    enrichment_status: EnrichmentStatus = EnrichmentStatus.PENDING,
+    add_source: FilmAddSource = FilmAddSource.MANUAL,
+) -> Film:
+    film = Film(
+        title=title,
+        year=year,
+        letterboxd_uri=letterboxd_uri,
+        import_job_id=None,
+        add_source=add_source,
+        enrichment_status=enrichment_status,
+    )
+    db.add(film)
+    db.flush()
+    return film
+
+
+def update_letterboxd_uri(db: Session, film: Film, letterboxd_uri: str) -> Film:
+    film.letterboxd_uri = letterboxd_uri
     db.flush()
     return film
 

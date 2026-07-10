@@ -99,12 +99,16 @@ def film_to_detail(film: Film) -> FilmDetail:
 
 
 def review_to_item(film: Film, review) -> ReviewRequiredItem:
+    review_type = review.review_type
+    if hasattr(review_type, "value"):
+        review_type = review_type.value
     return ReviewRequiredItem(
         film_id=film.id,
         title=film.title,
         year=film.year,
         letterboxd_uri=film.letterboxd_uri,
         review_id=review.id,
+        review_type=review_type,
         candidate_tmdb_id=review.candidate_tmdb_id,
         confidence_score=float(review.confidence_score),
         candidate_payload=review.candidate_payload or {},
