@@ -1,30 +1,43 @@
 # Issue #99 demo notes
 
-## Pass-back to execute
+**Date:** 2026-07-10  
+**Commit:** `f15773c` (demo-in-progress) + demo artifacts on branch `cursor/issue-99-add-film-to-watch-list`  
+**Stack:** Docker Compose on cloud VM; `TMDB_API_KEY` and `OPENAI_API_KEY` present in `.env`
 
-Demo on the cloud VM surfaced two bugs in the manual watchlist add flow:
+## Pass-back fixes (from prior demo)
 
-### Bug 1 — every add lands in Letterboxd review
-
-**Symptom:** Adding any TMDB pick (e.g. Fight Club, TMDB id `550`) returned `review_required` instead of enriching.
-
-**Root cause:** `GET https://letterboxd.com/tmdb/{id}` is blocked by Cloudflare (`403`) from server/datacenter IPs. The resolver returned `None`, so `_create_review_required_stub` ran for every film. Browsers on residential networks still get the redirect.
-
-**Fix:** Keep redirect as primary path; when it fails, probe accessible film pages at `/film/{slug}/` using slug candidates from the TMDB title/year and confirm via `data-tmdb-id` in the HTML. Verified: Fight Club resolves to `https://letterboxd.com/film/fight-club/` without the `/tmdb/550` shortcut.
-
-### Bug 2 — duplicate / retry UX
-
-**Symptom:** Re-adding a film stuck in review produced a generic conflict or duplicate review rows with no clear next step.
-
-**Fix:** Return the existing pending `letterboxd_uri` review when the same TMDB id is submitted again; surface `film_id` on metadata conflicts; add inline messages on `/watchlist/add` linking to the film detail page and `/review`.
+Cloudflare blocks `GET https://letterboxd.com/tmdb/{id}` from datacenter IPs. Slug-probe fallback (`letterboxd_resolver._resolve_via_slug_probe`) now resolves common titles (e.g. Fight Club → `fight-club`) without manual paste. Duplicate retry returns existing pending review instead of opaque conflicts.
 
 ## Test TMDB ids
 
-| Title | TMDB id | Expected Letterboxd URI |
-|-------|---------|------------------------|
-| The Matrix | 603 | `https://letterboxd.com/film/the-matrix/` |
-| Fight Club | 550 | `https://letterboxd.com/film/fight-club/` |
+| Title | TMDB id | Letterboxd URI |
+|-------|---------|----------------|
+| The Matrix | 603 | `https://letterboxd.com/film/the-matrix/` (seeded; duplicate scenario) |
+| Fight Club | 550 | `https://letterboxd.com/film/fight-club/` (happy path + restore) |
+| Blade Runner 2049 | 335984 | `https://letterboxd.com/film/blade-runner-2049/` (review paste scenario) |
 
-## Demo status
+## Scenario results
 
-Happy-path add with slug fallback should now reach `enriching` → `ready` on the VM without manual Letterboxd paste when the slug probe succeeds.
+| # | Scenario | Result | Notes |
+|---|----------|--------|-------|
+| 1 | Happy path — add from Home | **PASS** | Home shows three CTAs in order; Fight Club added via `/watchlist/add`, enriched to `ready` via slug fallback |
+| 2 | Watchlist add button | **PASS** | Header **Add film** links to `/watchlist/add` |
+| 3 | Already on watchlist | **PASS** | The Matrix shows inline “Already on your watchlist” with link |
+| 4 | Letterboxd review paste | **PASS** | Seeded `letterboxd_uri` review for Blade Runner 2049; `/review` shows paste UI; pasted URL completes add |
+| 5 | Restore archived | **PASS** | Archived Fight Club via DB seed; re-add via UI restores to active watchlist |
+
+## Gate evidence
+
+- `bash scripts/verify-phase8-gates.sh` — exit 0 (2026-07-10)
+- `pytest tests/test_integration_watchlist_add.py tests/test_letterboxd_resolver.py` — 20 passed
+
+## Artifacts
+
+- `scenario-1-home-cta.png`
+- `scenario-1-search-results.png`
+- `scenario-1-added-ready.png`
+- `scenario-2-watchlist-button.png`
+- `scenario-3-duplicate.png`
+- `scenario-4-review-paste.png`
+- `scenario-4-after-resolve.png`
+- `scenario-5-restored.png`
