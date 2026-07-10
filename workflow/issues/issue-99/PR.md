@@ -43,21 +43,21 @@ Adds an in-app flow to search TMDB, pick a film, resolve its Letterboxd identity
 | 4 | Letterboxd review paste | PASS |
 | 5 | Restore archived | PASS |
 
-![Home with three CTAs](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-1-home-cta.png)
+![Home with three CTAs](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-1-home-cta.png)
 
-![TMDB search results on /watchlist/add](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-1-search-results.png)
+![TMDB search results on /watchlist/add](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-1-search-results.png)
 
-![Fight Club on watchlist with Ready status](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-1-added-ready.png)
+![Fight Club on watchlist with Ready status](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-1-added-ready.png)
 
-![Watchlist Add film button](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-2-watchlist-button.png)
+![Watchlist Add film button](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-2-watchlist-button.png)
 
-![Duplicate detection for The Matrix](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-3-duplicate.png)
+![Duplicate detection for The Matrix](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-3-duplicate.png)
 
-![Letterboxd URI paste review card](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-4-review-paste.png)
+![Letterboxd URI paste review card](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-4-review-paste.png)
 
-![Film ready after Letterboxd paste](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-4-after-resolve.png)
+![Film ready after Letterboxd paste](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-4-after-resolve.png)
 
-![Restore archived Fight Club](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/149fb6cb30cdb67d8511267deda09d0076f675d0/workflow/issues/issue-99/demo/scenario-5-restored.png)
+![Restore archived Fight Club](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/24bbe066e8ab4c381e2e21c49ff666e4069c7cb1/workflow/issues/issue-99/demo/scenario-5-restored.png)
 
 ## How to Test
 
