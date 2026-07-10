@@ -24,7 +24,7 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 { "stage": "create-pr-in-progress", "active_skill": "create-pr", "updated_at": "<ISO8601>" }
 ```
 
-Push before drafting the PR description.
+Optionally push `create-pr-in-progress` before drafting `PR.md` (progress signal only; **no `PR.md`** in that push). This stage does **not** trigger babysit — only `create-pr-ready` does.
 
 **Required:** Commit `create-pr-in-progress` before writing `PR.md` or other substantive work (same rule as execute `execute-in-progress`).
 
@@ -68,7 +68,7 @@ Fall back to the issue **branch** name if SHA is unavailable:
 https://raw.githubusercontent.com/{owner}/{repo}/{branch}/workflow/issues/issue-{NNN}/demo/{filename}
 ```
 
-Get SHA: `git rev-parse HEAD`. Derive `{owner}/{repo}` from `git remote get-url origin`; `{NNN}` from `issue`. Do **not** use `main` in demo URLs. Do **not** use short relative paths like `demo/foo.png`.
+Resolve SHA **before** the handoff-triggering push: URLs must reference the commit that **contains** `PR.md` (the commit about to be pushed, or amended in place). Get SHA with `git rev-parse HEAD` on that local commit. Derive `{owner}/{repo}` from `git remote get-url origin`; `{NNN}` from `issue`. Branch-name fallback (above) is for edge cases only. Do **not** use `main` in demo URLs. Do **not** use short relative paths like `demo/foo.png`.
 
 Quality bar:
 
@@ -77,18 +77,28 @@ Quality bar:
 - UI changes must include embedded demo images in Scenario Results (absolute raw URLs)
 - How to Test must be copy-pasteable for a reviewer on this repo (`docker compose up`, gate scripts, etc. as appropriate)
 
-## Git and state
+## Git and state — batched final push
 
-1. Write `workflow/issues/issue-{NNN}/PR.md`
-2. Commit PR.md + updated `workflow.state.json`
-3. Set `stage: create-pr-ready`; increment `loops.total_runs`
-4. Push to issue branch
-5. GitHub Actions syncs labels and **updates the draft PR description** from `PR.md`
+The handoff-triggering push must be **exactly one** commit containing complete `PR.md` + `workflow.state.json` with `stage: create-pr-ready`. Use this sequence:
 
-Handoff Action triggers babysit-pr. No bot `@cursoragent` comment.
+1. Read sources locally (no `PR.md` push yet).
+2. Draft `PR.md` locally (placeholders OK for SHA).
+3. Run merge helper; set `stage: create-pr-ready` + increment `loops.total_runs` in `workflow.state.json` locally.
+4. `git add PR.md` + `workflow.state.json`
+5. `git commit -m "docs(workflow): PR description for issue #NNN"`
+6. `git rev-parse HEAD` → embed SHA in `raw.githubusercontent.com` URLs in `PR.md`
+7. If URLs changed: `git add PR.md && git commit --amend --no-edit` (still one commit)
+8. **Single** `git push` → one handoff run
+
+Expected push pattern: 1–2 pushes total (optional early `create-pr-in-progress` without `PR.md`; one `create-pr-ready` push with complete `PR.md`).
+
+GitHub Actions syncs labels and **updates the draft PR description** from `PR.md`. Handoff Action triggers babysit-pr. No bot `@cursoragent` comment.
 
 ## Do not
 
 - Create or open a new PR (`gh pr create` fails for cloud agents; draft PR already exists)
 - Mark the PR ready for review (babysit does that)
 - Change production code in this stage
+- Push `PR.md` with `create-pr-ready` until demo image URLs are final
+- Push then amend SHA in a **second** push (use `git commit --amend` before the single push instead)
+- Make a follow-up "fix demo image SHA" push after `create-pr-ready`
