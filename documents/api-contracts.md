@@ -646,6 +646,8 @@ Empty category groups are omitted. When the country object exists but all moneti
 
 Proxy TMDB movie search without requiring an existing film row. Used by the `/watchlist/add` flow. Requires `TMDB_API_KEY`.
 
+Letterboxd identity for manual adds is resolved server-side via `https://letterboxd.com/tmdb/{id}` when reachable, with a slug-probe fallback against `/film/{slug}/` when Cloudflare blocks the shortcut.
+
 ```
 GET /films/tmdb-search
 ```

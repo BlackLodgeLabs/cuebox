@@ -68,6 +68,39 @@ def list_pending(
     return list(rows), total
 
 
+def find_pending_letterboxd_for_film(
+    db: Session,
+    film_id: uuid.UUID,
+) -> MetadataMatchReview | None:
+    stmt = select(MetadataMatchReview).where(
+        MetadataMatchReview.film_id == film_id,
+        MetadataMatchReview.review_status == ReviewStatus.PENDING,
+        MetadataMatchReview.review_type == ReviewType.LETTERBOXD_URI,
+    )
+    return db.scalars(stmt).first()
+
+
+def find_pending_letterboxd_by_tmdb_id(
+    db: Session,
+    tmdb_id: int,
+) -> tuple[Film, MetadataMatchReview] | None:
+    stmt = (
+        select(Film, MetadataMatchReview)
+        .join(MetadataMatchReview, MetadataMatchReview.film_id == Film.id)
+        .where(
+            MetadataMatchReview.candidate_tmdb_id == tmdb_id,
+            MetadataMatchReview.review_status == ReviewStatus.PENDING,
+            MetadataMatchReview.review_type == ReviewType.LETTERBOXD_URI,
+            Film.enrichment_status == EnrichmentStatus.REVIEW_REQUIRED,
+        )
+        .order_by(MetadataMatchReview.created_at.desc())
+    )
+    row = db.execute(stmt).first()
+    if row is None:
+        return None
+    return row[0], row[1]
+
+
 def update_status(
     db: Session,
     review: MetadataMatchReview,

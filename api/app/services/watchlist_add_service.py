@@ -19,7 +19,7 @@ from app.repositories import (
     metadata_review_repository,
     watchlist_repository,
 )
-from app.schemas.errors import ErrorCode
+from app.schemas.errors import ErrorCode, ErrorDetail
 from app.services.letterboxd_resolver import resolve_letterboxd_uri
 from app.services.letterboxd_uri import canonical_film_uri
 from app.services.metadata_service import MetadataService
@@ -63,8 +63,24 @@ class WatchlistAddService:
                 status_code=502,
             ) from exc
 
-        letterboxd_uri = await resolve_letterboxd_uri(tmdb_id)
+        letterboxd_uri = await resolve_letterboxd_uri(
+            tmdb_id,
+            title=details.title,
+            year=details.year,
+            original_title=details.original_title,
+        )
         if letterboxd_uri is None:
+            existing_pending = metadata_review_repository.find_pending_letterboxd_by_tmdb_id(
+                db, tmdb_id
+            )
+            if existing_pending is not None:
+                film, review = existing_pending
+                return WatchlistAddOutcome(
+                    film_id=film.id,
+                    http_status=202,
+                    enrichment_status=EnrichmentStatus.REVIEW_REQUIRED.value,
+                    review_id=review.id,
+                )
             return await self._create_review_required_stub(db, tmdb_id, details, tmdb)
 
         return await self._add_with_resolved_uri(db, tmdb_id, details, tmdb, letterboxd_uri)
@@ -107,8 +123,35 @@ class WatchlistAddService:
         conflicting = film_metadata_repository.get_by_tmdb_id(db, tmdb_id)
         if conflicting is not None:
             other = film_repository.get_by_id(db, conflicting.film_id)
+            if other is not None:
+                active_entry = watchlist_repository.get_active_by_film_id(db, other.id)
+                if active_entry is not None and other.status == FilmStatus.ACTIVE:
+                    return WatchlistAddOutcome(
+                        film_id=other.id,
+                        http_status=200,
+                        already_on_watchlist=True,
+                    )
+                if other.enrichment_status == EnrichmentStatus.REVIEW_REQUIRED:
+                    pending = metadata_review_repository.find_pending_letterboxd_for_film(
+                        db, other.id
+                    )
+                    if pending is not None:
+                        return WatchlistAddOutcome(
+                            film_id=other.id,
+                            http_status=202,
+                            enrichment_status=EnrichmentStatus.REVIEW_REQUIRED.value,
+                            review_id=pending.id,
+                        )
             title = other.title if other else str(conflicting.film_id)
-            raise conflict(f"TMDB ID {tmdb_id} is already linked to film \"{title}\"")
+            details_list = None
+            if other is not None:
+                details_list = [
+                    ErrorDetail(field="film_id", message=str(other.id)),
+                ]
+            raise conflict(
+                f"TMDB ID {tmdb_id} is already linked to film \"{title}\"",
+                details=details_list,
+            )
 
         if existing is None:
             film = film_repository.create_manual(

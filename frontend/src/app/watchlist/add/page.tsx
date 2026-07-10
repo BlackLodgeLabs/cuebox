@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import {
   AddFilmSearch,
   AlreadyOnWatchlistMessage,
+  LinkedFilmConflictMessage,
+  PendingReviewMessage,
 } from "@/components/add-film-search";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { useAddToWatchlist, useFilm } from "@/hooks/use-films";
 import { useToast } from "@/hooks/use-toast";
+import { ApiClientError } from "@/lib/api-client";
 import type { TmdbSearchResultItem } from "@/types/api";
 
 export default function AddFilmPage() {
@@ -27,6 +30,9 @@ export default function AddFilmPage() {
   const [alreadyOnWatchlistId, setAlreadyOnWatchlistId] = useState<string | null>(
     null,
   );
+  const [pendingReviewId, setPendingReviewId] = useState<string | null>(null);
+  const [conflictFilmId, setConflictFilmId] = useState<string | null>(null);
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
 
   const polling = useFilm(pendingFilmId ?? "", { pollWhileEnriching: true });
 
@@ -50,8 +56,15 @@ export default function AddFilmPage() {
     router.push(`/watchlist/${pendingFilmId}`);
   }, [pendingFilmId, polling.data, router, toast]);
 
-  async function handleConfirm(selected: TmdbSearchResultItem) {
+  function clearInlineMessages() {
     setAlreadyOnWatchlistId(null);
+    setPendingReviewId(null);
+    setConflictFilmId(null);
+    setConflictMessage(null);
+  }
+
+  async function handleConfirm(selected: TmdbSearchResultItem) {
+    clearInlineMessages();
     try {
       const result = await addToWatchlist.mutateAsync({ tmdb_id: selected.tmdb_id });
 
@@ -61,11 +74,12 @@ export default function AddFilmPage() {
       }
 
       if (result.enrichment_status === "review_required") {
+        setPendingReviewId(result.review_id ?? null);
         toast({
           title: "Letterboxd link needed",
-          description: "Paste the film URL on the review page to finish adding.",
+          description:
+            "Cuebox could not auto-link this film. Paste the Letterboxd URL on the review page.",
         });
-        router.push("/review");
         return;
       }
 
@@ -83,8 +97,16 @@ export default function AddFilmPage() {
         title: "Adding film…",
         description: "Enriching metadata and semantic profile.",
       });
-    } catch {
-      // toast via mutation onError
+    } catch (error) {
+      if (error instanceof ApiClientError && error.code === "CONFLICT") {
+        const filmId = error.details?.find((detail) => detail.field === "film_id")
+          ?.message;
+        if (filmId) {
+          setConflictFilmId(filmId);
+          setConflictMessage(error.message);
+          return;
+        }
+      }
     }
   }
 
@@ -116,9 +138,20 @@ export default function AddFilmPage() {
             onConfirm={(selected) => void handleConfirm(selected)}
             isSubmitting={addToWatchlist.isPending || Boolean(pendingFilmId)}
             resultMessage={
-              alreadyOnWatchlistId ? (
-                <AlreadyOnWatchlistMessage filmId={alreadyOnWatchlistId} />
-              ) : null
+              <>
+                {alreadyOnWatchlistId ? (
+                  <AlreadyOnWatchlistMessage filmId={alreadyOnWatchlistId} />
+                ) : null}
+                {pendingReviewId ? (
+                  <PendingReviewMessage reviewId={pendingReviewId} />
+                ) : null}
+                {conflictFilmId && conflictMessage ? (
+                  <LinkedFilmConflictMessage
+                    filmId={conflictFilmId}
+                    message={conflictMessage}
+                  />
+                ) : null}
+              </>
             }
           />
           {pendingFilmId && (

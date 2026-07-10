@@ -54,11 +54,12 @@ def watchlist_size_exceeded(message: str = "CSV contains more than 500 films") -
     )
 
 
-def conflict(message: str) -> AppError:
+def conflict(message: str, details: list[ErrorDetail] | None = None) -> AppError:
     return AppError(
         code=ErrorCode.CONFLICT,
         message=message,
         status_code=409,
+        details=details,
     )
 
 

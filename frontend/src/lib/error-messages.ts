@@ -25,6 +25,12 @@ export function getErrorMessage(error: ErrorBody): string {
   if (error.code === "VALIDATION_ERROR" && error.details?.length) {
     return error.details.map((d) => d.message).join(" ");
   }
+  if (error.code === "CONFLICT") {
+    const filmId = error.details?.find((detail) => detail.field === "film_id")?.message;
+    if (filmId) {
+      return `${error.message} Open the existing film or review queue to continue.`;
+    }
+  }
   return ERROR_MESSAGES[error.code] ?? error.message;
 }
 

@@ -16,7 +16,7 @@ MATRIX_LETTERBOXD_URI = "https://letterboxd.com/film/the-matrix/"
 
 
 def _mock_resolve_success(tmdb_id: int):
-    async def _resolve(_tmdb_id: int, *, client=None):
+    async def _resolve(_tmdb_id: int, **kwargs):
         if _tmdb_id == MATRIX_TMDB_ID:
             return MATRIX_LETTERBOXD_URI
         return None
@@ -58,7 +58,10 @@ def test_add_film_happy_path_enriches_to_ready(integration_client):
 
 def test_add_film_redirect_failure_creates_letterboxd_review(integration_client):
     with patch(
-        "app.services.watchlist_add_service.resolve_letterboxd_uri",
+        "app.services.letterboxd_resolver._resolve_via_tmdb_redirect",
+        new=AsyncMock(return_value=None),
+    ), patch(
+        "app.services.letterboxd_resolver._resolve_via_slug_probe",
         new=AsyncMock(return_value=None),
     ):
         response = integration_client.post(
@@ -77,7 +80,10 @@ def test_add_film_redirect_failure_creates_letterboxd_review(integration_client)
 
 def test_resolve_letterboxd_review_completes_add(integration_client):
     with patch(
-        "app.services.watchlist_add_service.resolve_letterboxd_uri",
+        "app.services.letterboxd_resolver._resolve_via_tmdb_redirect",
+        new=AsyncMock(return_value=None),
+    ), patch(
+        "app.services.letterboxd_resolver._resolve_via_slug_probe",
         new=AsyncMock(return_value=None),
     ):
         add = integration_client.post(
@@ -238,9 +244,46 @@ def test_rss_watched_applies_to_manual_add(integration_client, db_session):
     assert watchlist_repository.get_active_by_film_id(db_session, film_id) is None
 
 
+def test_add_film_resolves_via_slug_when_redirect_blocked(integration_client):
+    with patch(
+        "app.services.letterboxd_resolver._resolve_via_tmdb_redirect",
+        new=AsyncMock(return_value=None),
+    ):
+        response = integration_client.post(
+            "/api/v1/watchlist/films",
+            json={"tmdb_id": MATRIX_TMDB_ID},
+        )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["enrichment_status"] == "enriching"
+    film = wait_for_film_status(integration_client, body["film_id"], "ready")
+    assert film["letterboxd_uri"] == MATRIX_LETTERBOXD_URI
+
+
 def test_add_film_invalid_tmdb_id(integration_client):
     response = integration_client.post(
         "/api/v1/watchlist/films",
         json={"tmdb_id": 99999999},
     )
     assert response.status_code == 404
+
+
+def test_add_film_pending_review_is_idempotent(integration_client):
+    with patch(
+        "app.services.watchlist_add_service.resolve_letterboxd_uri",
+        new=AsyncMock(return_value=None),
+    ):
+        first = integration_client.post(
+            "/api/v1/watchlist/films",
+            json={"tmdb_id": MATRIX_TMDB_ID},
+        )
+        second = integration_client.post(
+            "/api/v1/watchlist/films",
+            json={"tmdb_id": MATRIX_TMDB_ID},
+        )
+    assert first.status_code == 202
+    assert second.status_code == 202
+    first_body = first.json()
+    second_body = second.json()
+    assert first_body["review_id"] == second_body["review_id"]
+    assert first_body["film_id"] == second_body["film_id"]

@@ -175,3 +175,31 @@ export function AlreadyOnWatchlistMessage({ filmId }: { filmId: string }) {
     </p>
   );
 }
+
+export function PendingReviewMessage({ reviewId }: { reviewId?: string | null }) {
+  return (
+    <p className="rounded border border-border bg-surface-high p-3 text-sm">
+      This film is waiting for a Letterboxd URL before it can join your watchlist.{" "}
+      <Link href="/review" className="text-primary hover:underline">
+        Complete on the review page
+      </Link>
+      {reviewId ? ` (review ${reviewId.slice(0, 8)}…)` : ""}
+    </p>
+  );
+}
+
+export function LinkedFilmConflictMessage({ filmId, message }: { filmId: string; message: string }) {
+  return (
+    <p className="rounded border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+      {message}{" "}
+      <Link href={`/watchlist/${filmId}`} className="font-medium underline">
+        View existing film
+      </Link>
+      {" or "}
+      <Link href="/review" className="font-medium underline">
+        check review queue
+      </Link>
+      .
+    </p>
+  );
+}
