@@ -1,9 +1,9 @@
 {
   "issue": 99,
   "branch": "cursor/issue-99-add-film-to-watch-list",
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-10T14:35:12Z",
+  "updated_at": "2026-07-10T14:40:00Z",
   "agents": {
     "babysit-pr": "bc-06ecb2b8-4363-4eda-a673-f3fb038346cc",
     "create-pr": "bc-eea65507-1b04-4c95-be05-16849f2886ff",
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 7
+    "total_runs": 8
   }
 }
