@@ -1,0 +1,24 @@
+{
+  "issue": 92,
+  "branch": "cursor/issue-92-batch-create-pr-single-commit",
+  "pr": 97,
+  "stage": "complete",
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 7
+  },
+  "updated_at": "2026-07-08T19:59:30Z",
+  "agents": {
+    "babysit-pr": "bc-dd98df21-55d2-440b-82c7-20511d546a36",
+    "create-pr": "bc-d6fd71b9-f9c2-493a-a463-17efda390af3",
+    "demo": "bc-c8d10b76-6638-42b0-a537-0d605dc6838b",
+    "execute": "bc-78b1055d-7abd-47af-a2b7-c8786c7030f7",
+    "planning": "bc-dd9f4b1e-c695-467a-8de4-f0799cae6561"
+  },
+  "active_agent_id": null,
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "active_skill": null
+}
