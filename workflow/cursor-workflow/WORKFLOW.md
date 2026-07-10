@@ -109,7 +109,7 @@ When any handoff `stage` (`spec-ready` through `create-pr-ready`) has no recorde
 |-------|-----------------|-------|
 | `spec-ready` | Spawn planning; **ensure draft PR** | |
 | `plan-ready` | Spawn execute; **ensure draft PR if null** | |
-| `execute-ready` | Spawn demo **or** execute (`--reopen`) | Re-open inferred via `cursor-workflow-infer-reopen.sh` |
+| `execute-ready` | Spawn demo **or** execute (`--reopen`) | Re-open inferred via `cursor-workflow-infer-reopen.sh`; demo deferred when `active_skill=execute` (issue #91) |
 | `demo-ready` | Spawn create-pr | |
 | `create-pr-ready` | Spawn babysit-pr (draft PR check) | |
 | `execute-passback` | **`POST /v1/agents/{id}/runs`** | No new agent; uses `cursor-workflow-passback-run.sh` |
@@ -155,7 +155,7 @@ In-job pending lock: `CURSOR_WORKFLOW_PENDING_SKILL` env (not a branch push) blo
 Before `POST /v1/agents`, `cursor-workflow-spawn-agent.sh` orchestrates:
 
 1. **Re-fetch** remote `workflow.state.json` from `origin/<branch>` via `cursor-workflow-refetch-state.sh` (overlays `agents`, `handoff_pending`, `stage`, `pr`, `loops`).
-2. **Admission gate** — skip if peer recorded `agents.<skill>`; defer on fresh peer `handoff_pending`.
+2. **Admission gate** — skip if peer recorded `agents.<skill>`; defer on fresh peer `handoff_pending`; for **demo** target, skip when `stage=execute-in-progress` or stage rank &lt; `execute-ready`, defer when `active_skill=execute` (issue #91, closes [#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) premature demo spawn).
 3. **Branch pending lock** — `cursor-workflow-record-handoff-pending.sh set` pushes `handoff_pending` to the branch (production) or local state (mock/dry-run) **before** the API call.
 4. **Re-fetch + second gate** — peer wins (`skip:agent-already-recorded`) or holds lock (`defer:pending-lock`); holder proceeds with `CURSOR_WORKFLOW_WE_HOLD_LOCK=1`.
 5. **POST** once, then `record-spawn-on-branch.sh` clears pending and records `agents.<skill>` (first-wins if peer already recorded a different id).
@@ -165,6 +165,16 @@ Before `POST /v1/agents`, `cursor-workflow-spawn-agent.sh` orchestrates:
 **Recovery branch-tip refetch (issue #90):** `cursor-workflow-handoff-recovery.sh` force-fetches `origin/<branch>` and calls `refetch-state.sh --agents-from-tip` before admission. Recovery never spawns when branch tip already records the target skill, even if the job's checked-out `workflow.state.json` (trigger SHA) lacks it.
 
 If `record-spawn-on-branch.sh` fails after a successful POST, branch `handoff_pending` remains until stale (15 minutes) or recovery re-records — subsequent spawns defer on `pending-lock`. Handoff recovery uses the same refetch + gate path (no local-only bypass).
+
+**Admission gate stdout (demo preconditions, issue #91):**
+
+| stdout | Meaning |
+|--------|---------|
+| `skip:execute-in-progress` | Demo blocked — execute stage in progress |
+| `skip:stage-not-ready` | Demo blocked — stage rank below `execute-ready` |
+| `defer:execute-active` | Demo deferred — execute agent still owns branch (`active_skill=execute`) |
+
+`spawn-agent.sh` handles `defer:*` with backoff retry within the job; `skip:*` exits without POST.
 
 ### Status comment ID (`status_comment_id`)
 

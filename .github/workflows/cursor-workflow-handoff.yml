@@ -149,6 +149,8 @@ jobs:
                   skill="execute"
                   progress_stage="execute-in-progress"
                 else
+                  # Demo spawn deferred by admission gate when active_skill=execute or stage < execute-ready.
+                  # is_skip_stage blocks execute-in-progress transitions; gate covers recovery + premature execute-ready.
                   prompt="Use the demo skill for GitHub issue #${issue}. Branch: ${branch}. Full Docker stack must be running. Follow workflow/issues/issue-${issue}/demo/demo-spec.md."
                   skill="demo"
                   progress_stage="demo-in-progress"
