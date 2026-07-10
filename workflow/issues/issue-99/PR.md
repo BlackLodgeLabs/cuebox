@@ -88,13 +88,13 @@ Adds an in-app flow to search TMDB, pick a film, resolve its Letterboxd identity
 
 ## Gate evidence
 
-- [ ] `Phase 8 gate exit 0 at a53c15d`
-- [ ] `pytest tests/test_integration_watchlist_add.py tests/test_letterboxd_resolver.py` — 20 passed at a53c15d
-- [ ] `npx tsc --noEmit` and `npm run test:unit` — passed via Phase 8 gate at a53c15d
+- [x] `API CI + Frontend CI pass at 6769cbe` (api-tests 1m3s, frontend 1m3s)
+- [x] `pytest tests/ -v` — full suite passed in API CI at 6769cbe
+- [x] `npx tsc --noEmit` and `npm run test:unit` — passed in Frontend CI at 6769cbe
 
 ## Checklist
 
-- [ ] Acceptance criteria in `workflow/issues/issue-99/SPEC.md` met
-- [ ] Demo scenarios 1–5 pass on Docker Compose stack
-- [ ] No secrets or API keys in committed files
-- [ ] Migration `0006_manual_watchlist_add` applies cleanly via `alembic upgrade head`
+- [x] Acceptance criteria in `workflow/issues/issue-99/SPEC.md` met
+- [x] Demo scenarios 1–5 pass on Docker Compose stack
+- [x] No secrets or API keys in committed files
+- [x] Migration `0006_manual_watchlist_add` applies cleanly via `alembic upgrade head`
