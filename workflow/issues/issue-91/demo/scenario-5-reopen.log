@@ -1,6 +1,0 @@
-=== Re-open inference tests from full suite ===
-PASS: reopen inference agents+demo spawns execute
-PASS: reopen inference agents+demo not demo
-PASS: reopen inference prev_stage spawns execute
-
-All three reopen inference assertions passed.
