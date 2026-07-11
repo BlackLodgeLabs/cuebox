@@ -31,10 +31,19 @@ Push before monitoring or fixes.
 { "stage": "babysit-in-progress", "active_skill": "babysit-pr", "updated_at": "<ISO8601>" }
 ```
 
+## GitHub MCP
+
+See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/MCP-GITHUB.md).
+
+1. `GetMcpTools` → `github` with `serverStatus: ready`?
+2. If yes: use MCP for mapped operations (check idempotency markers first)
+3. Always: merge-state + push `workflow.state.json`
+4. If MCP fails: log in commit message; rely on Actions sync on push
+
 ## Read first
 
 1. `workflow/issues/issue-{NNN}/workflow.state.json` — **check limits before acting**
-2. PR (number in state file): checks, Bugbot comments, review threads
+2. PR (number in state file): **MCP (preferred)** `pull_request_read` methods `get`, `get_check_runs`, `get_reviews`, `get_review_comments` — replaces `gh pr view` / `gh api`
 3. `workflow/issues/issue-{NNN}/PR.md` — PR description (synced to GitHub by Actions)
 4. `workflow/issues/issue-{NNN}/PLAN.md` — definition of done
 4. `run-gate-scripts` — re-run gates after fixes
@@ -73,7 +82,7 @@ If limits exceeded or unrecoverable failure:
 
 1. Update `workflow/issues/issue-{NNN}/workflow.state.json`: `stage`: `blocked`, increment `loops.total_runs`, set `updated_at` to current ISO8601
 2. **Commit and push** the state file to the issue branch (required so remote automation sees the terminal state and stops handoffs)
-3. Labels: `cursor:blocked` on issue; comment on issue + PR with counters and last errors
+3. **MCP (preferred):** `add_issue_comment` on issue + PR with counters and last errors + `<!-- cursor-mcp-blocked:v1 -->` (check markers first). `issue_write` for `cursor:blocked` label or rely on Actions sync.
 4. **Stop** — no further automated handoffs
 
 ## Success — ready for review
@@ -90,15 +99,15 @@ When **all** true:
 Then:
 
 1. Run merge helper, then set `stage`: `complete`
-2. **Convert draft PR → ready for review** (not merged)
-3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions the issue author, and assigns the PR (cloud agents cannot post issue comments)
+2. **Convert draft PR → ready for review** via MCP `update_pull_request` with `draft: false` (or existing path if MCP unavailable)
+3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions the issue author, and assigns the PR
 
-Do **not** post an issue comment — the handoff Action handles that notification.
+Do **not** MCP-post an issue comment at `complete` — the handoff Action handles that notification (see MCP-GITHUB.md).
 
 ## Do not
 
 - Merge the PR
-- Post issue comments (GitHub Actions notifies the issue author at `complete`)
+- MCP-post issue comments at `complete` (GitHub Actions notifies the issue author)
 - Exceed loop limits silently
 - Disable tests or skip gates to greenwash CI
 - Mark ready while demo artifacts, PR.md, or critical checks are missing

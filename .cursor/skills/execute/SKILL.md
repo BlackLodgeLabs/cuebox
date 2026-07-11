@@ -112,3 +112,21 @@ Issue labels: synced by GitHub Actions on push. Push state file; handoff Action 
 - Mark PR ready for review (babysit does that)
 - Record demo artifacts (demo skill does that)
 - Push failing code
+
+## GitHub MCP
+
+See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/MCP-GITHUB.md).
+
+1. `GetMcpTools` → `github` with `serverStatus: ready`?
+2. If yes: use MCP for mapped operations (check idempotency markers first)
+3. Always: merge-state + push `workflow.state.json`
+4. If MCP fails: log in commit message; rely on Actions sync on push
+
+### When `pr` is null after push
+
+**MCP (preferred):** `issue_read` method `get_comments` — skip if `<!-- cursor-mcp-execute-no-pr:v1 -->` present. Else `add_issue_comment` on the issue with recovery steps:
+
+- Actions → **Cursor workflow handoff** → Run workflow → issue number → enable **ensure draft PR**
+- Push did not create a PR — human should resync
+
+Include marker as last line. Keep "do not `gh pr create`" — draft PR stays Actions (phase 2 optional MCP create documented in MCP-GITHUB.md).

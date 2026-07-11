@@ -261,7 +261,23 @@ Create these on the repository. **Agents do not set them reliably** — `.github
 
 **Manual resync** (e.g. issue already mid-flight): Actions → Cursor workflow handoff → **Run workflow** → enter issue number `45`.
 
-Cloud agents cannot post labels/comments; **do not rely on them for status**. Push `workflow.state.json` instead.
+When GitHub MCP is configured (see [MCP-GITHUB.md](MCP-GITHUB.md)), agents **can** post human-visible comments and set labels immediately. Push `workflow.state.json` is still required for stage transitions — Actions remain authoritative for the pinned status comment and handoff spawns.
+
+## GitHub MCP adoption
+
+Canonical guide: [MCP-GITHUB.md](MCP-GITHUB.md) — tool mapping, idempotency markers, @mentions, availability check, fallback policy.
+
+| Stage | Skill | MCP (add) | Actions (unchanged) |
+|-------|-------|-----------|---------------------|
+| 2 / 2b | `review-and-spec` | Read comments (`issue_read`); post questions (`add_issue_comment`); `spec-needs-info` label (`issue_write`) | Spawn planning at `spec-ready`; draft PR; label sync on push |
+| 3 | `planning` | `plan-needs-info` questions + label | Spawn execute at `plan-ready` |
+| 4 | `execute` | Issue comment when `pr` is null | Spawn demo; label sync |
+| 5 | `demo` | PR scenario summary; `blocked` issue+PR comments | Spawn create-pr; pass-back spawn |
+| 6 | `create-pr` | Optional: `update_pull_request` body from `PR.md` (phase 2) | Sync PR body from `PR.md`; spawn babysit |
+| 7 | `babysit-pr` | Read checks/reviews; `blocked` comments; mark ready (`update_pull_request` draft=false) | Complete notification |
+| — | `workflow-review` | MCP forensics (issues, PRs, checks, comments) | — |
+
+**Actions remain authoritative for:** handoff spawn (`POST /v1/agents`), pinned status comment (`status_comment_id`), draft PR at `spec-ready`, complete/stalled notifications.
 
 ## GitHub Action: `cursor-workflow-handoff`
 

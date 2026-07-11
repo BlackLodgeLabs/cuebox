@@ -28,7 +28,16 @@ Produce a structured post-mortem for a completed (or partially completed) Cursor
 
 - Workflow artifacts exist (`SPEC.md`, `PLAN.md`, `workflow.state.json` at minimum)
 - Prefer `stage: complete`; post-merge archive path is acceptable
-- `gh` CLI available for PR checks, comments, and Action run forensics
+- **MCP (preferred):** `GetMcpTools` → `github` ready for PR checks, comments, and Action run forensics — see [MCP-GITHUB.md](../../../workflow/cursor-workflow/MCP-GITHUB.md). Fall back to `gh` CLI only when MCP unavailable.
+
+## GitHub MCP
+
+See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/MCP-GITHUB.md).
+
+1. `GetMcpTools` → `github` with `serverStatus: ready`?
+2. If yes: use MCP read tools for forensics (check idempotency markers when reading comments)
+3. Always: commit + push review artifacts
+4. If MCP fails: fall back to `gh` CLI or branch artifacts only
 
 ## Read first
 
@@ -38,7 +47,7 @@ Produce a structured post-mortem for a completed (or partially completed) Cursor
 4. `workflow/issues/issue-{NNN}/PR.md` — if present
 5. `workflow/issues/issue-{NNN}/demo/demo-notes.md`, `demo/demo-spec.md` — demo pass/fail, evidence gaps
 6. [workflow/cursor-workflow/RETROSPECTIVES.md](../../../workflow/cursor-workflow/RETROSPECTIVES.md) — avoid duplicate index rows; check recurring patterns
-7. GitHub PR checks, comments, review threads: `gh pr view {pr} --json ...`
+7. **MCP (preferred):** `pull_request_read` methods `get`, `get_check_runs`, `get_reviews`, `get_review_comments`; `issue_read` for issue comments — replaces `gh pr view` / `gh api`
 8. GitHub Actions handoff runs for spawn failures, deferrals, API errors
 9. Archived reviews on `workflow/archive` for format reference (#28, #59)
 

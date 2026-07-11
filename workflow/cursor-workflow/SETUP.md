@@ -94,7 +94,7 @@ Create labels (Settings → Labels):
 
 Agents add/remove these; labels help you see state at a glance.
 
-**Important:** Cloud agents often **cannot** set labels or post comments (token limits). Labels and a **status comment** on the issue are set automatically by GitHub Actions on **every push** to `cursor/issue-*` branches (reading `workflow.state.json`). Create all labels in the table in [WORKFLOW.md](WORKFLOW.md) (including `cursor:*-in-progress`).
+**GitHub MCP (preferred):** Workflow Cloud Agents should have **GitHub MCP** enabled in the Cursor dashboard (HTTP MCP → `https://api.githubcopilot.com/mcp/`). Agents post human-visible comments and set labels immediately via MCP; see [MCP-GITHUB.md](MCP-GITHUB.md). When MCP is unavailable, labels and the **status comment** are still synced by GitHub Actions on **every push** to `cursor/issue-*` branches. Create all labels in the table in [WORKFLOW.md](WORKFLOW.md) (including `cursor:*-in-progress`).
 
 ### Visibility checklist
 
@@ -112,6 +112,9 @@ In [cursor.com/dashboard](https://cursor.com/dashboard) → **Cloud Agents** →
 - [ ] **Start command** / snapshot includes Docker + Node + Python
 - [ ] **Secrets** mirrored for demos/tests: `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. (as needed)
 - [ ] Stack terminal or snapshot verifies Part 1 + Part 2 gates from `AGENTS.md`
+- [ ] **GitHub MCP** enabled (dashboard HTTP MCP → `https://api.githubcopilot.com/mcp/`) — required for workflow agents to post comments and labels immediately
+- [ ] Verify MCP offline: `bash scripts/test-cursor-workflow-mcp-github.sh`
+- [ ] Verify MCP live (optional): `GetMcpTools` → `github` ready; `add_issue_comment` with `<!-- cursor-mcp-test:v1 -->` on a test issue (see [MCP-GITHUB.md](MCP-GITHUB.md))
 
 Demo and execute agents assume **full Docker stack** (frontend :3000, API :8000).
 
