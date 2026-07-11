@@ -1,9 +1,9 @@
 {
   "issue": 105,
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
-  "stage": "spec-ready",
+  "stage": "plan-in-progress",
   "active_skill": "planning",
-  "updated_at": "2026-07-11T18:22:46Z",
+  "updated_at": "2026-07-11T18:23:24Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
