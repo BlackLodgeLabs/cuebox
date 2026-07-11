@@ -1,7 +1,7 @@
 {
   "issue": 103,
   "branch": "cursor/issue-103-post-merge-agent-branch-cleanup-a8c0",
-  "pr": null,
+  "pr": 104,
   "stage": "plan-ready",
   "active_skill": null,
   "active_agent_id": null,
@@ -23,5 +23,5 @@
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-07-11T11:25:00Z"
+  "updated_at": "2026-07-11T11:22:32Z"
 }
