@@ -1,7 +1,7 @@
 # Demo notes — issue #105
 
 - **Date:** 2026-07-11T18:40:00Z
-- **Commit:** cb52ce1
+- **Commit:** a14b041
 - **Branch:** `cursor/issue-105-adopt-github-mcp-fb51`
 - **PR:** #107
 - **Docker stack:** Not required for this workflow-only demo (demo-spec preconditions). Stack not running; no product UI scenarios.
