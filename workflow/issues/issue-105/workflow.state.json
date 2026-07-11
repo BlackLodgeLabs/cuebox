@@ -1,9 +1,9 @@
 {
   "issue": 105,
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
-  "stage": "demo-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-11T18:36:25Z",
+  "updated_at": "2026-07-11T18:40:00Z",
   "agents": {
     "babysit-pr": "bc-d7c18ac2-c6b8-466a-85ab-f2263d2ff4e9",
     "create-pr": "bc-b01d95f7-f960-4995-b5e5-accde372e1e8",
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   }
 }
