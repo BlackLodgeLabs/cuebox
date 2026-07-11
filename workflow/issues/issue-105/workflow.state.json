@@ -2,10 +2,10 @@
   "issue": 105,
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
   "stage": "demo-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-11T18:36:21Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-11T18:36:25Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-d7c18ac2-c6b8-466a-85ab-f2263d2ff4e9",
     "create-pr": "bc-b01d95f7-f960-4995-b5e5-accde372e1e8",
     "demo": "bc-a9a58ef2-fbdc-4c96-b4c6-59fce1cf1017",
     "execute": "bc-5f097378-8c56-48ad-b919-02a0b04f5195",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 107,
-  "active_agent_id": "bc-b01d95f7-f960-4995-b5e5-accde372e1e8",
+  "active_agent_id": "bc-d7c18ac2-c6b8-466a-85ab-f2263d2ff4e9",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-11T18:36:21Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
