@@ -2,7 +2,7 @@
   "issue": 103,
   "branch": "cursor/issue-103-post-merge-agent-branch-cleanup-a8c0",
   "pr": 104,
-  "stage": "plan-ready",
+  "stage": "execute-ready",
   "active_skill": "execute",
   "active_agent_id": "bc-5f06bf9b-465e-4a01-834f-f16d5bf890d6",
   "agents": {
@@ -21,7 +21,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
-  "updated_at": "2026-07-11T11:23:43Z"
+  "updated_at": "2026-07-11T11:35:00Z"
 }
