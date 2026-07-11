@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-2 rounded px-3 py-2 text-label-md normal-case tracking-normal transition-all hover-glow",
                   pathname.startsWith("/review")
-                    ? "bg-accent shadow-glow"
+                    ? "bg-accent text-foreground shadow-glow"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >

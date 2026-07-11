@@ -31,6 +31,17 @@ test.describe("watchlist add flow (mocked API)", () => {
       });
     });
 
+    await page.route(`**${API_PATH_PREFIX}/films?on_watchlist=true**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [{ id: "seed-film", title: "Seed Film" }],
+          pagination: { total: 12, limit: 1, offset: 0, has_more: true },
+        }),
+      });
+    });
+
     await page.route(`**${API_PATH_PREFIX}/films/review-required**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -95,7 +106,10 @@ test.describe("watchlist add flow (mocked API)", () => {
 
   test("home shows add film CTA between recommendation and history", async ({ page }) => {
     await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Your watchlist" })).toBeVisible();
+    await expect(page.getByText("12 films on your watchlist")).toBeVisible();
     const links = page.getByRole("link");
+    await expect(links.filter({ hasText: "View watchlist" })).toHaveAttribute("href", "/watchlist");
     await expect(links.filter({ hasText: "Start questionnaire" })).toBeVisible();
     await expect(links.filter({ hasText: "Add a film" })).toBeVisible();
     await expect(links.filter({ hasText: "View history" })).toBeVisible();

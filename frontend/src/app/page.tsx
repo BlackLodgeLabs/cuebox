@@ -18,6 +18,7 @@ import { ErrorState } from "@/components/error-state";
 import {
   useHasWatchlist,
   usePendingReviewCount,
+  useWatchlistCount,
 } from "@/hooks/use-films";
 import { getHealth } from "@/lib/api-client";
 
@@ -30,6 +31,7 @@ export default function HomePage() {
     refetch: refetchWatchlist,
   } = useHasWatchlist();
   const { data: reviewCount = 0 } = usePendingReviewCount();
+  const { data: watchlistCount } = useWatchlistCount();
   const { data: health } = useQuery({
     queryKey: ["health"],
     queryFn: getHealth,
@@ -86,6 +88,24 @@ export default function HomePage() {
         </p>
       </div>
 
+      <Card className="hover-glow">
+        <CardHeader>
+          <CardTitle>Your watchlist</CardTitle>
+          <CardDescription>
+            {watchlistCount === undefined
+              ? "Loading watchlist…"
+              : watchlistCount === 1
+                ? "1 film on your watchlist"
+                : `${watchlistCount} films on your watchlist`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild className="w-full">
+            <Link href="/watchlist">View watchlist</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="hover-glow">
           <CardHeader>
@@ -125,7 +145,7 @@ export default function HomePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="outline" className="w-full">
+            <Button asChild className="w-full">
               <Link href="/history">View history</Link>
             </Button>
           </CardContent>

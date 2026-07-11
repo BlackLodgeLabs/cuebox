@@ -21,4 +21,16 @@ describe("AppShell", () => {
     const homeLink = screen.getByRole("link", { name: /home/i });
     expect(homeLink).toHaveAttribute("href", "/");
   });
+
+  it("applies text-foreground to active Review nav link", () => {
+    render(
+      <AppShell>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    const reviewLink = screen.getByRole("link", { name: /review/i });
+    expect(reviewLink.className).toContain("text-foreground");
+    expect(reviewLink.className).toContain("bg-accent");
+  });
 });

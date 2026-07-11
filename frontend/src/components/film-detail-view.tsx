@@ -86,7 +86,7 @@ export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailVi
                 alt=""
                 fill
                 priority
-                className="object-cover"
+                className="object-cover object-top"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/20" />
             </>
@@ -218,7 +218,7 @@ export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailVi
                         rel="noreferrer"
                         className="text-primary hover:underline"
                       >
-                        {metadata.tmdb_id}
+                        View on TMDB
                       </a>
                     </dd>
                   </div>
@@ -233,7 +233,7 @@ export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailVi
                         rel="noreferrer"
                         className="text-primary hover:underline"
                       >
-                        {metadata.imdb_id}
+                        View on IMDB
                       </a>
                     </dd>
                   </div>
