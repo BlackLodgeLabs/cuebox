@@ -16,12 +16,16 @@
   },
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-11T11:23:39Z",
+    "attempt": 0
+  },
   "status_comment_id": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-07-11T11:22:32Z"
+  "updated_at": "2026-07-11T11:23:39Z"
 }
