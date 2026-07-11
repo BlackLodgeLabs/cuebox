@@ -1,0 +1,39 @@
+# Scenario 2: Skill MCP integration
+# Date: 2026-07-11T18:31:57Z
+
+--- review-and-spec ---
+1
+  MCP-GITHUB.md ref: YES
+4. If MCP fails: log in commit message; rely on Actions sync on push
+--- planning ---
+1
+  MCP-GITHUB.md ref: YES
+4. If MCP fails: log in commit message; rely on Actions sync on push
+--- execute ---
+2
+  MCP-GITHUB.md ref: YES
+4. If MCP fails: log in commit message; rely on Actions sync on push
+--- demo ---
+1
+  MCP-GITHUB.md ref: YES
+4. If MCP fails: log in `demo-notes.md`; rely on Actions sync on push
+--- babysit-pr ---
+2
+  MCP-GITHUB.md ref: YES
+4. If MCP fails: log in commit message; rely on Actions sync on push
+--- workflow-review ---
+2
+  MCP-GITHUB.md ref: YES
+4. If MCP fails: fall back to `gh` CLI or branch artifacts only
+
+--- create-pr (out of scope) ---
+0
+create-pr MCP refs: NONE (expected)
+
+## babysit-pr pull_request_read
+2. PR (number in state file): **MCP (preferred)** `pull_request_read` methods `get`, `get_check_runs`, `get_reviews`, `get_review_comments` — replaces `gh pr view` / `gh api`
+
+## babysit-pr no MCP at complete
+Do **not** MCP-post an issue comment at `complete` — the handoff Action handles that notification (see MCP-GITHUB.md).
+
+RESULT: PASS

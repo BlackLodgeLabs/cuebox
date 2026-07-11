@@ -1,0 +1,11 @@
+# Scenario 4: Live GitHub MCP visibility
+# Date: 2026-07-11T18:31:57Z
+
+Marker <!-- cursor-mcp-spec-ready:v1 --> on issue #105:
+URL: https://github.com/BlackLodgeLabs/cuebox/issues/105#issuecomment-4948258758
+Author: BlackLodgeLabs | Created: 2026-07-11T18:19:16Z
+Posted via GitHub MCP during spec stage
+
+Screenshot: workflow/issues/issue-105/demo/scenario-4-github-comment.png
+
+RESULT: PASS
