@@ -3,7 +3,7 @@
   "branch": "cursor/issue-26-frontend-visual-polish-cdf5",
   "stage": "create-pr-ready",
   "active_skill": null,
-  "updated_at": "2026-07-11T07:42:00Z",
+  "updated_at": "2026-07-11T07:40:39Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-11T07:40:39Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
