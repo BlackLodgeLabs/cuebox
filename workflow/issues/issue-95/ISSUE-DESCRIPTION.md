@@ -34,6 +34,8 @@ All human-facing notifications must @mention the **repo owner** and the **issue 
 
 Evidence from [issue #99 workflow review](https://github.com/BlackLodgeLabs/cuebox/blob/81b08a2/workflow/issues/issue-99/WORKFLOW-REVIEW.md): deferral + `@cursoragent` comment at 23:18 UTC; fix landed ~12 hours later on a subsequent push — unclear whether the comment triggered anything.
 
+Evidence from [issue #26 workflow review](https://github.com/BlackLodgeLabs/cuebox/blob/65697ccd41abda1a2f7261f92e6cb4234d6e2b80/workflow/issues/issue-26/WORKFLOW-REVIEW.md) (2026-07-11): execute set `stage: execute-ready` but left `active_skill: execute`. Handoff deferred demo three times (`defer:execute-active`), posted a **transient** deferral comment (“retry on next push”), then PAT `@cursoragent` demo prompt — demo never spawned. Status comment incorrectly showed `demo-in-progress` for ~7 hours. Human `@cursoragent continue the workflow` at 07:31 UTC unblocked the tail pipeline. This stall would **not** self-heal on the next push because execute was finished.
+
 ---
 
 ## Communication scenarios
@@ -41,7 +43,7 @@ Evidence from [issue #99 workflow review](https://github.com/BlackLodgeLabs/cueb
 | Scenario | Trigger | Who acts | Notification |
 |----------|---------|----------|--------------|
 | **Complete** | `stage: complete` (babysit finished) | Human reviews PR | GitHub Action posts issue comment |
-| **Stalled** | Handoff spawn retries exhausted / permanent API failure | Human resumes workflow manually | GitHub Action posts issue comment |
+| **Stalled** | Handoff spawn retries exhausted / permanent API failure **or terminal defer that will not self-heal on next push** | Human resumes workflow manually | GitHub Action posts issue comment |
 | **Genuine question** | Agent cannot proceed without product/spec answer | Human replies on issue | Agent posts issue comment (best effort) |
 | **Step failure** | Demo/execute finds bug or fixable defect | Previous agent (pass-back) | No human question; pass-back in state + demo-notes |
 
@@ -92,6 +94,15 @@ Rules:
 
 **Do not** use this for **transient** deferrals that will retry on the next push — keep `cursor-workflow-post-deferral-comment.sh` as-is for those.
 
+**Do** use stalled notification (instead of only the transient deferral comment) when automation has exhausted retries and **no further agent push is expected** to clear the condition. Known terminal cases:
+
+| Defer reason | Why terminal | Example |
+|--------------|--------------|---------|
+| `execute-active` | Execute finished with `stage: execute-ready` but `active_skill` still `execute`; execute will not push again | [Issue #26](https://github.com/BlackLodgeLabs/cuebox/issues/26) — ~7h stall until human resume |
+| `at-cap` / `api-400` / `pending-lock` | After `MAX_ATTEMPTS` with no scheduled retry | Existing behaviour today ends in PAT fallback |
+
+For terminal `execute-active` stalls specifically, the stalled comment should note that execute may have finished successfully and demo is blocked by state — recovery may be `@cursoragent use demo skill for issue NNN` rather than re-running execute.
+
 **Replace** `pat_fallback()` posting `@cursoragent …` with a new script, e.g. `cursor-workflow-notify-stalled.sh`:
 
 - @mention **repo owner** and **issue author** (shared helper).
@@ -102,6 +113,7 @@ Rules:
 - Optionally link to the last agent conversation from `workflow.state.json` (`agents.<skill>` → `https://cursor.com/agents/<id>`).
 - Idempotent HTML marker, e.g. `<!-- cursor-workflow-stalled-notify:v1 -->` — one stalled comment per issue per stall reason or per 30–60 minutes (define policy; avoid spam on repeated pushes).
 - Post via `GITHUB_TOKEN` in Actions (same as complete notifier).
+- **Do not** call `cursor-workflow-sync-github-status.sh` with `HANDOFF_PROGRESS_STAGE` when spawn failed — prevents false `demo-in-progress` (etc.) labels while `workflow.state.json` still shows the prior stage ([issue #26](https://github.com/BlackLodgeLabs/cuebox/issues/26) showed “Demo — in progress” for ~7h with no demo agent).
 
 **Deprecate** PAT `@cursoragent` fallback in `pat_fallback()`, `cursor-workflow-passback-run.sh`, WORKFLOW.md, and SETUP.md — or remove entirely once stalled notification ships.
 
@@ -162,7 +174,7 @@ This matches existing demo pass-back design; this issue makes the distinction ex
 | `scripts/cursor-workflow-resolve-notify-targets.sh` | **New** — resolve issue author + repo owner logins |
 | `scripts/cursor-workflow-notify-complete.sh` | @mention repo owner + issue author |
 | `scripts/cursor-workflow-notify-stalled.sh` | **New** — terminal failure notification |
-| `scripts/cursor-workflow-spawn-agent.sh` | Replace `pat_fallback()` with stalled notifier |
+| `scripts/cursor-workflow-spawn-agent.sh` | Replace `pat_fallback()` with stalled notifier; do not sync progress labels on failed spawn |
 | `scripts/cursor-workflow-passback-run.sh` | Remove PAT `@cursoragent` fallback; use stalled notifier on failure |
 | `scripts/cursor-workflow-load-scripts.sh` | Register new scripts |
 | `scripts/test-cursor-workflow-handoff.sh` | Tests for owner resolution, complete + stalled idempotency |
@@ -177,6 +189,8 @@ This matches existing demo pass-back design; this issue makes the distinction ex
 
 - [ ] Complete notification @mentions **repo owner** and **issue author**; no hardcoded usernames.
 - [ ] Stalled notification posts on terminal handoff failure with reason, recovery steps, and idempotency marker.
+- [ ] Terminal defer reasons (e.g. post-retry `execute-active` at `execute-ready`) route to stalled notifier, not only transient deferral comment.
+- [ ] Failed spawn does not update GitHub status to `*-in-progress` for the target skill.
 - [ ] `pat_fallback()` no longer posts `@cursoragent` comments (removed or gated off).
 - [ ] Transient deferral comment behaviour unchanged (retry on next push).
 - [ ] Shared owner-resolution helper used by complete and stalled scripts.
@@ -189,6 +203,7 @@ This matches existing demo pass-back design; this issue makes the distinction ex
 ## Out of scope
 
 - Changing the primary handoff path (`CURSOR_API_KEY` → `POST /v1/agents`) — it stays as-is.
+- **Clearing `active_skill` on `execute-ready`** — execute skill / handoff hardening; see [issue #26 workflow review](https://github.com/BlackLodgeLabs/cuebox/blob/65697ccd41abda1a2f7261f92e6cb4234d6e2b80/workflow/issues/issue-26/WORKFLOW-REVIEW.md) follow-up (“Harden execute→demo handoff”). Without that fix, stalled notification helps humans recover faster but does not prevent the stall.
 - Cursor Automations dashboard backup prompts — optional, not part of this issue.
 - Org-level “notify” targets beyond `repo.owner.login` (can be a follow-up if org repos need a specific human).
 - Enabling cloud agents to reliably post GitHub issue comments without token changes — best-effort only.
@@ -201,3 +216,4 @@ This matches existing demo pass-back design; this issue makes the distinction ex
 - Current spawn fallback: `scripts/cursor-workflow-spawn-agent.sh` (`pat_fallback`)
 - Issue #99 workflow review (stalled handoff evidence): `workflow/issues/issue-99/WORKFLOW-REVIEW.md`
 - Pass-back: `workflow/cursor-workflow/WORKFLOW.md` § pass-back / `execute-passback`
+- Issue #26 workflow review (`execute-active` terminal stall): `workflow/issues/issue-26/WORKFLOW-REVIEW.md`
