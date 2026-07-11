@@ -3,7 +3,7 @@
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-11T18:22:00Z",
+  "updated_at": "2026-07-11T18:21:39Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 107,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
