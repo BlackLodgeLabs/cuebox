@@ -156,3 +156,5 @@ gh issue create --repo BlackLodgeLabs/cuebox \
 ```
 
 Then comment **`@cursoragent spec`** on the new issue.
+
+**Created:** https://github.com/BlackLodgeLabs/cuebox/issues/105
