@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/app-shell";
 
 vi.mock("next/navigation", () => ({
@@ -11,6 +11,10 @@ vi.mock("@/hooks/use-films", () => ({
 }));
 
 describe("AppShell", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("keeps the Home nav link on / even when reviews are pending", () => {
     render(
       <AppShell>
@@ -29,7 +33,7 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    const reviewLink = screen.getByRole("link", { name: /review/i });
+    const reviewLink = screen.getByRole("link", { name: "Review 3" });
     expect(reviewLink.className).toContain("text-foreground");
     expect(reviewLink.className).toContain("bg-accent");
   });
