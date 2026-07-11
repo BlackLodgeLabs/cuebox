@@ -2,7 +2,7 @@
   "issue": 103,
   "branch": "cursor/issue-103-post-merge-agent-branch-cleanup-a8c0",
   "pr": 104,
-  "stage": "babysit-in-progress",
+  "stage": "complete",
   "active_skill": "babysit-pr",
   "active_agent_id": "bc-e7d55061-0941-45b1-850b-3603ddee26a3",
   "agents": {
@@ -21,7 +21,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   },
-  "updated_at": "2026-07-11T12:22:00Z"
+  "updated_at": "2026-07-11T12:23:00Z"
 }
