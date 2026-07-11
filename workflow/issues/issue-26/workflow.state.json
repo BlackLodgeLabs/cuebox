@@ -2,10 +2,10 @@
   "issue": 26,
   "branch": "cursor/issue-26-frontend-visual-polish-cdf5",
   "stage": "create-pr-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-11T07:40:39Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-11T07:40:49Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-82c96da0-87c6-4965-830e-6d7cf7bd0694",
     "create-pr": null,
     "demo": null,
     "execute": "bc-c5bbbc71-5d7e-45b0-ba2a-f3133e55b2bc",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 101,
-  "active_agent_id": null,
+  "active_agent_id": "bc-82c96da0-87c6-4965-830e-6d7cf7bd0694",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-11T07:40:39Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
