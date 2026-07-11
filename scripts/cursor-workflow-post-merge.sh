@@ -9,6 +9,8 @@ cd "$ROOT"
 
 bash "$ROOT/scripts/cursor-workflow-strip-labels-from-pr.sh" "$PR"
 
+bash "$ROOT/scripts/cursor-workflow-delete-stale-branches.sh" "$PR"
+
 REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 BODY="$(gh pr view "$PR" --repo "$REPO" --json body -q .body 2>/dev/null || echo "")"
 
