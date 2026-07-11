@@ -1,9 +1,9 @@
 {
   "issue": 26,
   "branch": "cursor/issue-26-frontend-visual-polish-cdf5",
-  "stage": "spec-in-progress",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-11T00:20:00Z",
+  "stage": "spec-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-11T00:22:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
