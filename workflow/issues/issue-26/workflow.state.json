@@ -1,9 +1,9 @@
 {
   "issue": 26,
   "branch": "cursor/issue-26-frontend-visual-polish-cdf5",
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-11T07:45:00Z",
+  "updated_at": "2026-07-11T07:47:00Z",
   "agents": {
     "babysit-pr": "bc-82c96da0-87c6-4965-830e-6d7cf7bd0694",
     "create-pr": null,
