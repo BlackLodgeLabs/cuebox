@@ -3,7 +3,7 @@
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
   "stage": "demo-ready",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-11T18:33:53Z",
+  "updated_at": "2026-07-11T18:36:21Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-b01d95f7-f960-4995-b5e5-accde372e1e8",
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-b01d95f7-f960-4995-b5e5-accde372e1e8",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-11T18:36:21Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
