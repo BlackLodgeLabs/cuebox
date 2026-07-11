@@ -1,0 +1,27 @@
+{
+  "issue": 103,
+  "branch": "cursor/issue-103-post-merge-agent-branch-cleanup-a8c0",
+  "pr": null,
+  "stage": "plan-ready",
+  "active_skill": null,
+  "active_agent_id": null,
+  "agents": {
+    "review-and-spec": null,
+    "review-and-spec-continued": null,
+    "planning": null,
+    "execute": null,
+    "demo": null,
+    "create-pr": null,
+    "babysit-pr": null
+  },
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "status_comment_id": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  },
+  "updated_at": "2026-07-11T11:25:00Z"
+}
