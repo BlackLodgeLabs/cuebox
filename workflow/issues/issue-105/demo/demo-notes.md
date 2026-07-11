@@ -1,8 +1,8 @@
 # Demo notes — issue #105
 
 - **Date:** 2026-07-11T18:40:00Z
-- **Commit:** ea6d56f (pre-demo); final SHA on push
-- **Branch:** `cursor/issue-105-pr-107-demo-agent-092a` (demo agent; base `cursor/issue-105-adopt-github-mcp-fb51`)
+- **Commit:** cb52ce1
+- **Branch:** `cursor/issue-105-adopt-github-mcp-fb51`
 - **PR:** #107
 - **Docker stack:** Not required for this workflow-only demo (demo-spec preconditions). Stack not running; no product UI scenarios.
 
