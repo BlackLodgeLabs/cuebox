@@ -1,9 +1,9 @@
 {
   "issue": 105,
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
-  "stage": "execute-in-progress",
-  "active_skill": "execute",
-  "updated_at": "2026-07-11T18:26:38Z",
+  "stage": "execute-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-11T18:28:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   }
 }
