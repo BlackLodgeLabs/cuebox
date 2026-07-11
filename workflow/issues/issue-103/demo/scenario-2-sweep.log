@@ -1,0 +1,44 @@
+# Scenario 2 — Housekeeping sweep clears historical orphans
+# Date: 2026-07-11T12:20:00Z
+# PR: #104 (OPEN — housekeeping workflow not yet on main)
+
+## Orphan count before sweep
+
+Query:
+```bash
+gh api repos/BlackLodgeLabs/cuebox/git/refs/heads/cursor --jq '[.[] | select(.ref | test("-agent-"))] | length'
+```
+
+Result: **19** (includes 18 historical orphans + 1 throwaway demo test branch)
+
+Script count (merged PRs only):
+```bash
+export GH_TOKEN=$(gh auth token)
+export GITHUB_REPOSITORY=BlackLodgeLabs/cuebox
+bash scripts/cursor-workflow-delete-stale-branches.sh --count-stale
+```
+
+Result: **18** stale agent side-branches tied to merged PRs (#82, #88, #94, #96, #97, #98, #100)
+
+## Dry-run sweep preview (pre-merge validation)
+
+```
+Sweeping stale agent side-branches for merged PRs...
+BRANCH: dry-run delete cursor/issue-79-pr-82-create-pr-agent-0105
+... (18 branches total) ...
+Summary: deleted=18 skipped-open-pr=0 not-found=0 errors=0
+```
+
+Branches confirmed still present after dry-run (count-stale still 18).
+
+## Live housekeeping sweep
+
+**Status: DEFERRED** — `cursor-workflow-housekeeping.yml` with `sweep_stale_agent_branches`
+input deploys to `main` only after PR #104 merges.
+
+**Operator follow-up after merge:**
+1. Actions → Cursor workflow housekeeping → Run workflow → `sweep_stale_agent_branches: true`
+2. Confirm orphan count drops to 0
+3. Record Action run URL here
+
+**Action run URL:** (to be filled after merge)

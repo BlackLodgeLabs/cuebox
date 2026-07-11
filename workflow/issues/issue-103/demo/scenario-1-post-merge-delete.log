@@ -1,0 +1,35 @@
+# Scenario 1 — Post-merge deletes PR-scoped side-branches
+# Date: 2026-07-11T12:20:00Z
+# Commit: (recorded at demo-notes commit)
+# PR: #104 (OPEN — not yet merged)
+
+## Branches matching cursor/issue-103-pr-104-* (before merge)
+
+```
+(none)
+```
+
+No cloud-agent side-branches were created for PR #104 during execute/planning.
+Only the PR head branch exists: cursor/issue-103-post-merge-agent-branch-cleanup-a8c0
+
+## Dry-run post-merge delete for PR #104 (pre-merge validation)
+
+```
+Deleting agent side-branches for merged PR #104...
+BRANCH: skipped-open-pr cursor/issue-103-post-merge-agent-branch-cleanup-a8c0
+Summary: deleted=0 skipped-open-pr=1 not-found=0 errors=0
+```
+
+Open-PR guard correctly protects the PR head branch while PR #104 is open.
+
+## Post-merge Action validation
+
+**Status: DEFERRED** — requires merging PR #104 to `main` so `cursor-workflow-post-merge.yml`
+runs with the new `cursor-workflow-delete-stale-branches.sh` call.
+
+**Expected after merge:**
+- Post-merge Action completes for PR #104
+- No `cursor/issue-103-pr-104-*` branches remain (none exist today)
+- Action log shows `deleted` or `not-found` for PR head if GitHub auto-delete missed it
+
+**Action run URL:** (to be filled after merge)
