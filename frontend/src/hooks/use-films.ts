@@ -108,3 +108,11 @@ export function usePendingReviewCount() {
     select: (data) => data.pagination.total,
   });
 }
+
+export function useWatchlistCount() {
+  return useQuery({
+    queryKey: ["films", "watchlist-count"],
+    queryFn: () => getFilms({ on_watchlist: true, limit: 1 }),
+    select: (data) => data.pagination.total,
+  });
+}

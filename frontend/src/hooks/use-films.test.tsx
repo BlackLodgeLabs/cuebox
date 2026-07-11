@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createQueryWrapper } from "@/test/query-wrapper";
-import { useHasWatchlist, useReviewRequired } from "@/hooks/use-films";
+import { useHasWatchlist, useReviewRequired, useWatchlistCount } from "@/hooks/use-films";
 
 const { getFilmsMock, getReviewRequiredMock } = vi.hoisted(() => ({
   getFilmsMock: vi.fn(),
@@ -45,5 +45,23 @@ describe("useReviewRequired", () => {
     });
 
     expect(getReviewRequiredMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("useWatchlistCount", () => {
+  it("returns on_watchlist total from pagination", async () => {
+    getFilmsMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 12, limit: 1, offset: 0, has_more: true },
+    });
+
+    const { Wrapper } = createQueryWrapper();
+    const { result } = renderHook(() => useWatchlistCount(), { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(result.current.data).toBe(12);
+    });
+
+    expect(getFilmsMock).toHaveBeenCalledWith({ on_watchlist: true, limit: 1 });
   });
 });
