@@ -2,26 +2,22 @@
   "issue": 105,
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
   "stage": "plan-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-11T18:25:43Z",
+  "active_skill": "execute",
+  "updated_at": "2026-07-11T18:25:47Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
-    "execute": null,
+    "execute": "bc-5f097378-8c56-48ad-b919-02a0b04f5195",
     "planning": "bc-40147a2f-16f5-454d-8a1d-40775dc1558f",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 107,
-  "active_agent_id": "bc-40147a2f-16f5-454d-8a1d-40775dc1558f",
+  "active_agent_id": "bc-5f097378-8c56-48ad-b919-02a0b04f5195",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "execute",
-    "started_at": "2026-07-11T18:25:43Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
