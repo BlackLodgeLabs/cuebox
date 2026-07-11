@@ -1,0 +1,27 @@
+{
+  "issue": 103,
+  "branch": "cursor/issue-103-post-merge-agent-branch-cleanup-a8c0",
+  "pr": 104,
+  "stage": "complete",
+  "active_skill": "babysit-pr",
+  "active_agent_id": "bc-e7d55061-0941-45b1-850b-3603ddee26a3",
+  "agents": {
+    "babysit-pr": "bc-e7d55061-0941-45b1-850b-3603ddee26a3",
+    "create-pr": "bc-1f198a0c-ee2d-42d3-a6a7-04a5bac6ebfb",
+    "demo": null,
+    "execute": "bc-5f06bf9b-465e-4a01-834f-f16d5bf890d6",
+    "planning": null,
+    "review-and-spec": null,
+    "review-and-spec-continued": null
+  },
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "status_comment_id": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 4
+  },
+  "updated_at": "2026-07-11T12:23:00Z"
+}

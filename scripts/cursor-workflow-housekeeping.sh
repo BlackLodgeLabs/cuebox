@@ -45,6 +45,11 @@ if [[ -n "$REPO" ]] && command -v gh >/dev/null 2>&1; then
           [[ -z "$num" ]] && continue
           report "Closed issue #${num} still has cursor:* label — ${title}"
         done
+
+    stale_count="$(bash "$ROOT/scripts/cursor-workflow-delete-stale-branches.sh" --count-stale 2>/dev/null || echo 0)"
+    if [[ "$stale_count" -gt 0 ]]; then
+      report "${stale_count} stale agent side-branches for merged PRs (enable sweep_stale_agent_branches)"
+    fi
   fi
 fi
 

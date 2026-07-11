@@ -175,7 +175,20 @@ Skills live in `.cursor/skills/` (committed — see `.gitignore` exceptions). Af
 
 Cross-reference in root `AGENTS.md` points agents to this workflow.
 
+## 11. Housekeeping (stale agent branches)
+
+Cloud agents push ephemeral side-branches (`cursor/issue-NNN-pr-MMM-<skill>-agent-<id>`) during handoff. These are not PR heads, so GitHub `delete_branch_on_merge` does not remove them. Post-merge automation deletes branches scoped to each merged PR; use a one-time sweep for pre-existing orphans.
+
+**Drift report:** Actions → **Cursor workflow housekeeping** → Run workflow (default inputs). The report flags stale agent side-branches when present.
+
+**One-time sweep:** Same workflow → set `sweep_stale_agent_branches: true` → Run workflow. Deletes all `cursor/issue-*-pr-*-agent-*` branches whose embedded PR is already merged. Preview with:
+
+```bash
+bash scripts/cursor-workflow-delete-stale-branches.sh --sweep-merged --dry-run
+```
+
 ---
+
 
 ## Daily usage
 

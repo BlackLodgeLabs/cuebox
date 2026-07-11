@@ -10,9 +10,14 @@ on:
         required: false
         type: boolean
         default: false
+      sweep_stale_agent_branches:
+        description: Delete agent side-branches for merged PRs (orphan cleanup)
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
@@ -37,3 +42,12 @@ jobs:
             bash scripts/cursor-workflow-strip-cursor-labels.sh "$n"
           done
           echo "Stripped cursor labels from closed issues"
+
+      - name: Sweep stale agent side-branches
+        if: inputs.sweep_stale_agent_branches == true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          bash scripts/cursor-workflow-delete-stale-branches.sh --sweep-merged
+          echo "Swept stale agent side-branches for merged PRs"

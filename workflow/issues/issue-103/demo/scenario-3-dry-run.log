@@ -1,0 +1,38 @@
+Sweeping stale agent side-branches for merged PRs...
+BRANCH: dry-run delete cursor/issue-79-pr-82-create-pr-agent-0105
+BRANCH: deleted cursor/issue-79-pr-82-create-pr-agent-0105
+BRANCH: dry-run delete cursor/issue-79-pr-82-create-pr-agent-80a2
+BRANCH: deleted cursor/issue-79-pr-82-create-pr-agent-80a2
+BRANCH: dry-run delete cursor/issue-79-pr-82-demo-agent-be5c
+BRANCH: deleted cursor/issue-79-pr-82-demo-agent-be5c
+BRANCH: dry-run delete cursor/issue-84-pr-88-babysit-pr-agent-99c2
+BRANCH: deleted cursor/issue-84-pr-88-babysit-pr-agent-99c2
+BRANCH: dry-run delete cursor/issue-84-pr-88-create-pr-agent-b65c
+BRANCH: deleted cursor/issue-84-pr-88-create-pr-agent-b65c
+BRANCH: dry-run delete cursor/issue-84-pr-88-demo-agent-0254
+BRANCH: deleted cursor/issue-84-pr-88-demo-agent-0254
+BRANCH: dry-run delete cursor/issue-84-pr-88-execute-agent-d96d
+BRANCH: deleted cursor/issue-84-pr-88-execute-agent-d96d
+BRANCH: dry-run delete cursor/issue-86-pr-96-execute-agent-d54f
+BRANCH: deleted cursor/issue-86-pr-96-execute-agent-d54f
+BRANCH: dry-run delete cursor/issue-90-pr-94-babysit-pr-agent-dd52
+BRANCH: deleted cursor/issue-90-pr-94-babysit-pr-agent-dd52
+BRANCH: dry-run delete cursor/issue-90-pr-94-create-pr-agent-d244
+BRANCH: deleted cursor/issue-90-pr-94-create-pr-agent-d244
+BRANCH: dry-run delete cursor/issue-90-pr-94-demo-agent-31f7
+BRANCH: deleted cursor/issue-90-pr-94-demo-agent-31f7
+BRANCH: dry-run delete cursor/issue-90-pr-94-plan-agent-1277
+BRANCH: deleted cursor/issue-90-pr-94-plan-agent-1277
+BRANCH: dry-run delete cursor/issue-91-pr-98-create-pr-agent-793c
+BRANCH: deleted cursor/issue-91-pr-98-create-pr-agent-793c
+BRANCH: dry-run delete cursor/issue-91-pr-98-execute-agent-a78d
+BRANCH: deleted cursor/issue-91-pr-98-execute-agent-a78d
+BRANCH: dry-run delete cursor/issue-92-pr-97-create-pr-agent-97ca
+BRANCH: deleted cursor/issue-92-pr-97-create-pr-agent-97ca
+BRANCH: dry-run delete cursor/issue-99-pr-100-create-pr-agent-a60f
+BRANCH: deleted cursor/issue-99-pr-100-create-pr-agent-a60f
+BRANCH: dry-run delete cursor/issue-99-pr-100-demo-agent-f0fc
+BRANCH: deleted cursor/issue-99-pr-100-demo-agent-f0fc
+BRANCH: dry-run delete cursor/issue-99-pr-100-plan-agent-cb3c
+BRANCH: deleted cursor/issue-99-pr-100-plan-agent-cb3c
+Summary: deleted=18 skipped-open-pr=0 not-found=0 errors=0

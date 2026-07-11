@@ -337,6 +337,7 @@ When a PR with `Closes #NNN` / `Fixes #NNN` merges to `main`, [`.github/workflow
 1. GitHub auto-closes the linked issue (from `Closes`/`Fixes` in the PR body)
 2. Strips all `cursor:*` labels from linked issues
 3. Moves `workflow/issues/issue-N/` to `issue-N/` on the [`workflow/archive`](https://github.com/BlackLodgeLabs/cuebox/tree/workflow/archive) branch
+4. Deletes `cursor/issue-*-pr-{PR}-*` agent side-branches (and the merged PR head branch when it still exists and matches `^cursor/issue-`)
 
 `PR.md` must include `Closes #NNN` (see create-pr skill). Demo image URLs should use **commit SHA** so PR embeds survive archive.
 
