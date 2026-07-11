@@ -3,7 +3,7 @@
   "branch": "cursor/issue-105-adopt-github-mcp-fb51",
   "stage": "execute-ready",
   "active_skill": "demo",
-  "updated_at": "2026-07-11T18:30:13Z",
+  "updated_at": "2026-07-11T18:30:08Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
