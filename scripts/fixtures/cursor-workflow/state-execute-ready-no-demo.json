@@ -1,0 +1,10 @@
+{
+  "issue": 110,
+  "branch": "cursor/issue-110-test",
+  "stage": "execute-ready",
+  "active_skill": null,
+  "agents": {},
+  "pr": 113,
+  "handoff_pending": null,
+  "loops": { "bugbot": 0, "ci_autofix": 0, "total_runs": 1 }
+}

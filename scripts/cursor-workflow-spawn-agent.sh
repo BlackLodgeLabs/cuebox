@@ -140,9 +140,6 @@ pat_fallback() {
     echo "${CURSOR_HANDOFF_GITHUB_TOKEN}" | gh auth login --with-token
     gh issue comment "$ISSUE" --repo "${REPO}" --body "@cursoragent ${PROMPT}"
     echo "Posted handoff comment on issue #${ISSUE} (PAT fallback)"
-    HANDOFF_PROGRESS_STAGE="$PROGRESS_STAGE" \
-    HANDOFF_ACTIVE_SKILL="$SKILL" \
-      "$WF/cursor-workflow-sync-github-status.sh" "$STATE_FILE" || true
     return 0
   fi
   echo "::warning::Set CURSOR_API_KEY or CURSOR_HANDOFF_GITHUB_TOKEN"
