@@ -32,10 +32,10 @@ Workflow-only change — no product UI. Demo validated failure-path honesty and 
 
 | # | Scenario | Result | Evidence |
 |---|----------|--------|----------|
-| 1 | Spawn terminal failure — no false progress sync | **PASS** | [scenario-1-spawn-failure.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/6caf33c/workflow/issues/issue-110/demo/scenario-1-spawn-failure.log) |
-| 2 | Pass-back PAT failure — no false progress sync | **PASS** | [scenario-2-passback-failure.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/6caf33c/workflow/issues/issue-110/demo/scenario-2-passback-failure.log) |
-| 3 | Success-path regression | **PASS** | [scenario-3-success-regression.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/6caf33c/workflow/issues/issue-110/demo/scenario-3-success-regression.log) |
-| 4 | Workflow path verification | **PASS** | [scenario-4-verify-paths.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/6caf33c/workflow/issues/issue-110/demo/scenario-4-verify-paths.log) |
+| 1 | Spawn terminal failure — no false progress sync | **PASS** | [scenario-1-spawn-failure.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/da871aa/workflow/issues/issue-110/demo/scenario-1-spawn-failure.log) |
+| 2 | Pass-back PAT failure — no false progress sync | **PASS** | [scenario-2-passback-failure.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/da871aa/workflow/issues/issue-110/demo/scenario-2-passback-failure.log) |
+| 3 | Success-path regression | **PASS** | [scenario-3-success-regression.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/da871aa/workflow/issues/issue-110/demo/scenario-3-success-regression.log) |
+| 4 | Workflow path verification | **PASS** | [scenario-4-verify-paths.log](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/da871aa/workflow/issues/issue-110/demo/scenario-4-verify-paths.log) |
 
 ## How to Test
 
@@ -74,8 +74,8 @@ Workflow-only change — no product UI. Demo validated failure-path honesty and 
 - [x] `Workflow regression: verify-workflow-paths.sh exit 0 at f0ac516` (execute)
 - [x] `test-cursor-workflow-handoff.sh exit 0 at 0175c7e` (demo)
 - [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 0175c7e` (demo)
-- [x] `test-cursor-workflow-handoff.sh exit 0 at 6caf33c` (babysit)
-- [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 6caf33c` (babysit)
+- [x] `test-cursor-workflow-handoff.sh exit 0 at da871aa` (babysit)
+- [x] `Workflow regression: verify-workflow-paths.sh exit 0 at da871aa` (babysit)
 
 ## Checklist
 
