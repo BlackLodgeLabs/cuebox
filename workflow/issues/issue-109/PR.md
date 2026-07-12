@@ -101,11 +101,14 @@ Key gate assertions from scenario 3:
 - [x] `test-cursor-workflow-handoff.sh exit 0 at 319078e` (demo)
 - [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 319078e` (demo)
 - [x] `.github/workflows/cursor-workflow-handoff.yml` — 0 lines diff vs `main` (demo)
+- [x] `test-cursor-workflow-handoff.sh exit 0 at 27a20c2` (babysit)
+- [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 27a20c2` (babysit)
+- [x] CI handoff workflow success; api-ci/frontend-ci skipped (workflow-only paths)
 
 ## Checklist
 
-- [ ] Code follows project conventions
-- [ ] Tests pass locally
-- [ ] Documentation updated where applicable
-- [ ] No secrets or credentials committed
-- [ ] Handoff YAML spawn logic unchanged
+- [x] Code follows project conventions
+- [x] Tests pass locally
+- [x] Documentation updated where applicable
+- [x] No secrets or credentials committed
+- [x] Handoff YAML spawn logic unchanged

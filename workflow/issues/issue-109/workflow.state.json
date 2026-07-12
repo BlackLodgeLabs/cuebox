@@ -1,9 +1,9 @@
 {
   "issue": 109,
   "branch": "cursor/issue-109-harden-execute-demo-handoff",
-  "stage": "babysit-in-progress",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-12T08:45:00Z",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-12T08:48:30Z",
   "agents": {
     "babysit-pr": "bc-d0d95f0a-c28b-4c14-a9a3-d230bef29afc",
     "create-pr": "bc-9a338443-e52d-41ea-a203-a604fa2410ba",
@@ -12,7 +12,7 @@
     "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8"
   },
   "pr": 112,
-  "active_agent_id": "bc-d0d95f0a-c28b-4c14-a9a3-d230bef29afc",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
