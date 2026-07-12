@@ -1,19 +1,15 @@
 {
   "issue": 110,
   "branch": "cursor/issue-110-honest-github-status-failed-spawn",
-  "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-12T21:57:49Z",
+  "stage": "plan-in-progress",
+  "active_skill": "planning",
+  "updated_at": "2026-07-12T22:00:00Z",
   "agents": {},
   "pr": 113,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-12T21:57:49Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
