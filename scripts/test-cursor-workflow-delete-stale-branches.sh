@@ -163,6 +163,19 @@ test_count_stale() {
   cleanup
 }
 
+# Branch names with slashes must be percent-encoded for GitHub git ref API paths.
+test_branch_ref_encoding() {
+  eval "$(sed -n '/^_encode_branch_ref() {/,/^}/p' "$SCRIPT")"
+
+  local encoded
+  encoded="$(_encode_branch_ref "cursor/issue-84-pr-88-execute-agent-d96d")"
+  if [[ "$encoded" == "cursor%2Fissue-84-pr-88-execute-agent-d96d" ]]; then
+    pass "branch ref encoding percent-encodes slashes"
+  else
+    fail_test "branch ref encoding expected cursor%2F..., got ${encoded}"
+  fi
+}
+
 test_post_merge_pr_scope
 test_open_pr_guard
 test_dry_run
@@ -170,6 +183,7 @@ test_sweep_merged
 test_malformed_names
 test_idempotent
 test_count_stale
+test_branch_ref_encoding
 
 if [[ "$fail" -ne 0 ]]; then
   echo "test-cursor-workflow-delete-stale-branches.sh: FAILED" >&2

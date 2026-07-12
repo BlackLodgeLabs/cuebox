@@ -62,6 +62,23 @@ log_action() {
   echo "BRANCH: $*"
 }
 
+# GitHub git ref API paths require slashes in branch names to be percent-encoded.
+_encode_branch_ref() {
+  local branch="$1"
+  printf '%s' "$branch" | sed 's|/|%2F|g'
+}
+
+_gh_api_http_code() {
+  local output code
+  output="$(gh api "$@" --silent -i 2>&1 || true)"
+  code="$(printf '%s\n' "$output" | head -n 1 | awk '{print $2}')"
+  if [[ "$code" =~ ^[0-9]{3}$ ]]; then
+    echo "$code"
+  else
+    echo "000"
+  fi
+}
+
 # --- Test-mode mocks (CURSOR_WORKFLOW_TEST_MODE=1) ---
 # MOCK_REMOTE_BRANCHES: newline-separated branch names
 # MOCK_OPEN_PR_HEADS: newline-separated branches with open PRs
@@ -95,7 +112,9 @@ _branch_exists() {
   if [[ -z "$REPO" || -z "${GH_TOKEN:-}" ]]; then
     return 1
   fi
-  gh api "repos/${REPO}/git/ref/heads/${branch}" >/dev/null 2>&1
+  local encoded
+  encoded="$(_encode_branch_ref "$branch")"
+  gh api "repos/${REPO}/git/ref/heads/${encoded}" >/dev/null 2>&1
 }
 
 _is_open_pr_head() {
@@ -164,8 +183,9 @@ _delete_branch() {
     ERRORS=$((ERRORS + 1))
     return 1
   fi
-  local http_code
-  http_code="$(gh api -X DELETE "repos/${REPO}/git/refs/heads/${branch}" -o /dev/null -w "%{http_code}" 2>/dev/null || echo 000)"
+  local encoded http_code
+  encoded="$(_encode_branch_ref "$branch")"
+  http_code="$(_gh_api_http_code -X DELETE "repos/${REPO}/git/refs/heads/${encoded}")"
   case "$http_code" in
     204|200)
       return 0

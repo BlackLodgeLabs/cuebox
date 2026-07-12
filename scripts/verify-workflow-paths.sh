@@ -303,6 +303,13 @@ if [ ! -x "scripts/test-cursor-workflow-mcp-github.sh" ]; then
   fail=1
 fi
 
+while IFS= read -r -d '' script; do
+  if grep -E 'gh api.*-o /dev/null -w' "$script" >/dev/null 2>&1; then
+    echo "FAIL: ${script} uses curl-style -o/-w flags with gh api" >&2
+    fail=1
+  fi
+done < <(git ls-files -z 'scripts/cursor-workflow-*.sh')
+
 if [[ "$fail" -ne 0 ]]; then
   exit 1
 fi

@@ -7,6 +7,17 @@ set -euo pipefail
 
 MARKER="<!-- cursor-workflow-status:v1 -->"
 
+_gh_api_http_code() {
+  local output code
+  output="$(gh api "$@" --silent -i 2>&1 || true)"
+  code="$(printf '%s\n' "$output" | head -n 1 | awk '{print $2}')"
+  if [[ "$code" =~ ^[0-9]{3}$ ]]; then
+    echo "$code"
+  else
+    echo "000"
+  fi
+}
+
 STATE_FILE="${1:?usage: cursor-workflow-sync-github-status.sh <path-to-workflow.state.json>}"
 
 if [ ! -f "$STATE_FILE" ]; then
@@ -254,7 +265,10 @@ if [ -n "$CACHED_COMMENT_ID" ] && [ "$CACHED_COMMENT_ID" != "null" ]; then
       echo "MOCK PATCH comment ${COMMENT_ID}" >&2
     fi
   else
-    http_code=$(gh api -X PATCH "repos/${REPO}/issues/comments/${CACHED_COMMENT_ID}" -f body="$BODY" -o /dev/null -w "%{http_code}" 2>/dev/null || echo 404)
+    http_code="$(_gh_api_http_code -X PATCH "repos/${REPO}/issues/comments/${CACHED_COMMENT_ID}" -f body="$BODY")"
+    if [ "$http_code" = "000" ]; then
+      http_code=404
+    fi
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
       COMMENT_ID="$CACHED_COMMENT_ID"
       PATCH_USED=true
