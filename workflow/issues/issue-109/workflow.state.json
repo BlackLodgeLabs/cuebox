@@ -5,8 +5,8 @@
   "active_skill": "execute",
   "updated_at": "2026-07-12T08:33:52Z",
   "agents": {
-    "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8",
-    "execute": "bc-c95582e8-c142-49c8-871b-f9bdf91326cd"
+    "execute": "bc-c95582e8-c142-49c8-871b-f9bdf91326cd",
+    "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8"
   },
   "pr": 112,
   "active_agent_id": "bc-c95582e8-c142-49c8-871b-f9bdf91326cd",
