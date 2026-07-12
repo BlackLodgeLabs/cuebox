@@ -1,0 +1,18 @@
+{
+  "issue": 109,
+  "branch": "cursor/issue-109-harden-execute-demo-handoff",
+  "stage": "spec-in-progress",
+  "active_skill": "review-and-spec",
+  "updated_at": "2026-07-12T08:30:00Z",
+  "agents": {},
+  "pr": null,
+  "active_agent_id": null,
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}
