@@ -109,7 +109,7 @@ When any handoff `stage` (`spec-ready` through `create-pr-ready`) has no recorde
 |-------|-----------------|-------|
 | `spec-ready` | Spawn planning; **ensure draft PR** | |
 | `plan-ready` | Spawn execute; **ensure draft PR if null** | |
-| `execute-ready` | Spawn demo **or** execute (`--reopen`) | Re-open inferred via `cursor-workflow-infer-reopen.sh`; demo deferred when `active_skill=execute` (issue #91) |
+| `execute-ready` | Spawn demo **or** execute (`--reopen`) | Re-open inferred via `cursor-workflow-infer-reopen.sh`; execute agent must clear `active_skill` on finalize (issue #109); defense-in-depth allows demo at `execute-ready` even with stale `active_skill=execute` |
 | `demo-ready` | Spawn create-pr | |
 | `create-pr-ready` | Spawn babysit-pr (draft PR check) | |
 | `execute-passback` | **`POST /v1/agents/{id}/runs`** | No new agent; uses `cursor-workflow-passback-run.sh` |
@@ -155,7 +155,7 @@ In-job pending lock: `CURSOR_WORKFLOW_PENDING_SKILL` env (not a branch push) blo
 Before `POST /v1/agents`, `cursor-workflow-spawn-agent.sh` orchestrates:
 
 1. **Re-fetch** remote `workflow.state.json` from `origin/<branch>` via `cursor-workflow-refetch-state.sh` (overlays `agents`, `handoff_pending`, `stage`, `pr`, `loops`).
-2. **Admission gate** — skip if peer recorded `agents.<skill>`; defer on fresh peer `handoff_pending`; for **demo** target, skip when `stage=execute-in-progress` or stage rank &lt; `execute-ready`, defer when `active_skill=execute` (issue #91, closes [#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) premature demo spawn).
+2. **Admission gate** — skip if peer recorded `agents.<skill>`; defer on fresh peer `handoff_pending`; for **demo** target, skip when `stage=execute-in-progress` or stage rank &lt; `execute-ready`, defer when `active_skill=execute` **and** stage rank &lt; `execute-ready` (issue #91 / #109 — at `execute-ready`, stage rank wins over stale skill lock).
 3. **Branch pending lock** — `cursor-workflow-record-handoff-pending.sh set` pushes `handoff_pending` to the branch (production) or local state (mock/dry-run) **before** the API call.
 4. **Re-fetch + second gate** — peer wins (`skip:agent-already-recorded`) or holds lock (`defer:pending-lock`); holder proceeds with `CURSOR_WORKFLOW_WE_HOLD_LOCK=1`.
 5. **POST** once, then `record-spawn-on-branch.sh` clears pending and records `agents.<skill>` (first-wins if peer already recorded a different id).
@@ -172,9 +172,13 @@ If `record-spawn-on-branch.sh` fails after a successful POST, branch `handoff_pe
 |--------|---------|
 | `skip:execute-in-progress` | Demo blocked — execute stage in progress |
 | `skip:stage-not-ready` | Demo blocked — stage rank below `execute-ready` |
-| `defer:execute-active` | Demo deferred — execute agent still owns branch (`active_skill=execute`) |
+| `defer:execute-active` | Demo deferred — `active_skill=execute` while stage rank &lt; `execute-ready` (not at terminal execute stage; issue #109) |
 
 `spawn-agent.sh` handles `defer:*` with backoff retry within the job; `skip:*` exits without POST.
+
+### Execute finalize (`active_skill` clearing, issue #109)
+
+On successful execute completion (including pass-back resume), the execute agent must set `stage: execute-ready` with `active_skill: null` (and optionally `active_agent_id: null`) in `workflow.state.json` before push — mirroring planning's `plan-ready` finalize. If the agent forgets, defense-in-depth admission still allows demo spawn at `execute-ready` (stage rank ≥ `execute-ready` wins over stale `active_skill=execute`). During active execute (`execute-in-progress`), demo remains blocked.
 
 ### Status comment ID (`status_comment_id`)
 

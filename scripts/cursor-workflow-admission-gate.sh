@@ -90,7 +90,7 @@ if [ "$TARGET_SKILL" = "demo" ]; then
     exit 0
   fi
 
-  if [ "$active_skill" = "execute" ]; then
+  if [ "$active_skill" = "execute" ] && [ "$stage_rank" -lt "$execute_ready_rank" ]; then
     echo "defer:execute-active"
     exit 0
   fi
