@@ -2,18 +2,16 @@
   "issue": 110,
   "branch": "cursor/issue-110-honest-github-status-failed-spawn",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-12T21:57:49Z",
-  "agents": {},
+  "active_skill": "planning",
+  "updated_at": "2026-07-12T21:57:53Z",
+  "agents": {
+    "planning": "bc-ec89cbde-facb-4bd3-a682-b15950fa2f29"
+  },
   "pr": 113,
-  "active_agent_id": null,
+  "active_agent_id": "bc-ec89cbde-facb-4bd3-a682-b15950fa2f29",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-12T21:57:49Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
