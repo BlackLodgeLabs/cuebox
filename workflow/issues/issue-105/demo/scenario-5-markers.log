@@ -1,0 +1,20 @@
+# Scenario 5: Idempotency marker table
+# Date: 2026-07-11T18:31:57Z
+
+  cursor-mcp-spec-questions:v1: FOUND
+  cursor-mcp-plan-questions:v1: FOUND
+  cursor-mcp-spec-ready:v1: FOUND
+  cursor-mcp-demo-summary:v1: FOUND
+  cursor-mcp-blocked:v1: FOUND
+  cursor-mcp-execute-no-pr:v1: FOUND
+
+## test script markers:
+  'cursor-mcp-spec-questions:v1'
+  'cursor-mcp-plan-questions:v1'
+  'cursor-mcp-spec-ready:v1'
+  'cursor-mcp-demo-summary:v1'
+  'cursor-mcp-blocked:v1'
+  'cursor-mcp-execute-no-pr:v1'
+  'cursor-mcp-test:v1'
+
+RESULT: PASS

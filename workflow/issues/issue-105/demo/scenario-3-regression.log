@@ -1,0 +1,17 @@
+# Scenario 3: Regression scripts
+# Date: 2026-07-11T18:31:57Z
+# Commit: ea6d56f
+
+## test-cursor-workflow-mcp-github.sh
+PASS: MCP-GITHUB.md, markers, skills, and doc links verified
+EXIT: 0
+
+## verify-workflow-paths.sh (tail)
+test-cursor-workflow-delete-stale-branches.sh: all cases passed
+PASS: MCP-GITHUB.md, markers, skills, and doc links verified
+PASS: no legacy workflow paths found
+EXIT: 0
+
+## handoff YAML diff vs main: 0 lines
+
+RESULT: PASS

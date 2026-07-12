@@ -31,9 +31,18 @@ Before writing the spec, the issue must clearly cover:
 
 If any item is missing or ambiguous, **do not** write the spec document yet.
 
+## GitHub MCP
+
+See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/MCP-GITHUB.md).
+
+1. `GetMcpTools` → `github` with `serverStatus: ready`?
+2. If yes: use MCP for mapped operations (check idempotency markers first)
+3. Always: merge-state + push `workflow.state.json`
+4. If MCP fails: log in commit message; rely on Actions sync on push
+
 ## If detail is insufficient
 
-1. Post a numbered comment on the issue with specific questions (one topic per number).
+1. **MCP (preferred):** `issue_read` method `get_comments` — skip if `<!-- cursor-mcp-spec-questions:v1 -->` present. Else `add_issue_comment` with numbered questions (one topic per number) + marker as last line. `issue_write` method `update` with `labels: ["cursor:spec-needs-info"]`.
 2. Create branch `cursor/issue-{NNN}-{slug}` from `main` (same slug rules as below).
 3. Run merge helper, then update or create `workflow/issues/issue-{NNN}/workflow.state.json`:
    - `stage`: `spec-needs-info`
@@ -41,7 +50,7 @@ If any item is missing or ambiguous, **do not** write the spec document yet.
    - `branch`: `cursor/issue-{NNN}-{slug}`
    - increment `loops.total_runs`
 4. Commit and push **only** `workflow/issues/issue-{NNN}/workflow.state.json` on that branch (no spec file yet).
-5. Add label `cursor:spec-needs-info`; remove `cursor:spec-ready` if present.
+5. **MCP (preferred):** ensure `cursor:spec-needs-info` label via `issue_write`; remove `cursor:spec-ready` if present. Actions reconcile labels on push if MCP unavailable.
 6. **Stop.** Do not hand off to planning. User will reply and comment `@cursoragent continue spec`.
 
 ## If detail is sufficient
@@ -117,17 +126,16 @@ Preserve existing `loops` when resuming from `spec-needs-info` (do not reset `to
 
 ### Git and GitHub visibility
 
-Cloud agents often **cannot** post issue comments or set labels (integration token limits). **Do not fail the task** for that — commit and push are what matter.
-
 1. Commit spec + `workflow/issues/issue-{NNN}/workflow.state.json` on the feature branch; push.
-2. **Labels and a status comment** are applied by `.github/workflows/cursor-workflow-handoff.yml` using `GITHUB_TOKEN` (not your job).
-3. Optionally try labels/comments via `gh`; if permission denied, note in commit message only.
+2. **MCP (preferred):** After push, optional `add_issue_comment` with spec summary + `<!-- cursor-mcp-spec-ready:v1 -->` (check marker first via `issue_read` method `get_comments`). Dogfood criterion for workflow issues.
+3. **Labels and pinned status comment** are also applied by `.github/workflows/cursor-workflow-handoff.yml` on push (belt-and-suspenders).
+4. If MCP unavailable, push alone is sufficient — Actions sync labels and status comment.
 
-**Do not** ask the human to add labels manually unless the GitHub Action also failed.
+**Do not** ask the human to add labels manually unless both MCP and the GitHub Action failed.
 
 ## Resume (`continue spec`)
 
-1. Re-read issue comments for answers to your numbered questions.
+1. **MCP (preferred):** `issue_read` method `get_comments` for answers to your numbered questions.
 2. If still ambiguous → ask follow-ups and stay on `spec-needs-info`.
 3. If clear → update spec, set `stage` to `spec-ready`, preserve `loops` from existing `workflow.state.json`, push, update labels.
 

@@ -133,6 +133,7 @@ HANDOFF_SCRIPTS=(
   test-cursor-workflow-record-agent.sh
   test-cursor-workflow-strip-cursor-labels.sh
   test-cursor-workflow-delete-stale-branches.sh
+  test-cursor-workflow-mcp-github.sh
 )
 for script in "${HANDOFF_SCRIPTS[@]}"; do
   if [ ! -x "scripts/${script}" ]; then
@@ -271,6 +272,37 @@ if ! grep -qF "handoff_pending" AGENTS.md; then
   fail=1
 fi
 
+# --- GitHub MCP adoption (issue #105) ---
+MCP_GITHUB_MD="workflow/cursor-workflow/MCP-GITHUB.md"
+if [ ! -f "$MCP_GITHUB_MD" ]; then
+  echo "FAIL: missing ${MCP_GITHUB_MD}" >&2
+  fail=1
+else
+  for keyword in 'Idempotency markers' GetMcpTools 'cursor-mcp-spec-questions:v1'; do
+    if ! grep -qF "$keyword" "$MCP_GITHUB_MD"; then
+      echo "FAIL: ${MCP_GITHUB_MD} must mention ${keyword}" >&2
+      fail=1
+    fi
+  done
+fi
+
+if ! grep -qF 'MCP-GITHUB.md' "$WORKFLOW_MD"; then
+  echo "FAIL: ${WORKFLOW_MD} must link MCP-GITHUB.md" >&2
+  fail=1
+fi
+if ! grep -qF 'GitHub MCP adoption' "$WORKFLOW_MD"; then
+  echo "FAIL: ${WORKFLOW_MD} must include GitHub MCP adoption map" >&2
+  fail=1
+fi
+if ! grep -qF 'GitHub MCP' "$SETUP_MD"; then
+  echo "FAIL: ${SETUP_MD} must mention GitHub MCP" >&2
+  fail=1
+fi
+if [ ! -x "scripts/test-cursor-workflow-mcp-github.sh" ]; then
+  echo "FAIL: missing or non-executable scripts/test-cursor-workflow-mcp-github.sh" >&2
+  fail=1
+fi
+
 if [[ "$fail" -ne 0 ]]; then
   exit 1
 fi
@@ -281,6 +313,7 @@ bash scripts/test-cursor-workflow-record-agent.sh
 bash scripts/test-cursor-workflow-linked-issues.sh
 bash scripts/test-cursor-workflow-strip-cursor-labels.sh
 bash scripts/test-cursor-workflow-delete-stale-branches.sh
+bash scripts/test-cursor-workflow-mcp-github.sh
 
 if [[ "$fail" -ne 0 ]]; then
   exit 1

@@ -26,6 +26,15 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 
 Push before running scenarios.
 
+## GitHub MCP
+
+See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/MCP-GITHUB.md).
+
+1. `GetMcpTools` → `github` with `serverStatus: ready`?
+2. If yes: use MCP for mapped operations (check idempotency markers first)
+3. Always: merge-state + push `workflow.state.json`
+4. If MCP fails: log in `demo-notes.md`; rely on Actions sync on push
+
 ## Read first
 
 1. `workflow/issues/issue-{NNN}/demo/demo-spec.md`
@@ -66,7 +75,7 @@ Follow **every** scenario in `demo-spec.md`:
 1. Commit artifacts + `demo-notes.md` + updated state
 2. Set `stage: demo-ready`; increment `loops.total_runs`
 3. Push to issue branch
-4. PR comment: summary + thumbnail/list of artifacts (paths in repo)
+4. **MCP (preferred):** `pull_request_read` method `get_comments` on PR — skip if `<!-- cursor-mcp-demo-summary:v1 -->` present. Else `add_issue_comment` (PR number as `issue_number`) with scenario pass/fail table, artifact paths, marker as last line.
 5. Issue labels synced by GitHub Actions on push.
 
 Handoff Action triggers create-pr. No bot `@cursoragent` comment.
@@ -76,8 +85,8 @@ Handoff Action triggers create-pr. No bot `@cursoragent` comment.
 1. Commit artifacts + `demo-notes.md` + updated state (document failures in notes)
 2. Set `stage: blocked`; increment `loops.total_runs`
 3. Push to issue branch
-4. Post summary on issue and PR explaining the failure
-5. Issue labels: `cursor:blocked`; remove `cursor:execute-ready`
+4. **MCP (preferred):** `add_issue_comment` on PR with scenario summary + `<!-- cursor-mcp-demo-summary:v1 -->`; `add_issue_comment` on issue with failure summary + `<!-- cursor-mcp-blocked:v1 -->` (check markers first)
+5. Issue labels: `cursor:blocked`; remove `cursor:execute-ready` (MCP `issue_write` or Actions sync)
 
 Do **not** set `demo-ready` or hand off to create-pr when scenarios fail.
 

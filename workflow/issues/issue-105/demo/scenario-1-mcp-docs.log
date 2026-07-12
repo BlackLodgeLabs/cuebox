@@ -1,0 +1,47 @@
+# Scenario 1: MCP availability and documentation
+# Date: 2026-07-11T18:31:57Z
+# Commit: ea6d56f
+
+## GetMcpTools server: github
+serverStatus: ready
+Required tools present: add_issue_comment, issue_write, pull_request_read
+
+## MCP-GITHUB.md sections
+7:## Availability check
+17:## Repo context
+27:## Tool mapping
+45:### Mark PR ready for review
+49:## Idempotency markers
+67:### Idempotency procedure
+76:## @mention rules
+87:## Fallback policy
+98:## Per-skill MCP operations
+102:### Pattern (all skills)
+111:## Phase 2 (optional)
+122:## Verification
+124:### Offline (CI / gate scripts)
+131:### Live smoke (cloud VM, manual)
+139:## Explicitly Actions-only (do not replace with MCP)
+
+## Tool mapping table: PRESENT
+## Idempotency markers section: PRESENT
+<!-- cursor-mcp-{purpose}:v1 -->
+| Spec questions | `<!-- cursor-mcp-spec-questions:v1 -->` | review-and-spec |
+| Plan questions | `<!-- cursor-mcp-plan-questions:v1 -->` | planning |
+| Spec complete | `<!-- cursor-mcp-spec-ready:v1 -->` | review-and-spec |
+| Demo summary | `<!-- cursor-mcp-demo-summary:v1 -->` | demo |
+| Blocked notice | `<!-- cursor-mcp-blocked:v1 -->` | demo, babysit-pr |
+| Execute no-PR recovery | `<!-- cursor-mcp-execute-no-pr:v1 -->` | execute |
+| MCP smoke test | `<!-- cursor-mcp-test:v1 -->` | SETUP verification |
+2. `add_issue_comment` on a workflow issue with `<!-- cursor-mcp-test:v1 -->` (check marker first)
+
+## WORKFLOW.md MCP adoption map
+264:When GitHub MCP is configured (see [MCP-GITHUB.md](MCP-GITHUB.md)), agents **can** post human-visible comments and set labels immediately. Push `workflow.state.json` is still required for stage transitions — Actions remain authoritative for the pinned status comment and handoff spawns.
+266:## GitHub MCP adoption
+268:Canonical guide: [MCP-GITHUB.md](MCP-GITHUB.md) — tool mapping, idempotency markers, @mentions, availability check, fallback policy.
+
+## SETUP.md GitHub MCP requirement
+97:**GitHub MCP (preferred):** Workflow Cloud Agents should have **GitHub MCP** enabled in the Cursor dashboard (HTTP MCP → `https://api.githubcopilot.com/mcp/`). Agents post human-visible comments and set labels immediately via MCP; see [MCP-GITHUB.md](MCP-GITHUB.md). When MCP is unavailable, labels and the **status comment** are still synced by GitHub Actions on **every push** to `cursor/issue-*` branches. Create all labels in the table in [WORKFLOW.md](WORKFLOW.md) (including `cursor:*-in-progress`).
+115:- [ ] **GitHub MCP** enabled (dashboard HTTP MCP → `https://api.githubcopilot.com/mcp/`) — required for workflow agents to post comments and labels immediately
+
+RESULT: PASS

@@ -44,6 +44,15 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 
 Push (triggers status sync on the issue).
 
+## GitHub MCP
+
+See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/MCP-GITHUB.md).
+
+1. `GetMcpTools` → `github` with `serverStatus: ready`?
+2. If yes: use MCP for mapped operations (check idempotency markers first)
+3. Always: merge-state + push `workflow.state.json`
+4. If MCP fails: log in commit message; rely on Actions sync on push
+
 ## Classify the issue
 
 After reading `SPEC.md`, decide whether this is a **bug in the existing application**:
@@ -102,7 +111,7 @@ Ground `PLAN.md` in what you observed — not only static code reading:
 
 When steps are missing, contradictory, or you cannot reach the reported state:
 
-1. Post a **numbered** comment on the issue with specific questions (one topic per number).
+1. **MCP (preferred):** `issue_read` method `get_comments` — skip if `<!-- cursor-mcp-plan-questions:v1 -->` present. Else `add_issue_comment` with numbered questions + marker. `issue_write` method `update` with `labels: ["cursor:plan-needs-info"]`.
 2. Run merge helper, then set:
    - `stage`: `plan-needs-info`
    - `active_skill`: `planning`
@@ -118,7 +127,7 @@ Document in `bug-repro-notes.md` (steps taken, what you saw instead). Then eithe
 
 ## Resume (`continue plan`)
 
-1. Re-read issue comments for answers to your numbered questions.
+1. **MCP (preferred):** `issue_read` method `get_comments` for answers to your numbered questions.
 2. If still ambiguous → ask follow-ups and stay on `plan-needs-info`.
 3. If clear → complete bug reproduction (if applicable), then write `PLAN.md` and `demo-spec.md`.
 
