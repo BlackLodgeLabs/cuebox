@@ -94,6 +94,8 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
 ```json
 {
   "stage": "execute-ready",
+  "active_skill": null,
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "pr": <number from workflow.state.json — preserve>,
@@ -101,6 +103,8 @@ bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-{NNN}/workflow
   "updated_at": "<ISO8601>"
 }
 ```
+
+Set `active_skill: null` (and optionally `active_agent_id: null`) on `execute-ready`, mirroring the planning skill's `plan-ready` finalize — clears the skill lock so demo admission proceeds. Defense-in-depth: the admission gate also allows demo at `execute-ready` even if `active_skill` is stale (issue #109).
 
 Preserve `pr` from workflow.state.json (set by GitHub Actions). Do not reset `loops.bugbot` / `loops.ci_autofix`.
 

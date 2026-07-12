@@ -1057,13 +1057,13 @@ test_demo_skip_execute_in_progress() {
   rm -f "$state" "$post_count"
 }
 
-# --- Demo defer when active_skill=execute at execute-ready (issue #91) ---
-test_demo_defer_execute_active() {
+# --- Demo proceed at execute-ready with stale active_skill=execute (issue #109) ---
+test_demo_proceed_execute_ready_stale_lock() {
   cleanup_workflow_cache
   local state post_count
   state=$(mktemp)
   post_count=$(mktemp)
-  echo '{"issue":91,"branch":"cursor/issue-91-test","stage":"execute-ready","active_skill":"execute","agents":{"demo":null,"execute":"bc-exec"},"pr":98,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' > "$state"
+  echo '{"issue":109,"branch":"cursor/issue-109-test","stage":"execute-ready","active_skill":"execute","agents":{"demo":null,"execute":"bc-exec"},"pr":112,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":2}}' > "$state"
   echo 0 > "$post_count"
   export MOCK_CURSOR_API=1
   export MOCK_ACTIVE_AGENT_COUNT=0
@@ -1073,35 +1073,24 @@ test_demo_defer_execute_active() {
   unset CURSOR_API_KEY
 
   decision=$("$SCRIPT_DIR/cursor-workflow-admission-gate.sh" "$state" "demo")
-  if [ "$decision" = "defer:execute-active" ]; then
-    pass "demo defer execute-active gate"
+  if [ "$decision" = "proceed" ]; then
+    pass "demo proceed execute-ready stale lock gate"
   else
-    fail_test "demo defer execute-active expected defer:execute-active got $decision"
-  fi
-
-  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
-    91 "cursor/issue-91-test" "$state" "demo" "test prompt" "demo-in-progress" \
-    >/tmp/demo-defer-exec.log 2>&1 || true
-
-  if grep -q "defer:execute-active\|Spawn deferred" /tmp/demo-defer-exec.log; then
-    pass "demo defer execute-active spawn deferred"
-  else
-    fail_test "demo defer execute-active did not log defer"
-  fi
-  if [ "$(cat "$post_count")" = "0" ]; then
-    pass "demo defer execute-active 0 POST"
-  else
-    fail_test "demo defer execute-active expected 0 POST got $(cat "$post_count")"
+    fail_test "demo proceed execute-ready stale lock expected proceed got $decision"
   fi
 
   WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
-    91 "cursor/issue-91-test" "$state" "" >/tmp/demo-defer-recovery.log 2>&1 || true
+    109 "cursor/issue-109-test" "$state" "" >/tmp/demo-proceed-stale-recovery.log 2>&1 || true
 
-  if grep -q "Handoff recovery deferred.*defer:execute-active" /tmp/demo-defer-recovery.log \
-    && ! grep -q "Handoff recovery: spawning demo" /tmp/demo-defer-recovery.log; then
-    pass "demo defer execute-active recovery deferred"
+  if grep -q "Handoff recovery: spawning demo" /tmp/demo-proceed-stale-recovery.log; then
+    pass "demo proceed execute-ready stale lock recovery spawned demo"
   else
-    fail_test "demo defer execute-active recovery should defer without spawn"
+    fail_test "demo proceed execute-ready stale lock recovery did not spawn demo"
+  fi
+  if [ "$(cat "$post_count")" = "1" ]; then
+    pass "demo proceed execute-ready stale lock 1 POST"
+  else
+    fail_test "demo proceed execute-ready stale lock expected 1 POST got $(cat "$post_count")"
   fi
   rm -f "$state" "$post_count"
 }
@@ -1241,7 +1230,7 @@ test_reopen_inference_agents_demo
 test_reopen_inference_prev_stage
 test_execute_ready_forward
 test_demo_skip_execute_in_progress
-test_demo_defer_execute_active
+test_demo_proceed_execute_ready_stale_lock
 test_demo_proceed_execute_ready
 test_spec_ready_ensure_pr
 test_plan_ready_ensure_pr
