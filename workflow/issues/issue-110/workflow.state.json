@@ -1,9 +1,9 @@
 {
   "issue": 110,
   "branch": "cursor/issue-110-honest-github-status-failed-spawn",
-  "stage": "plan-ready",
+  "stage": "execute-in-progress",
   "active_skill": "execute",
-  "updated_at": "2026-07-12T22:01:22Z",
+  "updated_at": "2026-07-12T22:05:00Z",
   "agents": {
     "planning": "bc-ec89cbde-facb-4bd3-a682-b15950fa2f29",
     "execute": "bc-4f7542ee-6502-477c-97e4-6bbc4ab1d386"
