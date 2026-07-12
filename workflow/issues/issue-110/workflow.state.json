@@ -1,9 +1,9 @@
 {
   "issue": 110,
   "branch": "cursor/issue-110-honest-github-status-failed-spawn",
-  "stage": "babysit-in-progress",
+  "stage": "complete",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-12T22:15:00Z",
+  "updated_at": "2026-07-12T22:19:00Z",
   "agents": {
     "execute": "bc-4f7542ee-6502-477c-97e4-6bbc4ab1d386",
     "planning": "bc-ec89cbde-facb-4bd3-a682-b15950fa2f29",

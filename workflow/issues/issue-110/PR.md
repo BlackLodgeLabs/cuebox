@@ -76,11 +76,12 @@ Workflow-only change — no product UI. Demo validated failure-path honesty and 
 - [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 0175c7e` (demo)
 - [x] `test-cursor-workflow-handoff.sh exit 0 at da871aa` (babysit)
 - [x] `Workflow regression: verify-workflow-paths.sh exit 0 at da871aa` (babysit)
+- [x] CI handoff workflow success; api-ci/frontend-ci skipped (workflow-only paths)
 
 ## Checklist
 
-- [ ] Code follows project conventions
-- [ ] Tests pass locally
-- [ ] Documentation updated where applicable
-- [ ] No secrets or credentials committed
-- [ ] Success-path progress sync preserved (`test_batched_spawn_writes`, `test_passback_recovery`)
+- [x] Code follows project conventions
+- [x] Tests pass locally
+- [x] Documentation updated where applicable
+- [x] No secrets or credentials committed
+- [x] Success-path progress sync preserved (`test_batched_spawn_writes`, `test_passback_recovery`)
