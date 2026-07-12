@@ -165,7 +165,10 @@ test_count_stale() {
 
 # Branch names with slashes must be percent-encoded for GitHub git ref API paths.
 test_branch_ref_encoding() {
-  encoded="$(printf '%s' "cursor/issue-84-pr-88-execute-agent-d96d" | sed 's|/|%2F|g')"
+  eval "$(sed -n '/^_encode_branch_ref() {/,/^}/p' "$SCRIPT")"
+
+  local encoded
+  encoded="$(_encode_branch_ref "cursor/issue-84-pr-88-execute-agent-d96d")"
   if [[ "$encoded" == "cursor%2Fissue-84-pr-88-execute-agent-d96d" ]]; then
     pass "branch ref encoding percent-encodes slashes"
   else

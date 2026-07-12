@@ -71,11 +71,11 @@ _encode_branch_ref() {
 _gh_api_http_code() {
   local output code
   output="$(gh api "$@" --silent -i 2>&1 || true)"
-  code="$(printf '%s\n' "$output" | head -1 | awk '{print $2}')"
-  if [[ -z "$code" ]]; then
-    echo "000"
-  else
+  code="$(printf '%s\n' "$output" | head -n 1 | awk '{print $2}')"
+  if [[ "$code" =~ ^[0-9]{3}$ ]]; then
     echo "$code"
+  else
+    echo "000"
   fi
 }
 
