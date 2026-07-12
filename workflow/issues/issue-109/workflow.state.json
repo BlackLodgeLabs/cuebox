@@ -1,9 +1,9 @@
 {
   "issue": 109,
   "branch": "cursor/issue-109-harden-execute-demo-handoff",
-  "stage": "execute-ready",
+  "stage": "demo-in-progress",
   "active_skill": "demo",
-  "updated_at": "2026-07-12T08:37:42Z",
+  "updated_at": "2026-07-12T08:40:00Z",
   "agents": {
     "execute": "bc-c95582e8-c142-49c8-871b-f9bdf91326cd",
     "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8",
