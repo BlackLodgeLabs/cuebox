@@ -1,9 +1,0 @@
-=== Scenario 2: Admission gate stale-lock recovery ===
-Date: 2026-07-12T08:38:58Z
-Commit: 043c431
-
---- execute-ready + stale active_skill=execute ---
-proceed
-
---- execute-in-progress + active_skill=execute ---
-skip:execute-in-progress
