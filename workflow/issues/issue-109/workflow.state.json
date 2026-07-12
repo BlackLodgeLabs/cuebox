@@ -3,7 +3,7 @@
   "branch": "cursor/issue-109-harden-execute-demo-handoff",
   "stage": "spec-ready",
   "active_skill": "planning",
-  "updated_at": "2026-07-12T08:31:17Z",
+  "updated_at": "2026-07-12T08:33:48Z",
   "agents": {
     "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8"
   },
@@ -11,7 +11,11 @@
   "active_agent_id": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-12T08:33:48Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
