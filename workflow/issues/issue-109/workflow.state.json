@@ -1,15 +1,15 @@
 {
   "issue": 109,
   "branch": "cursor/issue-109-harden-execute-demo-handoff",
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-12T08:43:47Z",
+  "updated_at": "2026-07-12T08:45:00Z",
   "agents": {
+    "babysit-pr": "bc-d0d95f0a-c28b-4c14-a9a3-d230bef29afc",
     "create-pr": "bc-9a338443-e52d-41ea-a203-a604fa2410ba",
     "demo": "bc-cc9a6432-9355-47b4-9f4a-4aea4438171a",
     "execute": "bc-c95582e8-c142-49c8-871b-f9bdf91326cd",
-    "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8",
-    "babysit-pr": "bc-d0d95f0a-c28b-4c14-a9a3-d230bef29afc"
+    "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8"
   },
   "pr": 112,
   "active_agent_id": "bc-d0d95f0a-c28b-4c14-a9a3-d230bef29afc",
@@ -19,6 +19,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   }
 }
