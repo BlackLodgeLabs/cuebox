@@ -2,18 +2,16 @@
   "issue": 109,
   "branch": "cursor/issue-109-harden-execute-demo-handoff",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-12T08:31:12Z",
-  "agents": {},
+  "active_skill": "planning",
+  "updated_at": "2026-07-12T08:31:17Z",
+  "agents": {
+    "planning": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8"
+  },
   "pr": 112,
-  "active_agent_id": null,
+  "active_agent_id": "bc-dd982699-a02b-4d34-bada-99a39f2c5be8",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-12T08:31:12Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
