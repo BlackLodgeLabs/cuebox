@@ -7,6 +7,9 @@ MARKER="<!-- cursor-workflow-complete-notify:v1 -->"
 
 STATE_FILE="${1:?usage: cursor-workflow-notify-complete.sh <path-to-workflow.state.json>}"
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WF="${WF:-${SCRIPTS_DIR:-$SCRIPT_DIR}}"
+
 if [ ! -f "$STATE_FILE" ]; then
   echo "State file not found: $STATE_FILE" >&2
   exit 1
@@ -42,11 +45,8 @@ if [ "${already:-0}" != "0" ]; then
   exit 0
 fi
 
-AUTHOR=$(gh issue view "$ISSUE" --repo "$REPO" --json author -q '.author.login')
-if [ -z "$AUTHOR" ] || [ "$AUTHOR" = "null" ]; then
-  echo "Could not resolve issue author for #${ISSUE}" >&2
-  exit 1
-fi
+# shellcheck disable=SC1090
+eval "$("$WF/cursor-workflow-resolve-notify-targets.sh" "$ISSUE")"
 
 PR_LINE="The linked pull request is ready for your final review."
 if [ -n "$PR" ] && [ "$PR" != "null" ]; then
@@ -54,14 +54,14 @@ if [ -n "$PR" ] && [ "$PR" != "null" ]; then
 fi
 
 BODY="${MARKER}
-@${AUTHOR} The cursor workflow for issue #${ISSUE} is complete — ${PR_LINE}
+${MENTIONS} — The cursor workflow for issue #${ISSUE} is complete — ${PR_LINE}
 
 Branch: \`${BRANCH:-—}\` · Label: \`cursor:complete\`
 
 _Demo notes and PR summary are on the pull request. This notification is posted once by GitHub Actions._"
 
 gh issue comment "$ISSUE" --repo "$REPO" --body "$BODY"
-echo "Posted complete notification on issue #${ISSUE} for @${AUTHOR}"
+echo "Posted complete notification on issue #${ISSUE} for ${MENTIONS}"
 
 if [ -n "$PR" ] && [ "$PR" != "null" ]; then
   if gh pr edit "$PR" --repo "$REPO" --add-assignee "$AUTHOR" 2>/dev/null; then
