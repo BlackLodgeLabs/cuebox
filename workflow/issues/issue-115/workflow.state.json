@@ -2,8 +2,8 @@
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
   "stage": "complete",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-13T19:51:21Z",
+  "active_skill": "workflow-review",
+  "updated_at": "2026-07-13T20:40:00Z",
   "agents": {
     "babysit-pr": "bc-2abeb61d-2ea3-472c-9fe5-80474453819b",
     "create-pr": "bc-2abeb61d-2ea3-472c-9fe5-80474453819b",
