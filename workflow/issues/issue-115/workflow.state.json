@@ -1,9 +1,9 @@
 {
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
-  "stage": "plan-ready",
+  "stage": "execute-ready",
   "active_skill": "execute",
-  "updated_at": "2026-07-13T17:01:15Z",
+  "updated_at": "2026-07-13T17:12:00Z",
   "agents": {
     "execute": "bc-1212c4a0-349b-4d53-94d9-363902f4df4c",
     "planning": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
@@ -17,6 +17,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   }
 }
