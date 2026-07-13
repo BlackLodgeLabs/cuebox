@@ -1,17 +1,18 @@
 {
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
-  "stage": "demo-ready",
-  "active_skill": "demo",
-  "updated_at": "2026-07-13T17:45:00Z",
+  "stage": "create-pr-in-progress",
+  "active_skill": "create-pr",
+  "updated_at": "2026-07-13T19:39:42Z",
   "agents": {
+    "create-pr": "bc-2abeb61d-2ea3-472c-9fe5-80474453819b",
     "demo": "bc-923efa2f-275b-45b3-aebc-9ca8583a571e",
     "execute": "bc-1212c4a0-349b-4d53-94d9-363902f4df4c",
     "planning": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
     "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c"
   },
   "pr": 116,
-  "active_agent_id": "bc-923efa2f-275b-45b3-aebc-9ca8583a571e",
+  "active_agent_id": "bc-2abeb61d-2ea3-472c-9fe5-80474453819b",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
