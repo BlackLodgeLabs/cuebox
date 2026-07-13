@@ -283,6 +283,27 @@ Canonical guide: [MCP-GITHUB.md](MCP-GITHUB.md) — tool mapping, idempotency ma
 
 **Actions remain authoritative for:** handoff spawn (`POST /v1/agents`), pinned status comment (`status_comment_id`), draft PR at `spec-ready`, complete/stalled notifications.
 
+## Human communication
+
+Four scenarios govern when operators are notified and how agents communicate:
+
+| Scenario | Trigger | Who acts | Notification |
+|----------|---------|----------|--------------|
+| **Complete** | `stage: complete` (babysit finished) | Human reviews PR | GitHub Action → `cursor-workflow-notify-complete.sh` |
+| **Stalled** | Terminal handoff failure (retries exhausted, non-self-healing defer) | Human resumes manually | `cursor-workflow-notify-stalled.sh` |
+| **Genuine question** | Agent cannot proceed without product/spec answer | Human replies on issue | Agent posts via MCP (best effort) |
+| **Step failure** | Demo/execute finds bug or fixable defect | Previous agent (pass-back) | Pass-back in state + demo-notes only |
+
+**Complete:** `cursor-workflow-notify-complete.sh` @mentions **repo owner** and **issue author** (via `cursor-workflow-resolve-notify-targets.sh`), links the PR, assigns PR to issue author (once, idempotent marker `<!-- cursor-workflow-complete-notify:v1 -->`). Babysit agents do not post issue comments.
+
+**Stalled:** `cursor-workflow-notify-stalled.sh` posts when spawn or pass-back fails terminally. Body includes @mentions, issue #, branch, current `stage`, expected next skill, human-readable stall reason, recovery steps (`@cursoragent use <skill> skill for issue NNN` or workflow_dispatch), optional agent link from `workflow.state.json`. Idempotent marker: `<!-- cursor-workflow-stalled-notify:v1 -->`. Does **not** sync false `*-in-progress` labels.
+
+**Genuine questions:** Agents post numbered questions via MCP with @mentions (author + owner), agent chat link, and markers (`<!-- cursor-mcp-spec-questions:v1 -->` / `<!-- cursor-mcp-plan-questions:v1 -->`). Labels: `cursor:spec-needs-info` / `cursor:plan-needs-info`.
+
+**Step failures:** Demo pass-back only — `execute-passback` stage, `demo-notes.md` § Pass-back to execute. No human question on the issue. If pass-back API fails → stalled notifier (`passback-failed`), not a human fix request.
+
+**Deprecated:** PAT `@cursoragent` fallback in spawn/pass-back failure paths (replaced by stalled notifier in issue #111). `CURSOR_HANDOFF_GITHUB_TOKEN` is optional for deferral comments only.
+
 ## GitHub Action: `cursor-workflow-handoff`
 
 Workflow file: [`.github/workflows/cursor-workflow-handoff.yml`](../../.github/workflows/cursor-workflow-handoff.yml)
@@ -348,7 +369,7 @@ This complements [#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) / [#9
 
 The `create-pr-ready` row in the stage table above expects a single batched push per agent run (not multiple `create-pr-ready` pushes within seconds).
 
-When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` also @mentions the issue author (once) and assigns the linked PR to them. Babysit agents do not post issue comments.
+When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` @mentions the issue author and repo owner (once) and assigns the linked PR to the issue author. Babysit agents do not post issue comments.
 
 ### Post-merge cleanup (automated)
 
@@ -397,7 +418,9 @@ The resync job loads `workflow.state.json` from the remote issue branch and runs
 | Secret | Purpose |
 |--------|---------|
 | `CURSOR_API_KEY` | Spawn next cloud agent (recommended) |
-| `CURSOR_HANDOFF_GITHUB_TOKEN` | PAT fallback for `@cursoragent` handoff comments |
+| `GITHUB_TOKEN` | Issue comments for complete/stalled notifications (built-in Actions token) |
+
+`CURSOR_HANDOFF_GITHUB_TOKEN` is **optional** — deferral comments only (`cursor-workflow-post-deferral-comment.sh`). PAT `@cursoragent` spawn fallback was removed in issue #111; terminal failures use `cursor-workflow-notify-stalled.sh` instead.
 
 Workflow helper scripts are always loaded from `main` in Actions so issue branches do not need to carry the latest script versions.
 

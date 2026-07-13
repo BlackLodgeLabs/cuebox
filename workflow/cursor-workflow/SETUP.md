@@ -58,9 +58,9 @@ Create the API key: [Cursor Dashboard → Integrations](https://cursor.com/dashb
 
 | Secret | Optional | Purpose |
 |--------|----------|---------|
-| `CURSOR_HANDOFF_GITHUB_TOKEN` | Fallback | Fine-grained GitHub PAT limited to **this repository** with minimum permissions (Issues and Pull requests: Read and write); Action posts `@cursoragent …` **as you** when API is unavailable |
+| `CURSOR_HANDOFF_GITHUB_TOKEN` | Deferral comments | Fine-grained GitHub PAT for `cursor-workflow-post-deferral-comment.sh` when `GITHUB_TOKEN` lacks issue-comment scope in custom runners |
 
-Use API key path in production — PAT fallback exists because Cursor filters bot-authored `@cursoragent` comments.
+Use API key path in production. Terminal spawn/pass-back failures post **stalled notifications** via `GITHUB_TOKEN` (`cursor-workflow-notify-stalled.sh`) — not PAT `@cursoragent` comments (removed in issue #111).
 
 ### Draft pull requests
 
@@ -243,6 +243,7 @@ On any stage you can comment:
 | Bot handoff ignored | Use API key, not cursor-bot comment |
 | Demo fails | `docker compose ps`; health curls; see `AGENTS.md` |
 | Pass-back 409 agent busy | Re-push `workflow.state.json` after execute run completes |
+| Stalled notification missing | Check issue comments for `<!-- cursor-workflow-stalled-notify:v1 -->` (idempotent — one per stall episode); verify `GITHUB_TOKEN` in Actions; run workflow_dispatch to resync |
 | Agent links show "—" in status comment | Agent clobbered state — run merge helper before state commits; see [WORKFLOW.md#state-merge](workflow/cursor-workflow/WORKFLOW.md#state-merge) |
 
 See also [WORKFLOW.md](WORKFLOW.md).
