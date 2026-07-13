@@ -23,6 +23,8 @@ AGENT_SCRIPTS=(
   cursor-workflow-record-loops-on-branch.sh
   cursor-workflow-discover-agents.sh
   cursor-workflow-notify-complete.sh
+  cursor-workflow-resolve-notify-targets.sh
+  cursor-workflow-notify-stalled.sh
   cursor-workflow-update-pr-body.sh
   cursor-workflow-merge-state.sh
 )
@@ -35,6 +37,8 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-record-loops-on-branch.sh
   cursor-workflow-discover-agents.sh
   cursor-workflow-notify-complete.sh
+  cursor-workflow-resolve-notify-targets.sh
+  cursor-workflow-notify-stalled.sh
   cursor-workflow-update-pr-body.sh
   cursor-workflow-count-active-agents.sh
   cursor-workflow-admission-gate.sh
