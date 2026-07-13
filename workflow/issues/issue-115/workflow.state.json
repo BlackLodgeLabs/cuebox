@@ -7,8 +7,7 @@
   "agents": {
     "execute": "bc-1212c4a0-349b-4d53-94d9-363902f4df4c",
     "planning": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
-    "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c",
-    "execute": "bc-1212c4a0-349b-4d53-94d9-363902f4df4c"
+    "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c"
   },
   "pr": 116,
   "active_agent_id": "bc-1212c4a0-349b-4d53-94d9-363902f4df4c",
