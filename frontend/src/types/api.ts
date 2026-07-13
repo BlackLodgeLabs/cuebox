@@ -93,7 +93,14 @@ export interface FilmSummary {
   genres: string[];
   created_at: string;
   updated_at: string;
+  removed_at?: string | null;
 }
+
+export interface SetFilmStatusRequest {
+  status: FilmStatus;
+}
+
+export type WatchlistTab = "active" | "watched" | "archived";
 
 export interface FilmMetadataBlock {
   tmdb_id: number | null;
@@ -246,13 +253,9 @@ export interface SyncFilmSummary {
 
 export interface SyncCsvResponse {
   added: number;
-  removed: number;
-  watched: number;
   unchanged: number;
   failed: number;
   added_films: SyncFilmSummary[];
-  removed_films: SyncFilmSummary[];
-  watched_films: SyncFilmSummary[];
 }
 
 export interface SyncRssConfigResponse {

@@ -25,6 +25,7 @@ import type {
   ResolveLetterboxdRequest,
   FilmSummary,
   FilmDetail,
+  FilmStatus,
   FilmWatchProvidersResponse,
   TmdbSearchParams,
   TmdbSearchResponse,
@@ -152,6 +153,16 @@ export function getFilms(
 
 export function getFilm(filmId: string): Promise<FilmDetail> {
   return fetchApi<FilmDetail>(`/films/${filmId}`);
+}
+
+export function setFilmStatus(
+  filmId: string,
+  status: FilmStatus,
+): Promise<FilmDetail> {
+  return fetchApi<FilmDetail>(`/films/${filmId}/status`, {
+    method: "POST",
+    body: JSON.stringify({ status }),
+  });
 }
 
 export function getFilmWatchProviders(

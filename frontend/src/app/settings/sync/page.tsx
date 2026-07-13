@@ -103,8 +103,8 @@ export default function SyncSettingsPage() {
         <CardHeader>
           <CardTitle>CSV re-sync</CardTitle>
           <CardDescription>
-            Upload a fresh Letterboxd watchlist export to add, remove, or mark
-            films as watched.
+            Upload a fresh Letterboxd watchlist export to add new films. Existing
+            films are never removed or reclassified.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -129,8 +129,6 @@ export default function SyncSettingsPage() {
               <p className="font-medium">Sync complete</p>
               <ul className="mt-2 space-y-1 text-muted-foreground">
                 <li>Added: {syncResult.added}</li>
-                <li>Removed: {syncResult.removed}</li>
-                <li>Watched: {syncResult.watched}</li>
                 <li>Unchanged: {syncResult.unchanged}</li>
                 {syncResult.failed > 0 && (
                   <li className="text-destructive">Failed: {syncResult.failed}</li>

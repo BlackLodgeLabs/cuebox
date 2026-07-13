@@ -39,18 +39,44 @@ describe("WatchlistTable", () => {
     render(
       <WatchlistTable
         films={[film]}
+        tab="active"
         sort="created_at"
         sortDir="desc"
         onSort={onSort}
+        onStatusTransition={vi.fn()}
       />,
     );
 
     expect(screen.getAllByRole("link", { name: "Test Film" })[0]).toHaveAttribute(
       "href",
-      "/watchlist/film-1",
+      "/watchlist/film-1?tab=active",
     );
 
     fireEvent.click(screen.getByRole("button", { name: /title/i }));
     expect(onSort).toHaveBeenCalledWith("title");
+  });
+
+  it("shows Removed column on watched tab and wires status actions", () => {
+    const onStatusTransition = vi.fn();
+    const watchedFilm: FilmSummary = {
+      ...film,
+      status: "watched",
+      removed_at: "2024-06-01T00:00:00Z",
+    };
+
+    render(
+      <WatchlistTable
+        films={[watchedFilm]}
+        tab="watched"
+        sort="created_at"
+        sortDir="desc"
+        onSort={vi.fn()}
+        onStatusTransition={onStatusTransition}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /removed/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /return to watchlist/i }));
+    expect(onStatusTransition).toHaveBeenCalledWith("film-1", "active");
   });
 });
