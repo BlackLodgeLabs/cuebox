@@ -2,23 +2,20 @@
   "issue": 111,
   "branch": "cursor/issue-111-workflow-human-notifications",
   "stage": "create-pr-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-13T07:27:32Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-13T07:27:37Z",
   "agents": {
     "create-pr": "bc-c992cfcc-dbdc-4055-93b2-a0f49eb53d8c",
     "demo": "bc-53dfb78d-4383-456d-94f7-cebd194d5c8b",
     "execute": "bc-e3e02831-5d0c-43c5-a702-fd05b403d62c",
-    "planning": "bc-754002f3-aac2-49ce-b515-245646392e39"
+    "planning": "bc-754002f3-aac2-49ce-b515-245646392e39",
+    "babysit-pr": "bc-d799c6d9-0192-4771-b5c7-04cda3555b9d"
   },
   "pr": 114,
-  "active_agent_id": "bc-c992cfcc-dbdc-4055-93b2-a0f49eb53d8c",
+  "active_agent_id": "bc-d799c6d9-0192-4771-b5c7-04cda3555b9d",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-13T07:27:32Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
