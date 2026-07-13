@@ -1,0 +1,5 @@
+PASS: notify stalled body and marker
+PASS: notify stalled idempotent skip
+--- grep notify-stalled.sh markers ---
+MARKER="<!-- cursor-workflow-stalled-notify:v1 -->"
+eval "$("$WF/cursor-workflow-resolve-notify-targets.sh" "$ISSUE")"
