@@ -40,6 +40,28 @@ See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/M
 3. Always: merge-state + push `workflow.state.json`
 4. If MCP fails: log in commit message; rely on Actions sync on push
 
+## Genuine question vs step failure
+
+| Situation | Action |
+|-----------|--------|
+| **Genuine question** — product/spec ambiguity, missing acceptance criteria | MCP issue comment with @mentions + agent link + `<!-- cursor-mcp-spec-questions:v1 -->`; set `cursor:spec-needs-info` |
+| **Step failure** — code bug, CI failure, environment defect | N/A for this skill — fix or document in spec; do not ask human to fix code |
+
+**Genuine question comment template** (@mentions from `issue_read` author + repo owner metadata; marker last):
+
+```markdown
+@{author} @{owner} — I need clarification before proceeding on issue #NNN.
+
+1. …
+2. …
+
+Reply on this issue, then comment `@cursoragent continue spec`.
+
+If you need to chat more, talk to me [here](https://cursor.com/agents/<agent-id>).
+
+<!-- cursor-mcp-spec-questions:v1 -->
+```
+
 ## If detail is insufficient
 
 1. **MCP (preferred):** `issue_read` method `get_comments` — skip if `<!-- cursor-mcp-spec-questions:v1 -->` present. Else `add_issue_comment` with numbered questions (one topic per number) + marker as last line. `issue_write` method `update` with `labels: ["cursor:spec-needs-info"]`.

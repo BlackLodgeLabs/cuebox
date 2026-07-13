@@ -53,6 +53,28 @@ See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/M
 3. Always: merge-state + push `workflow.state.json`
 4. If MCP fails: log in commit message; rely on Actions sync on push
 
+## Genuine question vs step failure
+
+| Situation | Action |
+|-----------|--------|
+| **Genuine question** — bug repro blocked by missing info, ambiguous spec | MCP issue comment with @mentions + agent link + `<!-- cursor-mcp-plan-questions:v1 -->`; set `cursor:plan-needs-info` |
+| **Step failure** — code bug found during repro | Document in `bug-repro-notes.md`; do not ask human to fix — note for execute |
+
+**Genuine question comment template** (@mentions from `issue_read` author + repo owner metadata; marker last):
+
+```markdown
+@{author} @{owner} — I need clarification before proceeding on issue #NNN.
+
+1. …
+2. …
+
+Reply on this issue, then comment `@cursoragent continue plan`.
+
+If you need to chat more, talk to me [here](https://cursor.com/agents/<agent-id>).
+
+<!-- cursor-mcp-plan-questions:v1 -->
+```
+
 ## Classify the issue
 
 After reading `SPEC.md`, decide whether this is a **bug in the existing application**:
