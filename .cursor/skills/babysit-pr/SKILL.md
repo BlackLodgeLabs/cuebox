@@ -40,6 +40,13 @@ See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/M
 3. Always: merge-state + push `workflow.state.json`
 4. If MCP fails: log in commit message; rely on Actions sync on push
 
+## Genuine question vs step failure
+
+| Situation | Action |
+|-----------|--------|
+| **Genuine question** | N/A — do not ask humans to fix code or clarify product during babysit |
+| **Step failure** — loop limits, unrecoverable CI/Bugbot | Set `blocked` via MCP comments (`<!-- cursor-mcp-blocked:v1 -->`); Actions owns complete notification at `complete` |
+
 ## Read first
 
 1. `workflow/issues/issue-{NNN}/workflow.state.json` — **check limits before acting**
@@ -100,9 +107,9 @@ Then:
 
 1. Run merge helper, then set `stage`: `complete`
 2. **Convert draft PR → ready for review** via MCP `update_pull_request` with `draft: false` (or existing path if MCP unavailable)
-3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions the issue author, and assigns the PR
+3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions issue author and repo owner, and assigns the PR
 
-Do **not** MCP-post an issue comment at `complete` — the handoff Action handles that notification (see MCP-GITHUB.md).
+Do **not** MCP-post an issue comment at `complete` — the handoff Action runs `cursor-workflow-notify-complete.sh` (see MCP-GITHUB.md).
 
 ## Do not
 

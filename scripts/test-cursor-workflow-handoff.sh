@@ -18,7 +18,8 @@ cleanup_workflow_cache() {
     CURSOR_WORKFLOW_SYNCED CURSOR_WORKFLOW_SYNC_CALL_COUNT MOCK_CURSOR_LIST_FETCH_COUNT_FILE \
     CURSOR_WORKFLOW_REFETCH_REMOTE_JSON CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE \
     MOCK_CURSOR_POST_COUNT_FILE MOCK_RECORD_SPAWN_FAIL MOCK_IN_FLIGHT_RUN_COUNT MOCK_ACTIVE_AGENT_COUNT \
-    MOCK_CURSOR_RUNS_COUNT_FILE MOCK_ENSURE_DRAFT_PR
+    MOCK_CURSOR_RUNS_COUNT_FILE MOCK_ENSURE_DRAFT_PR MOCK_GH_COMMENTS_FILE MOCK_GH_LAST_COMMENT_FILE \
+    MOCK_GH_AUTHOR MOCK_GH_OWNER
 }
 cleanup_workflow_cache
 
@@ -26,10 +27,16 @@ fail=0
 pass() { echo "PASS: $1"; }
 fail_test() { echo "FAIL: $1" >&2; fail=1; }
 
-# Stub gh for PAT fallback tests (auth login, issue comment, api comments list).
+# Stub gh for notification and PAT fallback tests.
 setup_mock_gh() {
   local gh_dir
   gh_dir=$(mktemp -d)
+  MOCK_GH_COMMENTS_FILE=$(mktemp)
+  MOCK_GH_LAST_COMMENT_FILE=$(mktemp)
+  export MOCK_GH_COMMENTS_FILE MOCK_GH_LAST_COMMENT_FILE
+  export MOCK_GH_AUTHOR="${MOCK_GH_AUTHOR:-test-author}"
+  export MOCK_GH_OWNER="${MOCK_GH_OWNER:-test-owner}"
+  echo '[]' > "$MOCK_GH_COMMENTS_FILE"
   cat > "$gh_dir/gh" <<'EOF'
 #!/usr/bin/env bash
 case "${1:-}" in
@@ -37,20 +44,44 @@ case "${1:-}" in
     echo "MOCK gh auth $*" >&2
     ;;
   issue)
-  if [ "${2:-}" = "comment" ]; then
-    echo "MOCK gh issue comment $*" >&2
-  fi
-  ;;
+    if [ "${2:-}" = "view" ]; then
+      if [[ "${*:-}" == *"--json author"* ]]; then
+        if [[ "${*:-}" == *"-q"* ]]; then
+          echo "${MOCK_GH_AUTHOR}"
+        else
+          echo "{\"author\":{\"login\":\"${MOCK_GH_AUTHOR}\"}}"
+        fi
+      fi
+    elif [ "${2:-}" = "comment" ]; then
+      body=""
+      shift 2
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --body) body="$2"; shift 2 ;;
+          *) shift ;;
+        esac
+      done
+      echo "$body" > "${MOCK_GH_LAST_COMMENT_FILE}"
+      echo "MOCK gh issue comment posted" >&2
+    fi
+    ;;
   api)
-  if [[ "${*:-}" == *"/comments"* ]]; then
-    echo '[]'
-  fi
-  ;;
+    if [[ "${*:-}" == *"/comments"* ]]; then
+      cat "${MOCK_GH_COMMENTS_FILE}"
+    elif [[ "${*:-}" == *"repos/"* ]] && [[ "${*:-}" != *"/comments"* ]]; then
+      if [[ "${*:-}" == *"--jq"* ]]; then
+        echo "${MOCK_GH_OWNER}"
+      else
+        echo "{\"owner\":{\"login\":\"${MOCK_GH_OWNER}\"}}"
+      fi
+    fi
+    ;;
 esac
 exit 0
 EOF
   chmod +x "$gh_dir/gh"
   export PATH="$gh_dir:$PATH"
+  export GITHUB_TOKEN=mock-token
 }
 
 # --- Dedup: agents.demo set → skip, no POST ---
@@ -958,54 +989,150 @@ test_passback_recovery_409() {
   rm -f "$state" "$runs_count"
 }
 
-# --- Spawn PAT fallback: no false progress sync (issue #110) ---
-test_spawn_pat_fallback_no_progress_sync() {
+# --- Resolve notify targets: dedup when author == owner ---
+test_resolve_notify_targets_dedup() {
   cleanup_workflow_cache
-  local state gh_dir
+  setup_mock_gh
+  export MOCK_GH_AUTHOR=same-user
+  export MOCK_GH_OWNER=same-user
+  export GITHUB_TOKEN=mock
+
+  output=$("$SCRIPT_DIR/cursor-workflow-resolve-notify-targets.sh" 111)
+  if echo "$output" | grep -qE 'MENTIONS=.*@same-user' && ! echo "$output" | grep -qE '@same-user.*@same-user'; then
+    pass "resolve notify targets dedup"
+  else
+    fail_test "resolve notify targets dedup expected single @same-user got: $output"
+  fi
+}
+
+# --- Resolve notify targets: distinct author and owner ---
+test_resolve_notify_targets_distinct() {
+  cleanup_workflow_cache
+  setup_mock_gh
+  export MOCK_GH_AUTHOR=issue-author
+  export MOCK_GH_OWNER=repo-owner
+  export GITHUB_TOKEN=mock
+
+  output=$("$SCRIPT_DIR/cursor-workflow-resolve-notify-targets.sh" 111)
+  if echo "$output" | grep -qE 'MENTIONS=.*@issue-author.*@repo-owner'; then
+    pass "resolve notify targets distinct"
+  else
+    fail_test "resolve notify targets distinct expected both mentions got: $output"
+  fi
+}
+
+# --- Complete notifier: both @mentions, idempotent ---
+test_notify_complete_mentions_both() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":111,"branch":"cursor/issue-111-test","stage":"complete","pr":114,"agents":{}}' > "$state"
+  setup_mock_gh
+  export MOCK_GH_AUTHOR=issue-author
+  export MOCK_GH_OWNER=repo-owner
+  export GITHUB_TOKEN=mock
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-notify-complete.sh" "$state" >/tmp/notify-complete.log 2>&1
+  if grep -q '@issue-author @repo-owner' "$MOCK_GH_LAST_COMMENT_FILE"; then
+    pass "notify complete mentions both"
+  else
+    fail_test "notify complete missing both mentions"
+  fi
+
+  echo '[{"body":"<!-- cursor-workflow-complete-notify:v1 -->"}]' > "$MOCK_GH_COMMENTS_FILE"
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-notify-complete.sh" "$state" >/tmp/notify-complete-idem.log 2>&1
+  if grep -q "already posted" /tmp/notify-complete-idem.log; then
+    pass "notify complete idempotent skip"
+  else
+    fail_test "notify complete idempotent skip failed"
+  fi
+  rm -f "$state"
+}
+
+# --- Stalled notifier: body, marker, idempotent ---
+test_notify_stalled_body_and_idempotency() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":111,"branch":"cursor/issue-111-test","stage":"execute-ready","pr":114,"agents":{"demo":"bc-test-agent"}}' > "$state"
+  setup_mock_gh
+  export MOCK_GH_AUTHOR=issue-author
+  export MOCK_GH_OWNER=repo-owner
+  export GITHUB_TOKEN=mock
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-notify-stalled.sh" "$state" "at-cap" "demo" >/tmp/notify-stalled.log 2>&1
+  if grep -q 'cursor-workflow-stalled-notify:v1' "$MOCK_GH_LAST_COMMENT_FILE" \
+    && grep -q '@issue-author @repo-owner' "$MOCK_GH_LAST_COMMENT_FILE" \
+    && grep -q 'at-cap\|agent cap' "$MOCK_GH_LAST_COMMENT_FILE"; then
+    pass "notify stalled body and marker"
+  else
+    fail_test "notify stalled body/marker missing"
+  fi
+
+  echo '[{"body":"<!-- cursor-workflow-stalled-notify:v1 -->"}]' > "$MOCK_GH_COMMENTS_FILE"
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-notify-stalled.sh" "$state" "at-cap" "demo" >/tmp/notify-stalled-idem.log 2>&1
+  if grep -q "already posted" /tmp/notify-stalled-idem.log; then
+    pass "notify stalled idempotent skip"
+  else
+    fail_test "notify stalled idempotent skip failed"
+  fi
+  rm -f "$state"
+}
+
+# --- Spawn stalled notifier: no false progress sync (issue #110/#111) ---
+test_spawn_stalled_no_progress_sync() {
+  cleanup_workflow_cache
+  local state
   state=$(mktemp)
   cp "$FIXTURES/state-execute-ready-no-demo.json" "$state"
   setup_mock_gh
   export MOCK_CURSOR_API=1
   export MOCK_IN_FLIGHT_RUN_COUNT=8
-  export CURSOR_HANDOFF_GITHUB_TOKEN=mock
+  export GITHUB_TOKEN=mock
   export CURSOR_WORKFLOW_SYNC_CALL_COUNT=0
   unset CURSOR_API_KEY
+  unset CURSOR_HANDOFF_GITHUB_TOKEN
 
   WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
     110 "cursor/issue-110-test" "$state" demo "test prompt" "demo-in-progress" \
-    >/tmp/spawn-pat-fallback.log 2>&1
+    >/tmp/spawn-stalled.log 2>&1
   rc=$?
 
   if [ "$rc" -eq 0 ]; then
-    pass "spawn pat fallback exit 0"
+    pass "spawn stalled exit 0"
   else
-    fail_test "spawn pat fallback expected exit 0 got $rc"
+    fail_test "spawn stalled expected exit 0 got $rc"
   fi
-  if grep -q "Posted handoff comment" /tmp/spawn-pat-fallback.log; then
-    pass "spawn pat fallback posted comment"
+  if grep -q "Posted stalled notification" /tmp/spawn-stalled.log; then
+    pass "spawn stalled posted notification"
   else
-    fail_test "spawn pat fallback did not post PAT comment"
+    fail_test "spawn stalled did not post stalled notification"
+  fi
+  if grep -q 'cursor-workflow-stalled-notify:v1' "$MOCK_GH_LAST_COMMENT_FILE" 2>/dev/null; then
+    pass "spawn stalled posted stalled marker"
+  else
+    fail_test "spawn stalled missing stalled marker in comment"
   fi
   if [ "${CURSOR_WORKFLOW_SYNC_CALL_COUNT:-0}" = "0" ]; then
-    pass "spawn pat fallback no sync call"
+    pass "spawn stalled no sync call"
   else
-    fail_test "spawn pat fallback expected 0 sync calls got ${CURSOR_WORKFLOW_SYNC_CALL_COUNT}"
+    fail_test "spawn stalled expected 0 sync calls got ${CURSOR_WORKFLOW_SYNC_CALL_COUNT}"
   fi
-  if ! grep -qE 'cursor:demo-in-progress|Updated status comment|Created status comment' /tmp/spawn-pat-fallback.log; then
-    pass "spawn pat fallback no false progress label sync"
+  if ! grep -qE 'cursor:demo-in-progress|Updated status comment|Created status comment' /tmp/spawn-stalled.log; then
+    pass "spawn stalled no false progress label sync"
   else
-    fail_test "spawn pat fallback log contains false progress sync"
+    fail_test "spawn stalled log contains false progress sync"
   fi
   if [ "$(jq -r '.stage' "$state")" = "execute-ready" ]; then
-    pass "spawn pat fallback stage unchanged"
+    pass "spawn stalled stage unchanged"
   else
-    fail_test "spawn pat fallback expected execute-ready stage"
+    fail_test "spawn stalled expected execute-ready stage"
   fi
   rm -f "$state"
 }
 
-# --- Pass-back PAT fallback: no false progress sync (issue #110) ---
-test_passback_pat_fallback_no_progress_sync() {
+# --- Pass-back stalled notifier: no false progress sync (issue #110/#111) ---
+test_passback_stalled_no_progress_sync() {
   cleanup_workflow_cache
   local state
   state=$(mktemp)
@@ -1013,33 +1140,39 @@ test_passback_pat_fallback_no_progress_sync() {
   setup_mock_gh
   export MOCK_CURSOR_API=1
   export MOCK_CURSOR_POST_CODE=500
-  export CURSOR_HANDOFF_GITHUB_TOKEN=mock
+  export GITHUB_TOKEN=mock
   export CURSOR_WORKFLOW_SYNC_CALL_COUNT=0
   unset CURSOR_API_KEY
+  unset CURSOR_HANDOFF_GITHUB_TOKEN
 
   WF="$WF" "$SCRIPT_DIR/cursor-workflow-passback-run.sh" \
-    86 "cursor/issue-86-test" "$state" >/tmp/passback-pat-fallback.log 2>&1
-  rc=$?
+    86 "cursor/issue-86-test" "$state" >/tmp/passback-stalled.log 2>&1 || rc=$?
+  rc=${rc:-0}
 
-  if [ "$rc" -eq 0 ]; then
-    pass "passback pat fallback exit 0"
+  if [ "$rc" -eq 1 ]; then
+    pass "passback stalled exit 1"
   else
-    fail_test "passback pat fallback expected exit 0 got $rc"
+    fail_test "passback stalled expected exit 1 got $rc"
+  fi
+  if grep -q "Posted stalled notification" /tmp/passback-stalled.log; then
+    pass "passback stalled posted notification"
+  else
+    fail_test "passback stalled did not post stalled notification"
   fi
   if [ "${CURSOR_WORKFLOW_SYNC_CALL_COUNT:-0}" = "0" ]; then
-    pass "passback pat fallback no sync call"
+    pass "passback stalled no sync call"
   else
-    fail_test "passback pat fallback expected 0 sync calls got ${CURSOR_WORKFLOW_SYNC_CALL_COUNT}"
+    fail_test "passback stalled expected 0 sync calls got ${CURSOR_WORKFLOW_SYNC_CALL_COUNT}"
   fi
-  if ! grep -qE 'execute-in-progress|HANDOFF_PROGRESS_STAGE|Updated status comment|Created status comment' /tmp/passback-pat-fallback.log; then
-    pass "passback pat fallback no false progress sync"
+  if ! grep -qE 'execute-in-progress|HANDOFF_PROGRESS_STAGE|Updated status comment|Created status comment' /tmp/passback-stalled.log; then
+    pass "passback stalled no false progress sync"
   else
-    fail_test "passback pat fallback log contains false progress sync"
+    fail_test "passback stalled log contains false progress sync"
   fi
   if [ "$(jq -r '.stage' "$state")" = "execute-passback" ]; then
-    pass "passback pat fallback stage unchanged"
+    pass "passback stalled stage unchanged"
   else
-    fail_test "passback pat fallback expected execute-passback stage"
+    fail_test "passback stalled expected execute-passback stage"
   fi
   rm -f "$state"
 }
@@ -1339,8 +1472,12 @@ test_git_record_spawn_toctou
 test_git_recovery_checkout_rewind
 test_passback_recovery
 test_passback_recovery_409
-test_spawn_pat_fallback_no_progress_sync
-test_passback_pat_fallback_no_progress_sync
+test_resolve_notify_targets_dedup
+test_resolve_notify_targets_distinct
+test_notify_complete_mentions_both
+test_notify_stalled_body_and_idempotency
+test_spawn_stalled_no_progress_sync
+test_passback_stalled_no_progress_sync
 test_reopen_inference_agents_demo
 test_reopen_inference_prev_stage
 test_execute_ready_forward

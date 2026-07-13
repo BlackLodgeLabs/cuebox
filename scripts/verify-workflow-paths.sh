@@ -119,6 +119,9 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-ensure-before-sha.sh
   cursor-workflow-push-diff-includes.sh
   cursor-workflow-post-deferral-comment.sh
+  cursor-workflow-resolve-notify-targets.sh
+  cursor-workflow-notify-stalled.sh
+  cursor-workflow-notify-complete.sh
   cursor-workflow-fetch-agents-list.sh
   cursor-workflow-should-discover-agents.sh
   cursor-workflow-record-spawn-on-branch.sh
@@ -157,7 +160,7 @@ fi
 
 # --- Handoff docs and workflow ---
 WORKFLOW_MD="workflow/cursor-workflow/WORKFLOW.md"
-for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING status_comment_id CURSOR_AGENTS_LIST_CACHE skip discovery workflow-review @cursoragent workflow-review; do
+for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING status_comment_id CURSOR_AGENTS_LIST_CACHE skip discovery workflow-review @cursoragent workflow-review notify-stalled resolve-notify-targets stalled notification; do
   if ! grep -qF "$keyword" "$WORKFLOW_MD"; then
     echo "FAIL: ${WORKFLOW_MD} must mention ${keyword}" >&2
     fail=1
@@ -165,7 +168,7 @@ for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh
 done
 
 SETUP_MD="workflow/cursor-workflow/SETUP.md"
-for keyword in CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS handoff_pending deferral "in flight"; do
+for keyword in CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS handoff_pending deferral "in flight" notify-stalled stalled notification; do
   if ! grep -qF "$keyword" "$SETUP_MD"; then
     echo "FAIL: ${SETUP_MD} must mention ${keyword}" >&2
     fail=1

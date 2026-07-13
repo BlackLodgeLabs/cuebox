@@ -35,6 +35,13 @@ See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/M
 3. Always: merge-state + push `workflow.state.json`
 4. If MCP fails: log in `demo-notes.md`; rely on Actions sync on push
 
+## Genuine question vs step failure
+
+| Situation | Action |
+|-----------|--------|
+| **Genuine question** | N/A — product ambiguity should be caught in spec/plan |
+| **Step failure** — code defect, failing scenario | Pass-back only: `execute-passback` + `demo-notes.md` § Pass-back to execute. **Do not** post human questions on the issue |
+
 ## Read first
 
 1. `workflow/issues/issue-{NNN}/demo/demo-spec.md`

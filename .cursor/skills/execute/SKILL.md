@@ -70,6 +70,13 @@ When resuming after demo pass-back (`stage` was `execute-passback`):
 3. Frontend: `cd frontend && npx tsc --noEmit` and `npm run test:unit` when frontend touched
 4. API: `cd api && ruff check app tests` when API touched
 
+## Genuine question vs step failure
+
+| Situation | Action |
+|-----------|--------|
+| **Genuine question** | N/A — never ask humans product questions during execute |
+| **Step failure** — defect found during demo pass-back | Fix via pass-back from demo (`execute-passback`); do not post human fix requests on the issue |
+
 ### Cloud / compose gotchas
 
 - Export reachable DB URL before host pytest/gates if compose is up:  

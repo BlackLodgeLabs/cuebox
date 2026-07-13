@@ -75,12 +75,10 @@ Before posting:
 
 ## @mention rules
 
-Until [#95](https://github.com/BlackLodgeLabs/cuebox/issues/95) lands:
+Use `scripts/cursor-workflow-resolve-notify-targets.sh` as the source of truth for @mention targets in Actions notifications. Cloud agents resolve the same targets via MCP:
 
 - @mention the **issue author** from `issue_read` method `get` (`user.login`)
-- @mention the **repo owner** from `get_me` or repository metadata when notifying operators
-
-When #95 merges, use `scripts/cursor-workflow-resolve-notify-targets.sh` as the source of truth for @mention targets.
+- @mention the **repo owner** from repository metadata (`owner.login`)
 
 Do **not** hardcode usernames in skill files.
 
@@ -143,5 +141,6 @@ See [SETUP.md § Cloud agent environment](SETUP.md#5-cloud-agent-environment).
 | `POST /v1/agents` spawn | Requires `CURSOR_API_KEY` in GitHub Actions |
 | Pinned status comment (`status_comment_id`) | Actions cache + `cursor-workflow-sync-github-status.sh` |
 | Draft PR at `spec-ready` | `cursor-workflow-ensure-pr-on-branch.sh` in handoff Action |
-| Complete notification | `cursor-workflow-notify-complete.sh` (#95 coordination) |
+| Complete notification | `cursor-workflow-notify-complete.sh` (Actions-owned; uses `resolve-notify-targets.sh`) |
+| Stalled notification | `cursor-workflow-notify-stalled.sh` (Actions-owned; terminal spawn/pass-back failures) |
 | Deferral comments at agent cap | Handoff Action only |
