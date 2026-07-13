@@ -100,6 +100,7 @@ All six demo scenarios passed on full Docker Compose with Part 2 seeded watchlis
 - [x] `Phase 6 gate exit 0 at d73ff22` (execute)
 - [x] Focused API tests (`test_film_status_transition`, additive CSV, watched-excluded) at `d73ff22` (execute)
 - [x] Demo scenarios 1–6 PASS at `083a6e5` (demo)
+- [x] `api-tests` + `frontend` CI green (babysit recovery; handoff spawn failed on jq ARG_MAX)
 
 ## Checklist
 
