@@ -1,5 +1,0 @@
-PASS: notify complete mentions both
-PASS: notify complete idempotent skip
---- grep scripts/cursor-workflow-notify-complete.sh ---
-MARKER="<!-- cursor-workflow-complete-notify:v1 -->"
-eval "$("$WF/cursor-workflow-resolve-notify-targets.sh" "$ISSUE")"

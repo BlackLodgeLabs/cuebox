@@ -1,4 +1,0 @@
-PASS: resolve notify targets dedup
-PASS: resolve notify targets distinct
---- grep: no hardcoded usernames in script source (fixtures only) ---
-scripts/test-cursor-workflow-handoff.sh
