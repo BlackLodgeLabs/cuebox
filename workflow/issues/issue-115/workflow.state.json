@@ -1,9 +1,9 @@
 {
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
-  "stage": "create-pr-in-progress",
+  "stage": "create-pr-ready",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-13T19:39:42Z",
+  "updated_at": "2026-07-13T19:40:23Z",
   "agents": {
     "create-pr": "bc-2abeb61d-2ea3-472c-9fe5-80474453819b",
     "demo": "bc-923efa2f-275b-45b3-aebc-9ca8583a571e",
@@ -19,6 +19,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   }
 }
