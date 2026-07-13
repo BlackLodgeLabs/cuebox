@@ -1,9 +1,9 @@
 {
   "issue": 111,
   "branch": "cursor/issue-111-workflow-human-notifications",
-  "stage": "spec-ready",
+  "stage": "plan-in-progress",
   "active_skill": "planning",
-  "updated_at": "2026-07-13T06:58:26Z",
+  "updated_at": "2026-07-13T06:59:00Z",
   "agents": {
     "planning": "bc-754002f3-aac2-49ce-b515-245646392e39"
   },
