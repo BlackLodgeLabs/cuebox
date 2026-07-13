@@ -3,7 +3,7 @@
   "branch": "cursor/issue-111-workflow-human-notifications",
   "stage": "execute-ready",
   "active_skill": null,
-  "updated_at": "2026-07-13T07:20:00Z",
+  "updated_at": "2026-07-13T07:15:34Z",
   "agents": {
     "execute": "bc-e3e02831-5d0c-43c5-a702-fd05b403d62c",
     "planning": "bc-754002f3-aac2-49ce-b515-245646392e39"
@@ -12,7 +12,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "demo",
+    "started_at": "2026-07-13T07:15:34Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
