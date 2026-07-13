@@ -72,10 +72,6 @@ if [ -n "${CURSOR_HANDOFF_GITHUB_TOKEN:-}" ]; then
   echo "${CURSOR_HANDOFF_GITHUB_TOKEN}" | gh auth login --with-token
   gh issue comment "$ISSUE" --repo "$REPO" \
     --body "@cursoragent ${prompt}"
-  HANDOFF_PROGRESS_STAGE="execute-in-progress" \
-  HANDOFF_ACTIVE_SKILL="execute" \
-  HANDOFF_ACTIVE_AGENT="$agent_id" \
-    "$WF/cursor-workflow-sync-github-status.sh" "$STATE_FILE"
   exit 0
 fi
 

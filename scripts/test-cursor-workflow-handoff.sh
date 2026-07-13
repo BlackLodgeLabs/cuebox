@@ -26,6 +26,33 @@ fail=0
 pass() { echo "PASS: $1"; }
 fail_test() { echo "FAIL: $1" >&2; fail=1; }
 
+# Stub gh for PAT fallback tests (auth login, issue comment, api comments list).
+setup_mock_gh() {
+  local gh_dir
+  gh_dir=$(mktemp -d)
+  cat > "$gh_dir/gh" <<'EOF'
+#!/usr/bin/env bash
+case "${1:-}" in
+  auth)
+    echo "MOCK gh auth $*" >&2
+    ;;
+  issue)
+  if [ "${2:-}" = "comment" ]; then
+    echo "MOCK gh issue comment $*" >&2
+  fi
+  ;;
+  api)
+  if [[ "${*:-}" == *"/comments"* ]]; then
+    echo '[]'
+  fi
+  ;;
+esac
+exit 0
+EOF
+  chmod +x "$gh_dir/gh"
+  export PATH="$gh_dir:$PATH"
+}
+
 # --- Dedup: agents.demo set → skip, no POST ---
 test_dedup() {
   cleanup_workflow_cache
@@ -931,6 +958,92 @@ test_passback_recovery_409() {
   rm -f "$state" "$runs_count"
 }
 
+# --- Spawn PAT fallback: no false progress sync (issue #110) ---
+test_spawn_pat_fallback_no_progress_sync() {
+  cleanup_workflow_cache
+  local state gh_dir
+  state=$(mktemp)
+  cp "$FIXTURES/state-execute-ready-no-demo.json" "$state"
+  setup_mock_gh
+  export MOCK_CURSOR_API=1
+  export MOCK_IN_FLIGHT_RUN_COUNT=8
+  export CURSOR_HANDOFF_GITHUB_TOKEN=mock
+  export CURSOR_WORKFLOW_SYNC_CALL_COUNT=0
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    110 "cursor/issue-110-test" "$state" demo "test prompt" "demo-in-progress" \
+    >/tmp/spawn-pat-fallback.log 2>&1
+  rc=$?
+
+  if [ "$rc" -eq 0 ]; then
+    pass "spawn pat fallback exit 0"
+  else
+    fail_test "spawn pat fallback expected exit 0 got $rc"
+  fi
+  if grep -q "Posted handoff comment" /tmp/spawn-pat-fallback.log; then
+    pass "spawn pat fallback posted comment"
+  else
+    fail_test "spawn pat fallback did not post PAT comment"
+  fi
+  if [ "${CURSOR_WORKFLOW_SYNC_CALL_COUNT:-0}" = "0" ]; then
+    pass "spawn pat fallback no sync call"
+  else
+    fail_test "spawn pat fallback expected 0 sync calls got ${CURSOR_WORKFLOW_SYNC_CALL_COUNT}"
+  fi
+  if ! grep -qE 'cursor:demo-in-progress|Updated status comment|Created status comment' /tmp/spawn-pat-fallback.log; then
+    pass "spawn pat fallback no false progress label sync"
+  else
+    fail_test "spawn pat fallback log contains false progress sync"
+  fi
+  if [ "$(jq -r '.stage' "$state")" = "execute-ready" ]; then
+    pass "spawn pat fallback stage unchanged"
+  else
+    fail_test "spawn pat fallback expected execute-ready stage"
+  fi
+  rm -f "$state"
+}
+
+# --- Pass-back PAT fallback: no false progress sync (issue #110) ---
+test_passback_pat_fallback_no_progress_sync() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  cp "$FIXTURES/state-passback-recovery.json" "$state"
+  setup_mock_gh
+  export MOCK_CURSOR_API=1
+  export MOCK_CURSOR_POST_CODE=500
+  export CURSOR_HANDOFF_GITHUB_TOKEN=mock
+  export CURSOR_WORKFLOW_SYNC_CALL_COUNT=0
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-passback-run.sh" \
+    86 "cursor/issue-86-test" "$state" >/tmp/passback-pat-fallback.log 2>&1
+  rc=$?
+
+  if [ "$rc" -eq 0 ]; then
+    pass "passback pat fallback exit 0"
+  else
+    fail_test "passback pat fallback expected exit 0 got $rc"
+  fi
+  if [ "${CURSOR_WORKFLOW_SYNC_CALL_COUNT:-0}" = "0" ]; then
+    pass "passback pat fallback no sync call"
+  else
+    fail_test "passback pat fallback expected 0 sync calls got ${CURSOR_WORKFLOW_SYNC_CALL_COUNT}"
+  fi
+  if ! grep -qE 'execute-in-progress|HANDOFF_PROGRESS_STAGE|Updated status comment|Created status comment' /tmp/passback-pat-fallback.log; then
+    pass "passback pat fallback no false progress sync"
+  else
+    fail_test "passback pat fallback log contains false progress sync"
+  fi
+  if [ "$(jq -r '.stage' "$state")" = "execute-passback" ]; then
+    pass "passback pat fallback stage unchanged"
+  else
+    fail_test "passback pat fallback expected execute-passback stage"
+  fi
+  rm -f "$state"
+}
+
 # --- Re-open inference (issue #86) ---
 test_reopen_inference_agents_demo() {
   cleanup_workflow_cache
@@ -1226,6 +1339,8 @@ test_git_record_spawn_toctou
 test_git_recovery_checkout_rewind
 test_passback_recovery
 test_passback_recovery_409
+test_spawn_pat_fallback_no_progress_sync
+test_passback_pat_fallback_no_progress_sync
 test_reopen_inference_agents_demo
 test_reopen_inference_prev_stage
 test_execute_ready_forward

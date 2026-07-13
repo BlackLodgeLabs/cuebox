@@ -1,0 +1,8 @@
+# Scenario 3: Success-path regression
+# Date: 2026-07-12
+# Commit: 83a3ea4
+
+## Test output:
+PASS: batched spawn clears pending and records agent
+PASS: passback recovery started run
+test-cursor-workflow-handoff.sh: all cases passed
