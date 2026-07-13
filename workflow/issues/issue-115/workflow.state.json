@@ -1,12 +1,12 @@
 {
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
-  "stage": "plan-in-progress",
+  "stage": "plan-ready",
   "active_skill": "planning",
-  "updated_at": "2026-07-13T17:00:00Z",
+  "updated_at": "2026-07-13T17:05:00Z",
   "agents": {
-    "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c",
-    "planning": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33"
+    "planning": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
+    "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c"
   },
   "pr": 116,
   "active_agent_id": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
@@ -16,6 +16,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   }
 }
