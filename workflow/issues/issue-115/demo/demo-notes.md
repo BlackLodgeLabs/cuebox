@@ -1,7 +1,7 @@
 # Demo notes — Issue #115
 
 **Date:** 2026-07-13  
-**Commit:** `8ec8707` (demo artifacts committed separately)  
+**Commit:** `083a6e5`  
 **Branch:** `cursor/issue-115-tabbed-watchlist-watched-archived`  
 **Stack:** Docker Compose (postgres, api, frontend, backup) on localhost:3000/8000  
 **Seed:** Part 2 bootstrap + `python3 scripts/seed-dev-db.py` (12 active ready films)
