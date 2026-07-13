@@ -298,7 +298,8 @@ GET /films
       "runtime": 88,
       "genres": ["Horror", "Mystery"],
       "created_at": "2024-11-01T14:30:00Z",
-      "updated_at": "2024-11-01T15:00:00Z"
+      "updated_at": "2024-11-01T15:00:00Z",
+      "removed_at": null
     }
   ],
   "pagination": {
@@ -326,12 +327,49 @@ GET /films
 |`genres`           |array of string  |Genres from TMDB                 |
 |`created_at`       |string           |ISO 8601                         |
 |`updated_at`       |string           |ISO 8601                         |
+|`removed_at`       |string, nullable |Most recent watchlist `removed_at` when listing `status=watched` or `status=archived`; omitted otherwise |
 
 #### Errors
 
 |Code              |HTTP|Trigger                                      |
 |------------------|----|---------------------------------------------|
 |`VALIDATION_ERROR`|400 |Invalid `status`, `enrichment_status`, `sort`, or `sort_dir` value|
+
+-----
+
+### 4.1.1 Set Film Status
+
+Manually transition a film between `active`, `watched`, and `archived`. Forbidden transitions (`watched` ↔ `archived`) return `409`. Restoring to `active` enforces the 500-film active watchlist cap.
+
+```
+POST /films/{film_id}/status
+```
+
+#### Path Parameters
+
+|Parameter|Type|Description|
+|---------|----|-----------|
+|`film_id`|UUID|Film ID    |
+
+#### Request Body
+
+```json
+{ "status": "active" }
+```
+
+Allowed values: `active` | `watched` | `archived`.
+
+#### Response `200 OK`
+
+Returns the updated `FilmDetail` (same shape as §4.2).
+
+#### Errors
+
+|Code           |HTTP|Trigger                                              |
+|---------------|----|-----------------------------------------------------|
+|`NOT_FOUND`    |404 |Film not found                                       |
+|`CONFLICT`     |409 |Forbidden transition or active watchlist cap exceeded|
+|`UNPROCESSABLE`|422|Invalid `status` value                               |
 
 -----
 
@@ -791,7 +829,7 @@ Same shape as §5.1 (`review_status: accepted`).
 
 ### 6.1 Manual Sync via CSV Upload
 
-Upload a fresh Letterboxd CSV to synchronise additions, removals, and watched status. Diff is applied against the current active watchlist. Returns a summary of changes.
+Upload a fresh Letterboxd CSV as a **supplemental import**: new URIs are added as active films; existing URIs in any status are left unchanged. CSV re-sync never removes or reclassifies films.
 
 ```
 POST /sync/csv
@@ -806,39 +844,27 @@ Content-Type: multipart/form-data
 
 **Validation Rules**
 
-Same rules as `POST /import` (§3.1), except the 500-film limit applies to the post-sync active watchlist total, not just the uploaded file.
+Same rules as `POST /import` (§3.1), except the 500-film limit applies to the post-sync active watchlist total (`count_active + added`), not just the uploaded file.
 
 #### Response `200 OK`
 
 ```json
 {
   "added": 3,
-  "removed": 1,
-  "watched": 2,
   "unchanged": 114,
   "failed": 0,
   "added_films": [
     { "film_id": "f1a2b3c4-...", "title": "Berberian Sound Studio", "year": 2012 }
-  ],
-  "removed_films": [
-    { "film_id": "f2b3c4d5-...", "title": "Inland Empire", "year": 2006 }
-  ],
-  "watched_films": [
-    { "film_id": "f3c4d5e6-...", "title": "Stalker", "year": 1979 }
   ]
 }
 ```
 
-|Field          |Type   |Description                                                |
-|---------------|-------|-----------------------------------------------------------|
-|`added`        |integer|Films added to the watchlist                               |
-|`removed`      |integer|Films removed (transitioned to `archived`)                 |
-|`watched`      |integer|Films marked as watched                                    |
-|`unchanged`    |integer|Films present in both old and new CSV with no status change|
-|`failed`       |integer|Rows that could not be processed                           |
-|`added_films`  |array  |Summary objects for each added film                        |
-|`removed_films`|array  |Summary objects for each removed film                      |
-|`watched_films`|array  |Summary objects for each newly-watched film                |
+|Field       |Type   |Description                                                |
+|------------|-------|-----------------------------------------------------------|
+|`added`     |integer|New URIs created as active films                           |
+|`unchanged` |integer|URIs already present in the database (any status)            |
+|`failed`    |integer|Rows that could not be processed                           |
+|`added_films`|array  |Summary objects for each added film                        |
 
 #### Errors
 

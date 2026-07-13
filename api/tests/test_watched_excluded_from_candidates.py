@@ -23,6 +23,20 @@ def test_watched_film_excluded_from_stage1_query(db_session):
     assert watched.status == FilmStatus.WATCHED
 
 
+def test_manual_status_transition_excluded_from_candidates(integration_client, db_session):
+    films = seed_ready_films(db_session, count=2)
+    film = films[0]
+
+    response = integration_client.post(
+        f"/api/v1/films/{film.id}/status",
+        json={"status": "watched"},
+    )
+    assert response.status_code == 200
+
+    candidates = film_repository.list_recommendation_candidates(db_session)
+    assert film.id not in {candidate.id for candidate in candidates}
+
+
 def test_non_english_film_excluded_when_subtitles_no(db_session):
     films = seed_ready_films(db_session, count=2)
     foreign = films[0]

@@ -1,4 +1,4 @@
-"""Integration tests for CSV synchronisation."""
+"""Integration tests for additive-only CSV synchronisation."""
 
 import uuid
 
@@ -19,7 +19,7 @@ def _csv(rows: list[tuple[str, str, int | None]]) -> bytes:
     return "\n".join(lines).encode()
 
 
-def test_csv_sync_add_and_remove(integration_client, db_session):
+def test_csv_sync_additive_adds_new_uri(integration_client, db_session):
     suffix = uuid.uuid4().hex[:8]
     uri_keep = f"https://letterboxd.com/film/keep-{suffix}/"
     uri_remove = f"https://letterboxd.com/film/remove-{suffix}/"
@@ -49,14 +49,37 @@ def test_csv_sync_add_and_remove(integration_client, db_session):
     assert response.status_code == 200
     body = response.json()
     assert body["added"] == 1
-    assert body["removed"] == 1
     assert body["unchanged"] == 1
+    assert "removed" not in body
+    assert "watched" not in body
 
-    archived = integration_client.get("/api/v1/films?status=archived").json()["data"]
-    assert any(f["letterboxd_uri"] == uri_remove for f in archived)
+    removed_film = integration_client.get("/api/v1/films?on_watchlist=true&limit=100").json()
+    assert any(
+        f["letterboxd_uri"] == uri_remove and f["status"] == "active"
+        for f in removed_film["data"]
+    )
 
 
-def test_csv_sync_watched_via_rss_event(integration_client, db_session):
+def test_csv_sync_does_not_archive_on_absence(integration_client, db_session):
+    suffix = uuid.uuid4().hex[:8]
+    uri = f"https://letterboxd.com/film/absent-{suffix}/"
+    created = _import_csv(integration_client, _csv([("The Matrix", uri, 1999)]))
+    _wait_for_complete(integration_client, created["job_id"])
+
+    response = integration_client.post(
+        "/api/v1/sync/csv",
+        files={"file": ("watchlist.csv", _csv([]), "text/csv")},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["added"] == 0
+    assert body["unchanged"] == 0
+
+    film = integration_client.get(f"/api/v1/films?search=absent-{suffix}").json()["data"][0]
+    assert film["status"] == "active"
+
+
+def test_csv_sync_does_not_mark_watched_via_rss_on_absence(integration_client, db_session):
     suffix = uuid.uuid4().hex[:8]
     uri = f"https://letterboxd.com/film/watched-{suffix}/"
     created = _import_csv(integration_client, _csv([("The Matrix", uri, 1999)]))
@@ -82,10 +105,13 @@ def test_csv_sync_watched_via_rss_event(integration_client, db_session):
         files={"file": ("watchlist.csv", _csv([]), "text/csv")},
     )
     assert response.status_code == 200
-    assert response.json()["watched"] == 1
+    assert "watched" not in response.json()
+
+    film = integration_client.get(f"/api/v1/films?search=watched-{suffix}").json()["data"][0]
+    assert film["status"] == "active"
 
 
-def test_csv_sync_re_add_archived(integration_client, db_session):
+def test_csv_sync_existing_archived_unchanged(integration_client, db_session):
     suffix = uuid.uuid4().hex[:8]
     uri = f"https://letterboxd.com/film/readd-{suffix}/"
     created = _import_csv(integration_client, _csv([("The Matrix", uri, 1999)]))
@@ -108,10 +134,12 @@ def test_csv_sync_re_add_archived(integration_client, db_session):
         files={"file": ("watchlist.csv", _csv([("The Matrix", uri, 1999)]), "text/csv")},
     )
     assert response.status_code == 200
-    assert response.json()["added"] == 1
+    body = response.json()
+    assert body["added"] == 0
+    assert body["unchanged"] == 1
 
-    film = integration_client.get("/api/v1/films?status=active").json()["data"]
-    assert any(f["letterboxd_uri"] == uri and f["enrichment_status"] == "ready" for f in film)
+    film = integration_client.get(f"/api/v1/films?status=archived&search=readd-{suffix}").json()["data"]
+    assert any(f["letterboxd_uri"] == uri for f in film)
 
 
 def test_csv_sync_watchlist_size_limit(integration_client):
