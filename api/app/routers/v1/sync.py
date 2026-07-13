@@ -42,13 +42,9 @@ async def sync_csv(
     result = sync_service.sync_csv(db, content, background_tasks)
     return SyncCsvResponse(
         added=result.added,
-        removed=result.removed,
-        watched=result.watched,
         unchanged=result.unchanged,
         failed=result.failed,
         added_films=[FilmSyncSummary(**item) for item in result.added_films],
-        removed_films=[FilmSyncSummary(**item) for item in result.removed_films],
-        watched_films=[FilmSyncSummary(**item) for item in result.watched_films],
     )
 
 

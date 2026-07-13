@@ -16,13 +16,9 @@ class FilmSyncSummary(BaseModel):
 
 class SyncCsvResponse(BaseModel):
     added: int
-    removed: int
-    watched: int
     unchanged: int
     failed: int
     added_films: list[FilmSyncSummary]
-    removed_films: list[FilmSyncSummary]
-    watched_films: list[FilmSyncSummary]
 
 
 class RssConfigRequest(BaseModel):
