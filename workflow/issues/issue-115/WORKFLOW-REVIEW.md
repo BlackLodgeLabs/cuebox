@@ -154,11 +154,11 @@ Agent links open conversations in the [Cursor agents UI](https://cursor.com/agen
 
 ## Follow-up issues
 
-| Title | Scope |
-|-------|-------|
-| Harden agents-list fetch ARG_MAX from issue #115 workflow review | Rewrite `cursor-workflow-fetch-agents-list.sh` to avoid `--argjson` argv; fix PR filter no-op; tests |
-| Notify stalled when handoff recovery/fetch fails (from #115) | Wire `notify-stalled` for fetch/count hard failures; stop masking recovery errors with bare `\|\| true` |
-| Demo skill single-push `demo-ready` finalize (from #115) | Align demo git/state rules with create-pr batched push |
+| Issue | Title | Scope |
+|-------|-------|-------|
+| [#117](https://github.com/BlackLodgeLabs/cuebox/issues/117) | Harden agents-list fetch ARG_MAX from issue #115 workflow review | Rewrite `cursor-workflow-fetch-agents-list.sh` to avoid `--argjson` argv; fix PR filter no-op; tests |
+| [#118](https://github.com/BlackLodgeLabs/cuebox/issues/118) | Notify stalled when handoff recovery/fetch fails (from #115) | Wire `notify-stalled` for fetch/count hard failures; stop masking recovery errors with bare `\|\| true` |
+| [#119](https://github.com/BlackLodgeLabs/cuebox/issues/119) | Demo skill single-push `demo-ready` finalize (from #115) | Align demo git/state rules with create-pr batched push |
 
 ---
 
