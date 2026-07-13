@@ -4,6 +4,7 @@ import uuid
 
 from sqlalchemy import text
 
+from app.repositories import film_repository
 from app.database.session import SessionLocal
 from tests.conftest import requires_db
 from tests.test_integration_import import _import_csv, _wait_for_complete
@@ -75,7 +76,11 @@ def test_csv_sync_does_not_archive_on_absence(integration_client, db_session):
     assert body["added"] == 0
     assert body["unchanged"] == 0
 
-    film = integration_client.get(f"/api/v1/films?search=absent-{suffix}").json()["data"][0]
+    film = next(
+        item
+        for item in integration_client.get("/api/v1/films?on_watchlist=true&limit=100").json()["data"]
+        if item["letterboxd_uri"] == uri
+    )
     assert film["status"] == "active"
 
 
@@ -107,7 +112,11 @@ def test_csv_sync_does_not_mark_watched_via_rss_on_absence(integration_client, d
     assert response.status_code == 200
     assert "watched" not in response.json()
 
-    film = integration_client.get(f"/api/v1/films?search=watched-{suffix}").json()["data"][0]
+    film = next(
+        item
+        for item in integration_client.get("/api/v1/films?on_watchlist=true&limit=100").json()["data"]
+        if item["letterboxd_uri"] == uri
+    )
     assert film["status"] == "active"
 
 
@@ -122,12 +131,10 @@ def test_csv_sync_existing_archived_unchanged(integration_client, db_session):
         files={"file": ("watchlist.csv", _csv([]), "text/csv")},
     )
 
-    with SessionLocal() as db:
-        db.execute(
-            text("UPDATE films SET status = 'archived' WHERE letterboxd_uri = :uri"),
-            {"uri": uri},
-        )
-        db.commit()
+    film = film_repository.get_by_letterboxd_uri(db_session, uri)
+    assert film is not None
+    film_repository.archive_film(db_session, film)
+    db_session.commit()
 
     response = integration_client.post(
         "/api/v1/sync/csv",
@@ -138,7 +145,7 @@ def test_csv_sync_existing_archived_unchanged(integration_client, db_session):
     assert body["added"] == 0
     assert body["unchanged"] == 1
 
-    film = integration_client.get(f"/api/v1/films?status=archived&search=readd-{suffix}").json()["data"]
+    film = integration_client.get("/api/v1/films?status=archived&limit=100").json()["data"]
     assert any(f["letterboxd_uri"] == uri for f in film)
 
 
