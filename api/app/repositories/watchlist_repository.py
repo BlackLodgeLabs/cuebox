@@ -65,6 +65,40 @@ def deactivate_entry(db: Session, entry: WatchlistEntry) -> WatchlistEntry:
     return entry
 
 
+def get_latest_removed_at(db: Session, film_id: uuid.UUID) -> datetime | None:
+    stmt = (
+        select(WatchlistEntry.removed_at)
+        .where(
+            WatchlistEntry.film_id == film_id,
+            WatchlistEntry.active.is_(False),
+            WatchlistEntry.removed_at.isnot(None),
+        )
+        .order_by(WatchlistEntry.removed_at.desc())
+        .limit(1)
+    )
+    return db.scalar(stmt)
+
+
+def get_latest_removed_at_batch(
+    db: Session,
+    film_ids: list[uuid.UUID],
+) -> dict[uuid.UUID, datetime]:
+    if not film_ids:
+        return {}
+
+    stmt = (
+        select(WatchlistEntry.film_id, WatchlistEntry.removed_at)
+        .where(
+            WatchlistEntry.film_id.in_(film_ids),
+            WatchlistEntry.active.is_(False),
+            WatchlistEntry.removed_at.isnot(None),
+        )
+        .order_by(WatchlistEntry.film_id, WatchlistEntry.removed_at.desc())
+        .distinct(WatchlistEntry.film_id)
+    )
+    return {row[0]: row[1] for row in db.execute(stmt).all()}
+
+
 def get_active_by_uri(db: Session, letterboxd_uri: str) -> WatchlistEntry | None:
     stmt = (
         select(WatchlistEntry)
