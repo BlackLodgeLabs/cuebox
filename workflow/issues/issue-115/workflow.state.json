@@ -1,10 +1,11 @@
 {
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
-  "stage": "create-pr-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-13T19:40:23Z",
+  "stage": "babysit-in-progress",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-13T19:49:01Z",
   "agents": {
+    "babysit-pr": "bc-2abeb61d-2ea3-472c-9fe5-80474453819b",
     "create-pr": "bc-2abeb61d-2ea3-472c-9fe5-80474453819b",
     "demo": "bc-923efa2f-275b-45b3-aebc-9ca8583a571e",
     "execute": "bc-1212c4a0-349b-4d53-94d9-363902f4df4c",
@@ -19,6 +20,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   }
 }
