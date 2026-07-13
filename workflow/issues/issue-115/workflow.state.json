@@ -1,9 +1,9 @@
 {
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-13T16:55:00Z",
+  "updated_at": "2026-07-13T17:00:00Z",
   "agents": {
     "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c"
   },
