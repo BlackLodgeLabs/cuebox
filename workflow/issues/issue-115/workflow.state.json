@@ -2,20 +2,17 @@
   "issue": 115,
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-13T16:56:52Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-13T16:56:56Z",
   "agents": {
-    "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c"
+    "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c",
+    "planning": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33"
   },
   "pr": 116,
-  "active_agent_id": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c",
+  "active_agent_id": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-13T16:56:52Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
