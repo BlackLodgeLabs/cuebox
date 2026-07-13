@@ -1,0 +1,8 @@
+PASS: spawn stalled exit 0
+PASS: spawn stalled posted notification
+PASS: spawn stalled posted stalled marker
+PASS: spawn stalled no sync call
+PASS: spawn stalled no false progress label sync
+PASS: spawn stalled stage unchanged
+--- pat_fallback absent in spawn-agent.sh ---
+(no matches)
