@@ -147,6 +147,8 @@ def test_csv_sync_existing_archived_unchanged(integration_client, db_session):
 
     film = integration_client.get("/api/v1/films?status=archived&limit=100").json()["data"]
     assert any(f["letterboxd_uri"] == uri for f in film)
+    archived = next(f for f in film if f["letterboxd_uri"] == uri)
+    assert archived["enrichment_status"] == "ready"
 
 
 def test_csv_sync_watchlist_size_limit(integration_client):
