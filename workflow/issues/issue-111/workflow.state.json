@@ -1,9 +1,9 @@
 {
   "issue": 111,
   "branch": "cursor/issue-111-workflow-human-notifications",
-  "stage": "babysit-in-progress",
+  "stage": "complete",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-13T07:28:00Z",
+  "updated_at": "2026-07-13T07:32:00Z",
   "agents": {
     "babysit-pr": "bc-d799c6d9-0192-4771-b5c7-04cda3555b9d",
     "create-pr": "bc-c992cfcc-dbdc-4055-93b2-a0f49eb53d8c",

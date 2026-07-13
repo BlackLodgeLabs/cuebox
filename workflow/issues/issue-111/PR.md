@@ -78,12 +78,13 @@ No Docker stack or database setup required.
 
 ## Gate evidence
 
-- [ ] Workflow regression: `verify-workflow-paths.sh` exit 0 at `d8967db` (demo commit `052178c`)
+- [x] Workflow regression: `verify-workflow-paths.sh` exit 0 at `5cddf02` (babysit commit)
+- [x] Handoff tests: `test-cursor-workflow-handoff.sh` exit 0 at `5cddf02` (babysit commit)
 
 ## Checklist
 
-- [ ] Code follows project conventions
-- [ ] Tests added/updated and passing
-- [ ] Documentation updated where applicable
-- [ ] No secrets committed
-- [ ] Demo scenarios verified
+- [x] Code follows project conventions
+- [x] Tests added/updated and passing
+- [x] Documentation updated where applicable
+- [x] No secrets committed
+- [x] Demo scenarios verified

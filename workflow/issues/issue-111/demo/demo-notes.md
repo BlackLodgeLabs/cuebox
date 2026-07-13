@@ -31,3 +31,9 @@
 - Workflow-only change; no product UI or database seed required.
 - `bash scripts/test-cursor-workflow-handoff.sh` — all cases passed (re-run after initial flaky `reopen inference prev_stage` failure in first pass; not part of demo-spec scenarios).
 - `bash scripts/verify-workflow-paths.sh` — exit 0 including embedded handoff suite.
+
+## Babysit gate evidence (commit `5cddf02`)
+
+- `verify-workflow-paths.sh` exit 0
+- `test-cursor-workflow-handoff.sh` exit 0
+- CI: Cursor workflow handoff success; resync-status skipped (expected)
