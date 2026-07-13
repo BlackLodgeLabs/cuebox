@@ -3,7 +3,7 @@
   "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
   "stage": "plan-ready",
   "active_skill": "planning",
-  "updated_at": "2026-07-13T17:06:00Z",
+  "updated_at": "2026-07-13T17:01:07Z",
   "agents": {
     "planning": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
     "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c"
@@ -12,7 +12,11 @@
   "active_agent_id": "bc-5f77654c-8548-41ed-90e0-6b93c0ebdf33",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-13T17:01:07Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
