@@ -1,0 +1,20 @@
+{
+  "issue": 115,
+  "branch": "cursor/issue-115-tabbed-watchlist-watched-archived",
+  "stage": "spec-in-progress",
+  "active_skill": "review-and-spec",
+  "updated_at": "2026-07-13T16:55:00Z",
+  "agents": {
+    "review-and-spec": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c"
+  },
+  "pr": null,
+  "active_agent_id": "bc-11989aaa-2ae6-42d0-8183-ea8f31c30e1c",
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}
