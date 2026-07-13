@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Archive, Eye, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,24 +27,20 @@ export function FilmStatusActions({
 }: FilmStatusActionsProps) {
   const [archiveOpen, setArchiveOpen] = useState(false);
 
-  const renderButton = (
-    label: string,
-    icon: React.ReactNode,
-    onClick: () => void,
-  ) => {
+  const renderButton = (label: string, onClick: () => void) => {
     if (variant === "table") {
       return (
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+          size="sm"
+          className="h-8 px-2 text-label-md"
           aria-label={label}
           title={label}
           onClick={onClick}
           disabled={isPending}
         >
-          {icon}
+          {label}
         </Button>
       );
     }
@@ -58,8 +53,7 @@ export function FilmStatusActions({
         onClick={onClick}
         disabled={isPending}
       >
-        {icon}
-        <span className="ml-2">{label}</span>
+        {label}
       </Button>
     );
   };
@@ -69,30 +63,14 @@ export function FilmStatusActions({
   if (status === "active") {
     actions = (
       <>
-        {renderButton(
-          "Mark watched",
-          <Eye className="h-4 w-4" />,
-          () => onTransition("watched"),
-        )}
-        {renderButton(
-          "Archive",
-          <Archive className="h-4 w-4" />,
-          () => setArchiveOpen(true),
-        )}
+        {renderButton("Mark watched", () => onTransition("watched"))}
+        {renderButton("Archive", () => setArchiveOpen(true))}
       </>
     );
   } else if (status === "watched") {
-    actions = renderButton(
-      "Return to watchlist",
-      <RotateCcw className="h-4 w-4" />,
-      () => onTransition("active"),
-    );
+    actions = renderButton("Return to watchlist", () => onTransition("active"));
   } else if (status === "archived") {
-    actions = renderButton(
-      "Re-enable on watchlist",
-      <RotateCcw className="h-4 w-4" />,
-      () => onTransition("active"),
-    );
+    actions = renderButton("Re-enable on watchlist", () => onTransition("active"));
   }
 
   if (actions === null) {
