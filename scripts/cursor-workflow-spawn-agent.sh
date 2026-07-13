@@ -135,15 +135,9 @@ do_post_agent() {
   return 1
 }
 
-pat_fallback() {
-  if [ -n "${CURSOR_HANDOFF_GITHUB_TOKEN:-}" ]; then
-    echo "${CURSOR_HANDOFF_GITHUB_TOKEN}" | gh auth login --with-token
-    gh issue comment "$ISSUE" --repo "${REPO}" --body "@cursoragent ${PROMPT}"
-    echo "Posted handoff comment on issue #${ISSUE} (PAT fallback)"
-    return 0
-  fi
-  echo "::warning::Set CURSOR_API_KEY or CURSOR_HANDOFF_GITHUB_TOKEN"
-  return 0
+notify_stalled() {
+  local reason="${1:?}"
+  "$WF/cursor-workflow-notify-stalled.sh" "$STATE_FILE" "$reason" "$SKILL" || true
 }
 
 gate_args=("$STATE_FILE" "$SKILL")
@@ -187,7 +181,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
         continue
       fi
       "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "$reason" || true
-      pat_fallback || true
+      notify_stalled "$reason" || true
       exit 0
       ;;
     proceed)
@@ -201,7 +195,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
           continue
         fi
         "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "pending-lock" || true
-        pat_fallback || true
+        notify_stalled "pending-lock" || true
         exit 0
       fi
 
@@ -224,7 +218,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
             continue
           fi
           "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "$reason" || true
-          pat_fallback || true
+          notify_stalled "$reason" || true
           exit 0
           ;;
         proceed)
@@ -246,11 +240,11 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
             continue
           fi
           "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "api-400" || true
-          pat_fallback || true
+          notify_stalled "api-400" || true
           exit 0
         fi
         if [ -z "${CURSOR_API_KEY:-}" ] && [ "${MOCK_CURSOR_API:-}" != "1" ]; then
-          pat_fallback || true
+          notify_stalled "missing-api-key" || true
           exit 0
         fi
         attempt=$((attempt + 1))
@@ -258,7 +252,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
           sleep "${BACKOFF[$((attempt - 1))]:-120}"
           continue
         fi
-        pat_fallback || true
+        notify_stalled "spawn-failed" || true
         exit 0
       fi
       unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK

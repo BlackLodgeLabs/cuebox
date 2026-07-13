@@ -68,12 +68,10 @@ if [ -n "${CURSOR_API_KEY:-}" ] || [ "${MOCK_CURSOR_API:-}" = "1" ]; then
   echo "Pass-back API returned ${http_code}: $(cat /tmp/cursor-passback.json)" >&2
 fi
 
-if [ -n "${CURSOR_HANDOFF_GITHUB_TOKEN:-}" ]; then
-  echo "${CURSOR_HANDOFF_GITHUB_TOKEN}" | gh auth login --with-token
-  gh issue comment "$ISSUE" --repo "$REPO" \
-    --body "@cursoragent ${prompt}"
-  exit 0
+if "$WF/cursor-workflow-notify-stalled.sh" "$STATE_FILE" "passback-failed" "execute"; then
+  echo "Posted stalled notification for pass-back failure on issue #${ISSUE}"
+  exit 1
 fi
 
-echo "::warning::Pass-back failed — set CURSOR_API_KEY or CURSOR_HANDOFF_GITHUB_TOKEN" >&2
+echo "::warning::Pass-back failed and stalled notification could not be posted — set GITHUB_TOKEN" >&2
 exit 1
