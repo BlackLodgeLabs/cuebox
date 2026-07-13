@@ -3,13 +3,17 @@
   "branch": "cursor/issue-111-workflow-human-notifications",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-13T06:56:45Z",
+  "updated_at": "2026-07-13T06:58:20Z",
   "agents": {},
   "pr": 114,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "planning",
+    "started_at": "2026-07-13T06:58:20Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
