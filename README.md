@@ -113,7 +113,7 @@ Compose publishes port **3000** (frontend) and **8000** (API). From other device
 
 | Document | Purpose |
 |----------|---------|
-| [documents/roadmap.md](documents/roadmap.md) | Implementation phases and verification gates |
+| [documents/ROADMAP.md](documents/ROADMAP.md) | Product direction pointer for upcoming themes (agents + humans) |
 | [documents/PRD.md](documents/PRD.md) | Product requirements and success criteria |
 | [documents/DESIGN.md](documents/DESIGN.md) | Modern Neo-Noir Cinema design system |
 | [documents/api-contracts.md](documents/api-contracts.md) | REST API v1 reference |
