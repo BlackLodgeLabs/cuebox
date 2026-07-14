@@ -6,7 +6,7 @@ Guidance for AI agents working in the Cuebox repository.
 
 Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 8: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API with gated Developer Mode (`/dev/*`), full Next.js MVP UX styled with the Modern Neo-Noir Cinema design system ([documents/DESIGN.md](documents/DESIGN.md)), integration/NFR validation, and root [README.md](README.md).
 
-Specifications live under `documents/`; see [README.md](README.md) for human setup and quick start.
+Specifications live under `documents/`; see [README.md](README.md) for human setup and quick start. Product direction (themes, not schedules) lives in [documents/ROADMAP.md](documents/ROADMAP.md) — consult it when scoping features that may overlap upcoming work.
 
 ## Cursor Cloud specific instructions
 
