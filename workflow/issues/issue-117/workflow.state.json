@@ -1,9 +1,9 @@
 {
   "issue": 117,
   "branch": "cursor/issue-117-harden-agents-list-argmax-993a",
-  "stage": "create-pr-in-progress",
+  "stage": "create-pr-ready",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-15T07:18:35Z",
+  "updated_at": "2026-07-15T07:19:32Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-4d99c746-8fbd-4549-89d5-a80825db01bd",
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   }
 }
