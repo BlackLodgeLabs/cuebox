@@ -2,11 +2,11 @@
   "issue": 119,
   "branch": "cursor/issue-119-demo-single-push-finalize",
   "stage": "demo-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-15T19:28:58Z",
+  "active_skill": "create-pr",
+  "updated_at": "2026-07-15T19:29:02Z",
   "agents": {
     "babysit-pr": null,
-    "create-pr": null,
+    "create-pr": "bc-62aa48b6-7948-48f6-9abe-ed605582d32f",
     "demo": "bc-23450146-ff3c-423d-8ffb-98b0e31ce1fa",
     "execute": "bc-1d336af0-5fba-423f-b4b4-3e9150f83272",
     "planning": "bc-8e512798-bd74-456f-9b5a-7cafe5e3bee6",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 125,
-  "active_agent_id": null,
+  "active_agent_id": "bc-62aa48b6-7948-48f6-9abe-ed605582d32f",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "create-pr",
-    "started_at": "2026-07-15T19:28:58Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
