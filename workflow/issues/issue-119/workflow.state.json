@@ -1,9 +1,9 @@
 {
   "issue": 119,
   "branch": "cursor/issue-119-demo-single-push-finalize",
-  "stage": "create-pr-in-progress",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-15T19:35:00Z",
+  "stage": "create-pr-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-15T19:36:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-62aa48b6-7948-48f6-9abe-ed605582d32f",
@@ -14,13 +14,13 @@
     "review-and-spec-continued": null
   },
   "pr": 125,
-  "active_agent_id": "bc-62aa48b6-7948-48f6-9abe-ed605582d32f",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   }
 }
