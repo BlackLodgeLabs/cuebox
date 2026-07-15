@@ -48,3 +48,9 @@
 ## Stack note
 
 Full Docker stack was running for this demo agent (user/cloud requirement). Scenarios themselves are workflow-script only and do not depend on Cuebox UI or DB seed.
+
+## Babysit verification
+
+- 2026-07-15: re-ran `bash scripts/test-cursor-workflow-handoff.sh` and `bash scripts/verify-workflow-paths.sh` at `3553786`; both exited 0.
+- PR #121 had a successful `handoff` check, no reviews or unresolved review threads, and a clean mergeable state.
+- The GitHub MCP token could not convert the draft to ready for review (`Resource not accessible by personal access token`). The workflow state is still completed; use GitHub's ready-for-review control if the workflow does not apply the transition.
