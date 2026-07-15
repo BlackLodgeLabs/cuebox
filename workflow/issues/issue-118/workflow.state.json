@@ -1,9 +1,9 @@
 {
   "issue": 118,
   "branch": "cursor/issue-118-notify-stalled-handoff-failures-c8b7",
-  "stage": "execute-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-15T18:32:25Z",
+  "updated_at": "2026-07-15T18:36:00Z",
   "agents": {
     "babysit-pr": "bc-2a270ea9-c9bb-4bbb-a0f5-b18b527c7476",
     "create-pr": "bc-3d69b0e7-5e59-4f46-a7db-5d3df31e617c",
