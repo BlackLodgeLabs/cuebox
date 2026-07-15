@@ -1,0 +1,51 @@
+=== Scenario 0: Bug fix verification (ARG_MAX + PR filter) ===
+Date: 2026-07-15T07:13:21Z
+Commit: 651c3cfff106078f5a511a04040869aa05e6ee33
+Branch: cursor/issue-117-pr-121-demo-agent-2bf0
+getconf ARG_MAX: 2097152
+
+--- Pre-fix baseline (from bug-repro-notes.md) ---
+Pre-fix (089d8aa): exit 126, Argument list too long at jq --argjson wrap
+PR filter with or (. == .): no-op (kept all items)
+
+--- Generate 8000-item agents page ---
+wrote 8000 items to /tmp/tmp.UKGFZy2osJ/page.json
+page bytes: 1365811
+
+--- Optional: old --argjson wrap still fails (documents root cause) ---
+argjson exit: 126
+--: line 67: /usr/bin/jq: Argument list too long
+
+--- Fixed fetch (unfiltered) ---
+fetch exit: 0
+stdout: /tmp/cuebox-117-demo-cache.json
+unfiltered cache length: 8000
+OK: no Argument list too long on fixed path
+
+--- Fixed fetch with CURSOR_AGENTS_PR_URL (sparse match) ---
+fetch exit: 0
+stdout: /tmp/cuebox-117-demo-cache.json
+filtered cache length: 80
+
+--- Pass criteria check ---
+PASS: unfiltered fetch exit 0
+PASS: unfiltered length 8000
+PASS: filtered fetch exit 0
+PASS: filtered length 80 < 8000
+PASS: filtered length exactly 80
+PASS: no ARG_MAX on fixed path
+{
+  "scenario": 0,
+  "commit": "651c3cfff106078f5a511a04040869aa05e6ee33",
+  "arg_max": 2097152,
+  "argjson_wrap_exit": 126,
+  "argjson_wrap_stderr": "--: line 67: /usr/bin/jq: Argument list too long ",
+  "unfiltered_exit": 0,
+  "unfiltered_count": 8000,
+  "filtered_exit": 0,
+  "filtered_count": 80,
+  "fixed_path_argmax": false,
+  "pass": true
+}
+
+SCENARIO 0: PASS
