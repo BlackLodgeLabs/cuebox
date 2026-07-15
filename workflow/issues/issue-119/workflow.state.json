@@ -1,0 +1,26 @@
+{
+  "issue": 119,
+  "branch": "cursor/issue-119-demo-single-push-finalize",
+  "stage": "spec-in-progress",
+  "active_skill": "review-and-spec",
+  "updated_at": "2026-07-15T19:15:00Z",
+  "agents": {
+    "babysit-pr": null,
+    "create-pr": null,
+    "demo": null,
+    "execute": null,
+    "planning": null,
+    "review-and-spec": "bc-282f1dcb-dc40-4174-930e-0da9f00ccf95",
+    "review-and-spec-continued": null
+  },
+  "pr": null,
+  "active_agent_id": "bc-282f1dcb-dc40-4174-930e-0da9f00ccf95",
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}
