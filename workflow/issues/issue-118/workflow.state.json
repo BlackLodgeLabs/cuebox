@@ -2,11 +2,11 @@
   "issue": 118,
   "branch": "cursor/issue-118-notify-stalled-handoff-failures-c8b7",
   "stage": "execute-ready",
-  "active_skill": "demo",
-  "updated_at": "2026-07-15T18:28:01Z",
+  "active_skill": "create-pr",
+  "updated_at": "2026-07-15T18:28:05Z",
   "agents": {
     "babysit-pr": null,
-    "create-pr": null,
+    "create-pr": "bc-3d69b0e7-5e59-4f46-a7db-5d3df31e617c",
     "demo": "bc-672d60ce-b82d-4f00-84dc-df2579034696",
     "execute": "bc-e020a0ee-982e-460b-9e7a-55d412e2c12f",
     "planning": "bc-07ccb2de-007f-46d3-b091-25302f3d764f",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 124,
-  "active_agent_id": "bc-672d60ce-b82d-4f00-84dc-df2579034696",
+  "active_agent_id": "bc-3d69b0e7-5e59-4f46-a7db-5d3df31e617c",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "create-pr",
-    "started_at": "2026-07-15T18:28:01Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
