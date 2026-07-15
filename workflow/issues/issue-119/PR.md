@@ -88,6 +88,7 @@ Workflow-only change — no product UI. Demo validated skill documentation, cros
 - [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 060e051` (execute)
 - [x] `Workflow regression: verify-workflow-paths.sh exit 0 at e6f6756` (demo)
 - [x] `git diff origin/main -- api frontend` empty (demo)
+- [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 506667f` (babysit)
 
 ## Checklist
 
