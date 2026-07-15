@@ -2,11 +2,11 @@
   "issue": 117,
   "branch": "cursor/issue-117-harden-agents-list-argmax-993a",
   "stage": "demo-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-15T07:17:03Z",
+  "active_skill": "create-pr",
+  "updated_at": "2026-07-15T07:17:07Z",
   "agents": {
     "babysit-pr": null,
-    "create-pr": null,
+    "create-pr": "bc-4d99c746-8fbd-4549-89d5-a80825db01bd",
     "demo": "bc-1ca9a55e-35ea-4dd1-98bb-252e7c2e91a3",
     "execute": "bc-85dfbe0d-5ffe-4fcd-9433-dddcf67b30bb",
     "planning": "bc-63ad483b-dce1-4b33-b1b9-9c65ca8de37f",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 121,
-  "active_agent_id": null,
+  "active_agent_id": "bc-4d99c746-8fbd-4549-89d5-a80825db01bd",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "create-pr",
-    "started_at": "2026-07-15T07:17:03Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
