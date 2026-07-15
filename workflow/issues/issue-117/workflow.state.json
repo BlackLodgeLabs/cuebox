@@ -3,7 +3,7 @@
   "branch": "cursor/issue-117-harden-agents-list-argmax-993a",
   "stage": "create-pr-ready",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-15T07:19:32Z",
+  "updated_at": "2026-07-15T07:21:08Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-4d99c746-8fbd-4549-89d5-a80825db01bd",
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-4d99c746-8fbd-4549-89d5-a80825db01bd",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-15T07:21:08Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
