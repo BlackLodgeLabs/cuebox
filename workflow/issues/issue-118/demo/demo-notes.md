@@ -1,7 +1,7 @@
 # Demo notes — issue #118
 
-- **Date:** 2026-07-15T18:10:00Z
-- **Commit under test:** `2a5f008`
+- **Date:** 2026-07-15T18:36:00Z
+- **Commit under test:** `e1c0157`
 - **Branch:** `cursor/issue-118-notify-stalled-handoff-failures-c8b7`
 - **PR:** #124
 - **Docker stack:** all four services (`postgres`, `api`, `frontend`, and `backup`) were Up. Both `http://localhost:3000/api/v1/health` and `http://localhost:8000/api/v1/health` returned `{"status":"ok","database":"ok"}`.
@@ -10,12 +10,11 @@
 
 | # | Scenario | Result | Evidence |
 |---|----------|--------|----------|
-| 1 | Execute the issue demo specification | **BLOCKED** | `workflow/issues/issue-118/demo/demo-spec.md` is absent from the tested branch, so no approved scenarios, capture paths, or expected artifacts exist to execute. |
-| 2 | Supplemental workflow regression verification | **PASS** | `bash scripts/test-cursor-workflow-handoff.sh` completed with all cases passed, including forced recovery list-fetch failures for `planning`, `execute`, `demo`, `create-pr`, and `babysit-pr`; it also verified that an active-agent count failure remains terminal and that notifier failure does not hide the original failure. |
-| 3 | Workflow path regression | **PASS** | `bash scripts/verify-workflow-paths.sh` completed successfully; its nested workflow and GitHub-MCP checks passed. |
+| 1 | Agent-list failure is terminal and notified | **PASS** | `scenario-1-handoff-tests.log` captures `scripts/test-cursor-workflow-handoff.sh` passing every forced recovery fetch/count failure across `planning`, `execute`, `demo`, `create-pr`, and `babysit-pr`. It also verifies the stable `agents-list-fetch-failed` reason, stalled-notification marker, expected next skill, no agent POST/false progress, and preservation of the original error when notification posting fails. |
+| 2 | Workflow path and documentation regression | **PASS** | `scenario-2-workflow-gate.log` captures `scripts/verify-workflow-paths.sh` passing its nested handoff suite plus the GitHub-MCP, documentation-link, and legacy-path checks. |
 
 ## Notes
 
-- This is a workflow-only change; no product UI scenario is applicable.
-- Passing regression gates validate the implementation, but they cannot replace a missing approved demo specification. The workflow is therefore blocked rather than advanced to `demo-ready`.
-- No screenshots or recordings were specified or captured, and no secrets were included.
+- This is a workflow-only change, so the approved demo specifies shell-log artifacts rather than UI screenshots or recordings.
+- The operator recovery guidance for `agents-list-fetch-failed` is covered in `workflow/cursor-workflow/WORKFLOW.md` and `workflow/cursor-workflow/SETUP.md`.
+- The committed logs contain only mocked test-harness output; no credentials or environment values are included.
