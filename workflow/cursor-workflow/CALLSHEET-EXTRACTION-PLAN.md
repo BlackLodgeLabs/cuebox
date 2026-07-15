@@ -114,7 +114,7 @@ Do not rename actual Cursor integration identifiers:
    - agent cap, stale-lock duration, and loop limits;
    - adapter commands for validation, demo, CI discovery, and environment verification.
 5. Add a `schema_version` to the workflow state template and implement idempotent migrations for every supported prior schema version.
-6. Make every CallSheet-owned file identifiable by a generated-file header and record its checksum in the manifest.
+6. Make every Callsheet-owned file identifiable by a generated-file header and record its checksum in the manifest.
 7. Test the rebrand with a fixture repository that exercises status synchronization, handoff target resolution, state merge, recovery, and post-merge cleanup.
 
 ### Exit criteria
