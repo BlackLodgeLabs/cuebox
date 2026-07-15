@@ -1,9 +1,9 @@
 {
   "issue": 119,
   "branch": "cursor/issue-119-demo-single-push-finalize",
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-15T19:32:49Z",
+  "updated_at": "2026-07-15T19:36:00Z",
   "agents": {
     "babysit-pr": "bc-7df2d390-9e37-41f0-b723-8f96d4c17a4f",
     "create-pr": "bc-62aa48b6-7948-48f6-9abe-ed605582d32f",
@@ -21,6 +21,6 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   }
 }
