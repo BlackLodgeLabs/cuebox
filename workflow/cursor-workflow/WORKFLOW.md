@@ -103,6 +103,8 @@ When `stage` is `create-pr-ready`, the linked PR is still draft, and `agents.bab
 
 When any handoff `stage` (`spec-ready` through `create-pr-ready`) has no recorded agent for the target skill, the Action spawns on **sync-only** pushes via `cursor-workflow-handoff-recovery.sh`. Covers shallow-checkout misses where `github.event.before` was not fetched and the state diff was skipped.
 
+If the Cursor agent-list fetch or active-agent count fails before that spawn, recovery posts the idempotent stalled notification with reason `agents-list-fetch-failed` and exits non-zero. Operators should inspect the failed Action log for the curl/jq/count error, then retry **Cursor workflow handoff** with workflow dispatch after the dependency is healthy. A normal `skip:*` or `defer:*` admission result remains non-terminal and does not post this notification.
+
 **Handoff recovery coverage:**
 
 | Stage | Recovery action | Notes |

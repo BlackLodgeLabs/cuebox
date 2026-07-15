@@ -267,13 +267,13 @@ jobs:
 
           if [ "$state_changed" != "true" ]; then
             echo "workflow.state.json unchanged — sync only (stage=${stage})"
-            "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json "$prev_stage" || true
+            "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json "$prev_stage"
             exit 0
           fi
 
           if [ "$stage" = "$prev_stage" ]; then
             echo "Stage unchanged ($stage) — no handoff"
-            "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json "$prev_stage" || true
+            "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$branch" /tmp/workflow.state.json "$prev_stage"
             exit 0
           fi
 
@@ -350,7 +350,7 @@ jobs:
             git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
           fi
           "$WF/cursor-workflow-sync-github-status.sh" /tmp/workflow.state.json
-          "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$BRANCH" /tmp/workflow.state.json "" || true
+          "$WF/cursor-workflow-handoff-recovery.sh" "$ISSUE" "$BRANCH" /tmp/workflow.state.json ""
           STAGE=$(jq -r '.stage // empty' /tmp/workflow.state.json)
           if [ "$STAGE" = "complete" ]; then
             "$WF/cursor-workflow-notify-complete.sh" /tmp/workflow.state.json || true

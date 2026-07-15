@@ -21,6 +21,11 @@ if [ -f "$CACHE" ] && [ -s "$CACHE" ]; then
   exit 0
 fi
 
+if [ "${MOCK_CURSOR_LIST_FETCH_FAIL:-}" = "1" ]; then
+  echo "Mock Cursor agent-list fetch failure" >&2
+  exit 1
+fi
+
 if [ "${MOCK_CURSOR_API:-}" = "1" ]; then
   if [ -n "${MOCK_AGENTS_LIST_JSON:-}" ] && [ -f "${MOCK_AGENTS_LIST_JSON}" ]; then
     cp "${MOCK_AGENTS_LIST_JSON}" "$CACHE"
@@ -62,7 +67,7 @@ while true; do
     encoded_pr=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$pr_url_filter")
     url="${url}&prUrl=${encoded_pr}"
   fi
-  curl -sS -u "${CURSOR_API_KEY}:" "$url" -o "$page_file"
+  curl -fsS -u "${CURSOR_API_KEY}:" "$url" -o "$page_file"
   jq -s 'add' "$items_file" <(jq '.items // []' "$page_file") > "${tmpdir}/items.next.json"
   mv "${tmpdir}/items.next.json" "$items_file"
 

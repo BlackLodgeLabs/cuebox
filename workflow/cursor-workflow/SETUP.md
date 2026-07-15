@@ -244,6 +244,7 @@ On any stage you can comment:
 | Demo fails | `docker compose ps`; health curls; see `AGENTS.md` |
 | Pass-back 409 agent busy | Re-push `workflow.state.json` after execute run completes |
 | Stalled notification missing | Check issue comments for `<!-- cursor-workflow-stalled-notify:v1 -->` (idempotent — one per stall episode); verify `GITHUB_TOKEN` in Actions; run workflow_dispatch to resync |
+| Stalled `agents-list-fetch-failed` notification | Inspect the failed Action log for the Cursor agent-list curl/jq/count error, restore the dependency, then retry **Cursor workflow handoff** with workflow_dispatch |
 | Agent links show "—" in status comment | Agent clobbered state — run merge helper before state commits; see [WORKFLOW.md#state-merge](workflow/cursor-workflow/WORKFLOW.md#state-merge) |
 
 See also [WORKFLOW.md](WORKFLOW.md).
