@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { FilmPoster } from "@/components/film-poster";
+import { FilmStatusActions } from "@/components/film-status-actions";
 import { Badge } from "@/components/ui/badge";
 import { formatEnrichmentStatus } from "@/lib/enrichment-status";
 import { cn } from "@/lib/utils";
-import type { FilmSortField, FilmSummary, SortDirection } from "@/types/api";
+import type { FilmSortField, FilmStatus, FilmSummary, SortDirection, WatchlistTab } from "@/types/api";
 
 const SORTABLE_COLUMNS: FilmSortField[] = [
   "title",
@@ -16,9 +17,12 @@ const SORTABLE_COLUMNS: FilmSortField[] = [
 
 interface WatchlistTableProps {
   films: FilmSummary[];
+  tab: WatchlistTab;
   sort: FilmSortField;
   sortDir: SortDirection;
   onSort: (column: FilmSortField) => void;
+  onStatusTransition: (filmId: string, status: FilmStatus) => void;
+  isStatusPending?: boolean;
 }
 
 function SortHeader({
@@ -52,15 +56,31 @@ function SortHeader({
   );
 }
 
+function formatDateColumn(film: FilmSummary, tab: WatchlistTab): string {
+  if (tab === "active") {
+    return new Date(film.created_at).toISOString().split("T")[0];
+  }
+  if (film.removed_at) {
+    return new Date(film.removed_at).toISOString().split("T")[0];
+  }
+  return "—";
+}
+
 export function WatchlistTable({
   films,
+  tab,
   sort,
   sortDir,
   onSort,
+  onStatusTransition,
+  isStatusPending = false,
 }: WatchlistTableProps) {
+  const dateColumnLabel = tab === "active" ? "Added" : "Removed";
+  const dateSortColumn: FilmSortField = "created_at";
+
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
-      <table className="w-full min-w-[640px] border-collapse text-body-md">
+      <table className="w-full min-w-[720px] border-collapse text-body-md">
         <thead>
           <tr className="border-b border-border bg-surface-high text-left">
             <th className="px-4 py-3 text-label-md text-muted-foreground">Poster</th>
@@ -84,8 +104,8 @@ export function WatchlistTable({
             </th>
             <th className="px-4 py-3">
               <SortHeader
-                label="Added"
-                column="created_at"
+                label={dateColumnLabel}
+                column={dateSortColumn}
                 sort={sort}
                 sortDir={sortDir}
                 onSort={onSort}
@@ -100,6 +120,7 @@ export function WatchlistTable({
                 onSort={onSort}
               />
             </th>
+            <th className="px-4 py-3 text-label-md text-muted-foreground">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -109,13 +130,16 @@ export function WatchlistTable({
               className="border-b border-border/60 transition-colors hover:bg-surface-high/50"
             >
               <td className="px-4 py-3">
-                <Link href={`/watchlist/${film.id}`} className="inline-block hover-glow">
+                <Link
+                  href={`/watchlist/${film.id}?tab=${tab}`}
+                  className="inline-block hover-glow"
+                >
                   <FilmPoster src={film.poster_url} alt={film.title} size="sm" />
                 </Link>
               </td>
               <td className="px-4 py-3">
                 <Link
-                  href={`/watchlist/${film.id}`}
+                  href={`/watchlist/${film.id}?tab=${tab}`}
                   className="font-medium text-foreground hover:text-primary hover:underline"
                 >
                   {film.title}
@@ -125,12 +149,20 @@ export function WatchlistTable({
                 {film.year ?? "—"}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {new Date(film.created_at).toISOString().split("T")[0]}
+                {formatDateColumn(film, tab)}
               </td>
               <td className="px-4 py-3">
                 <Badge variant="secondary">
                   {formatEnrichmentStatus(film.enrichment_status)}
                 </Badge>
+              </td>
+              <td className="px-4 py-3">
+                <FilmStatusActions
+                  status={film.status}
+                  variant="table"
+                  isPending={isStatusPending}
+                  onTransition={(status) => onStatusTransition(film.id, status)}
+                />
               </td>
             </tr>
           ))}

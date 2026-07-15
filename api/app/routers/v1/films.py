@@ -9,11 +9,12 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
 from app.dependencies import get_db, get_metadata_service, get_provider_service, get_watch_provider_service
-from app.repositories import film_repository, metadata_review_repository
+from app.repositories import film_repository, metadata_review_repository, watchlist_repository
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
     FilmListResponse,
+    FilmStatusRequest,
     PaginationMeta,
     RematchRequest,
     RematchResponse,
@@ -23,6 +24,7 @@ from app.schemas.film_schemas import (
 from app.schemas.watch_providers import FilmWatchProvidersResponse
 from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.services.film_presenter import film_to_detail, film_to_summary, review_to_item
+from app.services.film_status_service import FilmStatusService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
 from app.services.watch_provider_service import WatchProviderService
@@ -102,8 +104,17 @@ def list_films(
         limit=limit,
         offset=offset,
     )
+    parsed_status = _parse_film_status(status)
+    removed_at_map: dict = {}
+    if parsed_status in (FilmStatus.WATCHED, FilmStatus.ARCHIVED):
+        removed_at_map = watchlist_repository.get_latest_removed_at_batch(
+            db, [film.id for film in films]
+        )
     return FilmListResponse(
-        data=[film_to_summary(f) for f in films],
+        data=[
+            film_to_summary(film, removed_at=removed_at_map.get(film.id))
+            for film in films
+        ],
         pagination=PaginationMeta(
             total=total,
             limit=limit,
@@ -185,6 +196,26 @@ async def get_film_watch_providers(
     watch_provider_service: WatchProviderService = Depends(get_watch_provider_service),
 ) -> FilmWatchProvidersResponse:
     return await watch_provider_service.get_watch_providers(db, film_id, country_code=country)
+
+
+@router.post("/{film_id}/status", response_model=FilmDetail)
+def set_film_status(
+    film_id: uuid.UUID,
+    body: FilmStatusRequest,
+    db: Session = Depends(get_db),
+) -> FilmDetail:
+    try:
+        target_status = FilmStatus(body.status)
+    except ValueError as exc:
+        from app.core.exceptions import unprocessable
+
+        raise unprocessable(f"Invalid status: {body.status}") from exc
+
+    film = FilmStatusService.transition(db, film_id, target_status)
+    db.commit()
+    film = film_repository.get_by_id_with_relations(db, film.id)
+    assert film is not None
+    return film_to_detail(film)
 
 
 @router.get("/{film_id}", response_model=FilmDetail)

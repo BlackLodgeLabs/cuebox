@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getReviewRequired, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist } from "@/lib/api-client";
-import type { FilmsQueryParams, ReviewRequiredQueryParams, TmdbSearchParams } from "@/types/api";
+import { getFilm, getFilms, getReviewRequired, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus } from "@/lib/api-client";
+import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useFilms(params?: FilmsQueryParams) {
@@ -77,6 +77,21 @@ export function useRematchFilm() {
       void queryClient.invalidateQueries({ queryKey: ["films"] });
       void queryClient.invalidateQueries({ queryKey: ["films", variables.filmId] });
       void queryClient.invalidateQueries({ queryKey: ["films", "review-required"] });
+    },
+    onError,
+  });
+}
+
+export function useFilmStatusTransition() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({ filmId, status }: { filmId: string; status: FilmStatus }) =>
+      setFilmStatus(filmId, status),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["films"] });
+      void queryClient.invalidateQueries({ queryKey: ["films", variables.filmId] });
     },
     onError,
   });

@@ -11,7 +11,7 @@ from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import watchlist_size_exceeded
-from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus, RssEventType
+from app.database.enums import EnrichmentStatus, FilmStatus, RssEventType
 from app.database.models import Film
 from app.repositories import (
     film_repository,
@@ -39,21 +39,15 @@ USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,50}$")
 @dataclass
 class CsvDiffResult:
     added: list[ParsedWatchlistRow] = field(default_factory=list)
-    removed: list[Film] = field(default_factory=list)
-    watched: list[Film] = field(default_factory=list)
     unchanged: int = 0
 
 
 @dataclass
 class SyncApplyResult:
     added: int = 0
-    removed: int = 0
-    watched: int = 0
     unchanged: int = 0
     failed: int = 0
     added_films: list[dict] = field(default_factory=list)
-    removed_films: list[dict] = field(default_factory=list)
-    watched_films: list[dict] = field(default_factory=list)
     enrichment_job_id: uuid.UUID | None = None
     enrichment_film_ids: list[uuid.UUID] = field(default_factory=list)
 
@@ -70,42 +64,17 @@ class SyncService:
         return username
 
     def csv_diff(self, db: Session, parsed_rows: list[ParsedWatchlistRow]) -> CsvDiffResult:
-        active_entries = watchlist_repository.list_active_entries(db)
-        current_by_uri = {entry.letterboxd_uri: entry.film for entry in active_entries}
         csv_by_uri = {row.letterboxd_uri: row for row in parsed_rows}
-
         result = CsvDiffResult()
 
         for uri, row in csv_by_uri.items():
-            film = current_by_uri.get(uri)
-            if film is None:
-                existing = film_repository.get_by_letterboxd_uri(db, uri)
-                if existing is None or existing.status != FilmStatus.ACTIVE:
-                    result.added.append(row)
-                else:
-                    result.unchanged += 1
-            elif film.status == FilmStatus.ACTIVE:
-                result.unchanged += 1
-            else:
+            existing = film_repository.get_by_letterboxd_uri(db, uri)
+            if existing is None:
                 result.added.append(row)
-
-        for uri, film in current_by_uri.items():
-            if uri in csv_by_uri:
-                continue
-            if film.add_source == FilmAddSource.MANUAL:
-                continue
-            if rss_sync_repository.has_watched_event_for_uri(db, uri):
-                result.watched.append(film)
             else:
-                result.removed.append(film)
+                result.unchanged += 1
 
-        projected_active = (
-            watchlist_repository.count_active(db)
-            + len(result.added)
-            - len(result.removed)
-            - len(result.watched)
-        )
-        if projected_active > MAX_ACTIVE_WATCHLIST:
+        if watchlist_repository.count_active(db) + len(result.added) > MAX_ACTIVE_WATCHLIST:
             raise watchlist_size_exceeded(
                 "Post-sync active watchlist would exceed 500 films"
             )
@@ -125,66 +94,24 @@ class SyncService:
             try:
                 existing = film_repository.get_by_letterboxd_uri(db, row.letterboxd_uri)
                 if existing is not None:
-                    if existing.status != FilmStatus.ACTIVE:
-                        film_repository.restore_active(db, existing)
-                    watchlist_repository.ensure_active_entry(
-                        db,
-                        film_id=existing.id,
-                        letterboxd_uri=row.letterboxd_uri,
-                    )
-                    if existing.enrichment_status != EnrichmentStatus.READY:
-                        film_repository.reset_failed_for_retry(
-                            db,
-                            existing,
-                            import_job_id=sync_job.id,
-                            title=row.title,
-                            year=row.year,
-                        )
-                        films_to_enrich.append(existing.id)
-                    outcome.added += 1
-                    outcome.added_films.append(_film_summary(existing))
-                elif existing is None:
-                    film = film_repository.create(
-                        db,
-                        title=row.title,
-                        letterboxd_uri=row.letterboxd_uri,
-                        year=row.year,
-                        import_job_id=sync_job.id,
-                    )
-                    watchlist_repository.create_active_entry(
-                        db,
-                        film_id=film.id,
-                        letterboxd_uri=row.letterboxd_uri,
-                    )
-                    films_to_enrich.append(film.id)
-                    outcome.added += 1
-                    outcome.added_films.append(_film_summary(film))
+                    continue
+                film = film_repository.create(
+                    db,
+                    title=row.title,
+                    letterboxd_uri=row.letterboxd_uri,
+                    year=row.year,
+                    import_job_id=sync_job.id,
+                )
+                watchlist_repository.create_active_entry(
+                    db,
+                    film_id=film.id,
+                    letterboxd_uri=row.letterboxd_uri,
+                )
+                films_to_enrich.append(film.id)
+                outcome.added += 1
+                outcome.added_films.append(_film_summary(film))
             except Exception:
                 logger.exception("Failed to add film during CSV sync: %s", row.letterboxd_uri)
-                outcome.failed += 1
-
-        for film in diff.removed:
-            try:
-                entry = watchlist_repository.get_active_by_film_id(db, film.id)
-                if entry is not None:
-                    watchlist_repository.deactivate_entry(db, entry)
-                film_repository.archive_film(db, film)
-                outcome.removed += 1
-                outcome.removed_films.append(_film_summary(film))
-            except Exception:
-                logger.exception("Failed to archive film during CSV sync: %s", film.id)
-                outcome.failed += 1
-
-        for film in diff.watched:
-            try:
-                entry = watchlist_repository.get_active_by_film_id(db, film.id)
-                if entry is not None:
-                    watchlist_repository.deactivate_entry(db, entry)
-                film_repository.mark_watched(db, film)
-                outcome.watched += 1
-                outcome.watched_films.append(_film_summary(film))
-            except Exception:
-                logger.exception("Failed to mark film watched during CSV sync: %s", film.id)
                 outcome.failed += 1
 
         if films_to_enrich:

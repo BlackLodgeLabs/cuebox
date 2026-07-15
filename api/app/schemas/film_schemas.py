@@ -13,6 +13,10 @@ class PaginationMeta(BaseModel):
     has_more: bool
 
 
+class FilmStatusRequest(BaseModel):
+    status: str
+
+
 class FilmSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,6 +32,7 @@ class FilmSummary(BaseModel):
     genres: list[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
+    removed_at: datetime | None = None
 
 
 class FilmListResponse(BaseModel):

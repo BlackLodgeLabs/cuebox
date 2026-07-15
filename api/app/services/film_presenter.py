@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from app.database.enums import FilmStatus
 from app.database.models import Film, FilmMetadata, FilmSemanticProfile
 from app.schemas.film_schemas import (
     FilmDetail,
@@ -12,8 +15,11 @@ from app.schemas.film_schemas import (
 )
 
 
-def film_to_summary(film: Film) -> FilmSummary:
+def film_to_summary(film: Film, *, removed_at: datetime | None = None) -> FilmSummary:
     metadata: FilmMetadata | None = film.metadata_
+    summary_removed_at = None
+    if film.status in (FilmStatus.WATCHED, FilmStatus.ARCHIVED) and removed_at is not None:
+        summary_removed_at = removed_at
     return FilmSummary(
         id=film.id,
         title=film.title,
@@ -27,6 +33,7 @@ def film_to_summary(film: Film) -> FilmSummary:
         genres=list(metadata.genres) if metadata else [],
         created_at=film.created_at,
         updated_at=film.updated_at,
+        removed_at=summary_removed_at,
     )
 
 

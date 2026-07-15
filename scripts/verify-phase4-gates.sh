@@ -58,7 +58,7 @@ echo "=== Gate 4: Archived films retain metadata ==="
 start_postgres
 (
   cd api
-  pytest tests/test_integration_csv_sync.py::test_csv_sync_re_add_archived -v
+  pytest tests/test_integration_csv_sync.py::test_csv_sync_existing_archived_unchanged -v
 )
 pass "Archived metadata retained"
 
@@ -85,7 +85,7 @@ pass "Ruff"
 echo "=== Gate 8: Regression test names ==="
 required_tests=(
   "test_import_pipeline_reaches_ready"
-  "test_csv_sync_add_and_remove"
+  "test_csv_sync_additive_adds_new_uri"
   "test_rss_poll_idempotent"
 )
 collected=$(cd api && pytest tests/ --collect-only -q)

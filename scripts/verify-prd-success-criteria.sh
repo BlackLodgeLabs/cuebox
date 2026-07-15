@@ -37,7 +37,7 @@ CRITERIA=(
   "17|Recommendation generation completes within 30 seconds|test|test_end_to_end_recommendation"
   "18|Users receive one winner and four runners-up with structured reasoning|manual|UI results screen or integration response shape (test_end_to_end_recommendation asserts winner + runners_up)"
   "19|All recommendation decisions are explainable and traceable|test|test_end_to_end_recommendation"
-  "20|Archived films retain metadata and recommendation history|test|test_csv_sync_re_add_archived"
+  "20|Archived films retain metadata and recommendation history|test|test_csv_sync_existing_archived_unchanged"
   "21|Watched films are excluded from future recommendations|test|test_watched_film_excluded_from_stage1_query"
   "22|Provider changes require only config.yaml edits, not code changes|manual|Change provider in config.yaml; no application code edit required"
   "23|Constraint relaxation is recorded as a JSONB object on the session|test|test_runtime_relaxation_recorded"

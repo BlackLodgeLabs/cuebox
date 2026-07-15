@@ -5,8 +5,16 @@ import { useParams, useSearchParams } from "next/navigation";
 import { FilmDetailView } from "@/components/film-detail-view";
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
-import { useFilm } from "@/hooks/use-films";
+import { useFilm, useFilmStatusTransition } from "@/hooks/use-films";
 import { useToast } from "@/hooks/use-toast";
+import type { WatchlistTab } from "@/types/api";
+
+function parseWatchlistTab(value: string | null): WatchlistTab | undefined {
+  if (value === "active" || value === "watched" || value === "archived") {
+    return value;
+  }
+  return undefined;
+}
 
 export default function WatchlistFilmPage() {
   const params = useParams<{ filmId: string }>();
@@ -20,6 +28,8 @@ export default function WatchlistFilmPage() {
   });
 
   const autoOpenEdit = searchParams.get("editMatch") === "1";
+  const watchlistTab = parseWatchlistTab(searchParams.get("tab"));
+  const statusTransition = useFilmStatusTransition();
 
   useEffect(() => {
     if (!data) return;
@@ -65,6 +75,11 @@ export default function WatchlistFilmPage() {
     <FilmDetailView
       film={data}
       autoOpenEditMatch={autoOpenEdit}
+      watchlistTab={watchlistTab}
+      isStatusPending={statusTransition.isPending}
+      onStatusTransition={(status) =>
+        statusTransition.mutate({ filmId, status })
+      }
     />
   );
 }

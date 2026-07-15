@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { EditFilmMatchDialog } from "@/components/edit-film-match-dialog";
 import { FilmPoster } from "@/components/film-poster";
+import { FilmStatusActions } from "@/components/film-status-actions";
 import { WhereToWatchSection } from "@/components/where-to-watch-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatEnrichmentStatus } from "@/lib/enrichment-status";
-import type { FilmDetail } from "@/types/api";
+import type { FilmDetail, FilmStatus, WatchlistTab } from "@/types/api";
 
 interface FilmDetailViewProps {
   film: FilmDetail;
   autoOpenEditMatch?: boolean;
+  watchlistTab?: WatchlistTab;
+  onStatusTransition?: (status: FilmStatus) => void;
+  isStatusPending?: boolean;
 }
 
 function TagGroup({ label, tags }: { label: string; tags: string[] }) {
@@ -55,7 +59,13 @@ function formatRating(value: number | null): string {
   return value.toFixed(1);
 }
 
-export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailViewProps) {
+export function FilmDetailView({
+  film,
+  autoOpenEditMatch = false,
+  watchlistTab,
+  onStatusTransition,
+  isStatusPending = false,
+}: FilmDetailViewProps) {
   const [editOpen, setEditOpen] = useState(false);
   const metadata = film.metadata;
   const semantic = film.semantic_profile;
@@ -68,10 +78,20 @@ export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailVi
     }
   }, [autoOpenEditMatch, film.id]);
 
+  const backTab =
+    watchlistTab ??
+    (film.status === "watched"
+      ? "watched"
+      : film.status === "archived"
+        ? "archived"
+        : "active");
+  const backHref =
+    backTab === "active" ? "/watchlist" : `/watchlist?tab=${backTab}`;
+
   return (
     <div className="space-y-8">
       <Link
-        href="/watchlist"
+        href={backHref}
         className="inline-flex text-body-md text-muted-foreground hover:text-foreground"
       >
         ← Watchlist
@@ -116,10 +136,18 @@ export function FilmDetailView({ film, autoOpenEditMatch = false }: FilmDetailVi
                 )}
                 <Badge variant="outline">{film.status}</Badge>
               </div>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
                   Edit film match
                 </Button>
+                {onStatusTransition && (
+                  <FilmStatusActions
+                    status={film.status}
+                    variant="detail"
+                    isPending={isStatusPending}
+                    onTransition={onStatusTransition}
+                  />
+                )}
               </div>
             </div>
           </div>
