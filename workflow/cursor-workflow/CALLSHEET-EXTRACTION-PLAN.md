@@ -4,11 +4,12 @@
 
 This plan covers the work after Cuebox completes the portable-workflow hardening pass tracked in [#122](https://github.com/BlackLodgeLabs/cuebox/issues/122):
 
-1. Create the Callsheet repository from the hardened core.
-2. Reorganize and rebrand it.
-3. Release `callsheet v1.0.0`.
-4. Install that release into Cuebox as the first consumer.
-5. Adopt a repeatable release and update process.
+1. [Prerequisite] Complete the portable-workflow hardening pass (tracked in #122).
+2. Create the Callsheet repository from the hardened core.
+3. Reorganize and rebrand it.
+4. Release callsheet v1.0.0.
+5. Install that release into Cuebox as the first consumer.
+6. Adopt a repeatable release and update process.
 
 It deliberately does not prescribe implementation details for #122. That issue defines the configuration boundary, state-schema compatibility contract, and core-versus-adapter test split that this plan requires.
 
