@@ -105,7 +105,7 @@ When **all** true:
 
 Then:
 
-1. Run merge helper, then set `stage`: `complete`
+1. Run merge helper, then set `stage`: `complete`, `active_skill: null` (and optionally `active_agent_id: null`)
 2. **Convert draft PR → ready for review** via MCP `update_pull_request` with `draft: false` (or existing path if MCP unavailable)
 3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions issue author and repo owner, and assigns the PR
 
