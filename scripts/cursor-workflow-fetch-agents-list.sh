@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 # Fetch paginated Cursor agents list once per Actions job; cache to CURSOR_AGENTS_LIST_CACHE.
 # Prints cache file path on stdout.
+#
+# Items are accumulated and wrapped via temp files / jq file inputs — never
+# `jq --argjson` with the full list on argv (Linux ARG_MAX; issue #117).
 set -euo pipefail
 
 CACHE="${CURSOR_AGENTS_LIST_CACHE:-${RUNNER_TEMP:-/tmp}/cursor-agents-list.json}"
 export CURSOR_AGENTS_LIST_CACHE="$CACHE"
+
+bump_fetch_count() {
+  if [ -n "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE:-}" ]; then
+    current=$(cat "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE}" 2>/dev/null || echo 0)
+    echo $((current + 1)) > "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE}"
+  fi
+}
 
 if [ -f "$CACHE" ] && [ -s "$CACHE" ]; then
   echo "$CACHE"
@@ -17,10 +27,7 @@ if [ "${MOCK_CURSOR_API:-}" = "1" ]; then
   else
     echo '{"items":[]}' > "$CACHE"
   fi
-  if [ -n "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE:-}" ]; then
-    current=$(cat "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE}" 2>/dev/null || echo 0)
-    echo $((current + 1)) > "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE}"
-  fi
+  bump_fetch_count
   echo "$CACHE"
   exit 0
 fi
@@ -40,7 +47,12 @@ if [ -z "$pr_url_filter" ] && [ -n "${CURSOR_AGENTS_STATE_FILE:-}" ] && [ -f "${
   fi
 fi
 
-all_items="[]"
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
+items_file="${tmpdir}/items.json"
+page_file="${tmpdir}/page.json"
+echo '[]' > "$items_file"
+
 page_cursor=""
 while true; do
   url="https://api.cursor.com/v1/agents?limit=100&includeArchived=false"
@@ -50,11 +62,11 @@ while true; do
     encoded_pr=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$pr_url_filter")
     url="${url}&prUrl=${encoded_pr}"
   fi
-  response=$(curl -sS -u "${CURSOR_API_KEY}:" "$url")
-  items=$(echo "$response" | jq -c '.items // []')
-  all_items=$(jq -s 'add' <(echo "$all_items") <(echo "$items"))
+  curl -sS -u "${CURSOR_API_KEY}:" "$url" -o "$page_file"
+  jq -s 'add' "$items_file" <(jq '.items // []' "$page_file") > "${tmpdir}/items.next.json"
+  mv "${tmpdir}/items.next.json" "$items_file"
 
-  page_cursor=$(echo "$response" | jq -r '.nextCursor // empty' | tr -d '\r')
+  page_cursor=$(jq -r '.nextCursor // empty' "$page_file" | tr -d '\r')
   if [ -z "$page_cursor" ] || [ "$page_cursor" = "null" ]; then
     break
   fi
@@ -62,20 +74,18 @@ done
 
 if [ -n "$pr_url_filter" ]; then
   pr_slug="${pr_url_filter#https://github.com/}"
-  all_items=$(echo "$all_items" | jq -c --arg pr "$pr_url_filter" --arg slug "$pr_slug" '
+  if jq --arg pr "$pr_url_filter" --arg slug "$pr_slug" '
     [.[] | select(
       ((.prUrl // "") == $pr)
       or ((.prUrl // "") | endswith("/" + ($slug | split("/") | last)))
-      or (. == .)
     )]
-  ' 2>/dev/null || echo "$all_items")
+  ' "$items_file" > "${tmpdir}/items.filtered.json"; then
+    mv "${tmpdir}/items.filtered.json" "$items_file"
+  fi
 fi
 
-jq -n --argjson items "$all_items" '{items: $items}' > "$CACHE"
+# File input — never --argjson with the full list on argv.
+jq '{items: .}' "$items_file" > "$CACHE"
 
-if [ -n "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE:-}" ]; then
-  current=$(cat "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE}" 2>/dev/null || echo 0)
-  echo $((current + 1)) > "${MOCK_CURSOR_LIST_FETCH_COUNT_FILE}"
-fi
-
+bump_fetch_count
 echo "$CACHE"

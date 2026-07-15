@@ -70,7 +70,13 @@ esac
 
 mkdir -p "$DEST"
 for script in "${SCRIPTS[@]}"; do
-  if git cat-file -e "${REF}:scripts/${script}" 2>/dev/null; then
+  # Prefer HEAD for the agents-list fetch script so issue-branch ARG_MAX fixes
+  # (issue #117) apply before they land on main — handoff otherwise loads the
+  # broken main copy and cannot spawn planning/babysit.
+  if [ "$script" = "cursor-workflow-fetch-agents-list.sh" ] \
+    && git cat-file -e "HEAD:scripts/${script}" 2>/dev/null; then
+    git show "HEAD:scripts/${script}" > "${DEST}/${script}"
+  elif git cat-file -e "${REF}:scripts/${script}" 2>/dev/null; then
     git show "${REF}:scripts/${script}" > "${DEST}/${script}"
   elif git cat-file -e "HEAD:scripts/${script}" 2>/dev/null; then
     git show "HEAD:scripts/${script}" > "${DEST}/${script}"
