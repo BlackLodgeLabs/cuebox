@@ -1,9 +1,9 @@
 {
   "issue": 119,
   "branch": "cursor/issue-119-demo-single-push-finalize",
-  "stage": "execute-ready",
-  "active_skill": "demo",
-  "updated_at": "2026-07-15T19:24:56Z",
+  "stage": "demo-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-15T19:32:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,13 +14,13 @@
     "review-and-spec-continued": null
   },
   "pr": 125,
-  "active_agent_id": "bc-23450146-ff3c-423d-8ffb-98b0e31ce1fa",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   }
 }
