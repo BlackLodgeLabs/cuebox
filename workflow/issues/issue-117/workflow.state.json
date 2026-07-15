@@ -3,7 +3,7 @@
   "branch": "cursor/issue-117-harden-agents-list-argmax-993a",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-15T06:30:33Z",
+  "updated_at": "2026-07-15T06:31:02Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 121,
   "active_agent_id": "bc-d74b9ddd-306b-4353-a0cb-dcc2294e993a",
   "passback_to": null,
   "passback_reason": null,
