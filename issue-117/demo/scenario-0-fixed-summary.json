@@ -1,0 +1,13 @@
+{
+  "scenario": 0,
+  "commit": "651c3cfff106078f5a511a04040869aa05e6ee33",
+  "arg_max": 2097152,
+  "argjson_wrap_exit": 126,
+  "argjson_wrap_stderr": "--: line 67: /usr/bin/jq: Argument list too long ",
+  "unfiltered_exit": 0,
+  "unfiltered_count": 8000,
+  "filtered_exit": 0,
+  "filtered_count": 80,
+  "fixed_path_argmax": false,
+  "pass": true
+}
