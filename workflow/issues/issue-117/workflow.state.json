@@ -1,15 +1,9 @@
 {
   "issue": 117,
   "branch": "cursor/issue-117-harden-agents-list-argmax-993a",
-<<<<<<< HEAD
-  "stage": "demo-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-15T07:17:07Z",
-=======
   "stage": "create-pr-in-progress",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-15T07:17:46Z",
->>>>>>> b6b702f (chore(workflow): mark issue #117 create-pr-in-progress)
+  "updated_at": "2026-07-15T07:18:35Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-4d99c746-8fbd-4549-89d5-a80825db01bd",
