@@ -1,7 +1,7 @@
 # Demo notes — issue #117
 
 **Date:** 2026-07-15  
-**Demo commit:** (see git tip on `cursor/issue-117-pr-121-demo-agent-2bf0`)  
+**Demo commit:** `c6358480b9bccb7491bcff6fca444a79fc7a95c0`
 **Issue branch tip synced:** `cursor/issue-117-harden-agents-list-argmax-993a`  
 **Fix under test:** `9d590c5` (`scripts/cursor-workflow-fetch-agents-list.sh` — file-input wrap, no `--argjson`)  
 **Environment:** Cloud agent VM; Docker Compose stack Up (postgres/api/frontend/backup); health ok. Product UI not exercised (workflow-script bug per demo-spec).
