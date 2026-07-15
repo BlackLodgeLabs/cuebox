@@ -3,7 +3,7 @@
   "branch": "cursor/issue-118-notify-stalled-handoff-failures-c8b7",
   "stage": "spec-ready",
   "active_skill": "planning",
-  "updated_at": "2026-07-15T17:52:37Z",
+  "updated_at": "2026-07-15T17:59:13Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-07ccb2de-007f-46d3-b091-25302f3d764f",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-15T17:59:13Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
