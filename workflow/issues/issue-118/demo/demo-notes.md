@@ -18,3 +18,4 @@
 - This is a workflow-only change, so the approved demo specifies shell-log artifacts rather than UI screenshots or recordings.
 - The operator recovery guidance for `agents-list-fetch-failed` is covered in `workflow/cursor-workflow/WORKFLOW.md` and `workflow/cursor-workflow/SETUP.md`.
 - The committed logs contain only mocked test-harness output; no credentials or environment values are included.
+- The GitHub MCP token cannot convert PR #124 from draft to ready (`Resource not accessible by personal access token`); the workflow state is completed, but a maintainer must use GitHub’s **Ready for review** control.
