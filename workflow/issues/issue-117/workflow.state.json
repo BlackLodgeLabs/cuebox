@@ -1,9 +1,9 @@
 {
   "issue": 117,
   "branch": "cursor/issue-117-harden-agents-list-argmax-993a",
-  "stage": "execute-ready",
+  "stage": "demo-in-progress",
   "active_skill": "demo",
-  "updated_at": "2026-07-15T07:10:25Z",
+  "updated_at": "2026-07-15T07:12:57Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,11 +17,7 @@
   "active_agent_id": "bc-1ca9a55e-35ea-4dd1-98bb-252e7c2e91a3",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "demo",
-    "started_at": "2026-07-15T07:10:25Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
