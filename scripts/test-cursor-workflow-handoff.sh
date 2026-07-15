@@ -19,7 +19,7 @@ cleanup_workflow_cache() {
     CURSOR_WORKFLOW_REFETCH_REMOTE_JSON CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE \
     MOCK_CURSOR_POST_COUNT_FILE MOCK_RECORD_SPAWN_FAIL MOCK_IN_FLIGHT_RUN_COUNT MOCK_ACTIVE_AGENT_COUNT \
     MOCK_CURSOR_RUNS_COUNT_FILE MOCK_ENSURE_DRAFT_PR MOCK_GH_COMMENTS_FILE MOCK_GH_LAST_COMMENT_FILE \
-    MOCK_GH_AUTHOR MOCK_GH_OWNER
+    MOCK_CURSOR_LIST_FETCH_FAIL MOCK_CURSOR_ACTIVE_COUNT_FAIL MOCK_GH_AUTHOR MOCK_GH_OWNER MOCK_GH_COMMENT_FAIL
 }
 cleanup_workflow_cache
 
@@ -53,6 +53,10 @@ case "${1:-}" in
         fi
       fi
     elif [ "${2:-}" = "comment" ]; then
+      if [ "${MOCK_GH_COMMENT_FAIL:-}" = "1" ]; then
+        echo "Mock gh issue comment failure" >&2
+        exit 1
+      fi
       body=""
       shift 2
       while [ $# -gt 0 ]; do
@@ -1183,7 +1187,149 @@ test_notify_stalled_body_and_idempotency() {
   rm -f "$state"
 }
 
-# --- Spawn stalled notifier: no false progress sync (issue #110/#111) ---
+test_recovery_agent_list_failure_is_terminal() {
+  cleanup_workflow_cache
+  local state cache stage skill rc post_count
+  setup_mock_gh
+  export MOCK_CURSOR_API=1
+  export MOCK_CURSOR_LIST_FETCH_FAIL=1
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_ENSURE_DRAFT_PR=124
+  export MOCK_PR_IS_DRAFT=true
+  export GITHUB_TOKEN=mock
+
+  while IFS=: read -r stage skill; do
+    state=$(mktemp)
+    cache=$(mktemp)
+    post_count=$(mktemp)
+    rm -f "$cache"
+    echo 0 > "$post_count"
+    export CURSOR_AGENTS_LIST_CACHE="$cache"
+    export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+    echo "{\"issue\":118,\"branch\":\"cursor/issue-118-test\",\"stage\":\"${stage}\",\"active_skill\":null,\"agents\":{},\"pr\":124,\"handoff_pending\":null,\"loops\":{\"bugbot\":0,\"ci_autofix\":0,\"total_runs\":1}}" > "$state"
+
+    rc=0
+    if WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+      118 "cursor/issue-118-test" "$state" >/tmp/recovery-agent-list-failure.log 2>&1; then
+      :
+    else
+      rc=$?
+    fi
+
+    if [ "$rc" -ne 0 ]; then
+      pass "recovery ${stage} agent-list failure exits non-zero"
+    else
+      fail_test "recovery ${stage} agent-list failure expected non-zero exit"
+    fi
+    if grep -Fq 'cursor-workflow-stalled-notify:v1' "$MOCK_GH_LAST_COMMENT_FILE" \
+      && grep -Fq 'agents-list-fetch-failed' "$MOCK_GH_LAST_COMMENT_FILE" \
+      && grep -Fq "**Expected next skill:** \`${skill}\`" "$MOCK_GH_LAST_COMMENT_FILE"; then
+      pass "recovery ${stage} reports ${skill} stalled notification"
+    else
+      fail_test "recovery ${stage} stalled notification missing reason or expected skill"
+    fi
+    if [ "$(cat "$post_count")" = "0" ]; then
+      pass "recovery ${stage} does not spawn after agent-list failure"
+    else
+      fail_test "recovery ${stage} spawned after agent-list failure"
+    fi
+    rm -f "$state" "$cache" "$post_count"
+  done <<'EOF'
+spec-ready:planning
+plan-ready:execute
+execute-ready:demo
+demo-ready:create-pr
+create-pr-ready:babysit-pr
+EOF
+}
+
+test_recovery_active_count_failure_is_terminal() {
+  cleanup_workflow_cache
+  local state cache post_count rc
+  state=$(mktemp)
+  cache=$(mktemp)
+  post_count=$(mktemp)
+  rm -f "$cache"
+  echo 0 > "$post_count"
+  echo '{"issue":118,"branch":"cursor/issue-118-test","stage":"plan-ready","agents":{},"pr":124,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' > "$state"
+  setup_mock_gh
+  export MOCK_CURSOR_API=1
+  export MOCK_CURSOR_ACTIVE_COUNT_FAIL=1
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  export CURSOR_AGENTS_LIST_CACHE="$cache"
+  export GITHUB_TOKEN=mock
+
+  rc=0
+  if WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    118 "cursor/issue-118-test" "$state" >/tmp/recovery-active-count-failure.log 2>&1; then
+    :
+  else
+    rc=$?
+  fi
+
+  if [ "$rc" -ne 0 ]; then
+    pass "recovery active-agent count failure exits non-zero"
+  else
+    fail_test "recovery active-agent count failure expected non-zero exit"
+  fi
+  if grep -Fq 'cursor-workflow-stalled-notify:v1' "$MOCK_GH_LAST_COMMENT_FILE" \
+    && grep -Fq 'agents-list-fetch-failed' "$MOCK_GH_LAST_COMMENT_FILE" \
+    && grep -Fq '**Expected next skill:** `execute`' "$MOCK_GH_LAST_COMMENT_FILE"; then
+    pass "recovery active-agent count failure posts execute notification"
+  else
+    fail_test "recovery active-agent count failure notification missing"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "recovery active-agent count failure does not spawn"
+  else
+    fail_test "recovery active-agent count failure unexpectedly spawned"
+  fi
+  rm -f "$state" "$cache" "$post_count"
+}
+
+test_spawn_agent_list_failure_stays_terminal_when_notify_fails() {
+  cleanup_workflow_cache
+  local state cache post_count rc
+  state=$(mktemp)
+  cache=$(mktemp)
+  post_count=$(mktemp)
+  rm -f "$cache"
+  echo 0 > "$post_count"
+  echo '{"issue":118,"branch":"cursor/issue-118-test","stage":"plan-ready","agents":{},"pr":124,"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":1}}' > "$state"
+  setup_mock_gh
+  export MOCK_CURSOR_API=1
+  export MOCK_CURSOR_LIST_FETCH_FAIL=1
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  export CURSOR_AGENTS_LIST_CACHE="$cache"
+  export MOCK_GH_COMMENT_FAIL=1
+  export GITHUB_TOKEN=mock
+
+  rc=0
+  if WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    118 "cursor/issue-118-test" "$state" execute "test prompt" "execute-in-progress" \
+    >/tmp/spawn-agent-list-notify-failure.log 2>&1; then
+    :
+  else
+    rc=$?
+  fi
+
+  if [ "$rc" -ne 0 ]; then
+    pass "spawn agent-list failure remains non-zero when notification fails"
+  else
+    fail_test "spawn agent-list failure became successful when notification failed"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "spawn agent-list failure does not POST an agent"
+  else
+    fail_test "spawn agent-list failure unexpectedly POSTed an agent"
+  fi
+  rm -f "$state" "$cache" "$post_count"
+}
+
+# --- Spawn deferral: no stalled notification or false progress sync ---
 test_spawn_stalled_no_progress_sync() {
   cleanup_workflow_cache
   local state
@@ -1207,15 +1353,15 @@ test_spawn_stalled_no_progress_sync() {
   else
     fail_test "spawn stalled expected exit 0 got $rc"
   fi
-  if grep -q "Posted stalled notification" /tmp/spawn-stalled.log; then
-    pass "spawn stalled posted notification"
+  if ! grep -q "Posted stalled notification" /tmp/spawn-stalled.log; then
+    pass "spawn deferral does not post stalled notification"
   else
-    fail_test "spawn stalled did not post stalled notification"
+    fail_test "spawn deferral unexpectedly posted stalled notification"
   fi
-  if grep -q 'cursor-workflow-stalled-notify:v1' "$MOCK_GH_LAST_COMMENT_FILE" 2>/dev/null; then
-    pass "spawn stalled posted stalled marker"
+  if ! grep -q 'cursor-workflow-stalled-notify:v1' "$MOCK_GH_LAST_COMMENT_FILE" 2>/dev/null; then
+    pass "spawn deferral has no stalled marker"
   else
-    fail_test "spawn stalled missing stalled marker in comment"
+    fail_test "spawn deferral unexpectedly wrote stalled marker"
   fi
   if [ "${CURSOR_WORKFLOW_SYNC_CALL_COUNT:-0}" = "0" ]; then
     pass "spawn stalled no sync call"
@@ -1581,6 +1727,9 @@ test_resolve_notify_targets_dedup
 test_resolve_notify_targets_distinct
 test_notify_complete_mentions_both
 test_notify_stalled_body_and_idempotency
+test_recovery_agent_list_failure_is_terminal
+test_recovery_active_count_failure_is_terminal
+test_spawn_agent_list_failure_stays_terminal_when_notify_fails
 test_spawn_stalled_no_progress_sync
 test_passback_stalled_no_progress_sync
 test_reopen_inference_agents_demo

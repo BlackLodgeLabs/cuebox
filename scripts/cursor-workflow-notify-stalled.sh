@@ -60,6 +60,9 @@ reason_text() {
     pending-lock)
       echo "Pending-lock race could not be resolved after retries."
       ;;
+    agents-list-fetch-failed)
+      echo "Cursor agent-list fetch or active-agent count failed before the next agent could be spawned."
+      ;;
     missing-api-key)
       echo "CURSOR_API_KEY is not set and API spawn failed."
       ;;
@@ -99,7 +102,7 @@ fi
 
 BODY="${MENTIONS} — The cursor workflow for issue #${ISSUE} has stalled.
 
-**Reason:** ${HUMAN_REASON}
+**Reason:** \`${REASON}\` — ${HUMAN_REASON}
 
 **Current stage:** \`${STAGE:-—}\` · **Branch:** \`${BRANCH:-—}\`"
 

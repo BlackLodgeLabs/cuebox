@@ -118,15 +118,37 @@ if [ "$stage" = "execute-ready" ] && [ "$reopen_decision" = "reopen" ]; then
   reopen_flag="--reopen"
 fi
 
+fail_pre_spawn_admission() {
+  local original_rc="${1:-1}"
+  echo "Agent-list fetch/count failed during recovery for ${skill} (exit ${original_rc})" >&2
+  if ! "$WF/cursor-workflow-notify-stalled.sh" \
+    "$STATE_FILE" "agents-list-fetch-failed" "$skill"; then
+    echo "::warning::Could not post stalled notification for agent-list fetch/count failure" >&2
+  fi
+  return "$original_rc"
+}
+
 if git rev-parse --git-dir >/dev/null 2>&1; then
   git fetch origin "$BRANCH" --quiet 2>/dev/null || echo "Warning: recovery fetch origin/${BRANCH} failed" >&2
 fi
-"$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" --agents-from-tip >/dev/null
+if "$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" --agents-from-tip >/dev/null; then
+  :
+else
+  refetch_rc=$?
+  fail_pre_spawn_admission "$refetch_rc"
+  exit $?
+fi
 gate_args=("$STATE_FILE" "$skill")
 if [ "$reopen_flag" = "--reopen" ]; then
   gate_args+=("--reopen")
 fi
-decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}")
+if decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}"); then
+  :
+else
+  gate_rc=$?
+  fail_pre_spawn_admission "$gate_rc"
+  exit $?
+fi
 if [ "$decision" != "proceed" ]; then
   echo "Handoff recovery deferred (${stage} → ${skill}): $decision"
   exit 0

@@ -140,6 +140,16 @@ notify_stalled() {
   "$WF/cursor-workflow-notify-stalled.sh" "$STATE_FILE" "$reason" "$SKILL" || true
 }
 
+fail_pre_spawn_admission() {
+  local original_rc="${1:-1}"
+  echo "Agent-list fetch/count failed before spawning ${SKILL} (exit ${original_rc})" >&2
+  if ! "$WF/cursor-workflow-notify-stalled.sh" \
+    "$STATE_FILE" "agents-list-fetch-failed" "$SKILL"; then
+    echo "::warning::Could not post stalled notification for agent-list fetch/count failure" >&2
+  fi
+  return "$original_rc"
+}
+
 gate_args=("$STATE_FILE" "$SKILL")
 if [ "$REOPEN" = "true" ]; then
   gate_args+=("--reopen")
@@ -164,9 +174,21 @@ set_pending_lock() {
 }
 
 while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
-  "$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null
+  if "$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null; then
+    :
+  else
+    refetch_rc=$?
+    fail_pre_spawn_admission "$refetch_rc"
+    exit $?
+  fi
 
-  decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}")
+  if decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}"); then
+    :
+  else
+    gate_rc=$?
+    fail_pre_spawn_admission "$gate_rc"
+    exit $?
+  fi
   case "$decision" in
     skip:*)
       echo "Spawn skipped: ${decision#skip:}"
@@ -181,7 +203,6 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
         continue
       fi
       "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "$reason" || true
-      notify_stalled "$reason" || true
       exit 0
       ;;
     proceed)
@@ -195,13 +216,24 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
           continue
         fi
         "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "pending-lock" || true
-        notify_stalled "pending-lock" || true
         exit 0
       fi
 
-      "$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null
+      if "$WF/cursor-workflow-refetch-state.sh" "$STATE_FILE" "$BRANCH" >/dev/null; then
+        :
+      else
+        refetch_rc=$?
+        fail_pre_spawn_admission "$refetch_rc"
+        exit $?
+      fi
 
-      decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}")
+      if decision=$("$WF/cursor-workflow-admission-gate.sh" "${gate_args[@]}"); then
+        :
+      else
+        gate_rc=$?
+        fail_pre_spawn_admission "$gate_rc"
+        exit $?
+      fi
       case "$decision" in
         skip:*)
           echo "Spawn skipped: ${decision#skip:}"
@@ -218,7 +250,6 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
             continue
           fi
           "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "$reason" || true
-          notify_stalled "$reason" || true
           exit 0
           ;;
         proceed)
@@ -240,7 +271,6 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
             continue
           fi
           "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "api-400" || true
-          notify_stalled "api-400" || true
           exit 0
         fi
         if [ -z "${CURSOR_API_KEY:-}" ] && [ "${MOCK_CURSOR_API:-}" != "1" ]; then
