@@ -386,6 +386,110 @@ test_shared_list_cache() {
   rm -f "$fetch_count" "$CURSOR_AGENTS_LIST_CACHE"
 }
 
+# --- Large agents list: no ARG_MAX via --argjson (issue #117) ---
+test_large_agents_list_no_argmax() {
+  local tmp bindir cache count pr_count
+  tmp=$(mktemp -d)
+  bindir="$tmp/bin"
+  mkdir -p "$bindir"
+  cache="$tmp/cache.json"
+
+  # Fake curl: one multi-MB page (no pagination) — large enough that --argjson hits ARG_MAX.
+  python3 - "$tmp/page.json" <<'PY'
+import json, sys
+n = 8000
+items = [
+    {
+        "id": f"bc-large-{i}",
+        "status": "ACTIVE",
+        "latestRunId": f"run-{i}",
+        "prUrl": (
+            "https://github.com/BlackLodgeLabs/cuebox/pull/121"
+            if i % 100 == 0
+            else "https://github.com/BlackLodgeLabs/cuebox/pull/999"
+        ),
+        "createdAt": "2026-01-01T00:00:00Z",
+    }
+    for i in range(n)
+]
+json.dump({"items": items, "nextCursor": None}, open(sys.argv[1], "w"))
+PY
+
+  cat > "$bindir/curl" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+out=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    -o) out="\$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+if [ -z "\$out" ]; then
+  cat "$tmp/page.json"
+else
+  cp "$tmp/page.json" "\$out"
+fi
+EOF
+  chmod +x "$bindir/curl"
+
+  # Document the failure mode this fix avoids (skip assert if runner ARG_MAX is huge).
+  if ! jq -n --argjson items "$(cat "$tmp/page.json" | jq -c '.items')" '{items: $items}' >/dev/null 2>"$tmp/argjson.err"; then
+    if grep -q "Argument list too long" "$tmp/argjson.err"; then
+      pass "large list reproduces ARG_MAX via --argjson"
+    else
+      pass "large list --argjson failed (non-ARG_MAX); safe path still required"
+    fi
+  else
+    pass "large list --argjson succeeded on this runner; safe path still exercised"
+  fi
+
+  export PATH="$bindir:$PATH"
+  unset MOCK_CURSOR_API || true
+  export CURSOR_API_KEY=mock-key-for-large-list
+  export GITHUB_REPOSITORY=BlackLodgeLabs/cuebox
+  export CURSOR_AGENTS_LIST_CACHE="$cache"
+  rm -f "$cache"
+
+  if ! "$SCRIPT_DIR/cursor-workflow-fetch-agents-list.sh" >"$tmp/out.path" 2>"$tmp/fetch.err"; then
+    fail_test "large list fetch failed: $(cat "$tmp/fetch.err")"
+    rm -rf "$tmp"
+    return 0
+  fi
+
+  count=$(jq '.items | length' "$cache")
+  if [ "$count" = "8000" ]; then
+    pass "large list fetch completes without ARG_MAX (8000 items)"
+  else
+    fail_test "large list fetch expected 8000 items got $count"
+  fi
+
+  # PR filter must shrink (no-op or (. == .) removed).
+  rm -f "$cache"
+  export CURSOR_AGENTS_PR_URL="https://github.com/BlackLodgeLabs/cuebox/pull/121"
+  "$SCRIPT_DIR/cursor-workflow-fetch-agents-list.sh" >/dev/null
+  pr_count=$(jq '.items | length' "$cache")
+  if [ "$pr_count" = "80" ]; then
+    pass "PR filter shrinks large list (80 matches)"
+  else
+    fail_test "PR filter expected 80 items got $pr_count"
+  fi
+
+  # Admission/count can still read the cache (mock in-flight count).
+  export MOCK_CURSOR_API=1
+  export MOCK_AGENTS_LIST_JSON="$cache"
+  export MOCK_IN_FLIGHT_RUN_COUNT=0
+  export CURSOR_AGENTS_LIST_CACHE="$tmp/cache2.json"
+  rm -f "$CURSOR_AGENTS_LIST_CACHE"
+  if "$SCRIPT_DIR/cursor-workflow-count-active-agents.sh" >/dev/null; then
+    pass "count-active proceeds after large-list fetch"
+  else
+    fail_test "count-active failed after large-list fetch"
+  fi
+
+  rm -rf "$tmp"
+}
+
 # --- Batched spawn writes ---
 test_batched_spawn_writes() {
   cleanup_workflow_cache
@@ -1455,6 +1559,7 @@ test_plan_ready_merge
 test_skip_discovery_plan_in_progress
 test_discovery_runs_spec_ready
 test_shared_list_cache
+test_large_agents_list_no_argmax
 test_batched_spawn_writes
 test_no_duplicate_sync
 test_comment_id_cache
