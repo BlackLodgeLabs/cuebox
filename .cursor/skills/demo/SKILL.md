@@ -75,17 +75,39 @@ Follow **every** scenario in `demo-spec.md`:
 - Artifacts must reflect the **current** branch behavior
 - If a scenario cannot pass, document why in `demo-notes.md` and set `stage` to `blocked` with explanation — do not fake passes
 
-## Git and state
+## Git and state — batched final push
 
-### If all scenarios pass
+The handoff-triggering push must be **exactly one** commit containing demo artifacts + `demo-notes.md` + `workflow.state.json` with `stage: demo-ready`. Use this sequence when all scenarios pass:
 
-1. Commit artifacts + `demo-notes.md` + updated state
-2. Set `stage: demo-ready`; increment `loops.total_runs`
-3. Push to issue branch
-4. **MCP (preferred):** `pull_request_read` method `get_comments` on PR — skip if `<!-- cursor-mcp-demo-summary:v1 -->` present. Else `add_issue_comment` (PR number as `issue_number`) with scenario pass/fail table, artifact paths, marker as last line.
-5. Issue labels synced by GitHub Actions on push.
+1. Capture artifacts and draft `demo-notes.md` locally (SHA placeholder OK initially).
+2. Run merge helper; set locally in `workflow.state.json`:
+   - `stage: demo-ready`
+   - `active_skill: null` (and optionally `active_agent_id: null`)
+   - increment `loops.total_runs`
+3. `git add` demo artifacts + `demo-notes.md` + `workflow.state.json`
+4. `git commit -m "docs(workflow): demo evidence for issue #NNN"`
+5. `git rev-parse HEAD` → embed short/full SHA in `demo-notes.md` (and any embedded raw URLs if used)
+6. If notes changed: `git add demo-notes.md && git commit --amend --no-edit` (still one commit)
+7. **Single** `git push` → one handoff run spawns create-pr
+8. **MCP (preferred):** `pull_request_read` method `get_comments` on PR — skip if `<!-- cursor-mcp-demo-summary:v1 -->` present. Else `add_issue_comment` (PR number as `issue_number`) with scenario pass/fail table, artifact paths, marker as last line. MCP PR summary happens **after** the single push (not part of the handoff trigger).
 
-Handoff Action triggers create-pr. No bot `@cursoragent` comment.
+Expected push pattern: 1–2 pushes total (optional early `demo-in-progress`; one `demo-ready` push).
+
+Finalize state JSON:
+
+```json
+{
+  "stage": "demo-ready",
+  "active_skill": null,
+  "active_agent_id": null,
+  "loops": { "bugbot": <preserve>, "ci_autofix": <preserve>, "total_runs": <increment> },
+  "updated_at": "<ISO8601>"
+}
+```
+
+Issue labels synced by GitHub Actions on push. Handoff Action triggers create-pr. No bot `@cursoragent` comment.
+
+**Reference implementation:** `.cursor/skills/create-pr/SKILL.md` § "Git and state — batched final push".
 
 ### If any scenario cannot pass
 
@@ -114,3 +136,5 @@ When a scenario fails due to a **code defect** (not environment/seed):
 - Change production code on pass-back (execute fixes defects)
 - Change production code (file bugs on PR if demo reveals issues — babysit may fix)
 - Mark PR ready for review
+- Push `demo-ready`, then push again only to fix SHA in `demo-notes.md` (use `git commit --amend` before the single push instead)
+- Leave `active_skill: "demo"` on `demo-ready` finalize

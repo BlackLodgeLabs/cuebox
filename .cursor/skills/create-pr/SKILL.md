@@ -83,7 +83,10 @@ The handoff-triggering push must be **exactly one** commit containing complete `
 
 1. Read sources locally (no `PR.md` push yet).
 2. Draft `PR.md` locally (placeholders OK for SHA).
-3. Run merge helper; set `stage: create-pr-ready` + increment `loops.total_runs` in `workflow.state.json` locally.
+3. Run merge helper; set locally in `workflow.state.json`:
+   - `stage: create-pr-ready`
+   - `active_skill: null` (and optionally `active_agent_id: null`)
+   - increment `loops.total_runs`
 4. `git add PR.md` + `workflow.state.json`
 5. `git commit -m "docs(workflow): PR description for issue #NNN"`
 6. `git rev-parse HEAD` → embed SHA in `raw.githubusercontent.com` URLs in `PR.md`
@@ -91,6 +94,18 @@ The handoff-triggering push must be **exactly one** commit containing complete `
 8. **Single** `git push` → one handoff run
 
 Expected push pattern: 1–2 pushes total (optional early `create-pr-in-progress` without `PR.md`; one `create-pr-ready` push with complete `PR.md`).
+
+Finalize state JSON:
+
+```json
+{
+  "stage": "create-pr-ready",
+  "active_skill": null,
+  "active_agent_id": null,
+  "loops": { "bugbot": <preserve>, "ci_autofix": <preserve>, "total_runs": <increment> },
+  "updated_at": "<ISO8601>"
+}
+```
 
 GitHub Actions syncs labels and **updates the draft PR description** from `PR.md`. Handoff Action triggers babysit-pr. No bot `@cursoragent` comment.
 

@@ -112,7 +112,7 @@ If the Cursor agent-list fetch or active-agent count fails before that spawn, re
 | `spec-ready` | Spawn planning; **ensure draft PR** | |
 | `plan-ready` | Spawn execute; **ensure draft PR if null** | |
 | `execute-ready` | Spawn demo **or** execute (`--reopen`) | Re-open inferred via `cursor-workflow-infer-reopen.sh`; execute agent must clear `active_skill` on finalize (issue #109); defense-in-depth allows demo at `execute-ready` even with stale `active_skill=execute` |
-| `demo-ready` | Spawn create-pr | |
+| `demo-ready` | Spawn create-pr | Single batched push per agent run (issue #119; mirrors create-pr #92) |
 | `create-pr-ready` | Spawn babysit-pr (draft PR check) | |
 | `execute-passback` | **`POST /v1/agents/{id}/runs`** | No new agent; uses `cursor-workflow-passback-run.sh` |
 | Manual resync | Same as above | After label/comment sync in `resync-status` job |
@@ -180,7 +180,7 @@ If `record-spawn-on-branch.sh` fails after a successful POST, branch `handoff_pe
 
 ### Execute finalize (`active_skill` clearing, issue #109)
 
-On successful execute completion (including pass-back resume), the execute agent must set `stage: execute-ready` with `active_skill: null` (and optionally `active_agent_id: null`) in `workflow.state.json` before push — mirroring planning's `plan-ready` finalize. If the agent forgets, defense-in-depth admission still allows demo spawn at `execute-ready` (stage rank ≥ `execute-ready` wins over stale `active_skill=execute`). During active execute (`execute-in-progress`), demo remains blocked.
+On successful execute completion (including pass-back resume), the execute agent must set `stage: execute-ready` with `active_skill: null` (and optionally `active_agent_id: null`) in `workflow.state.json` before push — mirroring planning's `plan-ready` finalize. Demo agents must clear `active_skill` on `demo-ready` finalize the same way (issue #119). If the agent forgets, defense-in-depth admission still allows demo spawn at `execute-ready` (stage rank ≥ `execute-ready` wins over stale `active_skill=execute`). During active execute (`execute-in-progress`), demo remains blocked.
 
 ### Status comment ID (`status_comment_id`)
 
@@ -370,6 +370,23 @@ Agents must resolve demo image SHA URLs **before** that final push: draft `PR.md
 This complements [#84](https://github.com/BlackLodgeLabs/cuebox/issues/84) / [#90](https://github.com/BlackLodgeLabs/cuebox/issues/90) spawn dedup and admission-gate hardening; it does not replace them.
 
 The `create-pr-ready` row in the stage table above expects a single batched push per agent run (not multiple `create-pr-ready` pushes within seconds).
+
+### Demo push batching (issue #119)
+
+Each push to a `cursor/issue-*` branch with a handoff `stage` can trigger `.github/workflows/cursor-workflow-handoff.yml`. The workflow uses `cancel-in-progress: true` on its concurrency group — a second push within seconds **cancels** the in-flight handoff run for the first push. On issue [#115](https://github.com/BlackLodgeLabs/cuebox/issues/115), a demo agent pushed `demo-ready`, then immediately pushed a second commit that only updated the commit SHA in `demo-notes.md`. The cancelled handoff stalled create-pr spawn for ~2h until recovery (which then failed with ARG_MAX).
+
+**Expected push pattern:** 1–2 pushes total per demo run:
+
+1. Optional early `demo-in-progress` push (progress signal only).
+2. **One** handoff-triggering push with complete demo artifacts + `demo-notes.md` + `workflow.state.json` at `stage: demo-ready`.
+
+Agents must embed commit SHA in `demo-notes.md` **before** that final push: draft locally → commit → `git rev-parse HEAD` → embed SHA → `git commit --amend` if notes changed → single push. See the demo skill **batched final push** section. Do **not** push a follow-up commit to fix SHA after `demo-ready`.
+
+On `demo-ready` finalize, set `active_skill: null` (and optionally `active_agent_id: null`) — same contract as execute `execute-ready` and planning `plan-ready` (issue #109).
+
+Handoff recovery exists for missed transitions but must **not** be relied on for SHA-fix follow-up races ([#115](https://github.com/BlackLodgeLabs/cuebox/issues/115)). Companion hardening: [#117](https://github.com/BlackLodgeLabs/cuebox/issues/117) (ARG_MAX), [#118](https://github.com/BlackLodgeLabs/cuebox/issues/118) (stalled notify).
+
+The `demo-ready` row in the stage table above expects a single batched push per agent run (not multiple `demo-ready` pushes within seconds).
 
 When `stage` is `complete`, `scripts/cursor-workflow-notify-complete.sh` @mentions the issue author and repo owner (once) and assigns the linked PR to the issue author. Babysit agents do not post issue comments.
 
