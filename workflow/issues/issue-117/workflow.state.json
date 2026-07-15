@@ -3,7 +3,7 @@
   "branch": "cursor/issue-117-harden-agents-list-argmax-993a",
   "stage": "demo-in-progress",
   "active_skill": "demo",
-  "updated_at": "2026-07-15T07:12:57Z",
+  "updated_at": "2026-07-15T07:12:45Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
