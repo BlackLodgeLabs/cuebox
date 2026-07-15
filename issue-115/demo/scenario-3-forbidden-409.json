@@ -1,0 +1,17 @@
+{
+  "request": {
+    "film_id": "85e80e24-dfd7-4b1d-a79a-92f222c94823",
+    "body": { "status": "archived" },
+    "transition": "watched → archived"
+  },
+  "response": {
+    "http_status": 409,
+    "body": {
+      "error": {
+        "code": "CONFLICT",
+        "message": "Cannot transition from watched to archived",
+        "details": null
+      }
+    }
+  }
+}
