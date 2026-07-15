@@ -1,9 +1,9 @@
 {
   "issue": 119,
   "branch": "cursor/issue-119-demo-single-push-finalize",
-  "stage": "spec-ready",
+  "stage": "plan-in-progress",
   "active_skill": "planning",
-  "updated_at": "2026-07-15T19:17:42Z",
+  "updated_at": "2026-07-15T19:20:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
