@@ -2,26 +2,22 @@
   "issue": 119,
   "branch": "cursor/issue-119-demo-single-push-finalize",
   "stage": "execute-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-15T19:24:52Z",
+  "active_skill": "demo",
+  "updated_at": "2026-07-15T19:24:56Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
-    "demo": null,
+    "demo": "bc-23450146-ff3c-423d-8ffb-98b0e31ce1fa",
     "execute": "bc-1d336af0-5fba-423f-b4b4-3e9150f83272",
     "planning": "bc-8e512798-bd74-456f-9b5a-7cafe5e3bee6",
     "review-and-spec": "bc-282f1dcb-dc40-4174-930e-0da9f00ccf95",
     "review-and-spec-continued": null
   },
   "pr": 125,
-  "active_agent_id": null,
+  "active_agent_id": "bc-23450146-ff3c-423d-8ffb-98b0e31ce1fa",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "demo",
-    "started_at": "2026-07-15T19:24:52Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
