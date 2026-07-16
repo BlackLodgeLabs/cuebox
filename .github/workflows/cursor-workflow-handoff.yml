@@ -63,6 +63,13 @@ jobs:
           command -v jq >/dev/null || sudo apt-get update -qq && sudo apt-get install -y jq
           command -v gh >/dev/null || sudo apt-get update -qq && sudo apt-get install -y gh
 
+      - name: Load workflow config
+        run: |
+          source scripts/cursor-workflow-config.sh
+          echo "WORKFLOW_BASE_BRANCH=$WORKFLOW_BASE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_ARCHIVE_BRANCH=$WORKFLOW_ARCHIVE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_LABEL_PREFIX=$WORKFLOW_LABEL_PREFIX" >> "$GITHUB_ENV"
+
       - name: Load workflow scripts from main
         run: |
           set -euo pipefail
@@ -310,6 +317,13 @@ jobs:
         run: |
           command -v jq >/dev/null || sudo apt-get update -qq && sudo apt-get install -y jq
           command -v gh >/dev/null || sudo apt-get update -qq && sudo apt-get install -y gh
+
+      - name: Load workflow config
+        run: |
+          source scripts/cursor-workflow-config.sh
+          echo "WORKFLOW_BASE_BRANCH=$WORKFLOW_BASE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_ARCHIVE_BRANCH=$WORKFLOW_ARCHIVE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_LABEL_PREFIX=$WORKFLOW_LABEL_PREFIX" >> "$GITHUB_ENV"
 
       - name: Load workflow scripts from main
         run: |

@@ -25,6 +25,13 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Load workflow config
+        run: |
+          source scripts/cursor-workflow-config.sh
+          echo "WORKFLOW_BASE_BRANCH=$WORKFLOW_BASE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_ARCHIVE_BRANCH=$WORKFLOW_ARCHIVE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_LABEL_PREFIX=$WORKFLOW_LABEL_PREFIX" >> "$GITHUB_ENV"
+
       - name: Post-merge workflow cleanup
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
