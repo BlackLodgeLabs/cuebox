@@ -1,8 +1,8 @@
 {
   "issue": 126,
   "branch": "cursor/issue-126-pre-122-skill-trims-portability-prep",
-  "stage": "execute-ready",
-  "updated_at": "2026-07-16T18:37:24Z",
+  "stage": "create-pr-in-progress",
+  "updated_at": "2026-07-16T18:55:56Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,8 +13,8 @@
     "review-and-spec-continued": null
   },
   "pr": 128,
-  "active_agent_id": "bc-e2bdd070-a4d2-40ef-8939-82e9a9b98abc",
-  "active_skill": "demo",
+  "active_agent_id": null,
+  "active_skill": "create-pr",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
