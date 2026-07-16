@@ -3,30 +3,26 @@
   "branch": "cursor/issue-122-harden-portable-workflow-boundary",
   "pr": 129,
   "stage": "plan-ready",
-  "active_skill": null,
-  "active_agent_id": null,
+  "active_skill": "execute",
+  "active_agent_id": "bc-259d45f3-7244-42c2-ab90-6f1290c85ef8",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
-    "execute": null,
+    "execute": "bc-259d45f3-7244-42c2-ab90-6f1290c85ef8",
     "planning": "bc-4edfef53-dd8c-4aca-8f98-57b702660e33",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "execute",
-    "started_at": "2026-07-16T22:02:51Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "status_comment_id": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "updated_at": "2026-07-16T22:02:51Z",
+  "updated_at": "2026-07-16T22:02:57Z",
   "schema_version": 1
 }
