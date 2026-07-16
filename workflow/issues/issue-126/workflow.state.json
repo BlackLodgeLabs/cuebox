@@ -1,9 +1,8 @@
 {
   "issue": 126,
   "branch": "cursor/issue-126-pre-122-skill-trims-portability-prep",
-  "stage": "plan-in-progress",
-  "active_skill": "planning",
-  "updated_at": "2026-07-16T18:30:00Z",
+  "stage": "plan-ready",
+  "updated_at": "2026-07-16T18:35:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,14 +16,10 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-16T18:26:36Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   }
 }
