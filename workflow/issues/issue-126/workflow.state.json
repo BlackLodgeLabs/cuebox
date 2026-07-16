@@ -1,9 +1,9 @@
 {
   "issue": 126,
   "branch": "cursor/issue-126-pre-122-skill-trims-portability-prep",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-16T18:25:00Z",
+  "updated_at": "2026-07-16T18:30:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
