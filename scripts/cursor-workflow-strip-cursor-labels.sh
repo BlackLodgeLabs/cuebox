@@ -4,6 +4,10 @@
 # Requires: gh, GH_TOKEN or GITHUB_TOKEN
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 ISSUE="${1:?usage: cursor-workflow-strip-cursor-labels.sh <issue-number>}"
 
 GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
@@ -15,7 +19,7 @@ export GH_TOKEN
 
 REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 
-mapfile -t ON_ISSUE < <(gh issue view "$ISSUE" --repo "$REPO" --json labels -q '.labels[].name' | grep '^cursor:' || true)
+mapfile -t ON_ISSUE < <(gh issue view "$ISSUE" --repo "$REPO" --json labels -q '.labels[].name' | grep "^${WORKFLOW_LABEL_PREFIX}:" || true)
 
 if [[ ${#ON_ISSUE[@]} -eq 0 ]]; then
   echo "No cursor labels on issue #${ISSUE}"

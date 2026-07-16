@@ -5,11 +5,15 @@
 # Usage: cursor-workflow-load-scripts.sh [dest-dir] [handoff|agent]
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 DEST="${1:-/tmp/cursor-workflow-scripts}"
 SCRIPT_SET="${2:-handoff}"
-REF="${WORKFLOW_SCRIPTS_REF:-origin/main}"
+REF="${WORKFLOW_SCRIPTS_REF:-origin/${WORKFLOW_BASE_BRANCH}}"
 
-FETCH_BRANCH="main"
+FETCH_BRANCH="${WORKFLOW_BASE_BRANCH}"
 if [[ "$REF" == origin/* ]]; then
   FETCH_BRANCH="${REF#origin/}"
 fi

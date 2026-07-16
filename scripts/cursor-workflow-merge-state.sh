@@ -4,6 +4,10 @@
 # unless the agent intentionally sets non-null overrides.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 STATE_FILE="${1:?usage: cursor-workflow-merge-state.sh <path-to-workflow.state.json>}"
 
 if [ ! -f "$STATE_FILE" ]; then
@@ -46,7 +50,13 @@ elif git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 LOCAL_JSON=$(cat "$STATE_FILE")
-PENDING_STALE_MINUTES="${CURSOR_WORKFLOW_PENDING_STALE_MINUTES:-15}"
+PENDING_STALE_MINUTES="${WORKFLOW_HANDOFF_PENDING_STALE_MINUTES}"
+
+# Migrate schema_version when missing (idempotent v0→v1).
+if ! jq -e 'has("schema_version")' "$STATE_FILE" >/dev/null 2>&1; then
+  LOCAL_JSON=$(echo "$LOCAL_JSON" | jq '.schema_version = 1')
+  echo "Applied schema_version migration (default 1) to ${STATE_FILE}" >&2
+fi
 
 MERGED=$(jq -n \
   --argjson remote "$REMOTE_JSON" \

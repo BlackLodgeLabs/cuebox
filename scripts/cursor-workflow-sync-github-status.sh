@@ -5,6 +5,11 @@
 # they push state; this script runs on the subsequent workflow trigger.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+LABEL_PREFIX="${WORKFLOW_LABEL_PREFIX}"
+
 MARKER="<!-- cursor-workflow-status:v1 -->"
 
 _gh_api_http_code() {
@@ -83,23 +88,23 @@ export GH_TOKEN
 
 stage_label() {
   case "$1" in
-    spec-needs-info) echo "cursor:spec-needs-info" ;;
-    spec-in-progress) echo "cursor:spec-in-progress" ;;
-    spec-ready) echo "cursor:spec-ready" ;;
-    plan-needs-info) echo "cursor:plan-needs-info" ;;
-    plan-in-progress) echo "cursor:plan-in-progress" ;;
-    plan-ready) echo "cursor:plan-ready" ;;
-    execute-in-progress) echo "cursor:execute-in-progress" ;;
-    execute-ready) echo "cursor:execute-ready" ;;
-    execute-passback) echo "cursor:execute-passback" ;;
-    changes-requested) echo "cursor:changes-requested" ;;
-    demo-in-progress) echo "cursor:demo-in-progress" ;;
-    demo-ready) echo "cursor:demo-ready" ;;
-    create-pr-in-progress) echo "cursor:create-pr-in-progress" ;;
-    create-pr-ready) echo "cursor:create-pr-ready" ;;
-    babysit-in-progress) echo "cursor:babysit-in-progress" ;;
-    complete) echo "cursor:complete" ;;
-    blocked) echo "cursor:blocked" ;;
+    spec-needs-info) echo "${LABEL_PREFIX}:spec-needs-info" ;;
+    spec-in-progress) echo "${LABEL_PREFIX}:spec-in-progress" ;;
+    spec-ready) echo "${LABEL_PREFIX}:spec-ready" ;;
+    plan-needs-info) echo "${LABEL_PREFIX}:plan-needs-info" ;;
+    plan-in-progress) echo "${LABEL_PREFIX}:plan-in-progress" ;;
+    plan-ready) echo "${LABEL_PREFIX}:plan-ready" ;;
+    execute-in-progress) echo "${LABEL_PREFIX}:execute-in-progress" ;;
+    execute-ready) echo "${LABEL_PREFIX}:execute-ready" ;;
+    execute-passback) echo "${LABEL_PREFIX}:execute-passback" ;;
+    changes-requested) echo "${LABEL_PREFIX}:changes-requested" ;;
+    demo-in-progress) echo "${LABEL_PREFIX}:demo-in-progress" ;;
+    demo-ready) echo "${LABEL_PREFIX}:demo-ready" ;;
+    create-pr-in-progress) echo "${LABEL_PREFIX}:create-pr-in-progress" ;;
+    create-pr-ready) echo "${LABEL_PREFIX}:create-pr-ready" ;;
+    babysit-in-progress) echo "${LABEL_PREFIX}:babysit-in-progress" ;;
+    complete) echo "${LABEL_PREFIX}:complete" ;;
+    blocked) echo "${LABEL_PREFIX}:blocked" ;;
     *) echo "" ;;
   esac
 }
@@ -128,23 +133,23 @@ stage_title() {
 }
 
 CURSOR_LABELS=(
-  "cursor:spec-needs-info"
-  "cursor:spec-in-progress"
-  "cursor:spec-ready"
-  "cursor:plan-needs-info"
-  "cursor:plan-in-progress"
-  "cursor:plan-ready"
-  "cursor:execute-in-progress"
-  "cursor:execute-ready"
-  "cursor:execute-passback"
-  "cursor:changes-requested"
-  "cursor:demo-in-progress"
-  "cursor:demo-ready"
-  "cursor:create-pr-in-progress"
-  "cursor:create-pr-ready"
-  "cursor:babysit-in-progress"
-  "cursor:complete"
-  "cursor:blocked"
+  "${LABEL_PREFIX}:spec-needs-info"
+  "${LABEL_PREFIX}:spec-in-progress"
+  "${LABEL_PREFIX}:spec-ready"
+  "${LABEL_PREFIX}:plan-needs-info"
+  "${LABEL_PREFIX}:plan-in-progress"
+  "${LABEL_PREFIX}:plan-ready"
+  "${LABEL_PREFIX}:execute-in-progress"
+  "${LABEL_PREFIX}:execute-ready"
+  "${LABEL_PREFIX}:execute-passback"
+  "${LABEL_PREFIX}:changes-requested"
+  "${LABEL_PREFIX}:demo-in-progress"
+  "${LABEL_PREFIX}:demo-ready"
+  "${LABEL_PREFIX}:create-pr-in-progress"
+  "${LABEL_PREFIX}:create-pr-ready"
+  "${LABEL_PREFIX}:babysit-in-progress"
+  "${LABEL_PREFIX}:complete"
+  "${LABEL_PREFIX}:blocked"
 )
 
 HANDOFF_PROGRESS_STAGE="${HANDOFF_PROGRESS_STAGE:-}"
@@ -249,9 +254,9 @@ ${PASSBACK_LINES}
 |---|---|
 ${AGENTS_TABLE}
 
-[Open Cursor agents](https://cursor.com/agents) · [Workflow docs](https://github.com/${REPO}/blob/main/workflow/cursor-workflow/WORKFLOW.md)
+[Open Cursor agents](https://cursor.com/agents) · [Workflow docs](https://github.com/${REPO}/blob/${WORKFLOW_BASE_BRANCH}/workflow/cursor-workflow/WORKFLOW.md)
 
-_This comment is updated automatically on every push to \`${BRANCH:-cursor/issue-*}\` from \`workflow/issues/issue-${ISSUE}/workflow.state.json\`._"
+_This comment is updated automatically on every push to \`${BRANCH:-${WORKFLOW_BRANCH_PATTERN}}\` from \`workflow/issues/issue-${ISSUE}/workflow.state.json\`._"
 
 COMMENT_ID=""
 PATCH_USED=false

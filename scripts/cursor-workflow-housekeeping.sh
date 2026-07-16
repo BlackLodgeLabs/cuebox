@@ -3,6 +3,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
 cd "$ROOT"
 
 FOUND=0
@@ -32,18 +35,18 @@ done
 if [[ -n "$REPO" ]] && command -v gh >/dev/null 2>&1; then
   export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
   if [[ -n "${GH_TOKEN:-}" ]]; then
-    gh issue list --repo "$REPO" --state open --label "cursor:complete" \
+    gh issue list --repo "$REPO" --state open --label "${WORKFLOW_LABEL_PREFIX}:complete" \
       --json number,title -q '.[] | "\(.number)\t\(.title)"' 2>/dev/null \
       | while IFS=$'\t' read -r num title; do
           [[ -z "$num" ]] && continue
-          report "Issue #${num} is OPEN with cursor:complete — ${title}"
+          report "Issue #${num} is OPEN with ${WORKFLOW_LABEL_PREFIX}:complete — ${title}"
         done
 
     gh issue list --repo "$REPO" --state closed --limit 100 \
-      --json number,labels,title -q '.[] | select([.labels[].name] | any(startswith("cursor:"))) | "\(.number)\t\(.title)"' 2>/dev/null \
+      --json number,labels,title -q ".[] | select([.labels[].name] | any(startswith(\"${WORKFLOW_LABEL_PREFIX}:\"))) | \"\(.number)\t\(.title)\"" 2>/dev/null \
       | while IFS=$'\t' read -r num title; do
           [[ -z "$num" ]] && continue
-          report "Closed issue #${num} still has cursor:* label — ${title}"
+          report "Closed issue #${num} still has ${WORKFLOW_LABEL_PREFIX}:* label — ${title}"
         done
 
     stale_count="$(bash "$ROOT/scripts/cursor-workflow-delete-stale-branches.sh" --count-stale 2>/dev/null || echo 0)"

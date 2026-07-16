@@ -4,6 +4,10 @@
 # Env: CURSOR_WORKFLOW_REFETCH_REMOTE_JSON — test hook bypassing git fetch
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 STATE_FILE="${1:?usage: cursor-workflow-refetch-state.sh <state-file> <branch> [--agents-from-tip]}"
 BRANCH="${2:?usage: cursor-workflow-refetch-state.sh <state-file> <branch> [--agents-from-tip]}"
 shift 2 || true
@@ -32,7 +36,7 @@ if [ -z "$ISSUE" ]; then
 fi
 
 REL_PATH="workflow/issues/issue-${ISSUE}/workflow.state.json"
-PENDING_STALE_MINUTES="${CURSOR_WORKFLOW_PENDING_STALE_MINUTES:-15}"
+PENDING_STALE_MINUTES="${WORKFLOW_HANDOFF_PENDING_STALE_MINUTES}"
 
 REMOTE_JSON="{}"
 FETCH_OK=false
