@@ -2,7 +2,7 @@
   "issue": 122,
   "branch": "cursor/issue-122-harden-portable-workflow-boundary",
   "pr": 129,
-  "stage": "execute-in-progress",
+  "stage": "execute-ready",
   "active_skill": "execute",
   "active_agent_id": "bc-259d45f3-7244-42c2-ab90-6f1290c85ef8",
   "agents": {
@@ -21,8 +21,8 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   },
-  "updated_at": "2026-07-16T22:03:00Z",
+  "updated_at": "2026-07-16T22:22:00Z",
   "schema_version": 1
 }
