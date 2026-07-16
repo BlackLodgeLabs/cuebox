@@ -2,6 +2,8 @@
 
 Reusable pipeline: GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review.
 
+**Skill tiering** (workflow vs application issues) and **config indirection** are enforced by late-stage skills — see [SKILL-TIERING.md](SKILL-TIERING.md) and [workflow.config.yaml](workflow.config.yaml) (resolved via `scripts/cursor-workflow-config.sh`). Agents classify tier at planning and re-check at execute/demo/create-pr/babysit.
+
 ## Stages
 
 | Stage | Trigger | Agent skill | Output |

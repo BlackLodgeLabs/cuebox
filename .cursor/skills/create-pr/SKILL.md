@@ -30,12 +30,15 @@ Optionally push `create-pr-in-progress` before drafting `PR.md` (progress signal
 
 ## Read first
 
-1. `workflow/cursor-workflow/templates/PR.md` — section structure and placeholders
-2. `workflow/issues/issue-{NNN}/SPEC.md` — problem, scope, acceptance criteria
-3. `workflow/issues/issue-{NNN}/PLAN.md` — approach, files touched, test plan
-4. `workflow/issues/issue-{NNN}/demo/demo-notes.md` — scenario results, screenshots
-5. `workflow/issues/issue-{NNN}/workflow.state.json` — issue number, branch, PR number
-6. Commit log on the issue branch: `git log main..HEAD --oneline` and `git log main..HEAD --format=%s%n%b` for detail
+1. `workflow/issues/issue-{NNN}/PLAN.md` — § **PR seed**, § Definition of done (primary narrative)
+2. `workflow/issues/issue-{NNN}/demo/demo-notes.md` — scenario results, gate line
+3. `workflow/cursor-workflow/templates/PR.md` — section structure and placeholders
+4. `workflow/issues/issue-{NNN}/workflow.state.json` — issue number, branch, PR number
+5. Commit log on the issue branch: `git log main..HEAD --oneline` and `git log main..HEAD --format=%s%n%b` for detail
+6. `source scripts/cursor-workflow-config.sh` — `$GITHUB_REPO_SLUG` for URLs
+7. [workflow/cursor-workflow/SKILL-TIERING.md](../../../workflow/cursor-workflow/SKILL-TIERING.md) — excerpt map for stage context (do **not** ingest full `WORKFLOW.md`)
+
+Do **not** require full `SPEC.md` or full `WORKFLOW.md` — PR seed + targeted PLAN excerpts are sufficient.
 
 ## Draft PR.md
 
@@ -43,13 +46,13 @@ Fill every section in the template with **concrete** content from the sources ab
 
 | Section | Sources |
 |---------|---------|
-| Related Issue | `Closes #{NNN}` on its own line (auto-closes issue on merge) + link to `https://github.com/{owner}/{repo}/issues/{NNN}` |
-| Description — what / why | SPEC summary + PLAN architectural choices |
-| Changes Proposed | Commit subjects + PLAN file list; bullet per meaningful change |
-| Scenario Results | Embed demo screenshots/recordings using **absolute** `raw.githubusercontent.com` URLs (see below); copy pass/fail table from `demo-notes.md` |
-| How to Test | PLAN test steps + demo-spec manual steps; include real branch name and routes |
+| Related Issue | `Closes #{NNN}` on its own line (auto-closes issue on merge) + link to `https://github.com/$GITHUB_REPO_SLUG/issues/{NNN}` |
+| Description — what / why | **PR seed** + PLAN architectural choices |
+| Changes Proposed | PR seed key changes + commit subjects + PLAN file list |
+| Scenario Results | Embed demo screenshots/recordings using **absolute** `raw.githubusercontent.com` URLs (see below); copy pass/fail table from `demo-notes.md`; for `workflow` tier with no screenshots, state "workflow tier — script verification only" and cite demo-notes gate line |
+| How to Test | PR seed test steps + PLAN test steps; include real branch name and routes |
 | Known Issues / Notes | `demo-notes.md` findings, migration commands, TODOs worth flagging |
-| Gate evidence | From execute/demo gate runs: `Phase N gate exit 0 at <short-sha>` or `Workflow regression: verify-workflow-paths.sh exit 0 at <short-sha>` for workflow-only issues |
+| Gate evidence | From execute/demo gate runs via config: `Workflow regression: $WORKFLOW_REGRESSION_GATE exit 0 at <short-sha>` (workflow tier) or application gate line from demo-notes |
 | Checklist | Leave boxes unchecked (`- [ ]`) for the human reviewer |
 
 ### Demo image URLs (required for Scenario Results)
@@ -59,16 +62,16 @@ Fill every section in the template with **concrete** content from the sources ab
 Use absolute `raw.githubusercontent.com` URLs. Prefer the **current commit SHA** so images survive post-merge archive (workflow folders move off `main`):
 
 ```text
-https://raw.githubusercontent.com/{owner}/{repo}/{commit-sha}/workflow/issues/issue-{NNN}/demo/{filename}
+https://raw.githubusercontent.com/$GITHUB_REPO_SLUG/{commit-sha}/workflow/issues/issue-{NNN}/demo/{filename}
 ```
 
 Fall back to the issue **branch** name if SHA is unavailable:
 
 ```text
-https://raw.githubusercontent.com/{owner}/{repo}/{branch}/workflow/issues/issue-{NNN}/demo/{filename}
+https://raw.githubusercontent.com/$GITHUB_REPO_SLUG/{branch}/workflow/issues/issue-{NNN}/demo/{filename}
 ```
 
-Resolve SHA **before** the handoff-triggering push: URLs must reference the commit that **contains** `PR.md` (the commit about to be pushed, or amended in place). Get SHA with `git rev-parse HEAD` on that local commit. Derive `{owner}/{repo}` from `git remote get-url origin`; `{NNN}` from `issue`. Branch-name fallback (above) is for edge cases only. Do **not** use `main` in demo URLs. Do **not** use short relative paths like `demo/foo.png`.
+Resolve SHA **before** the handoff-triggering push: URLs must reference the commit that **contains** `PR.md` (the commit about to be pushed, or amended in place). Get SHA with `git rev-parse HEAD` on that local commit. Derive slug from `$GITHUB_REPO_SLUG` after `source scripts/cursor-workflow-config.sh`; `{NNN}` from `issue`. Branch-name fallback (above) is for edge cases only. Do **not** use `main` in demo URLs. Do **not** use short relative paths like `demo/foo.png`.
 
 Quality bar:
 

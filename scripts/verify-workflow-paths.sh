@@ -317,6 +317,70 @@ if [[ "$fail" -ne 0 ]]; then
   exit 1
 fi
 
+# --- Issue #126: workflow config, tiering, PR seed, skill grep guards ---
+CONFIG_YAML="workflow/cursor-workflow/workflow.config.yaml"
+CONFIG_SH="scripts/cursor-workflow-config.sh"
+TIERING_MD="workflow/cursor-workflow/SKILL-TIERING.md"
+
+for artifact in "$CONFIG_YAML" "$CONFIG_SH" "$TIERING_MD"; do
+  if [[ ! -f "$artifact" ]]; then
+    echo "FAIL: missing ${artifact}" >&2
+    fail=1
+  fi
+done
+
+if [[ ! -x "$CONFIG_SH" ]]; then
+  echo "FAIL: ${CONFIG_SH} must be executable" >&2
+  fail=1
+fi
+
+bash scripts/test-cursor-workflow-config.sh
+
+PLANNING_SKILL=".cursor/skills/planning/SKILL.md"
+for keyword in "PR seed" SKILL-TIERING excerpt; do
+  if ! grep -qF "$keyword" "$PLANNING_SKILL"; then
+    echo "FAIL: ${PLANNING_SKILL} must mention ${keyword}" >&2
+    fail=1
+  fi
+done
+
+TIER_SKILLS=(planning execute demo create-pr babysit-pr)
+FORBIDDEN_PATTERNS=('localhost:' 'verify-phase8-gates.sh' 'BlackLodgeLabs/cuebox')
+for skill in "${TIER_SKILLS[@]}"; do
+  skill_file=".cursor/skills/${skill}/SKILL.md"
+  if ! grep -qE 'cursor-workflow-config\.sh|WORKFLOW_REGRESSION_GATE|APP_DEFAULT_GATE|APP_HEALTH_URL|GITHUB_REPO_SLUG|SKILL-TIERING' "$skill_file"; then
+    echo "FAIL: ${skill_file} must reference config resolver or config variables" >&2
+    fail=1
+  fi
+  for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
+    if grep -qF "$pattern" "$skill_file"; then
+      echo "FAIL: ${skill_file} contains hard-coded pattern: ${pattern}" >&2
+      fail=1
+    fi
+  done
+done
+
+ISSUE_126_PLAN="workflow/issues/issue-126/PLAN.md"
+if [[ -f "$ISSUE_126_PLAN" ]]; then
+  if ! grep -qF '## PR seed' "$ISSUE_126_PLAN"; then
+    echo "FAIL: ${ISSUE_126_PLAN} must contain ## PR seed (dogfood)" >&2
+    fail=1
+  fi
+fi
+
+if ! grep -qF 'SKILL-TIERING.md' "$WORKFLOW_MD"; then
+  echo "FAIL: ${WORKFLOW_MD} must link SKILL-TIERING.md" >&2
+  fail=1
+fi
+if ! grep -qF 'workflow.config.yaml' "$WORKFLOW_MD"; then
+  echo "FAIL: ${WORKFLOW_MD} must mention workflow.config.yaml" >&2
+  fail=1
+fi
+
+if [[ "$fail" -ne 0 ]]; then
+  exit 1
+fi
+
 # --- Shell tests for handoff hardening ---
 bash scripts/test-cursor-workflow-handoff.sh
 bash scripts/test-cursor-workflow-record-agent.sh

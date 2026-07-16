@@ -1,0 +1,24 @@
+# Committed workflow config — precursor to #122 portable adapter.
+# Skills reference keys via scripts/cursor-workflow-config.sh, not literal values.
+version: 1
+paths:
+  artifact_root: workflow/issues
+  workflow_docs: workflow/cursor-workflow
+  skills_root: .cursor/skills
+repository:
+  owner: BlackLodgeLabs
+  name: cuebox
+gates:
+  workflow_regression: scripts/verify-workflow-paths.sh
+  application_default: scripts/verify-phase8-gates.sh
+environment:
+  health_url_frontend: http://localhost:3000/api/v1/health
+  health_url_api: http://localhost:8000/api/v1/health
+  database_url_host_test: postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
+tiering:
+  workflow_loop_limits:
+    bugbot: 1
+    ci_autofix: 1
+  application_loop_limits:
+    bugbot: 3
+    ci_autofix: 2
