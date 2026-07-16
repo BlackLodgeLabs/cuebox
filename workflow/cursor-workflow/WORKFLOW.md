@@ -4,6 +4,19 @@ Reusable pipeline: GitHub issue → spec → plan → execute → demo → creat
 
 **Skill tiering** (workflow vs application issues) and **config indirection** are enforced by late-stage skills — see [SKILL-TIERING.md](SKILL-TIERING.md) and [workflow.config.yaml](workflow.config.yaml) (resolved via `scripts/cursor-workflow-config.sh`). Agents classify tier at planning and re-check at execute/demo/create-pr/babysit.
 
+## Core and adapter
+
+| Layer | Owns |
+|-------|------|
+| **Portable core** | Orchestration scripts, templates, `workflow.state.json` schema, handoff/merge/recovery, label sync, `verify-workflow-portable.sh`, `STATE-SCHEMA.md` |
+| **Application adapter** | Phase gates, CI workflow names, Docker/demo stack, cloud bootstrap, health URLs, `verify-workflow-cuebox-adapter.sh` |
+
+Portable scripts read branch, label, archive, and orchestration timing from config — not hard-coded literals. Adapter contract: [ADAPTER.md](ADAPTER.md). Config index: [CONFIG.md](CONFIG.md).
+
+A future **Callsheet** installer **generates** the portable core from templates and **preserves** the adapter section and application-specific files on update (see ADAPTER.md).
+
+GitHub Actions `on.push.branches` must match `repository.branch_pattern` manually when the pattern changes (YAML cannot source shell config at parse time).
+
 ## Stages
 
 | Stage | Trigger | Agent skill | Output |

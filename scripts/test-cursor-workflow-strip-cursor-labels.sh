@@ -5,6 +5,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPT="$ROOT/scripts/cursor-workflow-strip-cursor-labels.sh"
 
+if ! grep -q 'cursor-workflow-config.sh' "$SCRIPT"; then
+  echo "FAIL: strip-cursor-labels.sh must source cursor-workflow-config.sh" >&2
+  exit 1
+fi
+
+if ! grep -q 'WORKFLOW_LABEL_PREFIX' "$SCRIPT"; then
+  echo "FAIL: strip-cursor-labels.sh must use WORKFLOW_LABEL_PREFIX" >&2
+  exit 1
+fi
+
 if ! grep -q 'gh issue view.*labels' "$SCRIPT"; then
   echo "FAIL: strip-cursor-labels.sh must read cursor:* labels from the issue" >&2
   exit 1
