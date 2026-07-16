@@ -50,20 +50,40 @@ See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/M
 ## Read first
 
 1. `workflow/issues/issue-{NNN}/workflow.state.json` — **check limits before acting**
-2. PR (number in state file): **MCP (preferred)** `pull_request_read` methods `get`, `get_check_runs`, `get_reviews`, `get_review_comments` — replaces `gh pr view` / `gh api`
-3. `workflow/issues/issue-{NNN}/PR.md` — PR description (synced to GitHub by Actions)
-4. `workflow/issues/issue-{NNN}/PLAN.md` — definition of done
-4. `run-gate-scripts` — re-run gates after fixes
+2. `workflow/issues/issue-{NNN}/PLAN.md` — tier from PR seed / front matter; definition of done
+3. `source scripts/cursor-workflow-config.sh` — tier-aware loop limits
+4. PR (number in state file): **MCP (preferred)** `pull_request_read` methods `get`, `get_check_runs`, `get_reviews`, `get_review_comments` — replaces `gh pr view` / `gh api`
+5. `workflow/issues/issue-{NNN}/PR.md` — PR description (synced to GitHub by Actions)
+6. `run-gate-scripts` — re-run gates after fixes
 
 ## Loop limits (hard stop)
 
-| Counter | Max | Increment when |
-|---------|-----|----------------|
-| `loops.bugbot` | 3 | You push a commit primarily addressing Bugbot findings |
-| `loops.ci_autofix` | 2 | You push a commit primarily addressing CI failure |
-| `loops.total_runs` | 10 | Any agent stage run on this issue (already tracked in state) |
+Read tier from `PLAN.md` § PR seed. Resolve limits from config after `source scripts/cursor-workflow-config.sh`:
+
+| Tier | `loops.bugbot` max | `loops.ci_autofix` max |
+|------|-------------------|------------------------|
+| `workflow` | `$WORKFLOW_LOOP_LIMIT_BUGBOT` (default 1) | `$WORKFLOW_LOOP_LIMIT_CI_AUTOFIX` (default 1) |
+| `application` | `$APPLICATION_LOOP_LIMIT_BUGBOT` (default 3) | `$APPLICATION_LOOP_LIMIT_CI_AUTOFIX` (default 2) |
+
+| Counter | Increment when |
+|---------|----------------|
+| `loops.bugbot` | You push a commit primarily addressing Bugbot findings |
+| `loops.ci_autofix` | You push a commit primarily addressing CI failure |
+| `loops.total_runs` | Any agent stage run on this issue (already tracked in state) |
 
 **Before each fix cycle:** read counters. If any would exceed max after this cycle → **block** (below).
+
+### Workflow tier early-exit
+
+When tier is `workflow` and **all** true after first CI run:
+
+- Required CI checks green (or only allowed skips)
+- No unresolved Bugbot **must-fix** items you own
+- No merge conflicts
+- Demo artifacts and `PR.md` present on branch
+- Gate evidence in `PR.md` or `demo-notes.md`
+
+→ Mark ready immediately (`complete`); do **not** enter further fix cycles.
 
 ## React to everything
 
@@ -101,7 +121,7 @@ When **all** true:
 - No merge conflicts
 - Demo artifacts present on branch (`workflow/issues/issue-{NNN}/demo/`)
 - `workflow/issues/issue-{NNN}/PR.md` committed (PR body synced by Actions)
-- **Gate evidence** recorded in `PR.md` or `demo/demo-notes.md`, e.g. `Workflow regression: verify-workflow-paths.sh exit 0 at <short-sha>` (workflow-only issues) or `Phase 8 gate exit 0 at <short-sha>` (feature issues)
+- Gate evidence recorded in `PR.md` or `demo/demo-notes.md`, e.g. `Workflow regression: $WORKFLOW_REGRESSION_GATE exit 0 at <short-sha>` (workflow tier) or application gate line from demo-notes (feature issues)
 
 Then:
 

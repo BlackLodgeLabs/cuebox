@@ -17,8 +17,10 @@ Produce an implementation plan and demo spec on the existing feature branch.
 
 1. `workflow/issues/issue-{NNN}/SPEC.md`
 2. `workflow/issues/issue-{NNN}/workflow.state.json`
-3. [workflow/cursor-workflow/WORKFLOW.md](../../../workflow/cursor-workflow/WORKFLOW.md)
-4. Relevant code areas (grep/read before planning)
+3. [workflow/cursor-workflow/SKILL-TIERING.md](../../../workflow/cursor-workflow/SKILL-TIERING.md) — tier classification, excerpt map, PR seed contract
+4. `source scripts/cursor-workflow-config.sh` — config vars for gates and health URLs
+5. [workflow/cursor-workflow/WORKFLOW.md](../../../workflow/cursor-workflow/WORKFLOW.md) — **only** sections listed in SKILL-TIERING excerpt map (not the full file)
+6. Relevant code areas (grep/read before planning)
 
 ## Preconditions
 
@@ -75,9 +77,18 @@ If you need to chat more, talk to me [here](https://cursor.com/agents/<agent-id>
 <!-- cursor-mcp-plan-questions:v1 -->
 ```
 
-## Classify the issue
+## Classify tier and issue type
 
-After reading `SPEC.md`, decide whether this is a **bug in the existing application**:
+After reading `SPEC.md`, classify **tier** per [SKILL-TIERING.md](../../../workflow/cursor-workflow/SKILL-TIERING.md):
+
+| Tier | When |
+|------|------|
+| `workflow` | Changes limited to skills, `workflow/`, `scripts/cursor-workflow-*`, docs — no `api/` or `frontend/` product code |
+| `application` | Everything else; default when uncertain |
+
+Document tier in `PLAN.md` front matter (`**Tier:** workflow | application`) and `## PR seed`.
+
+Then decide whether this is a **bug in the existing application** (application tier only):
 
 | Treat as bug | Treat as feature / infra / workflow |
 |--------------|-------------------------------------|
@@ -89,18 +100,19 @@ When uncertain, prefer the bug path and document your reasoning in `bug-repro-no
 
 ## Bug reproduction (before planning)
 
-**Required** when the issue is a bug in the existing application. **Skip** for features, infrastructure, and workflow-only changes.
+**Required** when the issue is a bug in the existing application (`application` tier). **Skip** for `workflow` tier, features, infrastructure, and workflow-only changes — no stack bring-up or `bug-repro-*` artifacts.
 
 Do this **after** the `plan-in-progress` commit and **before** writing `PLAN.md`.
 
-### Environment
+### Environment (application tier only)
 
-1. Confirm stack: `docker compose ps` — all services Up
-2. Health checks:
-   - `curl -sf http://localhost:3000/api/v1/health`
-   - `curl -sf http://localhost:8000/api/v1/health`
-3. If stack is down: `bash scripts/cloud-ensure-docker.sh` and start stack per `AGENTS.md`
-4. Run any **Seed steps** from the spec (or `documents/cloud-agent-part2-test-data.md`) needed to reach the reported state
+1. `source scripts/cursor-workflow-config.sh`
+2. Confirm stack: `docker compose ps` — all services Up
+3. Health checks:
+   - `curl -sf $APP_HEALTH_URL_FRONTEND`
+   - `curl -sf $APP_HEALTH_URL_API`
+4. If stack is down: `bash scripts/cloud-ensure-docker.sh` and start stack per `AGENTS.md`
+5. Run any **Seed steps** from the spec (or `documents/cloud-agent-part2-test-data.md`) needed to reach the reported state
 
 ### Reproduce
 
@@ -165,22 +177,23 @@ Include:
 - **Files to change** — table: path, change type, rationale
 - **Implementation steps** — ordered, small commits mentally grouped
 - **Tests required** — unit, integration, E2E; map each to acceptance criterion; bugs need a regression test for the reproduced failure
-- **Gate script** — which `scripts/verify-phase*-gates.sh` to run before push (use `run-gate-scripts` skill)
+- **Gate script** — `workflow` tier: `bash $WORKFLOW_REGRESSION_GATE`; `application` tier: `bash $APP_DEFAULT_GATE` or narrower per `run-gate-scripts` skill (resolve via `source scripts/cursor-workflow-config.sh`)
 - **Documentation updates** — list files under `documents/`, `README.md`, etc.
 - **Risks and rollback**
 - **Definition of done** — checklist execute must satisfy
+- **PR seed** — required section (≤15 lines); template in [SKILL-TIERING.md](../../../workflow/cursor-workflow/SKILL-TIERING.md)
 
 ### 2. Demo spec — `workflow/issues/issue-{NNN}/demo/demo-spec.md`
 
 Instruct the demo agent what to capture on the VM:
 
-- Preconditions (stack health URLs, seed data)
+- **Preconditions** — `workflow` tier: script/doc verification only (no health URLs or Docker); `application` tier: stack health via `$APP_HEALTH_URL_*` from config, seed data as needed
 - **Scenario 0 (bugs):** repeat reproduction steps from `bug-repro-notes.md`; pass criteria = fixed behavior
 - Numbered scenarios with steps, pass criteria, and **exact artifact filenames** under `workflow/issues/issue-{NNN}/demo/`
 - Reference [workflow/cursor-workflow/templates/demo-spec.md](../../../workflow/cursor-workflow/templates/demo-spec.md)
 - Include **Seed steps** under Preconditions when any scenario depends on non-default DB state
 
-Assume **full Docker stack** on the cloud VM (frontend :3000, API :8000). API keys come from VM secrets / `.env`.
+For `application` tier, assume **full Docker stack** on the cloud VM. API keys come from VM secrets / `.env`.
 
 ## Workflow state
 

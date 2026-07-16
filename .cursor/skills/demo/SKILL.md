@@ -1,6 +1,6 @@
 ---
 name: demo
-description: Run the demo spec on the cloud VM with full Docker stack, capture screenshots and recordings under workflow/issues/issue-NNN/demo/, and push evidence to the PR branch. Use when workflow stage is execute-ready or when asked to demo issue NNN.
+description: Run the demo spec on the cloud VM; for workflow tier run the regression gate only, for application tier capture screenshots on the full Docker stack. Artifacts under workflow/issues/issue-NNN/demo/. Use when workflow stage is execute-ready or when asked to demo issue NNN.
 paths:
   - "workflow/**"
 ---
@@ -44,21 +44,38 @@ See [workflow/cursor-workflow/MCP-GITHUB.md](../../../workflow/cursor-workflow/M
 
 ## Read first
 
-1. `workflow/issues/issue-{NNN}/demo/demo-spec.md`
-2. `workflow/issues/issue-{NNN}/SPEC.md` (context)
-3. `workflow/issues/issue-{NNN}/workflow.state.json`
-4. PR diff (know what changed)
+1. `workflow/issues/issue-{NNN}/PLAN.md` — tier from front matter / PR seed
+2. `workflow/issues/issue-{NNN}/demo/demo-spec.md`
+3. [workflow/cursor-workflow/SKILL-TIERING.md](../../../workflow/cursor-workflow/SKILL-TIERING.md)
+4. `source scripts/cursor-workflow-config.sh`
+5. `workflow/issues/issue-{NNN}/workflow.state.json`
+6. PR diff (know what changed)
 
-## Environment
+## Classify tier
+
+Read tier from `PLAN.md` § PR seed / front matter. Re-check per SKILL-TIERING if touched paths include `api/` or `frontend/` → `application`.
+
+## Workflow tier — light path (default when tier is workflow)
+
+1. Do **not** start Docker or browse UI unless PLAN explicitly lists product scenarios
+2. Run `bash $WORKFLOW_REGRESSION_GATE`
+3. Write minimal `workflow/issues/issue-{NNN}/demo/demo-notes.md`:
+   - Date, commit SHA, `tier=workflow`
+   - Gate exit line and log excerpt
+4. Batched `demo-ready` push (see below)
+
+## Application tier — full stack path
+
+### Environment
 
 1. Confirm stack: `docker compose ps` — all services Up
 2. Health checks:
-   - `curl -sf http://localhost:3000/api/v1/health`
-   - `curl -sf http://localhost:8000/api/v1/health`
+   - `curl -sf $APP_HEALTH_URL_FRONTEND`
+   - `curl -sf $APP_HEALTH_URL_API`
 3. Use VM secrets / `.env` for API keys when the demo needs live providers
 4. If stack is down: `bash scripts/cloud-ensure-docker.sh` and start stack per `AGENTS.md`
 
-## Capture
+## Capture (application tier)
 
 Follow **every** scenario in `demo-spec.md`:
 

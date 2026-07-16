@@ -50,10 +50,12 @@ When resuming after demo pass-back (`stage` was `execute-passback`):
 
 ## Read first
 
-1. `workflow/issues/issue-{NNN}/PLAN.md`
-2. `workflow/issues/issue-{NNN}/SPEC.md`
-3. `workflow/issues/issue-{NNN}/workflow.state.json`
-4. Use **`run-gate-scripts`** skill to pick and run the correct gate script
+1. `workflow/issues/issue-{NNN}/PLAN.md` — implementation steps, gate script, tier
+2. `workflow/issues/issue-{NNN}/workflow.state.json`
+3. [workflow/cursor-workflow/SKILL-TIERING.md](../../../workflow/cursor-workflow/SKILL-TIERING.md) — tier re-check
+4. `source scripts/cursor-workflow-config.sh` — gate paths, DB URL, repo slug
+5. `workflow/issues/issue-{NNN}/SPEC.md` — **only** when PLAN references acceptance criteria
+6. Use **`run-gate-scripts`** skill to pick and run the correct gate script
 
 ## Implementation rules
 
@@ -66,9 +68,13 @@ When resuming after demo pass-back (`stage` was `execute-passback`):
 **No push until all of the following pass:**
 
 1. Tests listed in the implementation plan
-2. Appropriate phase gate from `run-gate-scripts` (default: `bash scripts/verify-phase8-gates.sh` for full regression; use narrower gate if plan specifies)
+2. Tier-aware gate (after `source scripts/cursor-workflow-config.sh`):
+   - `workflow` tier → `bash $WORKFLOW_REGRESSION_GATE` (unless PLAN specifies otherwise)
+   - `application` tier → `bash $APP_DEFAULT_GATE` unless PLAN specifies a narrower gate
 3. Frontend: `cd frontend && npx tsc --noEmit` and `npm run test:unit` when frontend touched
 4. API: `cd api && ruff check app tests` when API touched
+
+Do **not** run phase gates for `workflow` tier unless PLAN or touched paths require them.
 
 ## Genuine question vs step failure
 
@@ -80,7 +86,7 @@ When resuming after demo pass-back (`stage` was `execute-passback`):
 ### Cloud / compose gotchas
 
 - Export reachable DB URL before host pytest/gates if compose is up:  
-  `export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox`
+  `export DATABASE_URL=$APP_DATABASE_URL_HOST_TEST` (after `source scripts/cursor-workflow-config.sh`)
 - Before host `npm run build`: `docker compose stop frontend && sudo rm -rf frontend/.next` if EACCES
 
 If tests fail: fix, re-run, do not push.
