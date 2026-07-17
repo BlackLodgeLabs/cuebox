@@ -61,6 +61,10 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-should-discover-agents.sh
   cursor-workflow-record-spawn-on-branch.sh
   cursor-workflow-stage-rank.sh
+  cursor-workflow-count-in-flight-for-issue.sh
+  cursor-workflow-record-deferred-handoff.sh
+  cursor-workflow-clear-deferred-handoff.sh
+  cursor-workflow-resume-agent-run.sh
 )
 
 case "$SCRIPT_SET" in

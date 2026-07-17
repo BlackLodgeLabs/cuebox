@@ -138,6 +138,18 @@ else
   fail_pre_spawn_admission "$refetch_rc"
   exit $?
 fi
+
+if [ "$reopen_flag" != "--reopen" ]; then
+  agent_at_tip=$(jq -r --arg k "$skill" '
+    ((.agents // {})[$k] // empty)
+    | if type == "object" then .id // empty else . end
+  ' "$STATE_FILE")
+  if [ -n "$agent_at_tip" ] && [ "$agent_at_tip" != "null" ]; then
+    echo "skip:duplicate-handoff"
+    exit 0
+  fi
+fi
+
 gate_args=("$STATE_FILE" "$skill")
 if [ "$reopen_flag" = "--reopen" ]; then
   gate_args+=("--reopen")

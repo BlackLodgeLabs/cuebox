@@ -77,6 +77,18 @@ if [ "$in_flight_count" -ge "$MAX_ACTIVE" ]; then
   exit 0
 fi
 
+if [ "$PASSBACK" != "true" ] && [ "$REOPEN" != "true" ] \
+  && [ "${WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION}" = "true" ]; then
+  issue_num=$(jq -r '.issue // empty' "$STATE_FILE")
+  if [ -n "$issue_num" ] && [ "$issue_num" != "null" ]; then
+    same_skill_count=$("$SCRIPT_DIR/cursor-workflow-count-in-flight-for-issue.sh" "$issue_num" "$TARGET_SKILL")
+    if [ "$same_skill_count" -ge 1 ]; then
+      echo "defer:same-skill-in-flight"
+      exit 0
+    fi
+  fi
+fi
+
 if [ "$TARGET_SKILL" = "demo" ]; then
   stage=$(jq -r '.stage // empty' "$STATE_FILE")
   active_skill=$(jq -r '.active_skill // empty' "$STATE_FILE")

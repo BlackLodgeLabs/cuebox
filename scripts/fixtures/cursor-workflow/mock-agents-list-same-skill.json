@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "id": "bc-exec-running",
+      "name": "Issue #127 / PR #130 - Execute Agent",
+      "status": "ACTIVE",
+      "latestRunId": "run-exec-1",
+      "mockRun": {
+        "status": "RUNNING",
+        "branches": [
+          {
+            "repoUrl": "github.com/BlackLodgeLabs/cuebox",
+            "branch": "cursor/issue-127-pr-130-execute-agent-49ae"
+          }
+        ]
+      }
+    }
+  ]
+}

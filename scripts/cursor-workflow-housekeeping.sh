@@ -56,6 +56,17 @@ if [[ -n "$REPO" ]] && command -v gh >/dev/null 2>&1; then
   fi
 fi
 
+deferred_count=0
+for state in workflow/issues/issue-*/workflow.state.json; do
+  [[ -f "$state" ]] || continue
+  if jq -e '.handoff_deferred != null' "$state" >/dev/null 2>&1; then
+    deferred_count=$((deferred_count + 1))
+  fi
+done
+if [[ "$deferred_count" -gt 0 ]]; then
+  report "${deferred_count} issue(s) with handoff_deferred set (scheduled retry or manual resync)"
+fi
+
 if [[ "$FOUND" -eq 0 ]]; then
   echo "PASS: no hygiene issues detected"
   exit 0

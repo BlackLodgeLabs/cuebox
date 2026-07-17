@@ -107,6 +107,12 @@ jobs:
 
           git show "${AFTER_SHA}:${STATE_FILE}" > /tmp/workflow.state.json
 
+          canonical=$(jq -r '.branch // empty' /tmp/workflow.state.json)
+          if [ -n "$canonical" ] && [ "$BRANCH" != "$canonical" ]; then
+            echo "Skipping — push ref ${BRANCH} ≠ canonical ${canonical} (side-branch or agent workspace)"
+            exit 0
+          fi
+
           skill_agent_label() {
             case "$1" in
               planning) echo "Plan Agent" ;;
@@ -187,6 +193,17 @@ jobs:
             local reopen_flag=""
             if [ "$stage" = "execute-ready" ] && [ "$reopen_decision" = "reopen" ]; then
               reopen_flag="--reopen"
+            fi
+
+            if [ "$reopen_flag" != "--reopen" ]; then
+              agent_at_tip=$(jq -r --arg k "$skill" '
+                ((.agents // {})[$k] // empty)
+                | if type == "object" then .id // empty else . end
+              ' "$state_file")
+              if [ -n "$agent_at_tip" ] && [ "$agent_at_tip" != "null" ]; then
+                echo "skip:duplicate-handoff"
+                return 0
+              fi
             fi
 
             "$WF/cursor-workflow-spawn-agent.sh" \
