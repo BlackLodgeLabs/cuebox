@@ -94,7 +94,9 @@ The handoff-triggering push must be **exactly one** commit containing complete `
 5. `git commit -m "docs(workflow): PR description for issue #NNN"`
 6. `git rev-parse HEAD` → embed SHA in `raw.githubusercontent.com` URLs in `PR.md`
 7. If URLs changed: `git add PR.md && git commit --amend --no-edit` (still one commit)
-8. **Single** `git push` → one handoff run
+8. **Single** `git push` to the **canonical branch** (`workflow.state.json` → `.branch`) → one handoff run
+
+**Canonical branch required:** Handoff Actions skip side-branch pushes (`GITHUB_REF` ≠ `state.branch`) — label sync, PR body update, and babysit spawn only run on the canonical issue branch. Cloud agent workspaces often checkout `cursor/issue-NNN-pr-MMM-*-agent-*`; merge or push `PR.md` + `create-pr-ready` state to the canonical branch before finishing. See [WORKFLOW.md — Agent side-branch merges](../../../workflow/cursor-workflow/WORKFLOW.md#agent-side-branch-merges).
 
 Expected push pattern: 1–2 pushes total (optional early `create-pr-in-progress` without `PR.md`; one `create-pr-ready` push with complete `PR.md`).
 
