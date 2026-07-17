@@ -104,8 +104,9 @@ PASS: no legacy workflow paths found
 
 ## Gate evidence
 
-- [ ] `Workflow regression: verify-workflow-paths.sh exit 0 at e2b9030` (execute)
-- [ ] `Workflow regression: verify-workflow-paths.sh exit 0 at c853791` (demo)
+- [x] `Workflow regression: verify-workflow-paths.sh exit 0 at e2b9030` (execute)
+- [x] `Workflow regression: verify-workflow-paths.sh exit 0 at c853791` (demo)
+- [x] `Workflow regression: verify-workflow-paths.sh exit 0 at 08affad` (babysit)
 
 ## Checklist
 
