@@ -3,7 +3,7 @@
   "branch": "cursor/issue-93-review-watched-films-7684",
   "stage": "execute-ready",
   "active_skill": "demo",
-  "updated_at": "2026-07-17T21:20:55Z",
+  "updated_at": "2026-07-17T21:28:13Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -23,5 +23,9 @@
     "ci_autofix": 0,
     "total_runs": 3
   },
-  "handoff_deferred": null
+  "handoff_deferred": {
+    "skill": "execute",
+    "reason": "pending-lock",
+    "at": "2026-07-17T21:28:13Z"
+  }
 }
