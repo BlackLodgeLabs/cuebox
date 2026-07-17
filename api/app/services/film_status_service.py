@@ -45,6 +45,17 @@ class FilmStatusService:
             if entry is not None:
                 watchlist_repository.deactivate_entry(db, entry)
             film_repository.mark_pending_watch_review(db, film)
+            from datetime import date, datetime, timezone
+
+            from app.database.enums import WatchSource
+
+            if film_watch_repository.get_pending_for_film(db, film.id) is None:
+                film_watch_repository.create_pending(
+                    db,
+                    film_id=film.id,
+                    source=WatchSource.MANUAL,
+                    watched_at=datetime.now(timezone.utc).date(),
+                )
         elif target_status == FilmStatus.WATCHED:
             entry = watchlist_repository.get_active_by_film_id(db, film.id)
             if entry is not None:
