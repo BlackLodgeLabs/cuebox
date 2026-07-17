@@ -12,6 +12,7 @@ export CURSOR_WORKFLOW_TEST_MODE=1
 
 cleanup_workflow_cache() {
   rm -f /tmp/cursor-in-flight-count "${RUNNER_TEMP:-/tmp}/cursor-in-flight-count" \
+    "${RUNNER_TEMP:-/tmp}/cursor-agents-list.json" /tmp/cursor-agents-list.json \
     "${CURSOR_AGENTS_LIST_CACHE:-}" "${CURSOR_WORKFLOW_IN_FLIGHT_COUNT_FILE:-}" 2>/dev/null || true
   unset CURSOR_WORKFLOW_IN_FLIGHT_COUNT CURSOR_WORKFLOW_IN_FLIGHT_COUNT_FILE \
     CURSOR_AGENTS_LIST_CACHE CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK \
@@ -19,7 +20,9 @@ cleanup_workflow_cache() {
     CURSOR_WORKFLOW_REFETCH_REMOTE_JSON CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE \
     MOCK_CURSOR_POST_COUNT_FILE MOCK_RECORD_SPAWN_FAIL MOCK_IN_FLIGHT_RUN_COUNT MOCK_ACTIVE_AGENT_COUNT \
     MOCK_CURSOR_RUNS_COUNT_FILE MOCK_ENSURE_DRAFT_PR MOCK_GH_COMMENTS_FILE MOCK_GH_LAST_COMMENT_FILE \
-    MOCK_CURSOR_LIST_FETCH_FAIL MOCK_CURSOR_ACTIVE_COUNT_FAIL MOCK_GH_AUTHOR MOCK_GH_OWNER MOCK_GH_COMMENT_FAIL
+    MOCK_CURSOR_LIST_FETCH_FAIL MOCK_CURSOR_ACTIVE_COUNT_FAIL MOCK_GH_AUTHOR MOCK_GH_OWNER MOCK_GH_COMMENT_FAIL \
+    MOCK_SAME_SKILL_IN_FLIGHT_COUNT MOCK_AGENTS_LIST_JSON MOCK_CURSOR_POST_URL_FILE MOCK_CURSOR_RESUME_URL_FILE \
+    CURSOR_WORKFLOW_LATE_STAGE_RESUME CURSOR_WORKFLOW_SPAWN_CONFIRMED MOCK_CURSOR_RESUME_URL_FILE
 }
 cleanup_workflow_cache
 
@@ -801,7 +804,8 @@ test_recovery_remote_agent_skip() {
   WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
     70 "cursor/issue-70-test" "$state" >/tmp/recovery-remote-skip.log 2>&1 || true
 
-  if grep -q "Handoff recovery deferred.*skip:agent-already-recorded" /tmp/recovery-remote-skip.log \
+  if { grep -q "skip:duplicate-handoff" /tmp/recovery-remote-skip.log \
+    || grep -q "Handoff recovery deferred.*skip:agent-already-recorded" /tmp/recovery-remote-skip.log; } \
     && ! grep -q "Handoff recovery: spawning babysit-pr" /tmp/recovery-remote-skip.log; then
     pass "recovery remote agent skip no spawn log"
   else
@@ -1018,7 +1022,8 @@ test_git_recovery_checkout_rewind() {
     90 "$GIT_REMOTE_BRANCH" "$local_copy" >/tmp/git-recovery-rewind.log 2>&1 || true
   popd >/dev/null
 
-  if grep -q "Handoff recovery deferred.*skip:agent-already-recorded" /tmp/git-recovery-rewind.log \
+  if { grep -q "skip:duplicate-handoff" /tmp/git-recovery-rewind.log \
+    || grep -q "Handoff recovery deferred.*skip:agent-already-recorded" /tmp/git-recovery-rewind.log; } \
     && ! grep -q "Handoff recovery: spawning babysit-pr" /tmp/git-recovery-rewind.log; then
     pass "git recovery rewind deferred spawn"
   else
@@ -1693,6 +1698,307 @@ test_plan_ready_ensure_pr() {
   rm -f "$state" "$post_count"
 }
 
+# --- Same-skill in-flight blocks spawn (issue #127 AC1) ---
+test_same_skill_in_flight_defer() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-v1-test","stage":"plan-ready","agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_SAME_SKILL_IN_FLIGHT_COUNT=1
+  export MOCK_AGENTS_LIST_JSON="$FIXTURES/mock-agents-list-same-skill.json"
+  unset CURSOR_AGENTS_LIST_CACHE
+  rm -f /tmp/cursor-agents-list.json "${RUNNER_TEMP:-/tmp}/cursor-agents-list.json"
+
+  decision=$("$SCRIPT_DIR/cursor-workflow-admission-gate.sh" "$state" "execute")
+  if [ "$decision" = "defer:same-skill-in-flight" ]; then
+    pass "same-skill in-flight defer"
+  else
+    fail_test "same-skill in-flight expected defer:same-skill-in-flight got $decision"
+  fi
+  rm -f "$state"
+}
+
+# --- Fresh pending lock on different skill does not block (issue #127 AC1) ---
+test_fresh_pending_different_skill() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":70,"branch":"cursor/issue-70-test","stage":"plan-ready","agents":{},"handoff_pending":{"skill":"demo","started_at":"2099-01-01T00:00:00Z","attempt":0},"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+
+  decision=$("$SCRIPT_DIR/cursor-workflow-admission-gate.sh" "$state" "execute")
+  if [ "$decision" = "proceed" ]; then
+    pass "fresh pending different skill proceeds"
+  else
+    fail_test "fresh pending different skill expected proceed got $decision"
+  fi
+  rm -f "$state"
+}
+
+# --- Canonical branch guard (issue #127 AC1) ---
+test_canonical_branch_guard() {
+  local state push_ref canonical
+  state=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-v1-hardening-orchestration-reliability-68f4","stage":"plan-ready"}' > "$state"
+  push_ref="cursor/issue-127-pr-130-execute-agent-49ae"
+  canonical=$(jq -r '.branch // empty' "$state")
+  if [ "$push_ref" != "$canonical" ]; then
+    pass "canonical branch guard would skip side-branch"
+  else
+    fail_test "canonical branch guard expected mismatch"
+  fi
+  rm -f "$state"
+}
+
+test_side_branch_push_ignored() {
+  local state branch canonical
+  state=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-canonical","stage":"execute-ready"}' > "$state"
+  branch="cursor/issue-127-pr-130-plan-agent-abc"
+  canonical=$(jq -r '.branch // empty' "$state")
+  if [ -n "$canonical" ] && [ "$branch" != "$canonical" ]; then
+    pass "side-branch push ignored logic"
+  else
+    fail_test "side-branch guard should detect mismatch"
+  fi
+  rm -f "$state"
+}
+
+# --- skip:duplicate-handoff (issue #127 AC2) ---
+test_duplicate_handoff_skip() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  cp "$FIXTURES/state-dedup-demo.json" "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  post_count=$(mktemp)
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  echo 0 > "$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    70 "cursor/issue-70-test" "$state" >/tmp/duplicate-handoff.log 2>&1 || true
+
+  if grep -q "skip:duplicate-handoff" /tmp/duplicate-handoff.log \
+    && ! grep -q "Handoff recovery: spawning demo" /tmp/duplicate-handoff.log; then
+    pass "duplicate handoff skip logged"
+  else
+    fail_test "duplicate handoff expected skip:duplicate-handoff without spawn"
+  fi
+  if [ "$(cat "$post_count")" = "0" ]; then
+    pass "duplicate handoff skip 0 POST"
+  else
+    fail_test "duplicate handoff expected 0 POST"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+# --- Recovery spawns once when agents.* null (issue #127 AC3) ---
+test_recovery_spawns_once_without_agent() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  cp "$FIXTURES/state-execute-ready-no-demo.json" "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  post_count=$(mktemp)
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  echo 0 > "$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    70 "cursor/issue-70-test" "$state" >/tmp/recovery-once.log 2>&1 || true
+
+  if grep -q "Handoff recovery: spawning demo" /tmp/recovery-once.log; then
+    pass "recovery spawns without agent"
+  else
+    fail_test "recovery should spawn demo when agents.demo null"
+  fi
+  if [ "$(cat "$post_count")" = "1" ]; then
+    pass "recovery spawns exactly one POST"
+  else
+    fail_test "recovery expected 1 POST got $(cat "$post_count")"
+  fi
+  rm -f "$state" "$post_count"
+}
+
+# --- Defer without spawn leaves honest labels (issue #127 AC4) ---
+test_defer_honest_labels() {
+  local state
+  state=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-test","stage":"execute-ready","agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_GITHUB_SYNC=1
+  export GH_TOKEN=mock
+  export GITHUB_TOKEN=mock
+  unset CURSOR_WORKFLOW_SYNCED
+  unset CURSOR_WORKFLOW_SPAWN_CONFIRMED
+
+  HANDOFF_PROGRESS_STAGE="demo-in-progress" \
+    "$SCRIPT_DIR/cursor-workflow-sync-github-status.sh" "$state" >/tmp/honest-defer.log 2>&1
+
+  if grep -q "cursor:execute-ready" /tmp/honest-defer.log; then
+    pass "defer honest labels show execute-ready"
+  else
+    fail_test "defer should show execute-ready not demo-in-progress without spawn confirmed"
+  fi
+  rm -f "$state"
+}
+
+# --- Confirmed spawn shows in-progress label (issue #127 AC4) ---
+test_confirmed_spawn_progress_label() {
+  local state
+  state=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-test","stage":"execute-ready","agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_GITHUB_SYNC=1
+  export GH_TOKEN=mock
+  export GITHUB_TOKEN=mock
+  unset CURSOR_WORKFLOW_SYNCED
+
+  CURSOR_WORKFLOW_SPAWN_CONFIRMED=1 \
+  HANDOFF_PROGRESS_STAGE="demo-in-progress" \
+    "$SCRIPT_DIR/cursor-workflow-sync-github-status.sh" "$state" >/tmp/confirmed-spawn.log 2>&1
+
+  if grep -q "cursor:demo-in-progress" /tmp/confirmed-spawn.log; then
+    pass "confirmed spawn progress label"
+  else
+    fail_test "confirmed spawn should show demo-in-progress label"
+  fi
+  rm -f "$state"
+}
+
+# --- handoff_deferred persisted and cleared (issue #127 AC5) ---
+test_deferred_marker_written() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-test","stage":"plan-ready","agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export CURSOR_WORKFLOW_PENDING_DRY_RUN=1
+
+  "$SCRIPT_DIR/cursor-workflow-record-deferred-handoff.sh" \
+    "$state" "cursor/issue-127-test" "execute" "at-cap" >/dev/null
+
+  deferred=$(jq -r '.handoff_deferred.skill // empty' "$state")
+  if [ "$deferred" = "execute" ]; then
+    pass "deferred marker written"
+  else
+    fail_test "deferred marker expected execute got $deferred"
+  fi
+
+  "$SCRIPT_DIR/cursor-workflow-record-spawn-on-branch.sh" \
+    "$state" "execute" "bc-test-agent" "cursor/issue-127-test" >/dev/null
+
+  if jq -e '.handoff_deferred == null' "$state" >/dev/null; then
+    pass "deferred marker cleared on spawn"
+  else
+    fail_test "deferred marker should clear on spawn"
+  fi
+  rm -f "$state"
+}
+
+# --- Retry deferred recovery invoked (issue #127 AC5) ---
+test_retry_deferred_recovery() {
+  cleanup_workflow_cache
+  local state
+  state=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-test","stage":"execute-ready","agents":{},"handoff_pending":null,"handoff_deferred":{"skill":"demo","reason":"at-cap","at":"2026-07-17T10:00:00Z"},"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-handoff-recovery.sh" \
+    127 "cursor/issue-127-test" "$state" >/tmp/retry-deferred.log 2>&1 || true
+
+  if grep -q "Handoff recovery: spawning demo" /tmp/retry-deferred.log; then
+    pass "retry deferred recovery invoked"
+  else
+    fail_test "retry deferred should invoke recovery spawn"
+  fi
+  rm -f "$state"
+}
+
+# --- Late-stage resume uses /runs (issue #127 AC6) ---
+test_late_stage_resume_runs() {
+  cleanup_workflow_cache
+  local state runs_file
+  state=$(mktemp)
+  runs_file=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-test","stage":"demo-ready","pr":130,"agents":{"demo":"bc-demo-prior"},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_RUNS_COUNT_FILE="$runs_file"
+  export MOCK_CURSOR_RESUME_URL_FILE=$(mktemp)
+  export CURSOR_WORKFLOW_LATE_STAGE_RESUME=true
+  post_url=$(mktemp)
+  export MOCK_CURSOR_POST_URL_FILE="$post_url"
+  echo 0 > "$runs_file"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    127 "cursor/issue-127-test" "$state" "create-pr" "test prompt" "create-pr-in-progress" \
+    >/tmp/late-resume.log 2>&1 || true
+
+  if [ "$(cat "$runs_file")" = "1" ]; then
+    pass "late-stage resume used /runs"
+  else
+    fail_test "late-stage resume expected 1 /runs POST"
+  fi
+  if grep -q "/agents/.*/runs" "$(cat "$MOCK_CURSOR_RESUME_URL_FILE")" 2>/dev/null || grep -q "Late-stage resume" /tmp/late-resume.log; then
+    pass "late-stage resume logged"
+  else
+    fail_test "late-stage resume should log resume path"
+  fi
+  rm -f "$state" "$runs_file" "$post_url" "$MOCK_CURSOR_RESUME_URL_FILE"
+}
+
+test_late_stage_new_agent_default() {
+  cleanup_workflow_cache
+  local state post_url post_count
+  state=$(mktemp)
+  post_url=$(mktemp)
+  post_count=$(mktemp)
+  echo '{"issue":127,"branch":"cursor/issue-127-test","stage":"demo-ready","pr":130,"agents":{},"handoff_pending":null,"loops":{"bugbot":0,"ci_autofix":0,"total_runs":0}}' > "$state"
+  export MOCK_CURSOR_API=1
+  export MOCK_ACTIVE_AGENT_COUNT=0
+  export MOCK_CURSOR_POST_CODE=201
+  export MOCK_CURSOR_POST_RESPONSE="$FIXTURES/mock-agent-create-201.json"
+  export MOCK_CURSOR_POST_URL_FILE="$post_url"
+  export MOCK_CURSOR_POST_COUNT_FILE="$post_count"
+  export CURSOR_WORKFLOW_LATE_STAGE_RESUME=false
+  echo 0 > "$post_count"
+  unset CURSOR_API_KEY
+
+  WF="$WF" "$SCRIPT_DIR/cursor-workflow-spawn-agent.sh" \
+    127 "cursor/issue-127-test" "$state" "create-pr" "test prompt" "create-pr-in-progress" \
+    >/tmp/late-new-agent.log 2>&1 || true
+
+  if [ "$(cat "$post_count")" = "1" ]; then
+    pass "late-stage default uses new agent POST"
+  else
+    fail_test "late-stage default expected 1 /agents POST"
+  fi
+  if grep -q "/v1/agents\"" "$post_url" || grep -q "api.cursor.com/v1/agents" "$post_url"; then
+    pass "late-stage default /agents URL"
+  else
+    if [ -f "$post_url" ] && grep -q "agents" "$post_url"; then
+      pass "late-stage default /agents URL"
+    else
+      fail_test "late-stage default should POST to /v1/agents"
+    fi
+  fi
+  rm -f "$state" "$post_url" "$post_count"
+}
+
 test_dedup
 test_at_cap
 test_api_400
@@ -1740,6 +2046,18 @@ test_demo_proceed_execute_ready_stale_lock
 test_demo_proceed_execute_ready
 test_spec_ready_ensure_pr
 test_plan_ready_ensure_pr
+test_same_skill_in_flight_defer
+test_fresh_pending_different_skill
+test_canonical_branch_guard
+test_side_branch_push_ignored
+test_duplicate_handoff_skip
+test_recovery_spawns_once_without_agent
+test_defer_honest_labels
+test_confirmed_spawn_progress_label
+test_deferred_marker_written
+test_retry_deferred_recovery
+test_late_stage_resume_runs
+test_late_stage_new_agent_default
 
 if [ "$fail" -ne 0 ]; then
   echo "test-cursor-workflow-handoff.sh: FAILED" >&2
