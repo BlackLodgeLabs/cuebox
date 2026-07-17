@@ -2,8 +2,8 @@
   "issue": 127,
   "branch": "cursor/issue-127-v1-hardening-orchestration-reliability-68f4",
   "stage": "plan-ready",
-  "active_skill": "planning",
-  "updated_at": "2026-07-17T10:15:00Z",
+  "active_skill": null,
+  "updated_at": "2026-07-17T10:16:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 130,
-  "active_agent_id": "bc-6e5541c9-40af-4b44-98ba-ef02b47368f4",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
