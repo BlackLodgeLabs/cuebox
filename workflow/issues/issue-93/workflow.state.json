@@ -3,7 +3,7 @@
   "branch": "cursor/issue-93-review-watched-films-7684",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-17T20:13:23Z",
+  "updated_at": "2026-07-17T20:13:29Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": "bc-9a13a961-e8cf-465a-8a05-7c29c1097684",
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 131,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
