@@ -86,6 +86,11 @@ _export_config() {
   export WORKFLOW_MAX_ACTIVE_AGENTS="${CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS:-$(_config_get orchestration.max_active_agents)}"
   export WORKFLOW_HANDOFF_PENDING_STALE_MINUTES="${CURSOR_WORKFLOW_PENDING_STALE_MINUTES:-$(_config_get orchestration.handoff_pending_stale_minutes)}"
   export WORKFLOW_DEFERRAL_COMMENT_COOLDOWN_MINUTES="${CURSOR_WORKFLOW_DEFERRAL_COMMENT_MINUTES:-$(_config_get orchestration.deferral_comment_cooldown_minutes)}"
+  export WORKFLOW_LATE_STAGE_RESUME="${CURSOR_WORKFLOW_LATE_STAGE_RESUME:-$(_config_get orchestration.late_stage_resume)}"
+  export WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION="${CURSOR_WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION:-$(_config_get orchestration.per_issue_spawn_serialization)}"
+  case "${WORKFLOW_LATE_STAGE_RESUME}" in True|true|1) WORKFLOW_LATE_STAGE_RESUME=true ;; *) WORKFLOW_LATE_STAGE_RESUME=false ;; esac
+  case "${WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION}" in True|true|1) WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION=true ;; *) WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION=false ;; esac
+  export WORKFLOW_LATE_STAGE_RESUME WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION
   export WORKFLOW_LOOP_LIMIT_BUGBOT="$(_config_get tiering.workflow_loop_limits.bugbot)"
   export WORKFLOW_LOOP_LIMIT_CI_AUTOFIX="$(_config_get tiering.workflow_loop_limits.ci_autofix)"
   export APPLICATION_LOOP_LIMIT_BUGBOT="$(_config_get tiering.application_loop_limits.bugbot)"

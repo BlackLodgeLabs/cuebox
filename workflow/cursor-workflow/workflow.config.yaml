@@ -16,6 +16,8 @@ orchestration:
   max_active_agents: 8
   handoff_pending_stale_minutes: 15
   deferral_comment_cooldown_minutes: 30
+  late_stage_resume: false
+  per_issue_spawn_serialization: true
 gates:
   workflow_regression: scripts/verify-workflow-paths.sh
 tiering:

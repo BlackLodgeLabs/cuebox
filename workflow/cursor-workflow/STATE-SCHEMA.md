@@ -29,6 +29,7 @@ Missing `schema_version` on in-flight branches is treated as **1** (pre-v1 files
 | `passback_to` | string \| null | Skill to resume on pass-back |
 | `passback_reason` | string \| null | Human-readable pass-back reason |
 | `handoff_pending` | object \| null | Spawn lock: `{skill, started_at, attempt}` |
+| `handoff_deferred` | object \| null | Durable defer marker when in-job backoff exhausts: `{skill, reason, at}` — cleared on successful spawn |
 | `status_comment_id` | number \| null | Cached GitHub status comment id |
 | `updated_at` | string | ISO8601 timestamp |
 
