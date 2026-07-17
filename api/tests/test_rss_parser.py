@@ -55,6 +55,39 @@ def test_parse_diary_feed():
     assert events[0].payload["year"] == 1979
 
 
+DIARY_WITH_RATING_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:letterboxd="https://letterboxd.com">
+  <channel>
+    <item>
+      <title>Heat, 1995 — ★★★★½</title>
+      <link>https://letterboxd.com/film/heat/</link>
+      <pubDate>Sat, 02 Nov 2024 12:00:00 +0000</pubDate>
+      <letterboxd:filmTitle>Heat</letterboxd:filmTitle>
+      <letterboxd:filmYear>1995</letterboxd:filmYear>
+      <letterboxd:watchedDate>2024-11-01</letterboxd:watchedDate>
+      <letterboxd:memberRating>4.5</letterboxd:memberRating>
+    </item>
+  </channel>
+</rss>
+"""
+
+
+def test_parse_diary_feed_watched_date_and_member_rating():
+    events = parse_diary_feed(DIARY_WITH_RATING_XML)
+    assert len(events) == 1
+    assert events[0].payload["watched_date"] == "2024-11-01"
+    assert events[0].payload["member_rating"] == "4.5"
+
+
+def test_normalize_member_rating():
+    from app.services.rss_parser import normalize_member_rating
+
+    assert normalize_member_rating("4.5") == 4.5
+    assert normalize_member_rating(4.3) == 4.5
+    assert normalize_member_rating(0.1) == 0.5
+    assert normalize_member_rating(None) is None
+
+
 def test_event_fingerprint_is_stable():
     from datetime import UTC, datetime
 

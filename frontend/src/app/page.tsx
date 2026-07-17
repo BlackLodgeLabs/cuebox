@@ -160,13 +160,13 @@ export default function HomePage() {
               <Badge variant="secondary">{reviewCount}</Badge>
             </CardTitle>
             <CardDescription>
-              Some imported films need you to confirm their metadata match before
-              they can be recommended.
+              Some films need metadata confirmation or a watch diary entry before
+              they are fully ready.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/review">Review matches</Link>
+              <Link href="/review">Review now</Link>
             </Button>
           </CardContent>
         </Card>

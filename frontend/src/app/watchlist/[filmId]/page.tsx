@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { FilmDetailView } from "@/components/film-detail-view";
+import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilm, useFilmStatusTransition } from "@/hooks/use-films";
@@ -22,6 +23,7 @@ export default function WatchlistFilmPage() {
   const filmId = params.filmId;
   const { toast } = useToast();
   const prevStatusRef = useRef<string | null>(null);
+  const [markWatchedOpen, setMarkWatchedOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useFilm(filmId, {
     pollWhileEnriching: true,
@@ -72,14 +74,30 @@ export default function WatchlistFilmPage() {
   }
 
   return (
-    <FilmDetailView
-      film={data}
-      autoOpenEditMatch={autoOpenEdit}
-      watchlistTab={watchlistTab}
-      isStatusPending={statusTransition.isPending}
-      onStatusTransition={(status) =>
-        statusTransition.mutate({ filmId, status })
-      }
-    />
+    <>
+      <FilmDetailView
+        film={data}
+        autoOpenEditMatch={autoOpenEdit}
+        watchlistTab={watchlistTab}
+        isStatusPending={statusTransition.isPending}
+        onStatusTransition={(status) =>
+          statusTransition.mutate({ filmId, status })
+        }
+        onMarkWatched={async () => {
+          await statusTransition.mutateAsync({
+            filmId,
+            status: "pending_watch_review",
+          });
+          setMarkWatchedOpen(true);
+        }}
+      />
+
+      <WatchReviewDialog
+        filmId={filmId}
+        filmTitle={data.title}
+        open={markWatchedOpen}
+        onOpenChange={setMarkWatchedOpen}
+      />
+    </>
   );
 }

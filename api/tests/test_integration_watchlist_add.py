@@ -240,7 +240,7 @@ def test_rss_watched_applies_to_manual_add(integration_client, db_session):
 
     film = film_repository.get_by_id(db_session, film_id)
     assert film is not None
-    assert film.status == FilmStatus.WATCHED
+    assert film.status == FilmStatus.PENDING_WATCH_REVIEW
     assert watchlist_repository.get_active_by_film_id(db_session, film_id) is None
 
 

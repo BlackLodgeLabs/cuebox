@@ -225,7 +225,7 @@ Cuebox does not send your entire watchlist to the AI. It narrows the field throu
 
 First, Cuebox removes films that cannot possibly fit:
 
-- Films you have already watched or archived
+- Films you have already watched, marked pending watch review, or archived
 - Films still being enriched (not yet “ready”)
 - Films longer than your runtime limit
 - Non-English films, if you chose “no subtitles”
@@ -411,6 +411,7 @@ erDiagram
 |-------|------|
 | `import_jobs` | Tracks a CSV import run (progress, failures, completion) |
 | `films` | Core watchlist record — title, year, Letterboxd link, watch status, enrichment status |
+| `film_watches` | Personal watch diary entries (score, date, notes); pending row while review is incomplete |
 | `film_metadata` | Catalog facts from TMDB/OMDb (synopsis, runtime, genres, ratings, artwork) |
 | `film_semantic_profiles` | AI-generated taste profile (themes, pacing, complexity, summary) |
 | `film_embeddings` | Vector fingerprint for semantic similarity search |

@@ -314,6 +314,13 @@ class SyncService:
         film_repository.archive_film(db, entry.film)
 
     def _apply_watched(self, db: Session, uri: str, payload: dict | None = None) -> None:
+        import logging
+        from datetime import date, datetime, timezone
+
+        from app.database.enums import WatchSource
+        from app.repositories import film_watch_repository
+
+        logger = logging.getLogger(__name__)
         payload = payload or {}
         film, _ = film_repository.find_for_rss_watched(
             db,
@@ -326,7 +333,28 @@ class SyncService:
         entry = watchlist_repository.get_active_by_film_id(db, film.id)
         if entry is not None:
             watchlist_repository.deactivate_entry(db, entry)
-        film_repository.mark_watched(db, film)
+        film_repository.mark_pending_watch_review(db, film)
+
+        watched_date_str = payload.get("watched_date")
+        if watched_date_str:
+            watched_at = date.fromisoformat(watched_date_str)
+        else:
+            logger.warning(
+                "RSS watched event missing watched_date for %s; falling back to event timestamp",
+                uri,
+            )
+            watched_at = datetime.now(timezone.utc).date()
+
+        from app.services.rss_parser import normalize_member_rating
+
+        score = normalize_member_rating(payload.get("member_rating"))
+        film_watch_repository.create_pending(
+            db,
+            film_id=film.id,
+            source=WatchSource.RSS,
+            watched_at=watched_at,
+            score=score,
+        )
 
 
 def _film_summary(film: Film) -> dict:

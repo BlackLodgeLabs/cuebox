@@ -85,6 +85,18 @@ def parse_watchlist_feed(xml_text: str) -> list[RssEvent]:
     return events
 
 
+def normalize_member_rating(raw: str | float | int | None) -> float | None:
+    """Normalize Letterboxd memberRating to 0.5–5.0 in half-star steps."""
+    if raw is None:
+        return None
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None
+    value = max(0.5, min(5.0, value))
+    return round(value * 2) / 2
+
+
 def parse_diary_feed(xml_text: str) -> list[RssEvent]:
     """Parse diary RSS entries as watched events."""
     events: list[RssEvent] = []
@@ -101,6 +113,8 @@ def parse_diary_feed(xml_text: str) -> list[RssEvent]:
             pub_el = item.find("pubDate")
             film_title_el = item.find("letterboxd:filmTitle", _NS)
             film_year_el = item.find("letterboxd:filmYear", _NS)
+            watched_date_el = item.find("letterboxd:watchedDate", _NS)
+            member_rating_el = item.find("letterboxd:memberRating", _NS)
             if link_el is None or not (link_el.text or "").strip():
                 continue
             uri = canonical_film_uri(link_el.text.strip())
@@ -109,21 +123,26 @@ def parse_diary_feed(xml_text: str) -> list[RssEvent]:
             timestamp = _parse_pub_date(pub_el.text if pub_el is not None else None)
             event_type = RssEventType.WATCHED
             event_id = event_fingerprint(event_type, uri, timestamp)
+            payload: dict = {
+                "title": (
+                    film_title_el.text.strip()
+                    if film_title_el is not None and film_title_el.text
+                    else (title_el.text.strip() if title_el is not None and title_el.text else None)
+                ),
+                "year": int(film_year_el.text) if film_year_el is not None and film_year_el.text else None,
+                "source": "diary_feed",
+            }
+            if watched_date_el is not None and watched_date_el.text:
+                payload["watched_date"] = watched_date_el.text.strip()
+            if member_rating_el is not None and member_rating_el.text:
+                payload["member_rating"] = member_rating_el.text.strip()
             events.append(
                 RssEvent(
                     event_id=event_id,
                     event_type=event_type,
                     event_timestamp=timestamp,
                     letterboxd_uri=uri,
-                    payload={
-                        "title": (
-                            film_title_el.text.strip()
-                            if film_title_el is not None and film_title_el.text
-                            else (title_el.text.strip() if title_el is not None and title_el.text else None)
-                        ),
-                        "year": int(film_year_el.text) if film_year_el is not None and film_year_el.text else None,
-                        "source": "diary_feed",
-                    },
+                    payload=payload,
                 )
             )
         except Exception:

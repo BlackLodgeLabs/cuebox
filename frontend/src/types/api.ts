@@ -78,7 +78,18 @@ export interface ImportStatusResponse {
   completed_at: string | null;
 }
 
-export type FilmStatus = "active" | "watched" | "archived";
+export type FilmStatus = "active" | "pending_watch_review" | "watched" | "archived";
+
+export interface FilmWatch {
+  id: string;
+  score: number;
+  watched_at: string;
+  notes: string | null;
+  source: "manual" | "rss";
+  is_pending: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface FilmSummary {
   id: string;
@@ -94,6 +105,8 @@ export interface FilmSummary {
   created_at: string;
   updated_at: string;
   removed_at?: string | null;
+  latest_watched_at?: string | null;
+  watch_review_incomplete?: boolean;
 }
 
 export interface SetFilmStatusRequest {
@@ -148,6 +161,7 @@ export interface FilmDetail {
   enrichment_status: string;
   metadata: FilmMetadataBlock | null;
   semantic_profile: SemanticProfileBlock | null;
+  watches: FilmWatch[];
   created_at: string;
   updated_at: string;
 }
@@ -391,6 +405,34 @@ export interface FilmsQueryParams {
 export interface ReviewRequiredQueryParams {
   limit?: number;
   offset?: number;
+}
+
+export interface WatchReviewRequiredFilm {
+  film_id: string;
+  title: string;
+  year: number | null;
+  letterboxd_uri: string;
+  poster_url: string | null;
+  pending_watch: FilmWatch;
+  created_at: string;
+}
+
+export interface CompleteWatchReviewRequest {
+  score: number;
+  watched_at: string;
+  notes?: string;
+}
+
+export interface UpdateWatchRequest {
+  score: number;
+  watched_at: string;
+  notes?: string;
+}
+
+export interface PendingReviewCountResponse {
+  metadata_count: number;
+  watch_review_count: number;
+  total: number;
 }
 
 export interface HistoryQueryParams {

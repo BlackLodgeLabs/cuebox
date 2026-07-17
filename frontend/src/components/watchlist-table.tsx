@@ -22,6 +22,8 @@ interface WatchlistTableProps {
   sortDir: SortDirection;
   onSort: (column: FilmSortField) => void;
   onStatusTransition: (filmId: string, status: FilmStatus) => void;
+  onMarkWatched?: (film: FilmSummary) => void;
+  onCompleteReview?: (film: FilmSummary) => void;
   isStatusPending?: boolean;
 }
 
@@ -60,6 +62,9 @@ function formatDateColumn(film: FilmSummary, tab: WatchlistTab): string {
   if (tab === "active") {
     return new Date(film.created_at).toISOString().split("T")[0];
   }
+  if (tab === "watched" && film.latest_watched_at) {
+    return film.latest_watched_at;
+  }
   if (film.removed_at) {
     return new Date(film.removed_at).toISOString().split("T")[0];
   }
@@ -73,9 +78,11 @@ export function WatchlistTable({
   sortDir,
   onSort,
   onStatusTransition,
+  onMarkWatched,
+  onCompleteReview,
   isStatusPending = false,
 }: WatchlistTableProps) {
-  const dateColumnLabel = tab === "active" ? "Added" : "Removed";
+  const dateColumnLabel = tab === "active" ? "Added" : tab === "watched" ? "Watched" : "Removed";
   const dateSortColumn: FilmSortField = "created_at";
 
   return (
@@ -152,9 +159,14 @@ export function WatchlistTable({
                 {formatDateColumn(film, tab)}
               </td>
               <td className="px-4 py-3">
-                <Badge variant="secondary">
-                  {formatEnrichmentStatus(film.enrichment_status)}
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary">
+                    {formatEnrichmentStatus(film.enrichment_status)}
+                  </Badge>
+                  {(film.watch_review_incomplete || film.status === "pending_watch_review") && (
+                    <Badge variant="outline">Review incomplete</Badge>
+                  )}
+                </div>
               </td>
               <td className="px-4 py-3">
                 <FilmStatusActions
@@ -162,6 +174,8 @@ export function WatchlistTable({
                   variant="table"
                   isPending={isStatusPending}
                   onTransition={(status) => onStatusTransition(film.id, status)}
+                  onMarkWatched={() => onMarkWatched?.(film)}
+                  onCompleteReview={() => onCompleteReview?.(film)}
                 />
               </td>
             </tr>

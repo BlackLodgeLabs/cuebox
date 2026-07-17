@@ -9,12 +9,13 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
 from app.dependencies import get_db, get_metadata_service, get_provider_service, get_watch_provider_service
-from app.repositories import film_repository, metadata_review_repository, watchlist_repository
+from app.repositories import film_repository, film_watch_repository, metadata_review_repository, watchlist_repository
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
     FilmListResponse,
     FilmStatusRequest,
+    FilmWatchSummary,
     PaginationMeta,
     RematchRequest,
     RematchResponse,
@@ -23,8 +24,21 @@ from app.schemas.film_schemas import (
 )
 from app.schemas.watch_providers import FilmWatchProvidersResponse
 from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
-from app.services.film_presenter import film_to_detail, film_to_summary, review_to_item
+from app.schemas.watch_review_schemas import (
+    CompleteWatchReviewRequest,
+    PendingReviewCountResponse,
+    UpdateWatchRequest,
+    WatchReviewRequiredListResponse,
+)
+from app.services.film_presenter import (
+    film_to_detail,
+    film_to_summary,
+    review_to_item,
+    watch_review_to_item,
+    watch_to_summary,
+)
 from app.services.film_status_service import FilmStatusService
+from app.services.watch_review_service import WatchReviewService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
 from app.services.watch_provider_service import WatchProviderService
@@ -106,13 +120,18 @@ def list_films(
     )
     parsed_status = _parse_film_status(status)
     removed_at_map: dict = {}
+    latest_watched_at_map: dict = {}
     if parsed_status in (FilmStatus.WATCHED, FilmStatus.ARCHIVED):
-        removed_at_map = watchlist_repository.get_latest_removed_at_batch(
-            db, [film.id for film in films]
-        )
+        film_ids = [film.id for film in films]
+        removed_at_map = watchlist_repository.get_latest_removed_at_batch(db, film_ids)
+        latest_watched_at_map = film_watch_repository.get_latest_watched_at_batch(db, film_ids)
     return FilmListResponse(
         data=[
-            film_to_summary(film, removed_at=removed_at_map.get(film.id))
+            film_to_summary(
+                film,
+                removed_at=removed_at_map.get(film.id),
+                latest_watched_at=latest_watched_at_map.get(film.id),
+            )
             for film in films
         ],
         pagination=PaginationMeta(
@@ -120,6 +139,38 @@ def list_films(
             limit=limit,
             offset=offset,
             has_more=offset + len(films) < total,
+        ),
+    )
+
+
+@router.get("/reviews/pending-count", response_model=PendingReviewCountResponse)
+def get_pending_review_count(db: Session = Depends(get_db)) -> PendingReviewCountResponse:
+    _, metadata_total = metadata_review_repository.list_pending(db, limit=1, offset=0)
+    watch_total = film_watch_repository.count_pending_watch_reviews(db)
+    return PendingReviewCountResponse(
+        metadata_count=metadata_total,
+        watch_review_count=watch_total,
+        total=metadata_total + watch_total,
+    )
+
+
+@router.get("/watch-review-required", response_model=WatchReviewRequiredListResponse)
+def list_watch_review_required(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+) -> WatchReviewRequiredListResponse:
+    rows, total = film_watch_repository.list_pending_watch_reviews(
+        db, limit=limit, offset=offset
+    )
+    data = [watch_review_to_item(film, watch) for film, watch in rows]
+    return WatchReviewRequiredListResponse(
+        data=data,
+        pagination=PaginationMeta(
+            total=total,
+            limit=limit,
+            offset=offset,
+            has_more=offset + len(data) < total,
         ),
     )
 
@@ -198,6 +249,54 @@ async def get_film_watch_providers(
     return await watch_provider_service.get_watch_providers(db, film_id, country_code=country)
 
 
+@router.post("/{film_id}/watch-review", response_model=FilmDetail)
+def complete_watch_review(
+    film_id: uuid.UUID,
+    body: CompleteWatchReviewRequest,
+    db: Session = Depends(get_db),
+) -> FilmDetail:
+    film = WatchReviewService.complete_review(
+        db,
+        film_id,
+        score=body.score,
+        watched_at=body.watched_at,
+        notes=body.notes,
+    )
+    db.commit()
+    film = film_repository.get_by_id_with_relations(db, film.id)
+    assert film is not None
+    watches = film_watch_repository.list_all_for_film(db, film.id)
+    return film_to_detail(film, watches=watches)
+
+
+@router.delete("/{film_id}/watch-review", status_code=204)
+def cancel_watch_review(
+    film_id: uuid.UUID,
+    db: Session = Depends(get_db),
+) -> None:
+    WatchReviewService.cancel_review(db, film_id)
+    db.commit()
+
+
+@router.patch("/{film_id}/watches/{watch_id}", response_model=FilmWatchSummary)
+def update_film_watch(
+    film_id: uuid.UUID,
+    watch_id: uuid.UUID,
+    body: UpdateWatchRequest,
+    db: Session = Depends(get_db),
+) -> FilmWatchSummary:
+    watch = WatchReviewService.edit_watch(
+        db,
+        film_id,
+        watch_id,
+        score=body.score,
+        watched_at=body.watched_at,
+        notes=body.notes,
+    )
+    db.commit()
+    return watch_to_summary(watch)
+
+
 @router.post("/{film_id}/status", response_model=FilmDetail)
 def set_film_status(
     film_id: uuid.UUID,
@@ -215,7 +314,8 @@ def set_film_status(
     db.commit()
     film = film_repository.get_by_id_with_relations(db, film.id)
     assert film is not None
-    return film_to_detail(film)
+    watches = film_watch_repository.list_all_for_film(db, film.id)
+    return film_to_detail(film, watches=watches)
 
 
 @router.get("/{film_id}", response_model=FilmDetail)
@@ -226,4 +326,5 @@ def get_film(
     film = film_repository.get_by_id_with_relations(db, film_id)
     if film is None:
         raise not_found("Film")
-    return film_to_detail(film)
+    watches = film_watch_repository.list_all_for_film(db, film_id)
+    return film_to_detail(film, watches=watches)

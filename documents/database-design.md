@@ -26,6 +26,7 @@ CREATE EXTENSION IF NOT EXISTS "vector";     -- pgvector embeddings
 ```sql
 CREATE TYPE film_status AS ENUM (
     'active',
+    'pending_watch_review',
     'watched',
     'archived'
 );
@@ -303,6 +304,30 @@ CREATE INDEX idx_film_embeddings_semantic_hnsw
 
 CREATE INDEX idx_film_embeddings_film_id ON film_embeddings (film_id);
 CREATE INDEX idx_film_embeddings_type_version ON film_embeddings (embedding_type, embedding_version);
+```
+
+-----
+
+### 4.5.1 `film_watches`
+
+Personal watch diary entries (score, date, notes). Many-to-one with `films`. While `films.status = pending_watch_review`, at most one row has `is_pending = true` per film.
+
+```sql
+CREATE TABLE film_watches (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    film_id     UUID NOT NULL REFERENCES films (id) ON DELETE CASCADE,
+    score       NUMERIC(2, 1) NOT NULL CHECK (score >= 0.5 AND score <= 5.0),
+    watched_at  DATE NOT NULL,
+    notes       TEXT,
+    source      TEXT NOT NULL CHECK (source IN ('manual', 'rss')),
+    is_pending  BOOLEAN NOT NULL DEFAULT false,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_film_watches_film_watched_at ON film_watches (film_id, watched_at DESC);
+CREATE UNIQUE INDEX uq_film_watches_one_pending_per_film
+    ON film_watches (film_id) WHERE is_pending = true;
 ```
 
 -----

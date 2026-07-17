@@ -13,14 +13,22 @@ def _set_status(client, film_id, status: str):
     return client.post(f"/api/v1/films/{film_id}/status", json={"status": status})
 
 
-def test_active_to_watched(integration_client, db_session):
+def test_active_to_watched_blocked(integration_client, db_session):
     films = seed_ready_films(db_session, count=1)
     film = films[0]
 
     response = _set_status(integration_client, film.id, "watched")
+    assert response.status_code == 409
+
+
+def test_active_to_pending_watch_review(integration_client, db_session):
+    films = seed_ready_films(db_session, count=1)
+    film = films[0]
+
+    response = _set_status(integration_client, film.id, "pending_watch_review")
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "watched"
+    assert body["status"] == "pending_watch_review"
     assert watchlist_repository.get_active_by_film_id(db_session, film.id) is None
 
 
@@ -149,5 +157,5 @@ def test_watched_list_includes_removed_at(integration_client, db_session):
 
 def test_film_not_found(integration_client):
     missing = uuid.uuid4()
-    response = _set_status(integration_client, missing, "watched")
+    response = _set_status(integration_client, missing, "pending_watch_review")
     assert response.status_code == 404

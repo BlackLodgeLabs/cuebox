@@ -267,7 +267,7 @@ GET /films
 
 |Parameter          |Type   |Default     |Description                                               |
 |-------------------|-------|------------|----------------------------------------------------------|
-|`status`           |string |—           |Filter by `film_status`: `active` | `watched` | `archived`|
+|`status`           |string |—           |Filter by `film_status`: `active` | `pending_watch_review` | `watched` | `archived`. When `status=watched`, results include both `watched` and `pending_watch_review` films (Watched tab).|
 |`enrichment_status`|string |—           |Filter by `enrichment_status` (see enum in §3.2)          |
 |`on_watchlist`     |boolean|`false`     |When `true`, only films with an active watchlist entry    |
 |`search`           |string |—           |Case-insensitive substring match on title                 |
@@ -299,7 +299,9 @@ GET /films
       "genres": ["Horror", "Mystery"],
       "created_at": "2024-11-01T14:30:00Z",
       "updated_at": "2024-11-01T15:00:00Z",
-      "removed_at": null
+      "removed_at": null,
+      "latest_watched_at": null,
+      "watch_review_incomplete": false
     }
   ],
   "pagination": {
@@ -319,7 +321,7 @@ GET /films
 |`title`            |string           |Display title                    |
 |`year`             |integer, nullable|Release year                     |
 |`letterboxd_uri`   |string           |Canonical Letterboxd URI         |
-|`status`           |string           |`active` | `watched` | `archived`|
+|`status`           |string           |`active` | `pending_watch_review` | `watched` | `archived`|
 |`enrichment_status`|string           |See enrichment status enum       |
 |`poster_url`       |string, nullable |TMDB poster URL                  |
 |`director`         |string, nullable |Director name                    |
@@ -328,6 +330,8 @@ GET /films
 |`created_at`       |string           |ISO 8601                         |
 |`updated_at`       |string           |ISO 8601                         |
 |`removed_at`       |string, nullable |Most recent watchlist `removed_at` when listing `status=watched` or `status=archived`; omitted otherwise |
+|`latest_watched_at`|date, nullable   |Latest finalized watch record date when listing `status=watched` |
+|`watch_review_incomplete`|boolean  |`true` when `status=pending_watch_review` |
 
 #### Errors
 
@@ -339,7 +343,7 @@ GET /films
 
 ### 4.1.1 Set Film Status
 
-Manually transition a film between `active`, `watched`, and `archived`. Forbidden transitions (`watched` ↔ `archived`) return `409`. Restoring to `active` enforces the 500-film active watchlist cap.
+Manually transition a film between `active`, `pending_watch_review`, and `archived`. Direct `active → watched` is forbidden — use `POST /films/{film_id}/watch-review` to complete a watch diary entry. Forbidden transitions (`watched` ↔ `archived`, `pending_watch_review` ↔ `archived`) return `409`. Restoring to `active` enforces the 500-film active watchlist cap.
 
 ```
 POST /films/{film_id}/status
@@ -357,7 +361,7 @@ POST /films/{film_id}/status
 { "status": "active" }
 ```
 
-Allowed values: `active` | `watched` | `archived`.
+Allowed values: `active` | `pending_watch_review` | `archived`. (`watched` is only reachable via watch-review completion.)
 
 #### Response `200 OK`
 
@@ -373,9 +377,69 @@ Returns the updated `FilmDetail` (same shape as §4.2).
 
 -----
 
+### 4.1.2 Watch Review
+
+Complete, cancel, or list pending watch diary entries. A film in `pending_watch_review` has a draft `film_watches` row (`is_pending=true`) until the user saves score + watched date.
+
+#### List pending watch reviews
+
+```
+GET /films/watch-review-required
+```
+
+Paginated list of films with `status=pending_watch_review` and a pending watch record. Same pagination shape as §4.1.
+
+#### Combined pending review count
+
+```
+GET /films/reviews/pending-count
+```
+
+```json
+{
+  "metadata_count": 2,
+  "watch_review_count": 1,
+  "total": 3
+}
+```
+
+#### Complete watch review
+
+```
+POST /films/{film_id}/watch-review
+```
+
+```json
+{
+  "score": 4.5,
+  "watched_at": "2024-11-01",
+  "notes": "Optional diary note"
+}
+```
+
+Validates score (0.5–5.0, 0.5 steps) and watched date (not in future). Finalizes the pending watch record and transitions film to `watched`. Returns `FilmDetail`.
+
+#### Cancel watch review
+
+```
+DELETE /films/{film_id}/watch-review
+```
+
+Deletes the pending watch record and reverts film to `active` (reactivates watchlist entry). Returns `204`.
+
+#### Edit watch record
+
+```
+PATCH /films/{film_id}/watches/{watch_id}
+```
+
+Same body as complete. Updates a finalized watch record only.
+
+-----
+
 ### 4.2 Get Film
 
-Return a single film with full metadata and semantic profile.
+Return a single film with full metadata, semantic profile, and watch history.
 
 ```
 GET /films/{film_id}
@@ -432,6 +496,18 @@ GET /films/{film_id}
     "generated_by_model": "gpt-4o",
     "generated_at": "2024-11-01T15:00:00Z"
   },
+  "watches": [
+    {
+      "id": "w1a2b3c4-...",
+      "score": 4.5,
+      "watched_at": "2024-11-01",
+      "notes": "Still unsettling.",
+      "source": "manual",
+      "is_pending": false,
+      "created_at": "2024-11-02T10:00:00Z",
+      "updated_at": "2024-11-02T10:00:00Z"
+    }
+  ],
   "created_at": "2024-11-01T14:30:00Z",
   "updated_at": "2024-11-01T15:00:00Z"
 }

@@ -105,7 +105,7 @@ class WatchlistAddService:
                     already_on_watchlist=True,
                 )
 
-            if existing.status in (FilmStatus.ARCHIVED, FilmStatus.WATCHED):
+            if existing.status in (FilmStatus.ARCHIVED, FilmStatus.WATCHED, FilmStatus.PENDING_WATCH_REVIEW):
                 film_repository.restore_active(db, existing)
                 watchlist_repository.ensure_active_entry(
                     db, film_id=existing.id, letterboxd_uri=canonical_uri
