@@ -3,7 +3,11 @@
   "branch": "cursor/issue-93-review-watched-films-7684",
   "stage": "plan-ready",
   "active_skill": "execute",
+<<<<<<< HEAD
   "updated_at": "2026-07-17T20:28:47Z",
+=======
+  "updated_at": "2026-07-17T20:26:37Z",
+>>>>>>> a0aaee9 (chore(workflow): issue #93 execute-in-progress)
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
