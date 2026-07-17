@@ -1,0 +1,26 @@
+{
+  "issue": 127,
+  "branch": "cursor/issue-127-v1-hardening-orchestration-reliability-68f4",
+  "stage": "spec-in-progress",
+  "active_skill": "review-and-spec",
+  "updated_at": "2026-07-17T09:40:00Z",
+  "agents": {
+    "babysit-pr": null,
+    "create-pr": null,
+    "demo": null,
+    "execute": null,
+    "planning": null,
+    "review-and-spec": "bc-6e5541c9-40af-4b44-98ba-ef02b47368f4",
+    "review-and-spec-continued": null
+  },
+  "pr": null,
+  "active_agent_id": "bc-6e5541c9-40af-4b44-98ba-ef02b47368f4",
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}
