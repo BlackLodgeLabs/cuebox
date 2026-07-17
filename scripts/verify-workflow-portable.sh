@@ -121,6 +121,7 @@ HANDOFF_SCRIPTS=(
   test-cursor-workflow-delete-stale-branches.sh
   test-cursor-workflow-mcp-github.sh
   test-cursor-workflow-config.sh
+  test-cursor-workflow-load-scripts.sh
   test-cursor-workflow-state-schema.sh
 )
 for script in "${HANDOFF_SCRIPTS[@]}"; do

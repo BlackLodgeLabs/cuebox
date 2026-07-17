@@ -91,4 +91,16 @@ for script in "${SCRIPTS[@]}"; do
   chmod +x "${DEST}/${script}"
 done
 
+# Copied handoff scripts source config from SCRIPT_DIR; include config resolver in DEST.
+CONFIG_SCRIPT="cursor-workflow-config.sh"
+if git cat-file -e "HEAD:scripts/${CONFIG_SCRIPT}" 2>/dev/null; then
+  git show "HEAD:scripts/${CONFIG_SCRIPT}" > "${DEST}/${CONFIG_SCRIPT}"
+elif git cat-file -e "${REF}:scripts/${CONFIG_SCRIPT}" 2>/dev/null; then
+  git show "${REF}:scripts/${CONFIG_SCRIPT}" > "${DEST}/${CONFIG_SCRIPT}"
+else
+  echo "Missing workflow script: scripts/${CONFIG_SCRIPT} (not on HEAD or ${REF})" >&2
+  exit 1
+fi
+chmod +x "${DEST}/${CONFIG_SCRIPT}"
+
 echo "$DEST"

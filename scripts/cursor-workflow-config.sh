@@ -6,7 +6,8 @@
 #   bash scripts/cursor-workflow-config.sh get gates.workflow_regression
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# When handoff loads scripts into /tmp, set WORKFLOW_REPO_ROOT to the checkout root.
+ROOT="${WORKFLOW_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CONFIG="${ROOT}/workflow/cursor-workflow/workflow.config.yaml"
 
 if [[ ! -f "$CONFIG" ]]; then

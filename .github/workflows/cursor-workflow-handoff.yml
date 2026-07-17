@@ -82,6 +82,7 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           CURSOR_HANDOFF_GITHUB_TOKEN: ${{ secrets.CURSOR_HANDOFF_GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          WORKFLOW_REPO_ROOT: ${{ github.workspace }}
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
         run: |
@@ -335,6 +336,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          WORKFLOW_REPO_ROOT: ${{ github.workspace }}
           ISSUE: ${{ github.event.inputs.issue_number }}
           ENSURE_PR: ${{ github.event.inputs.ensure_draft_pr }}
           RESYNC_DISCOVER: ${{ github.event.inputs.discover }}
