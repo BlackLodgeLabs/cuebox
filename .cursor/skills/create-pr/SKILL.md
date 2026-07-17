@@ -112,6 +112,8 @@ Finalize state JSON:
 
 GitHub Actions syncs labels and **updates the draft PR description** from `PR.md`. Handoff Action triggers babysit-pr. No bot `@cursoragent` comment.
 
+When `orchestration.late_stage_resume` is enabled in `workflow.config.yaml`, handoff may resume the demo agent via `POST /runs` instead of spawning a new create-pr agent — expect faster context carry-over.
+
 ## Do not
 
 - Create or open a new PR (`gh pr create` fails for cloud agents; draft PR already exists)

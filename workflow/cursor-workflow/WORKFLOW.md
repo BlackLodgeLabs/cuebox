@@ -193,6 +193,18 @@ If `record-spawn-on-branch.sh` fails after a successful POST, branch `handoff_pe
 
 `spawn-agent.sh` handles `defer:*` with backoff retry within the job; `skip:*` exits without POST.
 
+### v1 orchestration hardening (issue #127)
+
+| Mechanism | Behavior |
+|-----------|----------|
+| **Canonical branch guard** | Push handoff skips label sync and spawn when `GITHUB_REF` ≠ `state.branch` (agent side-branches). Only the canonical issue branch drives handoff. |
+| **Per-issue same-skill serialization** | When `orchestration.per_issue_spawn_serialization` is true (default), admission defers with `defer:same-skill-in-flight` if another RUNNING/CREATING run targets the same issue branch prefix + skill. Bypass with `--passback` / `--reopen`. |
+| **Honest labels** | `HANDOFF_PROGRESS_STAGE` overrides apply only when `CURSOR_WORKFLOW_SPAWN_CONFIRMED=1` or state `stage` already ends with `-in-progress`. Deferred spawns leave honest `*-ready` labels (no premature in-progress). |
+| **`skip:duplicate-handoff`** | Recovery and handoff YAML log this when branch tip already records `agents.<target>` — no duplicate POST. |
+| **`handoff_deferred`** | Optional state field persisted when in-job backoff exhausts (`defer:at-cap`, `defer:pending-lock`, `api-400`). Cleared on successful spawn. Scheduled re-queue via `.github/workflows/cursor-workflow-retry-deferred.yml`. |
+| **Late-stage resume** | Opt-in via `orchestration.late_stage_resume: false` default. When true, `demo-ready` → create-pr and `create-pr-ready` → babysit may `POST /v1/agents/{prior}/runs` instead of new agents. |
+| **Operator checklist** | See [OPERATIONS.md](OPERATIONS.md) for runs vs ACTIVE workspaces, pre-flight, and resync vs `@cursoragent`. |
+
 ### Execute finalize (`active_skill` clearing, issue #109)
 
 On successful execute completion (including pass-back resume), the execute agent must set `stage: execute-ready` with `active_skill: null` (and optionally `active_agent_id: null`) in `workflow.state.json` before push — mirroring planning's `plan-ready` finalize. Demo agents must clear `active_skill` on `demo-ready` finalize the same way (issue #119). If the agent forgets, defense-in-depth admission still allows demo spawn at `execute-ready` (stage rank ≥ `execute-ready` wins over stale `active_skill=execute`). During active execute (`execute-in-progress`), demo remains blocked.

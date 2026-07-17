@@ -127,7 +127,9 @@ Then:
 
 1. Run merge helper, then set `stage`: `complete`, `active_skill: null` (and optionally `active_agent_id: null`)
 2. **Convert draft PR → ready for review** via MCP `update_pull_request` with `draft: false` (or existing path if MCP unavailable)
-3. Commit and push `workflow.state.json` — GitHub Actions applies `cursor:complete`, @mentions issue author and repo owner, and assigns the PR
+3. **Single batched push** — commit all fixes + final `workflow.state.json` (`complete`) together, then one `git push` (mirror demo/create-pr #119; avoids duplicate handoff runs)
+
+When `orchestration.late_stage_resume` is enabled, handoff may resume the create-pr agent via `POST /runs` instead of spawning a new babysit agent.
 
 Do **not** MCP-post an issue comment at `complete` — the handoff Action runs `cursor-workflow-notify-complete.sh` (see MCP-GITHUB.md).
 
