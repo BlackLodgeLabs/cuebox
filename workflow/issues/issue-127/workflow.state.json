@@ -1,9 +1,9 @@
 {
   "issue": 127,
   "branch": "cursor/issue-127-v1-hardening-orchestration-reliability-68f4",
-  "stage": "plan-in-progress",
+  "stage": "plan-ready",
   "active_skill": "planning",
-  "updated_at": "2026-07-17T10:05:00Z",
+  "updated_at": "2026-07-17T10:15:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,7 +21,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
   "schema_version": 1
 }
