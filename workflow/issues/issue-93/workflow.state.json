@@ -2,29 +2,26 @@
   "issue": 93,
   "branch": "cursor/issue-93-review-watched-films-7684",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-17T20:16:16Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-17T20:17:57Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-1eeffbf5-c688-47d4-af0c-6d398f8747ef",
     "review-and-spec": "bc-9a13a961-e8cf-465a-8a05-7c29c1097684",
     "review-and-spec-continued": null
   },
   "pr": 131,
-  "active_agent_id": null,
+  "active_agent_id": "bc-1eeffbf5-c688-47d4-af0c-6d398f8747ef",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-17T20:16:16Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "handoff_deferred": null
 }
