@@ -76,7 +76,7 @@ describe("WatchlistTable", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /watched/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Watched/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /return to watchlist/i }));
     expect(onStatusTransition).toHaveBeenCalledWith("film-1", "active");
   });

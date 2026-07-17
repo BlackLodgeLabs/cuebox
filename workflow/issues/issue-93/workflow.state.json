@@ -1,13 +1,9 @@
 {
   "issue": 93,
   "branch": "cursor/issue-93-review-watched-films-7684",
-  "stage": "plan-ready",
-  "active_skill": "execute",
-<<<<<<< HEAD
-  "updated_at": "2026-07-17T20:28:47Z",
-=======
-  "updated_at": "2026-07-17T20:26:37Z",
->>>>>>> a0aaee9 (chore(workflow): issue #93 execute-in-progress)
+  "stage": "execute-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-17T21:12:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -18,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 131,
-  "active_agent_id": "bc-97e95917-cb53-4703-802e-4a4c81e3f122",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   },
   "handoff_deferred": null
 }
