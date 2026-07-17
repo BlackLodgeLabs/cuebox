@@ -1,9 +1,9 @@
 {
   "issue": 93,
   "branch": "cursor/issue-93-review-watched-films-7684",
-  "stage": "babysit-in-progress",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-17T23:12:00Z",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-17T23:13:00Z",
   "agents": {
     "babysit-pr": "bc-fc216095-fedc-47db-b259-6bb1325290bb",
     "create-pr": null,
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 131,
-  "active_agent_id": "bc-fc216095-fedc-47db-b259-6bb1325290bb",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
