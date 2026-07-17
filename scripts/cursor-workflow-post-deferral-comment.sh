@@ -3,11 +3,15 @@
 # Usage: cursor-workflow-post-deferral-comment.sh <issue> <reason>
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 ISSUE="${1:?usage: cursor-workflow-post-deferral-comment.sh <issue> <reason>}"
 REASON="${2:?}"
 
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
-WINDOW_MINUTES="${CURSOR_WORKFLOW_DEFERRAL_COMMENT_MINUTES:-30}"
+WINDOW_MINUTES="${WORKFLOW_DEFERRAL_COMMENT_COOLDOWN_MINUTES}"
 
 if [ -z "${GH_TOKEN:-}" ] && [ -z "${CURSOR_HANDOFF_GITHUB_TOKEN:-}" ]; then
   echo "No GitHub token available for deferral comment" >&2

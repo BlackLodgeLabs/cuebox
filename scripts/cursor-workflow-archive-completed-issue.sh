@@ -4,13 +4,18 @@
 # Usage: cursor-workflow-archive-completed-issue.sh <issue-number> [--no-commit]
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 ISSUE="${1:?usage: cursor-workflow-archive-completed-issue.sh <issue-number> [--no-commit]}"
 NO_COMMIT=false
 if [[ "${2:-}" == "--no-commit" ]]; then
   NO_COMMIT=true
 fi
 
-ARCHIVE_BRANCH="workflow/archive"
+ARCHIVE_BRANCH="${WORKFLOW_ARCHIVE_BRANCH}"
+BASE_BRANCH="${WORKFLOW_BASE_BRANCH}"
 SRC="workflow/issues/issue-${ISSUE}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -46,14 +51,14 @@ else
   (
     cd "$WORKTREE"
     git rm -rf . 2>/dev/null || true
-    cat > README.md <<'EOF'
+    cat > README.md <<EOF
 # Workflow archive
 
 Completed per-issue workflow artifacts (spec, plan, demo, PR, state, reviews).
 
-Each folder `issue-N/` was moved from `workflow/issues/issue-N/` on `main` after the linked PR merged.
+Each folder \`issue-N/\` was moved from \`workflow/issues/issue-N/\` on \`${BASE_BRANCH}\` after the linked PR merged.
 
-Active issues remain on `main` under `workflow/issues/`. See `workflow/cursor-workflow/RETROSPECTIVES.md` on `main` for an index.
+Active issues remain on \`${BASE_BRANCH}\` under \`workflow/issues/\`. See \`workflow/cursor-workflow/RETROSPECTIVES.md\` on \`${BASE_BRANCH}\` for an index.
 EOF
     git add README.md
     git commit -m "chore(archive): initialize workflow archive branch"
@@ -89,6 +94,6 @@ if [[ "$NO_COMMIT" == false ]]; then
   if ! git diff --quiet --cached; then
     git -c user.name="${GIT_AUTHOR_NAME:-github-actions[bot]}" \
         -c user.email="${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}" \
-        commit -m "chore(workflow): remove archived issue #${ISSUE} from main"
+        commit -m "chore(workflow): remove archived issue #${ISSUE} from ${BASE_BRANCH}"
   fi
 fi

@@ -8,6 +8,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 REPO="${GITHUB_REPOSITORY:-}"
 DRY_RUN=0
 SWEEP=0
@@ -95,7 +99,7 @@ _list_remote_branches() {
   if [[ -z "$REPO" || -z "${GH_TOKEN:-}" ]]; then
     return
   fi
-  gh api "repos/${REPO}/git/matching-refs/heads/cursor/issue-" --paginate \
+  gh api "repos/${REPO}/git/matching-refs/heads/${WORKFLOW_BRANCH_PREFIX}" --paginate \
     -q '.[].ref' 2>/dev/null | sed 's|^refs/heads/||' || true
 }
 
@@ -236,13 +240,13 @@ _extract_pr_from_branch() {
 
 _is_agent_side_branch() {
   local branch="$1"
-  [[ "$branch" =~ ^cursor/issue-[0-9]+-pr-[0-9]+-.*-agent- ]]
+  [[ "$branch" =~ ^${WORKFLOW_BRANCH_PREFIX}[0-9]+-pr-[0-9]+-.*-agent- ]]
 }
 
 _matches_pr_scope() {
   local branch="$1"
   local pr_num="$2"
-  [[ "$branch" =~ ^cursor/issue-[0-9]+-pr-${pr_num}- ]]
+  [[ "$branch" =~ ^${WORKFLOW_BRANCH_PREFIX}[0-9]+-pr-${pr_num}- ]]
 }
 
 _count_stale_branches() {
@@ -271,7 +275,7 @@ _post_merge_delete() {
 
   local head_ref
   head_ref="$(_pr_head_ref "$pr_num")"
-  if [[ -n "$head_ref" && "$head_ref" =~ ^cursor/issue- ]]; then
+  if [[ -n "$head_ref" && "$head_ref" =~ ^${WORKFLOW_BRANCH_PREFIX} ]]; then
     _try_delete_branch "$head_ref"
   fi
 }

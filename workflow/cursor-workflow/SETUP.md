@@ -24,11 +24,11 @@ Automated handoffs: stages 3–7 via `.github/workflows/cursor-workflow-handoff.
 
 **State merge:** Before committing `workflow.state.json`, agents run `bash scripts/cursor-workflow-merge-state.sh workflow/issues/issue-NNN/workflow.state.json` to preserve remote `agents`, `pr`, loop counters, and monotonic `stage`. See [WORKFLOW.md](WORKFLOW.md#state-merge).
 
-**Agent cap:** The handoff Action never spawns when **8** or more Cloud Agent runs are already **in flight** (`RUNNING`/`CREATING`) for this repo (`CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`). Finished runs (`FINISHED`) do not count — agent workspaces may stay `ACTIVE` in the Cursor API after work completes. At cap or on API 400, it defers with backoff and posts a single deferral comment per 30 minutes — the Action does not exit with failure.
+**Agent cap:** The handoff Action never spawns when **8** or more Cloud Agent runs are already **in flight** (`RUNNING`/`CREATING`) for this repo. Default cap is `orchestration.max_active_agents` in [workflow.config.yaml](workflow.config.yaml) (override: `CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS`). Finished runs (`FINISHED`) do not count — agent workspaces may stay `ACTIVE` in the Cursor API after work completes. At cap or on API 400, it defers with backoff and posts a single deferral comment per 30 minutes (`orchestration.deferral_comment_cooldown_minutes`; override: `CURSOR_WORKFLOW_DEFERRAL_COMMENT_MINUTES`) — the Action does not exit with failure.
 
 **Babysit recovery:** If a branch is stuck at `create-pr-ready` with a draft PR but no `agents.babysit-pr`, the next push (even sync-only) self-heals by spawning babysit. Pass-back (`execute-passback`) and manual **Resync** (Actions → Cursor workflow handoff) also run recovery — see [WORKFLOW.md](WORKFLOW.md#handoff-recovery).
 
-**`handoff_pending`:** Per-issue spawn lock in `workflow.state.json`; prevents duplicate forward spawns. Stale after 15 minutes.
+**`handoff_pending`:** Per-issue spawn lock in `workflow.state.json`; prevents duplicate forward spawns. Stale after `orchestration.handoff_pending_stale_minutes` (default 15; override: `CURSOR_WORKFLOW_PENDING_STALE_MINUTES`).
 
 ---
 

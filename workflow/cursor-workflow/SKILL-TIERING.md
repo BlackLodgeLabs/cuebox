@@ -32,10 +32,18 @@ source scripts/cursor-workflow-config.sh
 |--------|-------------|---------|
 | `WORKFLOW_ARTIFACT_ROOT` | `paths.artifact_root` | `workflow/issues` |
 | `WORKFLOW_REGRESSION_GATE` | `gates.workflow_regression` | Light-path demo/execute gate |
-| `APP_DEFAULT_GATE` | `gates.application_default` | Full regression gate |
-| `APP_HEALTH_URL_FRONTEND` | `environment.health_url_frontend` | Stack health (application tier) |
-| `APP_HEALTH_URL_API` | `environment.health_url_api` | Stack health (application tier) |
-| `APP_DATABASE_URL_HOST_TEST` | `environment.database_url_host_test` | Host pytest when compose up |
+| `WORKFLOW_BASE_BRANCH` | `repository.base_branch` | Default git base branch |
+| `WORKFLOW_BRANCH_PATTERN` | `repository.branch_pattern` | Issue branch naming |
+| `WORKFLOW_LABEL_PREFIX` | `repository.label_prefix` | GitHub label prefix (`cursor`) |
+| `WORKFLOW_ARCHIVE_BRANCH` | `repository.archive_branch` | Post-merge archive branch |
+| `WORKFLOW_BRANCH_PREFIX` | derived | `${label_prefix}/issue-` for grep/API |
+| `WORKFLOW_MAX_ACTIVE_AGENTS` | `orchestration.max_active_agents` | Handoff admission cap |
+| `WORKFLOW_HANDOFF_PENDING_STALE_MINUTES` | `orchestration.handoff_pending_stale_minutes` | Stale `handoff_pending` lock |
+| `WORKFLOW_DEFERRAL_COMMENT_COOLDOWN_MINUTES` | `orchestration.deferral_comment_cooldown_minutes` | Deferral comment throttle |
+| `APP_DEFAULT_GATE` | `adapter.gates.application_default` | Full regression gate |
+| `APP_HEALTH_URL_FRONTEND` | `adapter.environment.health_url_frontend` | Stack health (application tier) |
+| `APP_HEALTH_URL_API` | `adapter.environment.health_url_api` | Stack health (application tier) |
+| `APP_DATABASE_URL_HOST_TEST` | `adapter.environment.database_url_host_test` | Host pytest when compose up |
 | `GITHUB_REPO_SLUG` | `repository.owner` + `repository.name` | PR URLs, raw.githubusercontent.com |
 | `WORKFLOW_LOOP_LIMIT_BUGBOT` | `tiering.workflow_loop_limits.bugbot` | Babysit cap (workflow) |
 | `WORKFLOW_LOOP_LIMIT_CI_AUTOFIX` | `tiering.workflow_loop_limits.ci_autofix` | Babysit cap (workflow) |

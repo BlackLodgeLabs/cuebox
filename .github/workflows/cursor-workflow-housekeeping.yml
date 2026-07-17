@@ -26,6 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4.3.1
 
+      - name: Load workflow config
+        run: |
+          source scripts/cursor-workflow-config.sh
+          echo "WORKFLOW_BASE_BRANCH=$WORKFLOW_BASE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_ARCHIVE_BRANCH=$WORKFLOW_ARCHIVE_BRANCH" >> "$GITHUB_ENV"
+          echo "WORKFLOW_LABEL_PREFIX=$WORKFLOW_LABEL_PREFIX" >> "$GITHUB_ENV"
+
       - name: Report drift
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

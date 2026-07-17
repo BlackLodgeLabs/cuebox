@@ -4,6 +4,10 @@
 # stdout: proceed | defer:<reason> | skip:<reason>
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 STATE_FILE="${1:?usage: cursor-workflow-admission-gate.sh <state-file> <target-skill> [--passback|--reopen]}"
 TARGET_SKILL="${2:?}"
 shift 2 || true
@@ -17,9 +21,8 @@ for arg in "$@"; do
   esac
 done
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PENDING_STALE_MINUTES="${CURSOR_WORKFLOW_PENDING_STALE_MINUTES:-15}"
-MAX_ACTIVE="${CURSOR_WORKFLOW_MAX_ACTIVE_AGENTS:-8}"
+PENDING_STALE_MINUTES="${WORKFLOW_HANDOFF_PENDING_STALE_MINUTES}"
+MAX_ACTIVE="${WORKFLOW_MAX_ACTIVE_AGENTS}"
 
 if [ ! -f "$STATE_FILE" ]; then
   echo "defer:missing-state-file"

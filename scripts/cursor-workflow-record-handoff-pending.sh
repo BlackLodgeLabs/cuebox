@@ -3,6 +3,10 @@
 # Usage: cursor-workflow-record-handoff-pending.sh <state-file> <branch> <set|clear> [skill] [attempt]
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
+
 STATE_FILE="${1:?usage: cursor-workflow-record-handoff-pending.sh <state-file> <branch> <set|clear> [skill] [attempt]}"
 BRANCH="${2:?}"
 ACTION="${3:?}"
@@ -35,7 +39,12 @@ if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ] || [ "${MOCK_CURSOR_API:-}" 
         exit 2
       fi
       pending_skill=$(jq -r '.handoff_pending.skill // empty' "$STATE_FILE")
-      if [ -n "$pending_skill" ] && [ "$pending_skill" = "$SKILL" ]; then
+      remote_pending=""
+      if [[ -n "${CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE:-}" && -f "${CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE}" ]]; then
+        remote_pending=$(jq -r '.handoff_pending.skill // empty' "$CURSOR_WORKFLOW_REFETCH_REMOTE_STATE_FILE")
+      fi
+      if [[ -n "$pending_skill" && "$pending_skill" = "$SKILL" ]] \
+        || [[ -n "$remote_pending" && "$remote_pending" = "$SKILL" ]]; then
         echo "Peer holds pending lock for ${SKILL}" >&2
         exit 2
       fi
@@ -86,7 +95,7 @@ case "$ACTION" in
       now_epoch=$(date -u +%s)
       started_epoch=$(date -u -d "$pending_started" +%s 2>/dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$pending_started" +%s 2>/dev/null || echo 0)
       age_minutes=$(( (now_epoch - started_epoch) / 60 ))
-      stale_minutes="${CURSOR_WORKFLOW_PENDING_STALE_MINUTES:-15}"
+      stale_minutes="${WORKFLOW_HANDOFF_PENDING_STALE_MINUTES}"
       if [ "$age_minutes" -lt "$stale_minutes" ]; then
         echo "Peer holds pending lock for ${SKILL}" >&2
         exit 2
