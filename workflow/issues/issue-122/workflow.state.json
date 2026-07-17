@@ -2,7 +2,7 @@
   "issue": 122,
   "branch": "cursor/issue-122-harden-portable-workflow-boundary",
   "pr": 129,
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
   "active_agent_id": "bc-6a4cd2a4-5893-4c91-975e-58764cb4348d",
   "agents": {
@@ -21,8 +21,8 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   },
-  "updated_at": "2026-07-17T08:28:54Z",
+  "updated_at": "2026-07-17T08:33:00Z",
   "schema_version": 1
 }
