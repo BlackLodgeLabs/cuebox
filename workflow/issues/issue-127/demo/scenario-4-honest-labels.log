@@ -1,0 +1,11 @@
+=== Scenario 4: Honest labels on defer ===
+Date: 2026-07-17T10:50:05Z
+--- Defer without spawn confirmed (state=execute-ready, spawn not confirmed) ---
+MOCK LIST+CREATE comment 999001
+Created status comment on issue #127 (label: cursor:execute-ready)
+PASS: label on defer is cursor:execute-ready (not demo-in-progress)
+
+--- After spawn confirmed ---
+MOCK LIST+CREATE comment 999001
+Created status comment on issue #127 (label: cursor:demo-in-progress)
+PASS: after spawn confirmed, label advances to cursor:demo-in-progress
