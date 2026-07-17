@@ -1,9 +1,9 @@
 {
   "issue": 127,
   "branch": "cursor/issue-127-v1-hardening-orchestration-reliability-68f4",
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-17T12:37:58Z",
+  "updated_at": "2026-07-17T12:51:00Z",
   "agents": {
     "babysit-pr": "bc-e981a484-9df7-4078-ad1e-383fcf87c27a",
     "create-pr": "bc-dfd5bc4d-013b-4689-ab8c-6c7d9f3dc8db",
@@ -21,7 +21,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 5
+    "total_runs": 6
   },
   "schema_version": 1
 }
