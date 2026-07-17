@@ -16,13 +16,17 @@
   },
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-17T08:28:50Z",
+    "attempt": 0
+  },
   "status_comment_id": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 5
   },
-  "updated_at": "2026-07-17T08:32:00Z",
+  "updated_at": "2026-07-17T08:28:50Z",
   "schema_version": 1
 }
