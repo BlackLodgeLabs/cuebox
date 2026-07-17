@@ -59,6 +59,7 @@ if [ -n "${CURSOR_API_KEY:-}" ] || [ "${MOCK_CURSOR_API:-}" = "1" ]; then
   fi
   if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
     echo "Pass-back run started on agent ${agent_id}"
+    CURSOR_WORKFLOW_SPAWN_CONFIRMED=1 \
     HANDOFF_PROGRESS_STAGE="execute-in-progress" \
     HANDOFF_ACTIVE_SKILL="execute" \
     HANDOFF_ACTIVE_AGENT="$agent_id" \

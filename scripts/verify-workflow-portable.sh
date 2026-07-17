@@ -53,7 +53,7 @@ if [[ -f "$TEMPLATE_STATE" ]]; then
   if ! bash scripts/cursor-workflow-validate-state.sh "$TEMPLATE_STATE"; then
     fail=1
   fi
-  for key in passback_to passback_reason handoff_pending status_comment_id schema_version; do
+  for key in passback_to passback_reason handoff_pending handoff_deferred status_comment_id schema_version; do
     if ! jq -e --arg k "$key" 'has($k)' "$TEMPLATE_STATE" >/dev/null 2>&1; then
       echo "FAIL: ${TEMPLATE_STATE} missing key: ${key}" >&2
       fail=1
@@ -106,6 +106,10 @@ HANDOFF_SCRIPTS=(
   cursor-workflow-fetch-agents-list.sh
   cursor-workflow-should-discover-agents.sh
   cursor-workflow-record-spawn-on-branch.sh
+  cursor-workflow-count-in-flight-for-issue.sh
+  cursor-workflow-record-deferred-handoff.sh
+  cursor-workflow-clear-deferred-handoff.sh
+  cursor-workflow-resume-agent-run.sh
   cursor-workflow-load-scripts.sh
   cursor-workflow-archive-completed-issue.sh
   cursor-workflow-linked-issues-from-text.sh
@@ -121,6 +125,7 @@ HANDOFF_SCRIPTS=(
   test-cursor-workflow-delete-stale-branches.sh
   test-cursor-workflow-mcp-github.sh
   test-cursor-workflow-config.sh
+  test-cursor-workflow-load-scripts.sh
   test-cursor-workflow-state-schema.sh
 )
 for script in "${HANDOFF_SCRIPTS[@]}"; do
@@ -145,7 +150,7 @@ fi
 
 # --- Handoff docs and workflow ---
 WORKFLOW_MD="workflow/cursor-workflow/WORKFLOW.md"
-for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending babysit recovery RUNNING status_comment_id CURSOR_AGENTS_LIST_CACHE skip discovery workflow-review @cursoragent workflow-review notify-stalled resolve-notify-targets stalled notification core adapter; do
+for keyword in changes-requested execute-passback cursor-workflow-merge-state.sh handoff_pending handoff_deferred babysit recovery RUNNING status_comment_id CURSOR_AGENTS_LIST_CACHE skip discovery workflow-review @cursoragent workflow-review notify-stalled resolve-notify-targets stalled notification core adapter OPERATIONS.md canonical branch honest label deferred re-queue late-stage resume; do
   if ! grep -qF "$keyword" "$WORKFLOW_MD"; then
     echo "FAIL: ${WORKFLOW_MD} must mention ${keyword}" >&2
     fail=1
@@ -241,8 +246,9 @@ CONFIG_YAML="workflow/cursor-workflow/workflow.config.yaml"
 CONFIG_SH="scripts/cursor-workflow-config.sh"
 TIERING_MD="workflow/cursor-workflow/SKILL-TIERING.md"
 STATE_SCHEMA_MD="workflow/cursor-workflow/STATE-SCHEMA.md"
+OPERATIONS_MD="workflow/cursor-workflow/OPERATIONS.md"
 
-for artifact in "$CONFIG_YAML" "$CONFIG_SH" "$TIERING_MD" "$STATE_SCHEMA_MD"; do
+for artifact in "$CONFIG_YAML" "$CONFIG_SH" "$TIERING_MD" "$STATE_SCHEMA_MD" "$OPERATIONS_MD"; do
   if [[ ! -f "$artifact" ]]; then
     echo "FAIL: missing ${artifact}" >&2
     fail=1

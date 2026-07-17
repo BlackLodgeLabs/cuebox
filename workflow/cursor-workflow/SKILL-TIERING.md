@@ -40,6 +40,8 @@ source scripts/cursor-workflow-config.sh
 | `WORKFLOW_MAX_ACTIVE_AGENTS` | `orchestration.max_active_agents` | Handoff admission cap |
 | `WORKFLOW_HANDOFF_PENDING_STALE_MINUTES` | `orchestration.handoff_pending_stale_minutes` | Stale `handoff_pending` lock |
 | `WORKFLOW_DEFERRAL_COMMENT_COOLDOWN_MINUTES` | `orchestration.deferral_comment_cooldown_minutes` | Deferral comment throttle |
+| `WORKFLOW_LATE_STAGE_RESUME` | `orchestration.late_stage_resume` | Opt-in late-stage `POST /runs` reuse |
+| `WORKFLOW_PER_ISSUE_SPAWN_SERIALIZATION` | `orchestration.per_issue_spawn_serialization` | Per-issue same-skill in-flight dedup |
 | `APP_DEFAULT_GATE` | `adapter.gates.application_default` | Full regression gate |
 | `APP_HEALTH_URL_FRONTEND` | `adapter.environment.health_url_frontend` | Stack health (application tier) |
 | `APP_HEALTH_URL_API` | `adapter.environment.health_url_api` | Stack health (application tier) |

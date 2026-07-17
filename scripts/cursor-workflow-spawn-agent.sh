@@ -21,6 +21,8 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WF="${WF:-${SCRIPTS_DIR:-$SCRIPT_DIR}}"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/cursor-workflow-config.sh"
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 REPO_URL="https://github.com/${REPO}"
 MAX_ATTEMPTS=3
@@ -77,6 +79,7 @@ sync_after_spawn() {
     echo "Post-spawn sync skipped — already synced this job"
     return 0
   fi
+  CURSOR_WORKFLOW_SPAWN_CONFIRMED=1 \
   HANDOFF_PROGRESS_STAGE="$PROGRESS_STAGE" \
   HANDOFF_ACTIVE_SKILL="$SKILL" \
   HANDOFF_ACTIVE_AGENT="${agent_id:-}" \
@@ -95,6 +98,9 @@ do_post_agent() {
     '{name: $name, prompt: {text: $text}, repos: [{url: $url, startingRef: $ref}], autoCreatePR: false}')
 
   if [ "${MOCK_CURSOR_API:-}" = "1" ]; then
+    if [ -n "${MOCK_CURSOR_POST_URL_FILE:-}" ]; then
+      echo "https://api.cursor.com/v1/agents" > "$MOCK_CURSOR_POST_URL_FILE"
+    fi
     http_code=$(mock_curl_post "https://api.cursor.com/v1/agents" /tmp/cursor-agent.json)
   elif [ -n "${CURSOR_API_KEY:-}" ]; then
     http_code=$(curl -sS -o /tmp/cursor-agent.json -w "%{http_code}" \
@@ -133,6 +139,49 @@ do_post_agent() {
 
   echo "Cursor API returned ${http_code}: $(cat /tmp/cursor-agent.json 2>/dev/null || true)"
   return 1
+}
+
+late_stage_resume_prior() {
+  local prior_key="" prior_id=""
+  if [ "${WORKFLOW_LATE_STAGE_RESUME}" != "true" ]; then
+    return 1
+  fi
+  case "$SKILL" in
+    create-pr) prior_key="demo" ;;
+    babysit-pr) prior_key="create-pr" ;;
+    *) return 1 ;;
+  esac
+  prior_id=$(jq -r --arg k "$prior_key" '
+    ((.agents // {})[$k] // empty)
+    | if type == "object" then .id // empty else . end
+  ' "$STATE_FILE")
+  if [ -z "$prior_id" ] || [ "$prior_id" = "null" ]; then
+    return 1
+  fi
+
+  http_code=$("$WF/cursor-workflow-resume-agent-run.sh" "$prior_id" "$PROMPT" /tmp/cursor-agent.json)
+  if [ "$http_code" = "409" ]; then
+    echo "Late-stage resume deferred — agent ${prior_id} busy (409)"
+    return 2
+  fi
+  if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+    agent_id="$prior_id"
+    echo "Late-stage resume run started on agent ${prior_id} (${prior_key} → ${SKILL})"
+    if [ "${MOCK_RECORD_SPAWN_FAIL:-}" = "1" ]; then
+      echo "Mock record-spawn failure (MOCK_RECORD_SPAWN_FAIL=1)" >&2
+    else
+      "$WF/cursor-workflow-record-spawn-on-branch.sh" "$STATE_FILE" "$SKILL" "$agent_id" "$BRANCH" || true
+    fi
+    sync_after_spawn
+    return 0
+  fi
+  echo "Late-stage resume API returned ${http_code}: $(cat /tmp/cursor-agent.json 2>/dev/null || true)" >&2
+  return 1
+}
+
+record_deferred_exhaust() {
+  local reason="$1"
+  "$WF/cursor-workflow-record-deferred-handoff.sh" "$STATE_FILE" "$BRANCH" "$SKILL" "$reason" || true
 }
 
 notify_stalled() {
@@ -203,6 +252,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
         continue
       fi
       "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "$reason" || true
+      record_deferred_exhaust "$reason"
       exit 0
       ;;
     proceed)
@@ -216,6 +266,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
           continue
         fi
         "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "pending-lock" || true
+        record_deferred_exhaust "pending-lock"
         exit 0
       fi
 
@@ -250,9 +301,21 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
             continue
           fi
           "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "$reason" || true
+          record_deferred_exhaust "$reason"
           exit 0
           ;;
         proceed)
+          if late_stage_resume_prior; then
+            resume_rc=$?
+            if [ "$resume_rc" -eq 0 ]; then
+              unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK
+              exit 0
+            elif [ "$resume_rc" -eq 2 ]; then
+              unset CURSOR_WORKFLOW_PENDING_SKILL CURSOR_WORKFLOW_WE_HOLD_LOCK
+              record_deferred_exhaust "resume-busy"
+              exit 0
+            fi
+          fi
           ;;
         *)
           echo "Unknown admission decision after pending lock: $decision"
@@ -271,6 +334,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
             continue
           fi
           "$WF/cursor-workflow-post-deferral-comment.sh" "$ISSUE" "api-400" || true
+          record_deferred_exhaust "api-400"
           exit 0
         fi
         if [ -z "${CURSOR_API_KEY:-}" ] && [ "${MOCK_CURSOR_API:-}" != "1" ]; then

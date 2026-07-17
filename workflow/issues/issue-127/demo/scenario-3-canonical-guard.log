@@ -1,0 +1,8 @@
+=== Scenario 3: Canonical branch guard ===
+Date: 2026-07-17T10:50:05Z
+push_ref=cursor/issue-127-pr-130-plan-agent-test
+canonical=cursor/issue-127-v1-hardening-orchestration-reliability-68f4
+PASS: guard skips handoff when push ref != state.branch
+PASS: early exit before sync/spawn
+PASS: no POST to Cursor API
+PASS: no Updated status comment / label sync for side-branch ref

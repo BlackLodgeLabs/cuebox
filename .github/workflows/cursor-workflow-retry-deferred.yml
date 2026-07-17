@@ -1,0 +1,86 @@
+name: Cursor workflow retry deferred
+
+# Re-queue handoffs that exhausted in-job backoff and persisted handoff_deferred.
+# Respects the global 8-run cap via the same admission gate as push handoff.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  retry-deferred:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          command -v jq >/dev/null || sudo apt-get update -qq && sudo apt-get install -y jq
+          command -v gh >/dev/null || sudo apt-get update -qq && sudo apt-get install -y gh
+
+      - name: Load workflow config
+        run: |
+          source scripts/cursor-workflow-config.sh
+          echo "WORKFLOW_LABEL_PREFIX=$WORKFLOW_LABEL_PREFIX" >> "$GITHUB_ENV"
+
+      - name: Load workflow scripts from main
+        run: |
+          set -euo pipefail
+          SCRIPTS_DIR=$(bash scripts/cursor-workflow-load-scripts.sh /tmp/cursor-workflow-scripts handoff)
+          echo "SCRIPTS_DIR=${SCRIPTS_DIR}" >> "$GITHUB_ENV"
+
+      - name: Scan deferred handoffs and recover
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WORKFLOW_REPO_ROOT: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          WF="${SCRIPTS_DIR:-/tmp/cursor-workflow-scripts}"
+          LABEL_PREFIX="${WORKFLOW_LABEL_PREFIX:-cursor}"
+
+          mapfile -t ISSUES < <(gh issue list --repo "${GITHUB_REPOSITORY}" --state open \
+            --label "${LABEL_PREFIX}:spec-ready" --label "${LABEL_PREFIX}:plan-ready" \
+            --label "${LABEL_PREFIX}:execute-ready" --label "${LABEL_PREFIX}:demo-ready" \
+            --label "${LABEL_PREFIX}:create-pr-ready" \
+            --json number -q '.[].number' 2>/dev/null || true)
+
+          if [ ${#ISSUES[@]} -eq 0 ]; then
+            mapfile -t ISSUES < <(for label in spec-ready plan-ready execute-ready demo-ready create-pr-ready; do
+              gh issue list --repo "${GITHUB_REPOSITORY}" --state open \
+                --label "${LABEL_PREFIX}:${label}" --json number -q '.[].number' 2>/dev/null || true
+            done | sort -nu)
+          fi
+
+          for issue in "${ISSUES[@]}"; do
+            [ -z "$issue" ] && continue
+            mapfile -t BRANCHES < <(git branch -r | grep -E "origin/cursor/issue-${issue}-" | sed 's|^[[:space:]]*origin/||' || true)
+            BRANCH="${BRANCHES[0]:-}"
+            if [ -z "$BRANCH" ]; then
+              echo "No branch for issue #${issue} — skip"
+              continue
+            fi
+            STATE="workflow/issues/issue-${issue}/workflow.state.json"
+            git fetch origin "$BRANCH" --quiet 2>/dev/null || continue
+            if ! git cat-file -e "origin/${BRANCH}:${STATE}" 2>/dev/null; then
+              continue
+            fi
+            git show "origin/${BRANCH}:${STATE}" > /tmp/workflow.state.json
+            deferred=$(jq -r '.handoff_deferred.skill // empty' /tmp/workflow.state.json)
+            if [ -z "$deferred" ] || [ "$deferred" = "null" ]; then
+              continue
+            fi
+            echo "Deferred handoff for issue #${issue} (${deferred}) on ${BRANCH} — running recovery"
+            "$WF/cursor-workflow-handoff-recovery.sh" "$issue" "$BRANCH" /tmp/workflow.state.json ""
+          done
+
+          echo "Deferred retry scan complete"

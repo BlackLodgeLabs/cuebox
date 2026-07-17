@@ -40,6 +40,7 @@ if [ "${CURSOR_WORKFLOW_PENDING_DRY_RUN:-}" = "1" ] || [ "${MOCK_CURSOR_API:-}" 
      | .active_agent_id = $id
      | .active_skill = $key
      | .handoff_pending = null
+     | .handoff_deferred = null
      | if $comment != "" and $comment != "null" then .status_comment_id = ($comment | tonumber? // $comment) else . end
      | .updated_at = $ts' \
     "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
@@ -104,6 +105,7 @@ jq --arg key "$AGENT_KEY" --arg id "$AGENT_ID" --arg ts "$TS" \
    | .active_agent_id = $id
    | .active_skill = $key
    | .handoff_pending = null
+   | .handoff_deferred = null
    | if $comment != "" and $comment != "null" then .status_comment_id = ($comment | tonumber? // $comment) else . end
    | .updated_at = $ts' \
   "$REL_PATH" > "${REL_PATH}.tmp" && mv "${REL_PATH}.tmp" "$REL_PATH"

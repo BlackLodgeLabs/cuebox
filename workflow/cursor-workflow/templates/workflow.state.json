@@ -18,6 +18,7 @@
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
+  "handoff_deferred": null,
   "status_comment_id": null,
   "loops": {
     "bugbot": 0,

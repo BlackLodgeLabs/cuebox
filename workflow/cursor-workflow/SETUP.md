@@ -211,6 +211,14 @@ Read issue + PR comments for loop counters. Fix manually or:
 1. Reset/adjust `workflow/issues/issue-NNN/workflow.state.json` if appropriate
 2. Comment `@cursoragent` with explicit skill + issue number to resume
 
+**Deferred handoff retry:** When in-job backoff exhausts, `handoff_deferred` is written to the branch. The scheduled workflow **Cursor workflow retry deferred** (`.github/workflows/cursor-workflow-retry-deferred.yml`, every 15 minutes) re-runs recovery. Manual fallback:
+
+```text
+@cursoragent use <skill> skill for issue NNN
+```
+
+Or **Actions → Cursor workflow handoff → Run workflow** with the issue number. See [OPERATIONS.md](OPERATIONS.md).
+
 ### Manual stage override
 
 On any stage you can comment:
