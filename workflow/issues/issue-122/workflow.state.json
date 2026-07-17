@@ -16,13 +16,17 @@
   },
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "create-pr",
+    "started_at": "2026-07-17T08:25:12Z",
+    "attempt": 0
+  },
   "status_comment_id": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 4
   },
-  "updated_at": "2026-07-17T08:22:30Z",
+  "updated_at": "2026-07-17T08:25:12Z",
   "schema_version": 1
 }
