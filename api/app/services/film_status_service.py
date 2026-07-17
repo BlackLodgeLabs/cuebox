@@ -45,7 +45,7 @@ class FilmStatusService:
             if entry is not None:
                 watchlist_repository.deactivate_entry(db, entry)
             film_repository.mark_pending_watch_review(db, film)
-            from datetime import date, datetime, timezone
+            from datetime import datetime, timezone
 
             from app.database.enums import WatchSource
 
