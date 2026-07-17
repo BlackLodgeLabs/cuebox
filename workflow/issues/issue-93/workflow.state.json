@@ -1,9 +1,9 @@
 {
   "issue": 93,
   "branch": "cursor/issue-93-review-watched-films-7684",
-  "stage": "create-pr-in-progress",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-17T23:05:00Z",
+  "stage": "create-pr-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-17T23:06:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,7 +21,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   },
   "handoff_deferred": null
 }
