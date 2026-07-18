@@ -45,7 +45,23 @@ describe("WatchReviewDialog", () => {
     expect(screen.getByRole("button", { name: "Save" })).not.toBeDisabled();
   });
 
-  it("calls cancel endpoint when Cancel is clicked", async () => {
+  it("calls cancel endpoint when Cancel is clicked with cancelOnDismiss", async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <WatchReviewDialog
+        filmId="film-1"
+        filmTitle="Heat"
+        open
+        cancelOnDismiss
+        onOpenChange={onOpenChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel watch review" }));
+    expect(cancelMutateAsync).toHaveBeenCalledWith("film-1");
+  });
+
+  it("closes without cancel API when cancelOnDismiss is false", async () => {
     const onOpenChange = vi.fn();
     render(
       <WatchReviewDialog
@@ -56,7 +72,8 @@ describe("WatchReviewDialog", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(cancelMutateAsync).toHaveBeenCalledWith("film-1");
+    fireEvent.click(screen.getByRole("button", { name: "Close watch review" }));
+    expect(cancelMutateAsync).not.toHaveBeenCalled();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

@@ -164,6 +164,7 @@ export function WatchlistPageContent() {
   const [reviewDialog, setReviewDialog] = useState<{
     filmId: string;
     filmTitle: string;
+    cancelOnDismiss?: boolean;
     initialScore?: number | null;
     initialWatchedAt?: string;
     initialNotes?: string | null;
@@ -177,6 +178,7 @@ export function WatchlistPageContent() {
     setReviewDialog({
       filmId: film.id,
       filmTitle: film.title,
+      cancelOnDismiss: true,
     });
   };
 
@@ -187,6 +189,7 @@ export function WatchlistPageContent() {
     setReviewDialog({
       filmId: film.id,
       filmTitle: film.title,
+      cancelOnDismiss: false,
       ...pendingProps,
     });
   };
@@ -393,6 +396,7 @@ export function WatchlistPageContent() {
           filmId={reviewDialog.filmId}
           filmTitle={reviewDialog.filmTitle}
           open
+          cancelOnDismiss={reviewDialog.cancelOnDismiss}
           onOpenChange={(open) => {
             if (!open) setReviewDialog(null);
           }}

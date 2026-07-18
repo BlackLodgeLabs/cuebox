@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HalfStarRatingInput } from "@/components/half-star-rating-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,8 @@ interface WatchReviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode?: "complete" | "edit";
+  /** When true, dismiss/Cancel reverts pending_watch_review to active (manual mark-watched only). */
+  cancelOnDismiss?: boolean;
   watchId?: string;
   initialScore?: number | null;
   initialWatchedAt?: string;
@@ -43,6 +45,7 @@ export function WatchReviewDialog({
   open,
   onOpenChange,
   mode = "complete",
+  cancelOnDismiss = false,
   watchId,
   initialScore = null,
   initialWatchedAt,
@@ -56,6 +59,7 @@ export function WatchReviewDialog({
   const [score, setScore] = useState<number | null>(initialScore);
   const [watchedAt, setWatchedAt] = useState(initialWatchedAt ?? todayIsoDate());
   const [notes, setNotes] = useState(initialNotes ?? "");
+  const saveInFlightRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -74,8 +78,9 @@ export function WatchReviewDialog({
   const isPending = complete.isPending || cancel.isPending || update.isPending;
 
   const handleSave = async () => {
-    if (!isValid || score === null) return;
+    if (!isValid || score === null || saveInFlightRef.current) return;
 
+    saveInFlightRef.current = true;
     try {
       if (mode === "edit" && watchId) {
         await update.mutateAsync({
@@ -94,11 +99,13 @@ export function WatchReviewDialog({
       onOpenChange(false);
     } catch {
       // toast handled by mutation hook
+    } finally {
+      saveInFlightRef.current = false;
     }
   };
 
   const handleCancel = async () => {
-    if (mode === "edit") {
+    if (mode === "edit" || !cancelOnDismiss) {
       onOpenChange(false);
       return;
     }
@@ -112,9 +119,14 @@ export function WatchReviewDialog({
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && open && mode === "complete") {
-      void handleCancel();
-      return;
+    if (!nextOpen && open) {
+      if (saveInFlightRef.current || complete.isPending || update.isPending) {
+        return;
+      }
+      if (mode === "complete" && cancelOnDismiss) {
+        void handleCancel();
+        return;
+      }
     }
     onOpenChange(nextOpen);
   };
@@ -174,8 +186,9 @@ export function WatchReviewDialog({
             variant="outline"
             onClick={() => void handleCancel()}
             disabled={isPending}
+            aria-label={cancelOnDismiss ? "Cancel watch review" : "Close watch review"}
           >
-            Cancel
+            {cancelOnDismiss ? "Cancel" : "Close"}
           </Button>
           <Button
             type="button"

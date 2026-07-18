@@ -96,6 +96,7 @@ export default function WatchlistFilmPage() {
         filmId={filmId}
         filmTitle={data.title}
         open={markWatchedOpen}
+        cancelOnDismiss
         onOpenChange={setMarkWatchedOpen}
       />
     </>
