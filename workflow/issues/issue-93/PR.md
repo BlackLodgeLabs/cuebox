@@ -40,27 +40,27 @@ Watch events are modeled as many-to-one `film_watches` records (not columns on `
 
 ### Scenario 1 — Manual mark watched (Flow A)
 
-![Scenario 1 dialog](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-1-dialog.png)
+![Scenario 1 dialog](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-1-dialog.png)
 
-![Scenario 1 watched tab](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-1-watched-tab.png)
+![Scenario 1 watched tab](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-1-watched-tab.png)
 
-![Scenario 1 detail history](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-1-detail-history.png)
+![Scenario 1 detail history](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-1-detail-history.png)
 
 ### Scenario 2 — Cancel revert (Flow B)
 
-![Scenario 2 cancel](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-2-cancel.png)
+![Scenario 2 cancel](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-2-cancel.png)
 
 ### Scenario 3 — Review page + badge
 
-![Scenario 3 review page](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-3-review-page.png)
+![Scenario 3 review page](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-3-review-page.png)
 
-![Scenario 3 nav badge](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-3-nav-badge.png)
+![Scenario 3 nav badge](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-3-nav-badge.png)
 
 ### Scenario 4 — Edit watch record (Flow D)
 
-![Scenario 4 edit dialog](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-4-edit-dialog.png)
+![Scenario 4 edit dialog](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-4-edit-dialog.png)
 
-![Scenario 4 updated history](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/8e261be12162bd08fab4a2547112cc6e93fa4fab/workflow/issues/issue-93/demo/scenario-4-updated-history.png)
+![Scenario 4 updated history](https://raw.githubusercontent.com/BlackLodgeLabs/cuebox/65b5310/workflow/issues/issue-93/demo/scenario-4-updated-history.png)
 
 ## How to Test
 
