@@ -121,16 +121,19 @@ def list_films(
     parsed_status = _parse_film_status(status)
     removed_at_map: dict = {}
     latest_watched_at_map: dict = {}
+    pending_watch_map: dict = {}
     if parsed_status in (FilmStatus.WATCHED, FilmStatus.ARCHIVED):
         film_ids = [film.id for film in films]
         removed_at_map = watchlist_repository.get_latest_removed_at_batch(db, film_ids)
         latest_watched_at_map = film_watch_repository.get_latest_watched_at_batch(db, film_ids)
+        pending_watch_map = film_watch_repository.get_pending_watch_batch(db, film_ids)
     return FilmListResponse(
         data=[
             film_to_summary(
                 film,
                 removed_at=removed_at_map.get(film.id),
                 latest_watched_at=latest_watched_at_map.get(film.id),
+                pending_watch=pending_watch_map.get(film.id),
             )
             for film in films
         ],

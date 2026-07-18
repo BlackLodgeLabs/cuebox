@@ -35,6 +35,7 @@ class FilmSummary(BaseModel):
     removed_at: datetime | None = None
     latest_watched_at: date | None = None
     watch_review_incomplete: bool = False
+    pending_watch: "FilmWatchSummary | None" = None
 
 
 class FilmListResponse(BaseModel):

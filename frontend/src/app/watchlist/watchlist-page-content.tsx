@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { WatchlistTable } from "@/components/watchlist-table";
-import { WatchReviewDialog } from "@/components/watch-review-dialog";
+import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -181,10 +181,13 @@ export function WatchlistPageContent() {
   };
 
   const openCompleteReviewDialog = (film: FilmSummary) => {
+    const pendingProps = film.pending_watch
+      ? watchToDialogProps(film.pending_watch)
+      : { initialWatchedAt: film.latest_watched_at ?? undefined };
     setReviewDialog({
       filmId: film.id,
       filmTitle: film.title,
-      initialWatchedAt: film.latest_watched_at ?? undefined,
+      ...pendingProps,
     });
   };
 

@@ -45,7 +45,7 @@ describe("WatchReviewDialog", () => {
     expect(screen.getByRole("button", { name: "Save" })).not.toBeDisabled();
   });
 
-  it("calls cancel endpoint in complete mode", async () => {
+  it("calls cancel endpoint when Cancel is clicked", async () => {
     const onOpenChange = vi.fn();
     render(
       <WatchReviewDialog

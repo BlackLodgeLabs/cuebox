@@ -107,6 +107,7 @@ export interface FilmSummary {
   removed_at?: string | null;
   latest_watched_at?: string | null;
   watch_review_incomplete?: boolean;
+  pending_watch?: FilmWatch | null;
 }
 
 export interface SetFilmStatusRequest {

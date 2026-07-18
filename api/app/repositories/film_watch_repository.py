@@ -145,6 +145,33 @@ def count_pending_watch_reviews(db: Session) -> int:
     )
 
 
+def update_pending_prefill(
+    db: Session,
+    watch: FilmWatch,
+    *,
+    watched_at: date,
+    score: float | Decimal | None = None,
+) -> FilmWatch:
+    watch.watched_at = watched_at
+    if score is not None:
+        watch.score = Decimal(str(score))
+    db.flush()
+    return watch
+
+
+def get_pending_watch_batch(
+    db: Session,
+    film_ids: list[uuid.UUID],
+) -> dict[uuid.UUID, FilmWatch]:
+    if not film_ids:
+        return {}
+    stmt = select(FilmWatch).where(
+        FilmWatch.film_id.in_(film_ids),
+        FilmWatch.is_pending.is_(True),
+    )
+    return {watch.film_id: watch for watch in db.scalars(stmt).all()}
+
+
 def get_latest_watched_at_batch(
     db: Session,
     film_ids: list[uuid.UUID],
@@ -153,10 +180,7 @@ def get_latest_watched_at_batch(
         return {}
     stmt = (
         select(FilmWatch.film_id, func.max(FilmWatch.watched_at))
-        .where(
-            FilmWatch.film_id.in_(film_ids),
-            FilmWatch.is_pending.is_(False),
-        )
+        .where(FilmWatch.film_id.in_(film_ids))
         .group_by(FilmWatch.film_id)
     )
     return {film_id: watched_at for film_id, watched_at in db.execute(stmt).all()}

@@ -48,6 +48,7 @@ def film_to_summary(
     *,
     removed_at: datetime | None = None,
     latest_watched_at: date | None = None,
+    pending_watch: FilmWatch | None = None,
 ) -> FilmSummary:
     metadata: FilmMetadata | None = film.metadata_
     summary_removed_at = None
@@ -70,6 +71,7 @@ def film_to_summary(
         removed_at=summary_removed_at,
         latest_watched_at=latest_watched_at,
         watch_review_incomplete=film.status == FilmStatus.PENDING_WATCH_REVIEW,
+        pending_watch=watch_to_summary(pending_watch) if pending_watch is not None else None,
     )
 
 

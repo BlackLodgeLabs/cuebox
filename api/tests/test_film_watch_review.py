@@ -188,3 +188,81 @@ def test_pending_review_count(integration_client, db_session):
     body = response.json()
     assert body["watch_review_count"] >= 1
     assert body["total"] >= body["watch_review_count"]
+
+
+def test_rss_watched_skips_already_watched_film(integration_client, db_session):
+    films = seed_ready_films(db_session, count=1)
+    film = films[0]
+
+    _set_status(integration_client, film.id, "pending_watch_review")
+    complete_response = _complete_review(integration_client, film.id, score=4.0)
+    assert complete_response.status_code == 200
+    db_session.commit()
+    db_session.expire_all()
+
+    from app.services.sync_service import SyncService
+
+    service = SyncService(integration_client.app.state.provider_service)
+    service._apply_watched(
+        db_session,
+        film.letterboxd_uri,
+        {
+            "title": film.title,
+            "year": film.year,
+            "watched_date": date.today().isoformat(),
+            "member_rating": "5",
+        },
+    )
+    db_session.commit()
+
+    db_session.expire_all()
+    restored = film_repository.get_by_id(db_session, film.id)
+    assert restored is not None
+    assert restored.status == FilmStatus.WATCHED
+    assert film_watch_repository.get_pending_for_film(db_session, film.id) is None
+    assert len(film_watch_repository.list_for_film(db_session, film.id)) == 1
+
+
+def test_rss_watched_does_not_duplicate_pending_watch(integration_client, db_session):
+    films = seed_ready_films(db_session, count=1)
+    film = films[0]
+
+    from app.services.sync_service import SyncService
+
+    service = SyncService(integration_client.app.state.provider_service)
+    payload = {
+        "title": film.title,
+        "year": film.year,
+        "watched_date": "2024-03-15",
+        "member_rating": "4.5",
+    }
+    service._apply_watched(db_session, film.letterboxd_uri, payload)
+    db_session.commit()
+
+    service._apply_watched(db_session, film.letterboxd_uri, payload)
+    db_session.commit()
+
+    pending = film_watch_repository.get_pending_for_film(db_session, film.id)
+    assert pending is not None
+    assert float(pending.score) == 4.5
+    assert pending.watched_at == date(2024, 3, 15)
+    assert len(film_watch_repository.list_all_for_film(db_session, film.id)) == 1
+
+
+def test_watched_list_includes_pending_watch_prefill(integration_client, db_session):
+    films = seed_ready_films(db_session, count=1)
+    film = films[0]
+
+    _set_status(integration_client, film.id, "pending_watch_review")
+    pending = film_watch_repository.get_pending_for_film(db_session, film.id)
+    pending.watched_at = date(2024, 5, 10)
+    pending.score = 3.5
+    pending.notes = "RSS note"
+    db_session.commit()
+
+    response = integration_client.get("/api/v1/films", params={"status": "watched"})
+    assert response.status_code == 200
+    item = next(row for row in response.json()["data"] if row["id"] == str(film.id))
+    assert item["latest_watched_at"] == "2024-05-10"
+    assert item["pending_watch"]["score"] == 3.5
+    assert item["pending_watch"]["notes"] == "RSS note"
