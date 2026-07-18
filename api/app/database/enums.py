@@ -5,8 +5,14 @@ import enum
 
 class FilmStatus(str, enum.Enum):
     ACTIVE = "active"
+    PENDING_WATCH_REVIEW = "pending_watch_review"
     WATCHED = "watched"
     ARCHIVED = "archived"
+
+
+class WatchSource(str, enum.Enum):
+    MANUAL = "manual"
+    RSS = "rss"
 
 
 class FilmAddSource(str, enum.Enum):

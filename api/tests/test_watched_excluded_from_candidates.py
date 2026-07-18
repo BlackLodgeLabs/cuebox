@@ -29,12 +29,25 @@ def test_manual_status_transition_excluded_from_candidates(integration_client, d
 
     response = integration_client.post(
         f"/api/v1/films/{film.id}/status",
-        json={"status": "watched"},
+        json={"status": "pending_watch_review"},
     )
     assert response.status_code == 200
 
     candidates = film_repository.list_recommendation_candidates(db_session)
     assert film.id not in {candidate.id for candidate in candidates}
+
+
+def test_pending_watch_review_excluded_from_candidates(db_session):
+    films = seed_ready_films(db_session, count=3)
+    pending = films[0]
+    film_repository.mark_pending_watch_review(db_session, pending)
+    entry = watchlist_repository.get_active_by_film_id(db_session, pending.id)
+    if entry:
+        watchlist_repository.deactivate_entry(db_session, entry)
+    db_session.commit()
+
+    candidates = film_repository.list_recommendation_candidates(db_session)
+    assert pending.id not in {film.id for film in candidates}
 
 
 def test_non_english_film_excluded_when_subtitles_no(db_session):

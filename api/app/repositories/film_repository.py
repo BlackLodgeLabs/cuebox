@@ -206,8 +206,14 @@ def list_films(
         count_stmt = count_stmt.join(*watchlist_join)
 
     if status is not None:
-        stmt = stmt.where(Film.status == status)
-        count_stmt = count_stmt.where(Film.status == status)
+        if status == FilmStatus.WATCHED:
+            stmt = stmt.where(Film.status.in_([FilmStatus.WATCHED, FilmStatus.PENDING_WATCH_REVIEW]))
+            count_stmt = count_stmt.where(
+                Film.status.in_([FilmStatus.WATCHED, FilmStatus.PENDING_WATCH_REVIEW])
+            )
+        else:
+            stmt = stmt.where(Film.status == status)
+            count_stmt = count_stmt.where(Film.status == status)
     if enrichment_status is not None:
         stmt = stmt.where(Film.enrichment_status == enrichment_status)
         count_stmt = count_stmt.where(Film.enrichment_status == enrichment_status)
@@ -273,6 +279,12 @@ def list_failed_for_job(db: Session, job_id: uuid.UUID) -> list[Film]:
 
 def archive_film(db: Session, film: Film) -> Film:
     film.status = FilmStatus.ARCHIVED
+    db.flush()
+    return film
+
+
+def mark_pending_watch_review(db: Session, film: Film) -> Film:
+    film.status = FilmStatus.PENDING_WATCH_REVIEW
     db.flush()
     return film
 

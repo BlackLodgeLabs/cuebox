@@ -240,8 +240,39 @@ def test_rss_watched_applies_to_manual_add(integration_client, db_session):
 
     film = film_repository.get_by_id(db_session, film_id)
     assert film is not None
-    assert film.status == FilmStatus.WATCHED
+    assert film.status == FilmStatus.PENDING_WATCH_REVIEW
     assert watchlist_repository.get_active_by_film_id(db_session, film_id) is None
+
+
+def test_restore_pending_watch_review_clears_pending_record(integration_client, db_session):
+    from app.repositories import film_watch_repository
+
+    body = _add_film(integration_client)
+    wait_for_film_status(integration_client, body["film_id"], "ready")
+    film_id = uuid.UUID(body["film_id"])
+
+    integration_client.post(
+        f"/api/v1/films/{film_id}/status",
+        json={"status": "pending_watch_review"},
+    )
+    assert film_watch_repository.get_pending_for_film(db_session, film_id) is not None
+
+    with patch(
+        "app.services.watchlist_add_service.resolve_letterboxd_uri",
+        new=AsyncMock(side_effect=_mock_resolve_success(MATRIX_TMDB_ID)),
+    ):
+        response = integration_client.post(
+            "/api/v1/watchlist/films",
+            json={"tmdb_id": MATRIX_TMDB_ID},
+        )
+    assert response.status_code in (200, 202), response.text
+
+    db_session.expire_all()
+    film = film_repository.get_by_id(db_session, film_id)
+    assert film is not None
+    assert film.status == FilmStatus.ACTIVE
+    assert film_watch_repository.get_pending_for_film(db_session, film_id) is None
+    assert watchlist_repository.get_active_by_film_id(db_session, film_id) is not None
 
 
 def test_add_film_resolves_via_slug_when_redirect_blocked(integration_client):

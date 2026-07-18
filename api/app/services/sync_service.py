@@ -277,6 +277,10 @@ class SyncService:
         year = payload.get("year")
         job = None
         if existing is not None:
+            if existing.status == FilmStatus.PENDING_WATCH_REVIEW:
+                from app.repositories import film_watch_repository
+
+                film_watch_repository.delete_pending_for_film(db, existing.id)
             if existing.status != FilmStatus.ACTIVE:
                 film_repository.restore_active(db, existing)
             watchlist_repository.ensure_active_entry(
@@ -314,6 +318,14 @@ class SyncService:
         film_repository.archive_film(db, entry.film)
 
     def _apply_watched(self, db: Session, uri: str, payload: dict | None = None) -> None:
+        import logging
+        from datetime import date, datetime, timezone
+
+        from app.database.enums import WatchSource
+        from app.repositories import film_watch_repository
+        from app.services.rss_parser import normalize_member_rating
+
+        logger = logging.getLogger(__name__)
         payload = payload or {}
         film, _ = film_repository.find_for_rss_watched(
             db,
@@ -323,10 +335,44 @@ class SyncService:
         )
         if film is None:
             return
+        if film.status == FilmStatus.WATCHED:
+            return
+
+        watched_date_str = payload.get("watched_date")
+        if watched_date_str:
+            watched_at = date.fromisoformat(watched_date_str)
+        else:
+            logger.warning(
+                "RSS watched event missing watched_date for %s; falling back to event timestamp",
+                uri,
+            )
+            watched_at = datetime.now(timezone.utc).date()
+
+        score = normalize_member_rating(payload.get("member_rating"))
+
         entry = watchlist_repository.get_active_by_film_id(db, film.id)
         if entry is not None:
             watchlist_repository.deactivate_entry(db, entry)
-        film_repository.mark_watched(db, film)
+
+        if film.status == FilmStatus.PENDING_WATCH_REVIEW:
+            existing = film_watch_repository.get_pending_for_film(db, film.id)
+            if existing is not None:
+                film_watch_repository.update_pending_prefill(
+                    db,
+                    existing,
+                    watched_at=watched_at,
+                    score=score,
+                )
+                return
+
+        film_repository.mark_pending_watch_review(db, film)
+        film_watch_repository.create_pending(
+            db,
+            film_id=film.id,
+            source=WatchSource.RSS,
+            watched_at=watched_at,
+            score=score,
+        )
 
 
 def _film_summary(film: Film) -> dict:

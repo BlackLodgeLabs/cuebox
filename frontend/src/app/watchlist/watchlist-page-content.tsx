@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { WatchlistTable } from "@/components/watchlist-table";
+import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +19,7 @@ import { ErrorState } from "@/components/error-state";
 import { CardGridSkeleton } from "@/components/loading-state";
 import { useFilmStatusTransition, useFilms } from "@/hooks/use-films";
 import { formatEnrichmentStatus } from "@/lib/enrichment-status";
-import type { FilmSortField, FilmStatus, SortDirection, WatchlistTab } from "@/types/api";
+import type { FilmSortField, FilmStatus, FilmSummary, SortDirection, WatchlistTab } from "@/types/api";
 
 const LIMIT = 20;
 const ENRICHMENT_OPTIONS = [
@@ -160,6 +161,38 @@ export function WatchlistPageContent() {
   const watchedCountQuery = useFilms({ status: "watched", limit: 1 });
   const archivedCountQuery = useFilms({ status: "archived", limit: 1 });
   const statusTransition = useFilmStatusTransition();
+  const [reviewDialog, setReviewDialog] = useState<{
+    filmId: string;
+    filmTitle: string;
+    cancelOnDismiss?: boolean;
+    initialScore?: number | null;
+    initialWatchedAt?: string;
+    initialNotes?: string | null;
+  } | null>(null);
+
+  const openMarkWatchedDialog = async (film: FilmSummary) => {
+    await statusTransition.mutateAsync({
+      filmId: film.id,
+      status: "pending_watch_review",
+    });
+    setReviewDialog({
+      filmId: film.id,
+      filmTitle: film.title,
+      cancelOnDismiss: true,
+    });
+  };
+
+  const openCompleteReviewDialog = (film: FilmSummary) => {
+    const pendingProps = film.pending_watch
+      ? watchToDialogProps(film.pending_watch)
+      : { initialWatchedAt: film.latest_watched_at ?? undefined };
+    setReviewDialog({
+      filmId: film.id,
+      filmTitle: film.title,
+      cancelOnDismiss: false,
+      ...pendingProps,
+    });
+  };
 
   const handleSort = (column: FilmSortField) => {
     const nextDir =
@@ -179,6 +212,13 @@ export function WatchlistPageContent() {
   };
 
   const handleStatusTransition = (filmId: string, status: FilmStatus) => {
+    if (status === "pending_watch_review") {
+      const film = data?.data.find((item) => item.id === filmId);
+      if (film) {
+        void openMarkWatchedDialog(film);
+      }
+      return;
+    }
     statusTransition.mutate({ filmId, status });
   };
 
@@ -321,6 +361,8 @@ export function WatchlistPageContent() {
                 sortDir={sortDir}
                 onSort={handleSort}
                 onStatusTransition={handleStatusTransition}
+                onMarkWatched={(film) => void openMarkWatchedDialog(film)}
+                onCompleteReview={openCompleteReviewDialog}
                 isStatusPending={statusTransition.isPending}
               />
 
@@ -348,6 +390,21 @@ export function WatchlistPageContent() {
           )}
         </TabsContent>
       </Tabs>
+
+      {reviewDialog && (
+        <WatchReviewDialog
+          filmId={reviewDialog.filmId}
+          filmTitle={reviewDialog.filmTitle}
+          open
+          cancelOnDismiss={reviewDialog.cancelOnDismiss}
+          onOpenChange={(open) => {
+            if (!open) setReviewDialog(null);
+          }}
+          initialScore={reviewDialog.initialScore}
+          initialWatchedAt={reviewDialog.initialWatchedAt}
+          initialNotes={reviewDialog.initialNotes}
+        />
+      )}
     </div>
   );
 }

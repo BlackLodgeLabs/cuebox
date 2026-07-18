@@ -1,6 +1,6 @@
 """Film API schemas per api-contracts.md §4."""
 
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -33,6 +33,9 @@ class FilmSummary(BaseModel):
     created_at: datetime
     updated_at: datetime
     removed_at: datetime | None = None
+    latest_watched_at: date | None = None
+    watch_review_incomplete: bool = False
+    pending_watch: "FilmWatchSummary | None" = None
 
 
 class FilmListResponse(BaseModel):
@@ -86,6 +89,18 @@ class FilmDetail(BaseModel):
     enrichment_status: str
     metadata: FilmMetadataBlock | None = None
     semantic_profile: SemanticProfileBlock | None = None
+    watches: list["FilmWatchSummary"] = Field(default_factory=list)
+    created_at: datetime
+    updated_at: datetime
+
+
+class FilmWatchSummary(BaseModel):
+    id: UUID
+    score: float
+    watched_at: date
+    notes: str | None = None
+    source: str
+    is_pending: bool
     created_at: datetime
     updated_at: datetime
 

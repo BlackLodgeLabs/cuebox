@@ -2,23 +2,58 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from app.database.enums import FilmStatus
-from app.database.models import Film, FilmMetadata, FilmSemanticProfile
+from app.database.models import Film, FilmMetadata, FilmSemanticProfile, FilmWatch
 from app.schemas.film_schemas import (
     FilmDetail,
     FilmMetadataBlock,
     FilmSummary,
+    FilmWatchSummary,
     ReviewRequiredItem,
     SemanticProfileBlock,
 )
+from app.schemas.watch_review_schemas import FilmWatchBlock, WatchReviewRequiredItem
 
 
-def film_to_summary(film: Film, *, removed_at: datetime | None = None) -> FilmSummary:
+def watch_to_block(watch: FilmWatch) -> FilmWatchBlock:
+    return FilmWatchBlock(
+        id=watch.id,
+        score=float(watch.score),
+        watched_at=watch.watched_at,
+        notes=watch.notes,
+        source=watch.source.value if hasattr(watch.source, "value") else str(watch.source),
+        is_pending=watch.is_pending,
+        created_at=watch.created_at,
+        updated_at=watch.updated_at,
+    )
+
+
+def watch_to_summary(watch: FilmWatch) -> FilmWatchSummary:
+    return FilmWatchSummary(
+        id=watch.id,
+        score=float(watch.score),
+        watched_at=watch.watched_at,
+        notes=watch.notes,
+        source=watch.source.value if hasattr(watch.source, "value") else str(watch.source),
+        is_pending=watch.is_pending,
+        created_at=watch.created_at,
+        updated_at=watch.updated_at,
+    )
+
+
+def film_to_summary(
+    film: Film,
+    *,
+    removed_at: datetime | None = None,
+    latest_watched_at: date | None = None,
+    pending_watch: FilmWatch | None = None,
+) -> FilmSummary:
     metadata: FilmMetadata | None = film.metadata_
     summary_removed_at = None
-    if film.status in (FilmStatus.WATCHED, FilmStatus.ARCHIVED) and removed_at is not None:
+    watched_statuses = (FilmStatus.WATCHED, FilmStatus.ARCHIVED, FilmStatus.PENDING_WATCH_REVIEW)
+    if film.status in watched_statuses and removed_at is not None:
         summary_removed_at = removed_at
     return FilmSummary(
         id=film.id,
@@ -34,6 +69,9 @@ def film_to_summary(film: Film, *, removed_at: datetime | None = None) -> FilmSu
         created_at=film.created_at,
         updated_at=film.updated_at,
         removed_at=summary_removed_at,
+        latest_watched_at=latest_watched_at,
+        watch_review_incomplete=film.status == FilmStatus.PENDING_WATCH_REVIEW,
+        pending_watch=watch_to_summary(pending_watch) if pending_watch is not None else None,
     )
 
 
@@ -82,7 +120,7 @@ def semantic_to_block(profile: FilmSemanticProfile) -> SemanticProfileBlock:
     )
 
 
-def film_to_detail(film: Film) -> FilmDetail:
+def film_to_detail(film: Film, *, watches: list[FilmWatch] | None = None) -> FilmDetail:
     metadata_block = None
     if film.metadata_ is not None:
         metadata_block = metadata_to_block(film.metadata_)
@@ -90,6 +128,8 @@ def film_to_detail(film: Film) -> FilmDetail:
     semantic_block = None
     if film.semantic_profile is not None:
         semantic_block = semantic_to_block(film.semantic_profile)
+
+    watch_list = watches if watches is not None else getattr(film, "watches", None) or []
 
     return FilmDetail(
         id=film.id,
@@ -100,6 +140,7 @@ def film_to_detail(film: Film) -> FilmDetail:
         enrichment_status=film.enrichment_status.value,
         metadata=metadata_block,
         semantic_profile=semantic_block,
+        watches=[watch_to_summary(w) for w in watch_list],
         created_at=film.created_at,
         updated_at=film.updated_at,
     )
@@ -120,4 +161,17 @@ def review_to_item(film: Film, review) -> ReviewRequiredItem:
         confidence_score=float(review.confidence_score),
         candidate_payload=review.candidate_payload or {},
         created_at=review.created_at,
+    )
+
+
+def watch_review_to_item(film: Film, watch: FilmWatch) -> WatchReviewRequiredItem:
+    metadata: FilmMetadata | None = film.metadata_
+    return WatchReviewRequiredItem(
+        film_id=film.id,
+        title=film.title,
+        year=film.year,
+        letterboxd_uri=film.letterboxd_uri,
+        poster_url=metadata.poster_url if metadata else None,
+        pending_watch=watch_to_block(watch),
+        created_at=watch.created_at,
     )

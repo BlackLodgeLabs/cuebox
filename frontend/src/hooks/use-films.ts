@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getReviewRequired, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus } from "@/lib/api-client";
-import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams } from "@/types/api";
+import { getFilm, getFilms, getReviewRequired, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, updateFilmWatch } from "@/lib/api-client";
+import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useFilms(params?: FilmsQueryParams) {
@@ -82,6 +82,18 @@ export function useRematchFilm() {
   });
 }
 
+function invalidateWatchReviewQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  filmId?: string,
+) {
+  void queryClient.invalidateQueries({ queryKey: ["films"] });
+  if (filmId) {
+    void queryClient.invalidateQueries({ queryKey: ["films", filmId] });
+  }
+  void queryClient.invalidateQueries({ queryKey: ["films", "watch-review-required"] });
+  void queryClient.invalidateQueries({ queryKey: ["films", "pending-review-count"] });
+}
+
 export function useFilmStatusTransition() {
   const queryClient = useQueryClient();
   const onError = useToastOnError();
@@ -90,8 +102,7 @@ export function useFilmStatusTransition() {
     mutationFn: ({ filmId, status }: { filmId: string; status: FilmStatus }) =>
       setFilmStatus(filmId, status),
     onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ["films"] });
-      void queryClient.invalidateQueries({ queryKey: ["films", variables.filmId] });
+      invalidateWatchReviewQueries(queryClient, variables.filmId);
     },
     onError,
   });
@@ -108,6 +119,70 @@ export function useReviewRequired(
   });
 }
 
+export function useWatchReviewRequired(
+  params?: ReviewRequiredQueryParams,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["films", "watch-review-required", params],
+    queryFn: () => getWatchReviewRequired(params),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCompleteWatchReview() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({
+      filmId,
+      body,
+    }: {
+      filmId: string;
+      body: CompleteWatchReviewRequest;
+    }) => completeWatchReview(filmId, body),
+    onSuccess: (_data, variables) => {
+      invalidateWatchReviewQueries(queryClient, variables.filmId);
+    },
+    onError,
+  });
+}
+
+export function useCancelWatchReview() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: (filmId: string) => cancelWatchReview(filmId),
+    onSuccess: (_data, filmId) => {
+      invalidateWatchReviewQueries(queryClient, filmId);
+    },
+    onError,
+  });
+}
+
+export function useUpdateFilmWatch() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({
+      filmId,
+      watchId,
+      body,
+    }: {
+      filmId: string;
+      watchId: string;
+      body: UpdateWatchRequest;
+    }) => updateFilmWatch(filmId, watchId, body),
+    onSuccess: (_data, variables) => {
+      invalidateWatchReviewQueries(queryClient, variables.filmId);
+    },
+    onError,
+  });
+}
+
 export function useHasWatchlist() {
   return useQuery({
     queryKey: ["films", "watchlist-presence"],
@@ -118,9 +193,9 @@ export function useHasWatchlist() {
 
 export function usePendingReviewCount() {
   return useQuery({
-    queryKey: ["films", "review-required", "count"],
-    queryFn: () => getReviewRequired({ limit: 1 }),
-    select: (data) => data.pagination.total,
+    queryKey: ["films", "pending-review-count"],
+    queryFn: () => getPendingReviewCount(),
+    select: (data) => data.total,
   });
 }
 

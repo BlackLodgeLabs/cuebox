@@ -16,6 +16,8 @@ interface FilmStatusActionsProps {
   status: FilmStatus;
   variant?: "table" | "detail";
   onTransition: (status: FilmStatus) => void;
+  onMarkWatched?: () => void;
+  onCompleteReview?: () => void;
   isPending?: boolean;
 }
 
@@ -23,6 +25,8 @@ export function FilmStatusActions({
   status,
   variant = "table",
   onTransition,
+  onMarkWatched,
+  onCompleteReview,
   isPending = false,
 }: FilmStatusActionsProps) {
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -63,10 +67,22 @@ export function FilmStatusActions({
   if (status === "active") {
     actions = (
       <>
-        {renderButton("Mark watched", () => onTransition("watched"))}
+        {renderButton("Mark watched", () => {
+          if (onMarkWatched) {
+            onMarkWatched();
+          } else {
+            onTransition("pending_watch_review");
+          }
+        })}
         {renderButton("Archive", () => setArchiveOpen(true))}
       </>
     );
+  } else if (status === "pending_watch_review") {
+    actions = renderButton("Complete review", () => {
+      if (onCompleteReview) {
+        onCompleteReview();
+      }
+    });
   } else if (status === "watched") {
     actions = renderButton("Return to watchlist", () => onTransition("active"));
   } else if (status === "archived") {

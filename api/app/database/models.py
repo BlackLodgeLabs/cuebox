@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -11,6 +11,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     Enum as SAEnum,
     ForeignKey,
@@ -32,6 +33,7 @@ from app.database.enums import (
     FilmAddSource,
     FilmStatus,
     ImportJobStatus,
+    WatchSource,
     ReviewStatus,
     ReviewType,
     RssEventType,
@@ -115,9 +117,43 @@ class Film(Base):
     embeddings: Mapped[list[FilmEmbedding]] = relationship(back_populates="film")
     watchlist_entries: Mapped[list[WatchlistEntry]] = relationship(back_populates="film")
     match_reviews: Mapped[list[MetadataMatchReview]] = relationship(back_populates="film")
+    watches: Mapped[list[FilmWatch]] = relationship(back_populates="film")
     exposure: Mapped[RecommendationExposure | None] = relationship(
         back_populates="film", uselist=False
     )
+
+
+class FilmWatch(Base):
+    __tablename__ = "film_watches"
+    __table_args__ = (
+        CheckConstraint(
+            "score >= 0.5 AND score <= 5.0",
+            name="chk_film_watches_score_range",
+        ),
+        CheckConstraint(
+            "source IN ('manual', 'rss')",
+            name="chk_film_watches_source",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    film_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("films.id", ondelete="CASCADE"), nullable=False
+    )
+    score: Mapped[Decimal] = mapped_column(Numeric(2, 1), nullable=False)
+    watched_at: Mapped[date] = mapped_column(Date, nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[WatchSource] = mapped_column(
+        SAEnum(WatchSource, native_enum=False, values_callable=_enum_values),
+        nullable=False,
+    )
+    is_pending: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    film: Mapped[Film] = relationship(back_populates="watches")
 
 
 class FilmMetadata(Base):

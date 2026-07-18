@@ -26,7 +26,12 @@ import type {
   FilmSummary,
   FilmDetail,
   FilmStatus,
+  FilmWatch,
   FilmWatchProvidersResponse,
+  CompleteWatchReviewRequest,
+  PendingReviewCountResponse,
+  UpdateWatchRequest,
+  WatchReviewRequiredFilm,
   TmdbSearchParams,
   TmdbSearchResponse,
   WatchlistAddRequest,
@@ -180,6 +185,45 @@ export function getReviewRequired(
   return fetchApi<PaginatedResponse<ReviewRequiredFilm>>(
     `/films/review-required${buildQuery(params)}`,
   );
+}
+
+export function getWatchReviewRequired(
+  params?: ReviewRequiredQueryParams,
+): Promise<PaginatedResponse<WatchReviewRequiredFilm>> {
+  return fetchApi<PaginatedResponse<WatchReviewRequiredFilm>>(
+    `/films/watch-review-required${buildQuery(params)}`,
+  );
+}
+
+export function getPendingReviewCount(): Promise<PendingReviewCountResponse> {
+  return fetchApi<PendingReviewCountResponse>("/films/reviews/pending-count");
+}
+
+export function completeWatchReview(
+  filmId: string,
+  body: CompleteWatchReviewRequest,
+): Promise<FilmDetail> {
+  return fetchApi<FilmDetail>(`/films/${filmId}/watch-review`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function cancelWatchReview(filmId: string): Promise<void> {
+  return fetchApi<void>(`/films/${filmId}/watch-review`, {
+    method: "DELETE",
+  });
+}
+
+export function updateFilmWatch(
+  filmId: string,
+  watchId: string,
+  body: UpdateWatchRequest,
+): Promise<FilmWatch> {
+  return fetchApi<FilmWatch>(`/films/${filmId}/watches/${watchId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 }
 
 export function acceptReview(reviewId: string): Promise<ReviewActionResponse> {

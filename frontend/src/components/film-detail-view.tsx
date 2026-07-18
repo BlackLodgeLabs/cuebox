@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EditFilmMatchDialog } from "@/components/edit-film-match-dialog";
 import { FilmPoster } from "@/components/film-poster";
 import { FilmStatusActions } from "@/components/film-status-actions";
+import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
 import { WhereToWatchSection } from "@/components/where-to-watch-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,13 +17,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatEnrichmentStatus } from "@/lib/enrichment-status";
-import type { FilmDetail, FilmStatus, WatchlistTab } from "@/types/api";
+import type { FilmDetail, FilmStatus, FilmWatch, WatchlistTab } from "@/types/api";
 
 interface FilmDetailViewProps {
   film: FilmDetail;
   autoOpenEditMatch?: boolean;
   watchlistTab?: WatchlistTab;
   onStatusTransition?: (status: FilmStatus) => void;
+  onMarkWatched?: () => void;
   isStatusPending?: boolean;
 }
 
@@ -64,9 +66,14 @@ export function FilmDetailView({
   autoOpenEditMatch = false,
   watchlistTab,
   onStatusTransition,
+  onMarkWatched,
   isStatusPending = false,
 }: FilmDetailViewProps) {
   const [editOpen, setEditOpen] = useState(false);
+  const [watchDialog, setWatchDialog] = useState<{
+    mode: "complete" | "edit";
+    watch?: FilmWatch;
+  } | null>(null);
   const metadata = film.metadata;
   const semantic = film.semantic_profile;
   const backdropUrl = metadata?.backdrop_url ?? null;
@@ -80,7 +87,7 @@ export function FilmDetailView({
 
   const backTab =
     watchlistTab ??
-    (film.status === "watched"
+    (film.status === "watched" || film.status === "pending_watch_review"
       ? "watched"
       : film.status === "archived"
         ? "archived"
@@ -146,6 +153,14 @@ export function FilmDetailView({
                     variant="detail"
                     isPending={isStatusPending}
                     onTransition={onStatusTransition}
+                    onMarkWatched={onMarkWatched}
+                    onCompleteReview={() => {
+                      const pending = film.watches.find((watch) => watch.is_pending);
+                      setWatchDialog({
+                        mode: "complete",
+                        watch: pending,
+                      });
+                    }}
                   />
                 )}
               </div>
@@ -214,6 +229,56 @@ export function FilmDetailView({
           )}
         </CardContent>
       </Card>
+
+      {(film.watches.length > 0 || film.status === "pending_watch_review") && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Watch history</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {film.status === "pending_watch_review" && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/60 p-4">
+                <p className="text-body-md text-muted-foreground">
+                  This film is waiting for a watch diary entry.
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const pending = film.watches.find((watch) => watch.is_pending);
+                    setWatchDialog({ mode: "complete", watch: pending });
+                  }}
+                >
+                  Complete review
+                </Button>
+              </div>
+            )}
+            {film.watches
+              .filter((watch) => !watch.is_pending)
+              .map((watch) => (
+                <div
+                  key={watch.id}
+                  className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 py-3 last:border-0"
+                >
+                  <div>
+                    <p className="font-medium">{watch.score}★ · {watch.watched_at}</p>
+                    {watch.notes && (
+                      <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                        {watch.notes}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setWatchDialog({ mode: "edit", watch })}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      )}
 
       {metadata && (
         <Card>
@@ -322,6 +387,19 @@ export function FilmDetailView({
         open={editOpen}
         onOpenChange={setEditOpen}
       />
+
+      {watchDialog && (
+        <WatchReviewDialog
+          filmId={film.id}
+          filmTitle={film.title}
+          open
+          mode={watchDialog.mode}
+          onOpenChange={(open) => {
+            if (!open) setWatchDialog(null);
+          }}
+          {...(watchDialog.watch ? watchToDialogProps(watchDialog.watch) : {})}
+        />
+      )}
     </div>
   );
 }

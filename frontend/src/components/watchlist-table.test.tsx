@@ -56,12 +56,13 @@ describe("WatchlistTable", () => {
     expect(onSort).toHaveBeenCalledWith("title");
   });
 
-  it("shows Removed column on watched tab and wires status actions", () => {
+  it("shows Watched column on watched tab and wires status actions", () => {
     const onStatusTransition = vi.fn();
     const watchedFilm: FilmSummary = {
       ...film,
       status: "watched",
       removed_at: "2024-06-01T00:00:00Z",
+      latest_watched_at: "2024-06-01",
     };
 
     render(
@@ -75,7 +76,7 @@ describe("WatchlistTable", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /removed/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Watched/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /return to watchlist/i }));
     expect(onStatusTransition).toHaveBeenCalledWith("film-1", "active");
   });

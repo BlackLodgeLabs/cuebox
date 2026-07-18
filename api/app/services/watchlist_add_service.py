@@ -16,6 +16,7 @@ from app.providers.tmdb import TmdbClient, TmdbMovieDetails
 from app.repositories import (
     film_metadata_repository,
     film_repository,
+    film_watch_repository,
     metadata_review_repository,
     watchlist_repository,
 )
@@ -105,7 +106,9 @@ class WatchlistAddService:
                     already_on_watchlist=True,
                 )
 
-            if existing.status in (FilmStatus.ARCHIVED, FilmStatus.WATCHED):
+            if existing.status in (FilmStatus.ARCHIVED, FilmStatus.WATCHED, FilmStatus.PENDING_WATCH_REVIEW):
+                if existing.status == FilmStatus.PENDING_WATCH_REVIEW:
+                    film_watch_repository.delete_pending_for_film(db, existing.id)
                 film_repository.restore_active(db, existing)
                 watchlist_repository.ensure_active_entry(
                     db, film_id=existing.id, letterboxd_uri=canonical_uri
