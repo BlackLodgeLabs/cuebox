@@ -3,7 +3,7 @@
   "branch": "cursor/issue-89-import-watched-list-9ab1",
   "stage": "execute-ready",
   "active_skill": null,
-  "updated_at": "2026-07-20T09:06:00Z",
+  "updated_at": "2026-07-20T09:09:29Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "demo",
+    "started_at": "2026-07-20T09:09:29Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
