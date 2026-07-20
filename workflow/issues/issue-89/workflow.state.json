@@ -2,26 +2,22 @@
   "issue": 89,
   "branch": "cursor/issue-89-import-watched-list-9ab1",
   "stage": "plan-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-20T08:49:50Z",
+  "active_skill": "execute",
+  "updated_at": "2026-07-20T08:51:37Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
-    "execute": null,
+    "execute": "bc-9b23d476-3717-4d26-8a5c-1b503418c3f2",
     "planning": "bc-5f5c6bd1-c4c8-44fa-afd1-5bb87ca4e4a3",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 133,
-  "active_agent_id": "bc-5f5c6bd1-c4c8-44fa-afd1-5bb87ca4e4a3",
+  "active_agent_id": "bc-9b23d476-3717-4d26-8a5c-1b503418c3f2",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "execute",
-    "started_at": "2026-07-20T08:49:50Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
