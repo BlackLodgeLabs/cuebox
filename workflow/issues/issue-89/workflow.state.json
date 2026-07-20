@@ -3,7 +3,7 @@
   "branch": "cursor/issue-89-import-watched-list-9ab1",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-20T08:35:46Z",
+  "updated_at": "2026-07-20T08:39:10Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 133,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
