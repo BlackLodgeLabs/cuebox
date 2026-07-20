@@ -1,9 +1,9 @@
 {
   "issue": 89,
   "branch": "cursor/issue-89-import-watched-list-9ab1",
-  "stage": "spec-needs-info",
+  "stage": "spec-in-progress",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-20T07:48:02Z",
+  "updated_at": "2026-07-20T08:34:58Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
