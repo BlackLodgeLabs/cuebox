@@ -1,15 +1,9 @@
 {
   "issue": 89,
   "branch": "cursor/issue-89-import-watched-list-9ab1",
-<<<<<<< HEAD
-  "stage": "plan-ready",
-  "active_skill": "execute",
-  "updated_at": "2026-07-20T08:51:37Z",
-=======
   "stage": "execute-in-progress",
   "active_skill": "execute",
-  "updated_at": "2026-07-20T08:52:20Z",
->>>>>>> 70b13b2 (chore(workflow): mark issue #89 execute in progress)
+  "updated_at": "2026-07-20T08:53:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -28,6 +22,5 @@
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 2
-  },
-  "handoff_deferred": null
+  }
 }
