@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import SyncSettingsPage from "@/app/settings/sync/page";
 
 const rssStatusState = vi.hoisted(() => ({
@@ -40,6 +40,11 @@ vi.mock("@/hooks/use-sync", () => ({
 }));
 
 describe("SyncSettingsPage", () => {
+  afterEach(() => {
+    cleanup();
+    syncWatchedMutate.mockReset();
+  });
+
   it("prefills the RSS username from saved config", async () => {
     rssStatusState.username = "saveduser";
     render(<SyncSettingsPage />);
@@ -70,10 +75,10 @@ describe("SyncSettingsPage", () => {
     render(<SyncSettingsPage />);
 
     expect(
-      screen.getByRole("heading", { name: /import watched history/i }),
+      screen.getByText(/upload letterboxd.s watched, ratings, and diary/i),
     ).toBeInTheDocument();
     const importButton = screen.getByRole("button", {
-      name: /import watched history/i,
+      name: /^import watched history$/i,
     });
     expect(importButton).toBeDisabled();
   });
@@ -97,14 +102,13 @@ describe("SyncSettingsPage", () => {
       new File(["d"], "diary.csv", { type: "text/csv" }),
     ];
     const inputs = document.querySelectorAll('input[type="file"]');
-    // First file input is watchlist CSV; next three are watched import.
     expect(inputs.length).toBeGreaterThanOrEqual(4);
     fireEvent.change(inputs[1]!, { target: { files: [files[0]] } });
     fireEvent.change(inputs[2]!, { target: { files: [files[1]] } });
     fireEvent.change(inputs[3]!, { target: { files: [files[2]] } });
 
     const importButton = screen.getByRole("button", {
-      name: /import watched history/i,
+      name: /^import watched history$/i,
     });
     await waitFor(() => expect(importButton).not.toBeDisabled());
     fireEvent.click(importButton);
