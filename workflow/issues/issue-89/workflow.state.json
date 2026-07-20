@@ -2,29 +2,26 @@
   "issue": 89,
   "branch": "cursor/issue-89-import-watched-list-9ab1",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-20T08:41:54Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-20T08:43:20Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-5f5c6bd1-c4c8-44fa-afd1-5bb87ca4e4a3",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 133,
-  "active_agent_id": null,
+  "active_agent_id": "bc-5f5c6bd1-c4c8-44fa-afd1-5bb87ca4e4a3",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-20T08:41:54Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "handoff_deferred": null
 }
