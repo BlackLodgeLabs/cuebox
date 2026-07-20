@@ -2,10 +2,10 @@
   "issue": 89,
   "branch": "cursor/issue-89-import-watched-list-9ab1",
   "stage": "create-pr-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-20T09:40:29Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-20T09:42:00Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-3f07a3f1-adfc-46a8-8380-c8e3fd79b47c",
     "create-pr": "bc-a054c8ae-e352-4b19-94ef-e3cd91c15795",
     "demo": "bc-d527f4de-451b-4449-b260-474ca6eeb91e",
     "execute": "bc-9b23d476-3717-4d26-8a5c-1b503418c3f2",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 133,
-  "active_agent_id": null,
+  "active_agent_id": "bc-3f07a3f1-adfc-46a8-8380-c8e3fd79b47c",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-20T09:40:29Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
