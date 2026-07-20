@@ -44,6 +44,17 @@ def get_by_letterboxd_uri(db: Session, letterboxd_uri: str) -> Film | None:
     return db.scalars(stmt).first()
 
 
+def find_by_title_year(db: Session, title: str, year: int | None) -> Film | None:
+    """Exact case-insensitive title (+ optional year) match; returns only if unique."""
+    stmt = select(Film).where(func.lower(Film.title) == title.strip().lower())
+    if year is not None:
+        stmt = stmt.where(Film.year == year)
+    matches = list(db.scalars(stmt).all())
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
 def find_for_rss_watched(
     db: Session,
     letterboxd_uri: str,

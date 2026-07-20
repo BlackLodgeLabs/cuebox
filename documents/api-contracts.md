@@ -951,6 +951,65 @@ Same rules as `POST /import` (§3.1), except the 500-film limit applies to the p
 
 -----
 
+### 6.1.1 Import Watched History
+
+Bulk-import Letterboxd watched-library exports (`watched.csv` + `ratings.csv` + `diary.csv`) into Cuebox watch history. Separate from watchlist CSV sync. Does **not** enforce the 500 active watchlist cap. New films are created without an active watchlist entry and enqueued for enrichment.
+
+```
+POST /sync/watched
+Content-Type: multipart/form-data
+```
+
+#### Request
+
+|Field    |Type|Required|Description                         |
+|---------|----|--------|------------------------------------|
+|`watched`|file|yes     |Letterboxd `watched.csv` export     |
+|`ratings`|file|yes     |Letterboxd `ratings.csv` export     |
+|`diary`  |file|yes     |Letterboxd `diary.csv` export       |
+
+**Merge rules (summary)**
+
+- Join key: `Name` + `Year` (trimmed), starting from `watched.csv`
+- Diary `Watched Date` is used for `watched_at` (never diary `Date`)
+- No diary row → `watched_at = 1984-09-28`; score from ratings or `null`
+- Diary without rating → `pending_watch_review` (review queue); multi-diary extras staged until finalize
+- Rated paths write completed `film_watches` and set `status = watched`
+- Re-upload skips existing non-pending `(film_id, watched_at)` pairs
+
+#### Response `200 OK`
+
+```json
+{
+  "films_seen": 10,
+  "films_created": 3,
+  "watches_created": 12,
+  "watches_skipped_duplicate": 2,
+  "pending_review": 1,
+  "enrichment_job_id": "a1b2c3d4-...",
+  "failures": []
+}
+```
+
+|Field                       |Type   |Description                                      |
+|----------------------------|-------|-------------------------------------------------|
+|`films_seen`                |integer|Watched.csv rows processed                       |
+|`films_created`             |integer|New film stubs created                           |
+|`watches_created`           |integer|New completed watch rows inserted                |
+|`watches_skipped_duplicate` |integer|Skipped as existing `(film_id, watched_at)`      |
+|`pending_review`            |integer|Films sent/refreshed in watch review queue       |
+|`enrichment_job_id`         |uuid\|null|Import job id when new films need enrichment  |
+|`failures`                  |array  |Per-film failures (`title`, `year`, `letterboxd_uri`, `reason`)|
+
+#### Errors
+
+|Code                |HTTP|Trigger                             |
+|--------------------|----|------------------------------------|
+|`INVALID_CSV_FORMAT`|400 |Missing columns or unparseable file |
+|`VALIDATION_ERROR`  |400 |Empty file or missing multipart field|
+
+-----
+
 ### 6.2 Configure RSS Sync
 
 Store or update the Letterboxd RSS username used for automatic polling. Polling runs every 15 minutes once configured.

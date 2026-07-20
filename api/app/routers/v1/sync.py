@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import validation_error
-from app.dependencies import get_db, get_sync_service
+from app.dependencies import get_db, get_sync_service, get_watched_import_service
 from app.repositories import sync_config_repository
 from app.schemas.sync import (
     FilmSyncSummary,
@@ -14,10 +14,26 @@ from app.schemas.sync import (
     RssConfigResponse,
     RssStatusResponse,
     SyncCsvResponse,
+    SyncWatchedFailure,
+    SyncWatchedResponse,
 )
 from app.services.sync_service import SyncService
+from app.services.watched_import_service import WatchedImportService
 
 router = APIRouter(prefix="/sync", tags=["sync"])
+
+
+def _require_csv(file: UploadFile | None, field_name: str) -> UploadFile:
+    if file is None:
+        raise validation_error(f"{field_name} file field is required")
+    filename = file.filename or ""
+    content_type = file.content_type or ""
+    if not (
+        filename.lower().endswith(".csv")
+        or content_type in ("text/csv", "application/csv", "application/vnd.ms-excel")
+    ):
+        raise validation_error(f"{field_name} must be a CSV file")
+    return file
 
 
 @router.post("/csv", response_model=SyncCsvResponse)
@@ -45,6 +61,45 @@ async def sync_csv(
         unchanged=result.unchanged,
         failed=result.failed,
         added_films=[FilmSyncSummary(**item) for item in result.added_films],
+    )
+
+
+@router.post("/watched", response_model=SyncWatchedResponse)
+async def sync_watched(
+    background_tasks: BackgroundTasks,
+    watched: UploadFile | None = None,
+    ratings: UploadFile | None = None,
+    diary: UploadFile | None = None,
+    db: Session = Depends(get_db),
+    watched_import_service: WatchedImportService = Depends(get_watched_import_service),
+) -> SyncWatchedResponse:
+    watched_file = _require_csv(watched, "watched")
+    ratings_file = _require_csv(ratings, "ratings")
+    diary_file = _require_csv(diary, "diary")
+
+    result = watched_import_service.import_watched(
+        db,
+        await watched_file.read(),
+        await ratings_file.read(),
+        await diary_file.read(),
+        background_tasks,
+    )
+    return SyncWatchedResponse(
+        films_seen=result.films_seen,
+        films_created=result.films_created,
+        watches_created=result.watches_created,
+        watches_skipped_duplicate=result.watches_skipped_duplicate,
+        pending_review=result.pending_review,
+        enrichment_job_id=result.enrichment_job_id,
+        failures=[
+            SyncWatchedFailure(
+                title=item.title,
+                year=item.year,
+                letterboxd_uri=item.letterboxd_uri,
+                reason=item.reason,
+            )
+            for item in result.failures
+        ],
     )
 
 

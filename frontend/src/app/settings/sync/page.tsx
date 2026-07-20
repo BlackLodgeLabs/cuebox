@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 import { Button } from "@/components/ui/button";
@@ -19,20 +20,29 @@ import {
   useSyncCsv,
   useSyncRssConfig,
   useSyncRssStatus,
+  useSyncWatched,
 } from "@/hooks/use-sync";
 import { ApiClientError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/error-messages";
-import type { SyncCsvResponse } from "@/types/api";
+import type { SyncCsvResponse, SyncWatchedResponse } from "@/types/api";
 
 export default function SyncSettingsPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<SyncCsvResponse | null>(null);
+  const [watchedFile, setWatchedFile] = useState<File | null>(null);
+  const [ratingsFile, setRatingsFile] = useState<File | null>(null);
+  const [diaryFile, setDiaryFile] = useState<File | null>(null);
+  const [watchedError, setWatchedError] = useState<string | null>(null);
+  const [watchedResult, setWatchedResult] = useState<SyncWatchedResponse | null>(
+    null,
+  );
   const [username, setUsername] = useState("");
   const [rssError, setRssError] = useState<string | null>(null);
   const usernameEdited = useRef(false);
 
   const syncCsv = useSyncCsv();
+  const syncWatched = useSyncWatched();
   const syncRss = useSyncRssConfig();
   const {
     data: rssStatus,
@@ -71,6 +81,37 @@ export default function SyncSettingsPage() {
     }
   };
 
+  const handleWatchedImport = async () => {
+    if (!watchedFile || !ratingsFile || !diaryFile) {
+      setWatchedError("Select watched.csv, ratings.csv, and diary.csv.");
+      return;
+    }
+    setWatchedError(null);
+    try {
+      const result = await syncWatched.mutateAsync({
+        watched: watchedFile,
+        ratings: ratingsFile,
+        diary: diaryFile,
+      });
+      setWatchedResult(result);
+      setWatchedFile(null);
+      setRatingsFile(null);
+      setDiaryFile(null);
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        setWatchedError(
+          getErrorMessage({
+            code: error.code as Parameters<typeof getErrorMessage>[0]["code"],
+            message: error.message,
+            details: error.details,
+          }),
+        );
+      } else {
+        setWatchedError("Watched history import failed. Please try again.");
+      }
+    }
+  };
+
   const handleRssSave = async () => {
     setRssError(null);
     try {
@@ -89,6 +130,8 @@ export default function SyncSettingsPage() {
       }
     }
   };
+
+  const watchedReady = Boolean(watchedFile && ratingsFile && diaryFile);
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -134,6 +177,91 @@ export default function SyncSettingsPage() {
                   <li className="text-destructive">Failed: {syncResult.failed}</li>
                 )}
               </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Import watched history</CardTitle>
+          <CardDescription>
+            Upload Letterboxd&apos;s watched, ratings, and diary CSVs to seed your
+            Cuebox watch history. Separate from watchlist sync — does not count
+            toward the 500 active-film cap.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FileUpload
+            label="watched.csv"
+            selectedFile={watchedFile}
+            onFileSelect={(f) => {
+              setWatchedFile(f);
+              setWatchedError(null);
+            }}
+            disabled={syncWatched.isPending}
+          />
+          <FileUpload
+            label="ratings.csv"
+            selectedFile={ratingsFile}
+            onFileSelect={(f) => {
+              setRatingsFile(f);
+              setWatchedError(null);
+            }}
+            disabled={syncWatched.isPending}
+          />
+          <FileUpload
+            label="diary.csv"
+            selectedFile={diaryFile}
+            onFileSelect={(f) => {
+              setDiaryFile(f);
+              setWatchedError(null);
+            }}
+            disabled={syncWatched.isPending}
+          />
+          {watchedError && (
+            <p className="text-sm text-destructive">{watchedError}</p>
+          )}
+          <Button
+            onClick={() => void handleWatchedImport()}
+            disabled={!watchedReady || syncWatched.isPending}
+          >
+            {syncWatched.isPending ? "Importing…" : "Import watched history"}
+          </Button>
+          {watchedResult && (
+            <div className="rounded-md border p-4 text-sm">
+              <p className="font-medium">Watched history imported</p>
+              <ul className="mt-2 space-y-1 text-muted-foreground">
+                <li>Films seen: {watchedResult.films_seen}</li>
+                <li>Films created: {watchedResult.films_created}</li>
+                <li>Watches created: {watchedResult.watches_created}</li>
+                <li>
+                  Watches skipped (duplicates):{" "}
+                  {watchedResult.watches_skipped_duplicate}
+                </li>
+                <li>Sent to review queue: {watchedResult.pending_review}</li>
+                {watchedResult.failures.length > 0 && (
+                  <li className="text-destructive">
+                    Failures: {watchedResult.failures.length}
+                  </li>
+                )}
+              </ul>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <Link
+                  href="/watchlist?tab=watched"
+                  className="text-sm text-primary underline-offset-4 hover:underline"
+                >
+                  View Watched list
+                </Link>
+                {watchedResult.pending_review > 0 && (
+                  <Link
+                    href="/watchlist?tab=active"
+                    className="text-sm text-primary underline-offset-4 hover:underline"
+                  >
+                    Open watch review queue
+                  </Link>
+                )}
+              </div>
             </div>
           )}
         </CardContent>

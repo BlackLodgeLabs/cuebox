@@ -260,7 +260,11 @@ export function FilmDetailView({
                   className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 py-3 last:border-0"
                 >
                   <div>
-                    <p className="font-medium">{watch.score}★ · {watch.watched_at}</p>
+                    <p className="font-medium">
+                      {watch.score == null
+                        ? `Unrated · ${watch.watched_at}`
+                        : `${watch.score}★ · ${watch.watched_at}`}
+                    </p>
                     {watch.notes && (
                       <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
                         {watch.notes}

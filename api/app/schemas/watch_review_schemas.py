@@ -10,7 +10,7 @@ from app.schemas.film_schemas import PaginationMeta
 
 class FilmWatchBlock(BaseModel):
     id: UUID
-    score: float
+    score: float | None
     watched_at: date
     notes: str | None = None
     source: str

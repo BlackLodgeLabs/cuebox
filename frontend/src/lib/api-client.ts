@@ -38,6 +38,7 @@ import type {
   WatchlistAddResponse,
   HistoryCard,
   SyncCsvResponse,
+  SyncWatchedResponse,
   SyncRssConfigResponse,
   SyncRssStatusResponse,
 } from "@/types/api";
@@ -318,6 +319,22 @@ export function deleteRecommendation(sessionId: string): Promise<void> {
 
 export function postSyncCsv(file: File): Promise<SyncCsvResponse> {
   return fetchMultipart<SyncCsvResponse>("/sync/csv", file);
+}
+
+export function postSyncWatched(
+  watched: File,
+  ratings: File,
+  diary: File,
+): Promise<SyncWatchedResponse> {
+  const formData = new FormData();
+  formData.append("watched", watched);
+  formData.append("ratings", ratings);
+  formData.append("diary", diary);
+
+  return fetchApi<SyncWatchedResponse>("/sync/watched", {
+    method: "POST",
+    body: formData,
+  });
 }
 
 export function putSyncRss(username: string): Promise<SyncRssConfigResponse> {

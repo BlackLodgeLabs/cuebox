@@ -6,8 +6,14 @@ const rssStatusState = vi.hoisted(() => ({
   username: undefined as string | undefined,
 }));
 
+const syncWatchedMutate = vi.hoisted(() => vi.fn());
+
 vi.mock("@/hooks/use-sync", () => ({
   useSyncCsv: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useSyncWatched: () => ({
+    mutateAsync: syncWatchedMutate,
+    isPending: false,
+  }),
   useSyncRssConfig: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useSyncRssStatus: () => ({
     data: rssStatusState.username
@@ -57,5 +63,57 @@ describe("SyncSettingsPage", () => {
     rerender(<SyncSettingsPage />);
 
     expect(input).toHaveValue("typing-user");
+  });
+
+  it("shows Import watched history card and requires three files", () => {
+    rssStatusState.username = undefined;
+    render(<SyncSettingsPage />);
+
+    expect(
+      screen.getByRole("heading", { name: /import watched history/i }),
+    ).toBeInTheDocument();
+    const importButton = screen.getByRole("button", {
+      name: /import watched history/i,
+    });
+    expect(importButton).toBeDisabled();
+  });
+
+  it("imports when all three files are selected and shows summary", async () => {
+    rssStatusState.username = undefined;
+    syncWatchedMutate.mockResolvedValue({
+      films_seen: 10,
+      films_created: 10,
+      watches_created: 11,
+      watches_skipped_duplicate: 0,
+      pending_review: 1,
+      enrichment_job_id: "job-1",
+      failures: [],
+    });
+    render(<SyncSettingsPage />);
+
+    const files = [
+      new File(["w"], "watched.csv", { type: "text/csv" }),
+      new File(["r"], "ratings.csv", { type: "text/csv" }),
+      new File(["d"], "diary.csv", { type: "text/csv" }),
+    ];
+    const inputs = document.querySelectorAll('input[type="file"]');
+    // First file input is watchlist CSV; next three are watched import.
+    expect(inputs.length).toBeGreaterThanOrEqual(4);
+    fireEvent.change(inputs[1]!, { target: { files: [files[0]] } });
+    fireEvent.change(inputs[2]!, { target: { files: [files[1]] } });
+    fireEvent.change(inputs[3]!, { target: { files: [files[2]] } });
+
+    const importButton = screen.getByRole("button", {
+      name: /import watched history/i,
+    });
+    await waitFor(() => expect(importButton).not.toBeDisabled());
+    fireEvent.click(importButton);
+
+    await waitFor(() => {
+      expect(syncWatchedMutate).toHaveBeenCalled();
+      expect(screen.getByText(/watched history imported/i)).toBeInTheDocument();
+      expect(screen.getByText(/films seen: 10/i)).toBeInTheDocument();
+      expect(screen.getByText(/view watched list/i)).toBeInTheDocument();
+    });
   });
 });

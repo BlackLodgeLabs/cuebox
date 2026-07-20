@@ -10,6 +10,7 @@ from app.services.provider_service import ProviderService
 from app.services.recommendation_service import RecommendationService
 from app.services.sync_service import SyncService
 from app.services.watch_provider_service import WatchProviderService
+from app.services.watched_import_service import WatchedImportService
 from app.services.watchlist_add_service import WatchlistAddService
 
 
@@ -27,6 +28,10 @@ def get_metadata_service(request: Request) -> MetadataService:
 
 def get_sync_service(request: Request) -> SyncService:
     return SyncService(get_provider_service(request))
+
+
+def get_watched_import_service(request: Request) -> WatchedImportService:
+    return WatchedImportService(get_provider_service(request))
 
 
 def get_recommendation_service(request: Request) -> RecommendationService:
@@ -53,6 +58,7 @@ __all__ = [
     "get_provider_service",
     "get_recommendation_service",
     "get_sync_service",
+    "get_watched_import_service",
     "get_watch_provider_service",
     "get_watchlist_add_service",
 ]

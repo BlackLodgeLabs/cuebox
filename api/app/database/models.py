@@ -127,11 +127,11 @@ class FilmWatch(Base):
     __tablename__ = "film_watches"
     __table_args__ = (
         CheckConstraint(
-            "score >= 0.5 AND score <= 5.0",
+            "score IS NULL OR (score >= 0.5 AND score <= 5.0)",
             name="chk_film_watches_score_range",
         ),
         CheckConstraint(
-            "source IN ('manual', 'rss')",
+            "source IN ('manual', 'rss', 'letterboxd_import')",
             name="chk_film_watches_source",
         ),
     )
@@ -140,7 +140,7 @@ class FilmWatch(Base):
     film_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("films.id", ondelete="CASCADE"), nullable=False
     )
-    score: Mapped[Decimal] = mapped_column(Numeric(2, 1), nullable=False)
+    score: Mapped[Decimal | None] = mapped_column(Numeric(2, 1), nullable=True)
     watched_at: Mapped[date] = mapped_column(Date, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
     source: Mapped[WatchSource] = mapped_column(
@@ -148,6 +148,7 @@ class FilmWatch(Base):
         nullable=False,
     )
     is_pending: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    staged_watched_dates: Mapped[list[str] | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
