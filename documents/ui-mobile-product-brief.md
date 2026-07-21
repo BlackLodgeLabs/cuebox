@@ -36,10 +36,10 @@ Cuebox is a locally hosted, single-user app that helps someone decide **what to 
 
 **Home is the default landing** and acts as a hub of quick links:
 
-1. Add a film / mark watched → opens **search-picker** (see prerequisites)
-2. Create a recommendation → Recommend flow
-3. Mark watched (via same picker pattern) / related watchlist actions as designed with the picker
-4. History → history list (History is **not** a bottom tab)
+1. **Add a film** → opens **search-picker** (see prerequisites)
+2. **Create a recommendation** → Recommend flow
+3. **Mark a film watched** → opens the **same search-picker** (Mark watched vs Add depending on whether the title is already on the list)
+4. **History** → history list (History is **not** a bottom tab)
 
 **Recommend** remains a primary product job: visible as both a Home CTA and its own tab.
 
