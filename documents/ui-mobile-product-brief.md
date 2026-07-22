@@ -62,7 +62,7 @@ Where-to-watch and questionnaire summary live on **stage 3**, not on the ceremon
 **Poster-first grid** (posters are the primary visual asset app-wide when they don’t fight the job):
 
 - Poster + **title below only**
-- **⋯** on the poster (e.g. top-right) for actions: watched / archive / etc.
+- **more_horiz** icon (or standard ellipsis) on the poster (e.g. top-right) for actions: watched / archive / etc.
 - **No metadata** on grid cells
 - **Filter** control (top-right) opens a filter/sort menu driven by Cuebox-stored metadata
 - Status tabs remain: Watchlist / Watched / Archived (product model per lifecycle work)
