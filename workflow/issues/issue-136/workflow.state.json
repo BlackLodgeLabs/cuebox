@@ -3,7 +3,7 @@
   "branch": "cursor/issue-136-home-search-picker-e134",
   "stage": "create-pr-ready",
   "active_skill": null,
-  "updated_at": "2026-07-24T13:10:48Z",
+  "updated_at": "2026-07-24T13:14:32Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-30c29872-5b06-4256-aac5-befd5dea4f55",
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-24T13:14:32Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
