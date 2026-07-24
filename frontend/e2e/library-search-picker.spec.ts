@@ -83,7 +83,8 @@ test.describe("library search picker (mocked API)", () => {
 
   test("home shows Add and Mark watched entries into picker", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Your watchlist" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
+    await expect(page.getByText("Your watchlist", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Add a film" })).toHaveAttribute(
       "href",
       "/search?intent=add",

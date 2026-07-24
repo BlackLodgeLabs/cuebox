@@ -117,7 +117,7 @@ test.describe("watchlist add flow (mocked API)", () => {
 
   test("home shows add film CTA between recommendation and history", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Your watchlist" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
     await expect(page.getByText("12 films on your watchlist")).toBeVisible();
     const links = page.getByRole("link");
     await expect(links.filter({ hasText: "View watchlist" })).toHaveAttribute("href", "/watchlist");
