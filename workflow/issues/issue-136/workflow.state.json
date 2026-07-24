@@ -3,7 +3,7 @@
   "branch": "cursor/issue-136-home-search-picker-e134",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-24T11:52:09Z",
+  "updated_at": "2026-07-24T11:55:48Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 138,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
