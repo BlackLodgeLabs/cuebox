@@ -1,9 +1,9 @@
 {
   "issue": 136,
   "branch": "cursor/issue-136-home-search-picker-e134",
-  "stage": "plan-in-progress",
-  "active_skill": "planning",
-  "updated_at": "2026-07-24T11:03:05Z",
+  "stage": "plan-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-24T12:04:18Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,11 +17,7 @@
   "active_agent_id": "bc-6fb95dd4-53da-4c90-9e02-ed132e251bbf",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-24T11:58:53Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
