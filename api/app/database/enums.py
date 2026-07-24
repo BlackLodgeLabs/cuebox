@@ -13,6 +13,7 @@ class FilmStatus(str, enum.Enum):
 class WatchSource(str, enum.Enum):
     MANUAL = "manual"
     RSS = "rss"
+    LETTERBOXD_IMPORT = "letterboxd_import"
 
 
 class FilmAddSource(str, enum.Enum):

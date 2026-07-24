@@ -38,3 +38,20 @@ class RssStatusResponse(BaseModel):
     last_polled_at: datetime | None = None
     last_poll_status: str | None = None
     events_processed_last_poll: int | None = None
+
+
+class SyncWatchedFailure(BaseModel):
+    title: str
+    year: int | None = None
+    letterboxd_uri: str
+    reason: str
+
+
+class SyncWatchedResponse(BaseModel):
+    films_seen: int
+    films_created: int
+    watches_created: int
+    watches_skipped_duplicate: int
+    pending_review: int
+    enrichment_job_id: uuid.UUID | None = None
+    failures: list[SyncWatchedFailure] = Field(default_factory=list)

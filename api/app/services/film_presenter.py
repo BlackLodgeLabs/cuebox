@@ -20,7 +20,7 @@ from app.schemas.watch_review_schemas import FilmWatchBlock, WatchReviewRequired
 def watch_to_block(watch: FilmWatch) -> FilmWatchBlock:
     return FilmWatchBlock(
         id=watch.id,
-        score=float(watch.score),
+        score=float(watch.score) if watch.score is not None else None,
         watched_at=watch.watched_at,
         notes=watch.notes,
         source=watch.source.value if hasattr(watch.source, "value") else str(watch.source),
@@ -33,7 +33,7 @@ def watch_to_block(watch: FilmWatch) -> FilmWatchBlock:
 def watch_to_summary(watch: FilmWatch) -> FilmWatchSummary:
     return FilmWatchSummary(
         id=watch.id,
-        score=float(watch.score),
+        score=float(watch.score) if watch.score is not None else None,
         watched_at=watch.watched_at,
         notes=watch.notes,
         source=watch.source.value if hasattr(watch.source, "value") else str(watch.source),

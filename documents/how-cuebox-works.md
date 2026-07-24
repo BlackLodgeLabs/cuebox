@@ -15,6 +15,8 @@ The basic journey looks like this:
 3. **Answer a short questionnaire** about your mood and constraints.
 4. **Receive a pick** (plus a few alternatives) with plain-language explanations.
 
+Optionally, under **Settings → Sync**, you can also **import watched history** from Letterboxd’s `watched.csv`, `ratings.csv`, and `diary.csv` exports. That seeds your Cuebox watch diary (and review queue for unscored diary entries) without counting toward the 500-film active watchlist cap.
+
 Cuebox is designed to feel like a film-loving friend making a suggestion, not a search engine returning one fixed “correct” answer. If several films are a good fit, results can vary slightly between runs.
 
 ---
@@ -411,7 +413,7 @@ erDiagram
 |-------|------|
 | `import_jobs` | Tracks a CSV import run (progress, failures, completion) |
 | `films` | Core watchlist record — title, year, Letterboxd link, watch status, enrichment status |
-| `film_watches` | Personal watch diary entries (score, date, notes); pending row while review is incomplete |
+| `film_watches` | Personal watch diary entries (score may be null for unrated imports, date, notes); pending row while review is incomplete; optional staged dates for multi-diary unscored imports |
 | `film_metadata` | Catalog facts from TMDB/OMDb (synopsis, runtime, genres, ratings, artwork) |
 | `film_semantic_profiles` | AI-generated taste profile (themes, pacing, complexity, summary) |
 | `film_embeddings` | Vector fingerprint for semantic similarity search |

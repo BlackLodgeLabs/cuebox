@@ -109,3 +109,10 @@ def get_active_by_uri(db: Session, letterboxd_uri: str) -> WatchlistEntry | None
         .options(selectinload(WatchlistEntry.film))
     )
     return db.scalars(stmt).first()
+
+
+def has_any_entry_for_film(db: Session, film_id: uuid.UUID) -> bool:
+    stmt = select(func.count()).select_from(WatchlistEntry).where(
+        WatchlistEntry.film_id == film_id
+    )
+    return (db.scalar(stmt) or 0) > 0

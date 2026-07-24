@@ -204,9 +204,11 @@ export function WatchReviewDialog({
 }
 
 export function watchToDialogProps(watch: FilmWatch) {
+  const score = watch.score;
   return {
     watchId: watch.id,
-    initialScore: watch.is_pending && watch.score <= 0.5 ? null : watch.score,
+    initialScore:
+      score == null || (watch.is_pending && score <= 0.5) ? null : score,
     initialWatchedAt: watch.watched_at,
     initialNotes: watch.notes,
   };

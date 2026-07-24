@@ -310,17 +310,18 @@ CREATE INDEX idx_film_embeddings_type_version ON film_embeddings (embedding_type
 
 ### 4.5.1 `film_watches`
 
-Personal watch diary entries (score, date, notes). Many-to-one with `films`. While `films.status = pending_watch_review`, at most one row has `is_pending = true` per film.
+Personal watch diary entries (score, date, notes). Many-to-one with `films`. While `films.status = pending_watch_review`, at most one row has `is_pending = true` per film. Completed watches may have a null `score` (watched-only Letterboxd import). `staged_watched_dates` holds extra diary dates for unscored multi-diary imports until review is finalized.
 
 ```sql
 CREATE TABLE film_watches (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     film_id     UUID NOT NULL REFERENCES films (id) ON DELETE CASCADE,
-    score       NUMERIC(2, 1) NOT NULL CHECK (score >= 0.5 AND score <= 5.0),
+    score       NUMERIC(2, 1) CHECK (score IS NULL OR (score >= 0.5 AND score <= 5.0)),
     watched_at  DATE NOT NULL,
     notes       TEXT,
-    source      TEXT NOT NULL CHECK (source IN ('manual', 'rss')),
+    source      TEXT NOT NULL CHECK (source IN ('manual', 'rss', 'letterboxd_import')),
     is_pending  BOOLEAN NOT NULL DEFAULT false,
+    staged_watched_dates JSONB,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -328,6 +329,8 @@ CREATE TABLE film_watches (
 CREATE INDEX idx_film_watches_film_watched_at ON film_watches (film_id, watched_at DESC);
 CREATE UNIQUE INDEX uq_film_watches_one_pending_per_film
     ON film_watches (film_id) WHERE is_pending = true;
+CREATE UNIQUE INDEX uq_film_watches_film_watched_at_completed
+    ON film_watches (film_id, watched_at) WHERE is_pending = false;
 ```
 
 -----

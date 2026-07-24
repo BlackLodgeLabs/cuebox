@@ -20,17 +20,55 @@ def create_pending(
     source: WatchSource,
     watched_at: date,
     score: float | Decimal | None = None,
+    staged_watched_dates: list[str] | None = None,
 ) -> FilmWatch:
     watch = FilmWatch(
         film_id=film_id,
         source=source,
         watched_at=watched_at,
-        score=Decimal(str(score)) if score is not None else Decimal("0.5"),
+        score=Decimal(str(score)) if score is not None else None,
         is_pending=True,
+        staged_watched_dates=staged_watched_dates,
     )
     db.add(watch)
     db.flush()
     return watch
+
+
+def create_completed(
+    db: Session,
+    *,
+    film_id: uuid.UUID,
+    source: WatchSource,
+    watched_at: date,
+    score: float | Decimal | None = None,
+    notes: str | None = None,
+) -> FilmWatch:
+    watch = FilmWatch(
+        film_id=film_id,
+        source=source,
+        watched_at=watched_at,
+        score=Decimal(str(score)) if score is not None else None,
+        notes=notes,
+        is_pending=False,
+        staged_watched_dates=None,
+    )
+    db.add(watch)
+    db.flush()
+    return watch
+
+
+def get_completed_by_film_and_date(
+    db: Session,
+    film_id: uuid.UUID,
+    watched_at: date,
+) -> FilmWatch | None:
+    stmt = select(FilmWatch).where(
+        FilmWatch.film_id == film_id,
+        FilmWatch.watched_at == watched_at,
+        FilmWatch.is_pending.is_(False),
+    )
+    return db.scalars(stmt).first()
 
 
 def get_pending_for_film(db: Session, film_id: uuid.UUID) -> FilmWatch | None:
@@ -53,6 +91,7 @@ def finalize_pending(
     watch.watched_at = watched_at
     watch.notes = notes
     watch.is_pending = False
+    watch.staged_watched_dates = None
     db.flush()
     return watch
 
@@ -151,10 +190,13 @@ def update_pending_prefill(
     *,
     watched_at: date,
     score: float | Decimal | None = None,
+    staged_watched_dates: list[str] | None = None,
 ) -> FilmWatch:
     watch.watched_at = watched_at
     if score is not None:
         watch.score = Decimal(str(score))
+    if staged_watched_dates is not None:
+        watch.staged_watched_dates = staged_watched_dates
     db.flush()
     return watch
 

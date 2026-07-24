@@ -82,10 +82,10 @@ export type FilmStatus = "active" | "pending_watch_review" | "watched" | "archiv
 
 export interface FilmWatch {
   id: string;
-  score: number;
+  score: number | null;
   watched_at: string;
   notes: string | null;
-  source: "manual" | "rss";
+  source: "manual" | "rss" | "letterboxd_import";
   is_pending: boolean;
   created_at: string;
   updated_at: string;
@@ -271,6 +271,23 @@ export interface SyncCsvResponse {
   unchanged: number;
   failed: number;
   added_films: SyncFilmSummary[];
+}
+
+export interface SyncWatchedFailure {
+  title: string;
+  year: number | null;
+  letterboxd_uri: string;
+  reason: string;
+}
+
+export interface SyncWatchedResponse {
+  films_seen: number;
+  films_created: number;
+  watches_created: number;
+  watches_skipped_duplicate: number;
+  pending_review: number;
+  enrichment_job_id: string | null;
+  failures: SyncWatchedFailure[];
 }
 
 export interface SyncRssConfigResponse {

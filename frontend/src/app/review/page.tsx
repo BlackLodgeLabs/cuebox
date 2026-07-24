@@ -227,7 +227,8 @@ export default function ReviewPage() {
                     </CardTitle>
                     <CardDescription>
                       Watched {film.pending_watch.watched_at}
-                      {film.pending_watch.score > 0.5
+                      {film.pending_watch.score != null &&
+                      film.pending_watch.score > 0.5
                         ? ` · ${film.pending_watch.score}★`
                         : ""}
                     </CardDescription>

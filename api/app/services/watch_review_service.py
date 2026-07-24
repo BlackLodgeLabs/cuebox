@@ -54,6 +54,9 @@ class WatchReviewService:
         if pending is None:
             raise conflict("No pending watch record found")
 
+        staged_dates = list(pending.staged_watched_dates or [])
+        pending_source = pending.source
+
         film_watch_repository.finalize_pending(
             db,
             pending,
@@ -61,6 +64,27 @@ class WatchReviewService:
             watched_at=validated_date,
             notes=notes,
         )
+
+        for raw in staged_dates:
+            try:
+                staged_at = date.fromisoformat(str(raw))
+            except ValueError:
+                continue
+            if staged_at == validated_date:
+                continue
+            existing = film_watch_repository.get_completed_by_film_and_date(
+                db, film_id, staged_at
+            )
+            if existing is not None:
+                continue
+            film_watch_repository.create_completed(
+                db,
+                film_id=film_id,
+                source=pending_source,
+                watched_at=staged_at,
+                score=validated_score,
+            )
+
         film_repository.mark_watched(db, film)
         db.flush()
         return film
@@ -73,7 +97,18 @@ class WatchReviewService:
         if film.status != FilmStatus.PENDING_WATCH_REVIEW:
             raise conflict("Film is not pending watch review")
 
+        pending = film_watch_repository.get_pending_for_film(db, film_id)
+        pending_source = pending.source if pending is not None else None
         film_watch_repository.delete_pending_for_film(db, film_id)
+
+        had_watchlist = watchlist_repository.has_any_entry_for_film(db, film_id)
+        if (
+            pending_source == WatchSource.LETTERBOXD_IMPORT
+            and not had_watchlist
+        ):
+            film_repository.archive_film(db, film)
+            db.flush()
+            return film
 
         if watchlist_repository.count_active(db) >= MAX_ACTIVE_WATCHLIST:
             raise conflict("Active watchlist limit reached")

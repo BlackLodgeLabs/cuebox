@@ -96,7 +96,7 @@ class FilmDetail(BaseModel):
 
 class FilmWatchSummary(BaseModel):
     id: UUID
-    score: float
+    score: float | None
     watched_at: date
     notes: str | None = None
     source: str
