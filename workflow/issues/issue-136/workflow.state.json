@@ -1,9 +1,9 @@
 {
   "issue": 136,
   "branch": "cursor/issue-136-home-search-picker-e134",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-24T11:51:40Z",
+  "updated_at": "2026-07-24T11:52:09Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
