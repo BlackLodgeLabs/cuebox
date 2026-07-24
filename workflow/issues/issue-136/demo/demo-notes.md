@@ -40,3 +40,13 @@ Empty query: idle guidance (“Type a title…”). Nonsense query: “No result
 - GitHub MCP `serverStatus: ready` during demo.
 - No secrets in screenshots or notes.
 - No Scenario 0 / bug-repro artifacts (feature demo).
+
+## Babysit notes
+
+- **Date:** 2026-07-24T13:22:55Z
+- **Commit:** `8a46d11` (babysit-in-progress) / complete push follows
+- **CI:** API CI + Frontend CI success on `8a46d11` after agent push; earlier `github-actions[bot]` workflow-only commits left checks in `action_required` (not a code failure).
+- **Bugbot:** No Bugbot reviews or unresolved must-fix threads after green CI wait.
+- **Merge:** `mergeStateStatus: CLEAN`, mergeable, no conflicts with `main`.
+- **Loops used:** bugbot 0/3, ci_autofix 0/2, total_runs 5/10.
+- **Mark ready:** GitHub MCP `update_pull_request` (`draft: false`) failed: `Resource not accessible by personal access token`. Manual **Ready for review** toggle needed on https://github.com/BlackLodgeLabs/cuebox/pull/138 — do not block `complete` solely for this (MCP-GITHUB.md).
