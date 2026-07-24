@@ -74,7 +74,8 @@ Users should **find and act on a film from Home in one step** (add, mark watched
 ### Global header
 
 1. Magnifying-glass visible in `AppShell` header on all shell screens.
-2. Activate → `/search` → redirect to `/?focus=search` → Home focuses the inline input (returning user).
+2. Place **Search** after the primary nav items (Home…Settings) and **before** the conditional **Review** link.
+3. Activate → `/search` → redirect to `/?focus=search` → Home focuses the inline input (returning user).
 
 ### `/search` alias
 
@@ -87,10 +88,10 @@ Users should **find and act on a film from Home in one step** (add, mark watched
 |----------|---------|
 | Local `active` | **View**, **Mark watched** |
 | Local `pending_watch_review` | **View**, **Complete review** |
-| Local `watched` | **View** only |
+| Local `watched` | **View**, **Return to watchlist** (`watched` → `active` via existing status API; eligible for recommendations again) |
 | TMDB-only | **Add to watchlist**, **Add & mark watched** |
 
-Library actions and dialogs are unchanged from #136. **Add & mark watched** is client-side orchestration only.
+Library actions and dialogs match #136 plus **Return to watchlist** on watched hits (same transition as the Watched tab). **Add & mark watched** is client-side orchestration only.
 
 ### API changes
 
@@ -114,6 +115,13 @@ If execute finds an enrichment race for **Add & mark watched** (status transitio
 ## Open questions
 
 None — ready for planning.
+
+## Spec revision (post-execute feedback)
+
+Human follow-up on PR #147 (no workflow stage change):
+
+1. Header **Search** sits after primary nav items and before conditional **Review**.
+2. Local `watched` hits expose **View** + **Return to watchlist** (`POST/PUT` status → `active`, same as Watched tab).
 
 ## Links
 

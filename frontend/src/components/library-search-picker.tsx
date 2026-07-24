@@ -231,6 +231,23 @@ export function LibrarySearchPicker({
     });
   }
 
+  async function handleReturnToWatchlist(film: FilmSummary) {
+    clearInlineMessages();
+    try {
+      await statusTransition.mutateAsync({
+        filmId: film.id,
+        status: "active",
+      });
+      toast({
+        title: "Returned to watchlist",
+        description: `${film.title} is active again for recommendations.`,
+      });
+      void libraryQuery.refetch();
+    } catch {
+      // useFilmStatusTransition toasts on error
+    }
+  }
+
   async function handleAddTmdb(selected: TmdbSearchResultItem) {
     clearInlineMessages();
     try {
@@ -409,6 +426,7 @@ export function LibrarySearchPicker({
               isAddPending={isAddPending}
               onMarkWatched={(film) => void openMarkWatchedDialog(film)}
               onCompleteReview={openCompleteReviewDialog}
+              onReturnToWatchlist={(film) => void handleReturnToWatchlist(film)}
               onAddTmdb={(result) => void handleAddTmdb(result)}
               onAddAndMarkWatched={(result) => void handleAddAndMarkWatched(result)}
             />
@@ -460,6 +478,7 @@ function SearchHitRow({
   isAddPending,
   onMarkWatched,
   onCompleteReview,
+  onReturnToWatchlist,
   onAddTmdb,
   onAddAndMarkWatched,
 }: {
@@ -468,6 +487,7 @@ function SearchHitRow({
   isAddPending: boolean;
   onMarkWatched: (film: FilmSummary) => void;
   onCompleteReview: (film: FilmSummary) => void;
+  onReturnToWatchlist: (film: FilmSummary) => void;
   onAddTmdb: (result: TmdbSearchResultItem) => void;
   onAddAndMarkWatched: (result: TmdbSearchResultItem) => void;
 }) {
@@ -511,6 +531,16 @@ function SearchHitRow({
               onClick={() => onCompleteReview(film)}
             >
               Complete review
+            </Button>
+          )}
+          {film.status === "watched" && (
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={isStatusPending}
+              onClick={() => onReturnToWatchlist(film)}
+            >
+              Return to watchlist
             </Button>
           )}
         </div>

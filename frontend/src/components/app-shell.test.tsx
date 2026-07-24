@@ -26,7 +26,7 @@ describe("AppShell", () => {
     expect(homeLink).toHaveAttribute("href", "/");
   });
 
-  it("exposes Search films header link to /search", () => {
+  it("exposes Search films header link to /search after main nav and before Review", () => {
     render(
       <AppShell>
         <div>content</div>
@@ -35,6 +35,22 @@ describe("AppShell", () => {
 
     const searchLink = screen.getByRole("link", { name: "Search films" });
     expect(searchLink).toHaveAttribute("href", "/search");
+
+    const navLinks = screen.getAllByRole("link").filter((link) => {
+      const href = link.getAttribute("href");
+      return (
+        href === "/" ||
+        href === "/watchlist" ||
+        href === "/recommend" ||
+        href === "/history" ||
+        href === "/settings/sync" ||
+        href === "/search" ||
+        href === "/review"
+      );
+    });
+    const hrefs = navLinks.map((link) => link.getAttribute("href"));
+    expect(hrefs.indexOf("/search")).toBeGreaterThan(hrefs.indexOf("/settings/sync"));
+    expect(hrefs.indexOf("/search")).toBeLessThan(hrefs.indexOf("/review"));
   });
 
   it("applies text-foreground to active Review nav link", () => {

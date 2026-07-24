@@ -114,7 +114,7 @@ Optional (only if execute finds Home focus awkward without it): small Home unit 
 ### Step 5 — AppShell header search
 
 1. Add a `Link` (icon-only on small screens is fine) using `<Icon name="search" />`, `aria-label="Search films"` (visible text optional; accessible name required), `href="/search"`.
-2. Place it in the header row — e.g. before or after nav items, visually consistent with existing nav `hover-glow` / muted styles; do not treat it as a primary nav “active” route for `/`.
+2. Place it **after** the primary `NAV_ITEMS` and **before** the conditional Review link; muted `hover-glow` styles; do not treat it as a primary nav “active” route for `/`.
 3. Material Symbols `search` works with existing `Icon` (string name; no registry change).
 
 ### Step 6 — Watchlist **Add film** link
@@ -137,7 +137,8 @@ Update `documents/api-contracts.md` §4.7 blurb: picker is embedded on Home; `/s
 | `intent` removed | Unit: render without intent; placeholder **Find a film…**; no emphasize variants |
 | `/search` redirect-only | E2E: `goto("/search")` and `goto("/search?intent=mark-watched")` end at `/` or `/?focus=search` then cleared to `/` with focused input (returning-user stubs) |
 | Home `?focus=search` | E2E: `goto("/?focus=search")` focuses `library-search-input`; URL cleared |
-| Header search icon | Unit `app-shell.test.tsx`: link **Search films** → `/search`; E2E optional click → lands on Home focused |
+| Header search icon | Unit `app-shell.test.tsx`: link **Search films** → `/search`, ordered after Settings and before Review |
+| Watched **Return to watchlist** | Unit: watched hit shows **Return to watchlist**; status call with `active` |
 | TMDB **Add & mark watched** | Unit: mock add → ready film → status PUT `pending_watch_review` → dialog heading; E2E mocked chain preferred |
 | TMDB **Add to watchlist** unchanged | Existing E2E add + enrichment poll → detail (retarget from `/watchlist/add` through redirect to Home picker) |
 | Watchlist **Add film** → `/search` | E2E `watchlist-add.spec.ts` href assert |
@@ -200,3 +201,11 @@ Rollback: revert the PR branch; `/search` page and dual CTAs return.
 **Key changes:** `page.tsx` embeds picker; `library-search-picker.tsx` loses `intent` and gains mark-watched chain; `/search` redirect; AppShell search icon; test + api-contracts updates.  
 **Gate:** Phase 6: `scripts/verify-phase6-gates.sh` exit 0 at `<short-sha>`  
 **How to test:** Seeded Home → search inline; header / `/search` / `/watchlist/add` focus field; TMDB **Add & mark watched** opens review dialog after enrichment.
+
+## Plan revision (post-execute feedback)
+
+Human follow-up on PR #147 — implement without advancing workflow stage:
+
+1. **Header order:** Search after Home…Settings, before Review (`app-shell.tsx`).
+2. **Watched hits:** **View** + **Return to watchlist** → existing `status: "active"` transition (`library-search-picker.tsx`); TMDB rows unchanged.
+3. Update unit tests + SPEC result-actions table accordingly.

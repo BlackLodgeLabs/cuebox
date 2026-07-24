@@ -159,7 +159,7 @@ describe("LibrarySearchPicker", () => {
     );
   });
 
-  it("shows Complete review for pending_watch_review and View only for watched", async () => {
+  it("shows Complete review for pending_watch_review and Return to watchlist for watched", async () => {
     getFilmsMock.mockResolvedValue({
       data: [
         makeFilm({
@@ -181,6 +181,11 @@ describe("LibrarySearchPicker", () => {
       data: [],
       pagination: { total: 0, limit: 20, offset: 0, has_more: false },
     });
+    setFilmStatusMock.mockResolvedValue({
+      id: "film-watched",
+      title: "Watched Film",
+      status: "active",
+    });
 
     const { Wrapper } = createQueryWrapper();
     render(<LibrarySearchPicker />, { wrapper: Wrapper });
@@ -198,6 +203,16 @@ describe("LibrarySearchPicker", () => {
     expect(screen.queryByRole("button", { name: "Mark watched" })).not.toBeInTheDocument();
     const viewed = screen.getAllByRole("link", { name: "View" });
     expect(viewed).toHaveLength(2);
+    expect(
+      screen.getByRole("button", { name: "Return to watchlist" }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Return to watchlist" }),
+    );
+    await waitFor(() => {
+      expect(setFilmStatusMock).toHaveBeenCalledWith("film-watched", "active");
+    });
   });
 
   it("shows empty idle, no-results, and TMDB partial error states", async () => {
