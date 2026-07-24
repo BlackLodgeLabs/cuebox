@@ -5,10 +5,14 @@ import { getFilm, getFilms, getReviewRequired, getWatchReviewRequired, getPendin
 import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
-export function useFilms(params?: FilmsQueryParams) {
+export function useFilms(
+  params?: FilmsQueryParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ["films", params],
     queryFn: () => getFilms(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

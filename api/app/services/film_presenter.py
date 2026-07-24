@@ -62,6 +62,7 @@ def film_to_summary(
         letterboxd_uri=film.letterboxd_uri,
         status=film.status.value,
         enrichment_status=film.enrichment_status.value,
+        tmdb_id=metadata.tmdb_id if metadata else None,
         poster_url=metadata.poster_url if metadata else None,
         director=metadata.director if metadata else None,
         runtime=metadata.runtime if metadata else None,

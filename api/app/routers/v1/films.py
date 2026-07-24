@@ -58,6 +58,23 @@ def _parse_film_status(value: str | None) -> FilmStatus | None:
         raise validation_error(f"Invalid status: {value}") from exc
 
 
+def _parse_film_statuses(value: str | None) -> list[FilmStatus] | None:
+    if value is None:
+        return None
+    tokens = [token.strip() for token in value.split(",")]
+    if not tokens or any(token == "" for token in tokens):
+        raise validation_error("statuses must be a non-empty comma-separated list of film statuses")
+    parsed: list[FilmStatus] = []
+    seen: set[FilmStatus] = set()
+    for token in tokens:
+        status = _parse_film_status(token)
+        assert status is not None
+        if status not in seen:
+            seen.add(status)
+            parsed.append(status)
+    return parsed
+
+
 def _parse_enrichment_status(value: str | None) -> EnrichmentStatus | None:
     if value is None:
         return None
@@ -88,6 +105,7 @@ def _parse_sort_dir(value: str | None) -> SortDirection:
 @router.get("", response_model=FilmListResponse)
 def list_films(
     status: str | None = None,
+    statuses: str | None = None,
     enrichment_status: str | None = None,
     on_watchlist: bool = False,
     search: str | None = None,
@@ -102,9 +120,14 @@ def list_films(
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ) -> FilmListResponse:
+    if status is not None and statuses is not None:
+        raise validation_error("Cannot combine status and statuses query parameters")
+    parsed_status = _parse_film_status(status)
+    parsed_statuses = _parse_film_statuses(statuses)
     films, total = film_repository.list_films(
         db,
-        status=_parse_film_status(status),
+        status=parsed_status,
+        statuses=parsed_statuses,
         enrichment_status=_parse_enrichment_status(enrichment_status),
         on_watchlist=on_watchlist,
         search=search,
@@ -118,11 +141,21 @@ def list_films(
         limit=limit,
         offset=offset,
     )
-    parsed_status = _parse_film_status(status)
     removed_at_map: dict = {}
     latest_watched_at_map: dict = {}
     pending_watch_map: dict = {}
-    if parsed_status in (FilmStatus.WATCHED, FilmStatus.ARCHIVED):
+    needs_watch_extras = parsed_status in (FilmStatus.WATCHED, FilmStatus.ARCHIVED) or (
+        parsed_statuses is not None
+        and bool(
+            set(parsed_statuses)
+            & {
+                FilmStatus.WATCHED,
+                FilmStatus.ARCHIVED,
+                FilmStatus.PENDING_WATCH_REVIEW,
+            }
+        )
+    )
+    if needs_watch_extras:
         film_ids = [film.id for film in films]
         removed_at_map = watchlist_repository.get_latest_removed_at_batch(db, film_ids)
         latest_watched_at_map = film_watch_repository.get_latest_watched_at_batch(db, film_ids)

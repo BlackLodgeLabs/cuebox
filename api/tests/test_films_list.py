@@ -167,3 +167,85 @@ def test_list_films_sort_by_title(integration_client):
     assert response.status_code == 200
     titles = [item["title"] for item in response.json()["data"]]
     assert titles == sorted(titles)
+
+
+def test_list_films_includes_tmdb_id(integration_client):
+    with SessionLocal() as db:
+        film_id = _seed_watchlist_film(db, title="Tmdb Id Film", year=2001)
+
+    response = integration_client.get(f"/api/v1/films?search=Tmdb%20Id%20Film&limit=5")
+    assert response.status_code == 200
+    item = next(row for row in response.json()["data"] if row["id"] == film_id)
+    assert item["tmdb_id"] == abs(hash("Tmdb Id Film")) % 1_000_000
+
+
+def test_list_films_statuses_exact_set_excludes_archived(integration_client):
+    with SessionLocal() as db:
+        active_id = _seed_watchlist_film(db, title="Statuses Active", year=2001)
+        pending_id = _seed_watchlist_film(
+            db,
+            title="Statuses Pending",
+            year=2002,
+            film_status=FilmStatus.PENDING_WATCH_REVIEW,
+            on_watchlist=False,
+        )
+        watched_id = _seed_watchlist_film(
+            db,
+            title="Statuses Watched",
+            year=2003,
+            film_status=FilmStatus.WATCHED,
+            on_watchlist=False,
+        )
+        _seed_watchlist_film(
+            db,
+            title="Statuses Archived",
+            year=2004,
+            film_status=FilmStatus.ARCHIVED,
+            on_watchlist=False,
+        )
+
+    response = integration_client.get(
+        "/api/v1/films?statuses=active,pending_watch_review,watched"
+        "&search=Statuses&limit=50&sort=title&sort_dir=asc"
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    ids = {item["id"] for item in payload["data"]}
+    assert ids == {active_id, pending_id, watched_id}
+    assert all(item["title"] != "Statuses Archived" for item in payload["data"])
+    assert all(item["tmdb_id"] is not None for item in payload["data"])
+
+
+def test_list_films_statuses_and_status_conflict(integration_client):
+    response = integration_client.get(
+        "/api/v1/films?status=active&statuses=active,watched"
+    )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_list_films_statuses_invalid_token(integration_client):
+    response = integration_client.get("/api/v1/films?statuses=active,nope")
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_list_films_statuses_empty_rejected(integration_client):
+    response = integration_client.get("/api/v1/films?statuses=")
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_list_films_statuses_coexists_with_search(integration_client):
+    with SessionLocal() as db:
+        match_id = _seed_watchlist_film(db, title="Picker Match", year=1999)
+        _seed_watchlist_film(db, title="Other Title", year=2000)
+
+    response = integration_client.get(
+        "/api/v1/films?statuses=active,pending_watch_review,watched"
+        "&search=Picker&limit=20"
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert len(data) == 1
+    assert data[0]["id"] == match_id

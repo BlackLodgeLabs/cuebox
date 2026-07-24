@@ -52,9 +52,20 @@ test.describe("watchlist add flow (mocked API)", () => {
         }),
       });
     });
+
+    await page.route(`**${API_PATH_PREFIX}/films?statuses=**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [],
+          pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+        }),
+      });
+    });
   });
 
-  test("add film search and confirm", async ({ page }) => {
+  test("add film search and confirm via shared picker", async ({ page }) => {
     await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -97,9 +108,9 @@ test.describe("watchlist add flow (mocked API)", () => {
     });
 
     await page.goto("/watchlist/add");
-    await page.getByLabel("TMDB search query").fill("Matrix");
+    await expect(page).toHaveURL(/\/search\?intent=add/);
+    await page.getByLabel("Library and TMDB search").fill("Matrix");
     await expect(page.getByText("The Matrix (1999)")).toBeVisible();
-    await page.getByText("The Matrix (1999)").click();
     await page.getByRole("button", { name: "Add to watchlist" }).click();
     await expect(page).toHaveURL(new RegExp(`/watchlist/${addedFilmId}$`));
   });
@@ -111,11 +122,18 @@ test.describe("watchlist add flow (mocked API)", () => {
     const links = page.getByRole("link");
     await expect(links.filter({ hasText: "View watchlist" })).toHaveAttribute("href", "/watchlist");
     await expect(links.filter({ hasText: "Start questionnaire" })).toBeVisible();
-    await expect(links.filter({ hasText: "Add a film" })).toBeVisible();
+    await expect(links.filter({ hasText: "Add a film" })).toHaveAttribute(
+      "href",
+      "/search?intent=add",
+    );
+    await expect(links.filter({ hasText: "Mark watched" })).toHaveAttribute(
+      "href",
+      "/search?intent=mark-watched",
+    );
     await expect(links.filter({ hasText: "View history" })).toBeVisible();
   });
 
-  test("watchlist page shows add button", async ({ page }) => {
+  test("watchlist page shows add button to shared picker", async ({ page }) => {
     await page.route(`**${API_PATH_PREFIX}/films?**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -130,7 +148,7 @@ test.describe("watchlist add flow (mocked API)", () => {
     await page.goto("/watchlist");
     await expect(page.getByRole("link", { name: "Add film" })).toHaveAttribute(
       "href",
-      "/watchlist/add",
+      "/search?intent=add",
     );
   });
 });

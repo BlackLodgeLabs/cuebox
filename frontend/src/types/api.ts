@@ -98,6 +98,7 @@ export interface FilmSummary {
   letterboxd_uri: string;
   status: FilmStatus;
   enrichment_status: string;
+  tmdb_id?: number | null;
   poster_url: string | null;
   director: string | null;
   runtime: number | null;
@@ -406,6 +407,8 @@ export type SortDirection = "asc" | "desc";
 
 export interface FilmsQueryParams {
   status?: FilmStatus;
+  /** Comma-separated exact status set; serialized as CSV in the query string. */
+  statuses?: FilmStatus[] | string;
   enrichment_status?: string;
   on_watchlist?: boolean;
   search?: string;
