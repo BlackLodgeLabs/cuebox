@@ -1,0 +1,9 @@
+Watched history imported
+
+Films seen: 10
+Films created: 9
+Watches created: 10
+Watches skipped (duplicates): 0
+Sent to review queue: 1
+View Watched list
+Open watch review queue

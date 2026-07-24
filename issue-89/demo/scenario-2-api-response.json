@@ -1,0 +1,10 @@
+{
+  "source": "UI first import summary",
+  "films_seen": 10,
+  "films_created": 9,
+  "watches_created": 10,
+  "watches_skipped_duplicate": 0,
+  "pending_review": 1,
+  "failures": [],
+  "raw_summary_text": "Watched history imported\n\nFilms seen: 10\nFilms created: 9\nWatches created: 10\nWatches skipped (duplicates): 0\nSent to review queue: 1\nView Watched list\nOpen watch review queue"
+}
