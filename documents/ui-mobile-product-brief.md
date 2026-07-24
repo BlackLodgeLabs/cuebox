@@ -100,6 +100,8 @@ Where-to-watch and questionnaire summary live on **stage 3**, not on the ceremon
 
 **Prerequisites (must ship before this UI pass):** Home search-picker (#136) and inline placement + global header search (#140) — see §5.
 
+See §6 for implementation build order.
+
 ### D10 — Success criteria
 
 Use **A–F as a checklist**. **Fail the pass** if **A, D, or B** are not met.
@@ -183,7 +185,25 @@ Notes for the UI pass:
 
 ---
 
-## 6. Out of scope reminders
+## 6. Build order / decomposition
+
+Implement as **separate GitHub issues** (one workflow pass each). Do not attempt the full D9 reskin in a single PR.
+
+| Order | Slice | Issue | Notes |
+|-------|--------|-------|-------|
+| 0 | P1 prerequisites | #136 (done), #140 | Required before UI pass |
+| 1 | App shell | #141 | Bottom tabs + header + Review badge; everything else renders inside this |
+| 2 | Home hub | #142 | After #141; depends on #140 picker placement |
+| 3 | Watchlist poster grid + filter sheet | #143 | After #141; can parallelize with #142 |
+| 4 | Film detail | #144 | After #141; prefer alongside/after #143 for visual consistency |
+| 5 | Ceremony 1→2→3 + history replay | #145 | After #141; largest product risk — lock back/refresh/deep-link in spec |
+| 6 | Questionnaire density + first-run | #146 | After #141; prefer after #142 so empty→import path is coherent |
+
+**Rule:** Start `@cursoragent spec` on #141 first. Parallelize #142–#146 only after the shell PR has landed (or is clearly merge-ready).
+
+---
+
+## 7. Out of scope reminders
 
 - Multi-user / auth
 - Letterboxd write-back
@@ -194,7 +214,7 @@ Notes for the UI pass:
 
 ---
 
-## 7. Suggested designer kickoff pack
+## 8. Suggested designer kickoff pack
 
 1. This brief  
 2. [DESIGN.md](DESIGN.md) + live app on a phone viewport (Chrome, LAN/Tailscale)  
@@ -215,7 +235,7 @@ Treat this document as **hard constraints**. Do not invent a new visual brand. D
 
 ---
 
-## 8. Decision log (source)
+## 9. Decision log (source)
 
 | # | Topic | Choice |
 |---|--------|--------|
@@ -229,3 +249,4 @@ Treat this document as **hard constraints**. Do not invent a new visual brand. D
 | 8 | A11y/motion | Atmosphere + reduced-motion/contrast guardrails |
 | 9 | v1 scope | Full primary reskin; Home picker + inline placement (#136, #140) are **prerequisites**, not in-pass feature work |
 | 10 | Success | Checklist A–F; fail on A/D/B |
+
