@@ -1,9 +1,9 @@
 {
   "issue": 136,
   "branch": "cursor/issue-136-home-search-picker-e134",
-  "stage": "execute-in-progress",
-  "active_skill": "execute",
-  "updated_at": "2026-07-24T12:27:37Z",
+  "stage": "execute-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-24T12:40:37Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 138,
-  "active_agent_id": "bc-be4a1afe-6c9e-4822-ac2e-81e9d3f94a08",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
   "handoff_deferred": null
 }
