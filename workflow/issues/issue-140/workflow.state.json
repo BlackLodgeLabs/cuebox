@@ -1,9 +1,15 @@
 {
   "issue": 140,
   "branch": "cursor/issue-140-home-inline-search-8d81",
+<<<<<<< HEAD
   "stage": "demo-in-progress",
   "active_skill": "demo",
   "updated_at": "2026-07-24T18:15:25Z",
+=======
+  "stage": "execute-ready",
+  "active_skill": "demo",
+  "updated_at": "2026-07-24T18:11:48Z",
+>>>>>>> origin/cursor/issue-140-home-inline-search-8d81
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
