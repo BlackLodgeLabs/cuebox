@@ -1,0 +1,425 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  AlreadyOnWatchlistMessage,
+  LinkedFilmConflictMessage,
+  PendingReviewMessage,
+} from "@/components/add-film-search";
+import { FilmPoster } from "@/components/film-poster";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  WatchReviewDialog,
+  watchToDialogProps,
+} from "@/components/watch-review-dialog";
+import {
+  useAddToWatchlist,
+  useFilm,
+  useFilmStatusTransition,
+  useFilms,
+  useGlobalTmdbSearch,
+} from "@/hooks/use-films";
+import { useToast } from "@/hooks/use-toast";
+import { ApiClientError } from "@/lib/api-client";
+import {
+  mergeLibraryAndTmdbResults,
+  PICKER_LIBRARY_STATUSES,
+  statusBadgeLabel,
+  type LibrarySearchHit,
+} from "@/lib/library-search-merge";
+import type { FilmSummary, TmdbSearchResultItem } from "@/types/api";
+
+export type SearchPickerIntent = "add" | "mark-watched";
+
+interface LibrarySearchPickerProps {
+  intent?: SearchPickerIntent;
+}
+
+interface ReviewDialogState {
+  filmId: string;
+  filmTitle: string;
+  cancelOnDismiss: boolean;
+  initialWatchedAt?: string;
+  initialScore?: number | null;
+  initialNotes?: string | null;
+  watchId?: string;
+}
+
+export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [reviewDialog, setReviewDialog] = useState<ReviewDialogState | null>(
+    null,
+  );
+  const [pendingFilmId, setPendingFilmId] = useState<string | null>(null);
+  const [alreadyOnWatchlistId, setAlreadyOnWatchlistId] = useState<string | null>(
+    null,
+  );
+  const [pendingReviewId, setPendingReviewId] = useState<string | null>(null);
+  const [conflictFilmId, setConflictFilmId] = useState<string | null>(null);
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
+
+  const addToWatchlist = useAddToWatchlist();
+  const statusTransition = useFilmStatusTransition();
+  const polling = useFilm(pendingFilmId ?? "", { pollWhileEnriching: true });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const trimmedQuery = debouncedQuery.trim();
+  const hasQuery = Boolean(trimmedQuery);
+
+  const libraryQuery = useFilms(
+    {
+      statuses: PICKER_LIBRARY_STATUSES,
+      search: trimmedQuery || undefined,
+      limit: 20,
+      sort: "title",
+      sort_dir: "asc",
+    },
+    { enabled: hasQuery },
+  );
+
+  const tmdbQuery = useGlobalTmdbSearch(
+    { q: trimmedQuery, page: 1 },
+    { enabled: hasQuery },
+  );
+
+  useEffect(() => {
+    if (!pendingFilmId || !polling.data) return;
+    const status = polling.data.enrichment_status;
+    if (status !== "ready" && status !== "failed") return;
+
+    if (status === "ready") {
+      toast({
+        title: "Film added",
+        description: `${polling.data.title} is ready on your watchlist.`,
+      });
+    } else {
+      toast({
+        title: "Enrichment failed",
+        description:
+          "The film was added but enrichment failed. Check the watchlist.",
+        variant: "destructive",
+      });
+    }
+    router.push(`/watchlist/${pendingFilmId}`);
+  }, [pendingFilmId, polling.data, router, toast]);
+
+  const libraryFilms = hasQuery ? (libraryQuery.data?.data ?? []) : [];
+  const tmdbResults = hasQuery ? (tmdbQuery.data?.data ?? []) : [];
+  const hits = hasQuery
+    ? mergeLibraryAndTmdbResults(libraryFilms, tmdbResults)
+    : [];
+
+  const libraryLoading = hasQuery && (libraryQuery.isLoading || libraryQuery.isFetching);
+  const tmdbLoading = hasQuery && (tmdbQuery.isLoading || tmdbQuery.isFetching);
+  const isLoading = libraryLoading || tmdbLoading;
+  const libraryError = hasQuery && libraryQuery.isError;
+  const tmdbError = hasQuery && tmdbQuery.isError;
+  const bothFailed = libraryError && tmdbError;
+  const partialError = (libraryError || tmdbError) && !bothFailed;
+  const noResults =
+    hasQuery && !isLoading && !bothFailed && hits.length === 0 && !partialError;
+
+  function clearInlineMessages() {
+    setAlreadyOnWatchlistId(null);
+    setPendingReviewId(null);
+    setConflictFilmId(null);
+    setConflictMessage(null);
+  }
+
+  async function openMarkWatchedDialog(film: FilmSummary) {
+    await statusTransition.mutateAsync({
+      filmId: film.id,
+      status: "pending_watch_review",
+    });
+    setReviewDialog({
+      filmId: film.id,
+      filmTitle: film.title,
+      cancelOnDismiss: true,
+    });
+  }
+
+  function openCompleteReviewDialog(film: FilmSummary) {
+    const pendingProps = film.pending_watch
+      ? watchToDialogProps(film.pending_watch)
+      : { initialWatchedAt: film.latest_watched_at ?? undefined };
+    setReviewDialog({
+      filmId: film.id,
+      filmTitle: film.title,
+      cancelOnDismiss: false,
+      ...pendingProps,
+    });
+  }
+
+  async function handleAddTmdb(selected: TmdbSearchResultItem) {
+    clearInlineMessages();
+    try {
+      const result = await addToWatchlist.mutateAsync({
+        tmdb_id: selected.tmdb_id,
+      });
+
+      if (result.already_on_watchlist) {
+        setAlreadyOnWatchlistId(result.film_id);
+        return;
+      }
+
+      if (result.enrichment_status === "review_required") {
+        setPendingReviewId(result.review_id ?? null);
+        toast({
+          title: "Letterboxd link needed",
+          description:
+            "Cuebox could not auto-link this film. Paste the Letterboxd URL on the review page.",
+        });
+        return;
+      }
+
+      if (result.restored) {
+        toast({
+          title: "Added back to your watchlist",
+          description: `${selected.title} was restored to your active watchlist.`,
+        });
+        router.push(`/watchlist/${result.film_id}`);
+        return;
+      }
+
+      setPendingFilmId(result.film_id);
+      toast({
+        title: "Adding film…",
+        description: "Enriching metadata and semantic profile.",
+      });
+    } catch (error) {
+      if (error instanceof ApiClientError && error.code === "CONFLICT") {
+        const filmId = error.details?.find((detail) => detail.field === "film_id")
+          ?.message;
+        if (filmId) {
+          setConflictFilmId(filmId);
+          setConflictMessage(error.message);
+          return;
+        }
+      }
+    }
+  }
+
+  function handleReviewSuccessNavigate() {
+    if (intent === "mark-watched") {
+      router.push("/");
+      return;
+    }
+    void libraryQuery.refetch();
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Searches your library (including watched films) and TMDB. Archived titles
+        are not listed.
+      </p>
+
+      <Input
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder={
+          intent === "mark-watched"
+            ? "Find a film to mark watched…"
+            : "Search library and TMDB…"
+        }
+        aria-label="Library and TMDB search"
+        autoFocus={intent === "add" || intent === "mark-watched"}
+      />
+
+      <div className="max-h-[32rem] space-y-2 overflow-y-auto pr-1" role="list">
+        {!hasQuery && (
+          <p className="text-sm text-muted-foreground">
+            Type a title to search your library and TMDB.
+          </p>
+        )}
+
+        {hasQuery && isLoading && (
+          <p className="text-sm text-muted-foreground">Searching…</p>
+        )}
+
+        {bothFailed && (
+          <p className="text-sm text-destructive">
+            Could not search your library or TMDB. Check the API and try again.
+          </p>
+        )}
+
+        {partialError && libraryError && (
+          <p className="text-sm text-destructive">
+            Library search failed. Showing TMDB results only.
+          </p>
+        )}
+
+        {partialError && tmdbError && (
+          <p className="text-sm text-destructive">
+            TMDB search failed. Showing library results only. Check your TMDB API
+            key if this persists.
+          </p>
+        )}
+
+        {noResults && (
+          <p className="text-sm text-muted-foreground">No results found.</p>
+        )}
+
+        {!isLoading &&
+          hits.map((hit) => (
+            <SearchHitRow
+              key={hit.key}
+              hit={hit}
+              emphasizeMarkWatched={intent === "mark-watched"}
+              isStatusPending={statusTransition.isPending}
+              isAddPending={addToWatchlist.isPending || Boolean(pendingFilmId)}
+              onMarkWatched={(film) => void openMarkWatchedDialog(film)}
+              onCompleteReview={openCompleteReviewDialog}
+              onAddTmdb={(result) => void handleAddTmdb(result)}
+            />
+          ))}
+      </div>
+
+      {alreadyOnWatchlistId ? (
+        <AlreadyOnWatchlistMessage filmId={alreadyOnWatchlistId} />
+      ) : null}
+      {pendingReviewId ? <PendingReviewMessage reviewId={pendingReviewId} /> : null}
+      {conflictFilmId && conflictMessage ? (
+        <LinkedFilmConflictMessage
+          filmId={conflictFilmId}
+          message={conflictMessage}
+        />
+      ) : null}
+      {pendingFilmId && (
+        <p className="text-sm text-muted-foreground">
+          Enriching film… this may take a moment.
+        </p>
+      )}
+
+      {reviewDialog && (
+        <WatchReviewDialog
+          filmId={reviewDialog.filmId}
+          filmTitle={reviewDialog.filmTitle}
+          open
+          cancelOnDismiss={reviewDialog.cancelOnDismiss}
+          watchId={reviewDialog.watchId}
+          initialScore={reviewDialog.initialScore}
+          initialWatchedAt={reviewDialog.initialWatchedAt}
+          initialNotes={reviewDialog.initialNotes}
+          onOpenChange={(open) => {
+            if (!open) {
+              setReviewDialog(null);
+              void libraryQuery.refetch();
+            }
+          }}
+          onCompleted={handleReviewSuccessNavigate}
+        />
+      )}
+    </div>
+  );
+}
+
+function SearchHitRow({
+  hit,
+  emphasizeMarkWatched,
+  isStatusPending,
+  isAddPending,
+  onMarkWatched,
+  onCompleteReview,
+  onAddTmdb,
+}: {
+  hit: LibrarySearchHit;
+  emphasizeMarkWatched: boolean;
+  isStatusPending: boolean;
+  isAddPending: boolean;
+  onMarkWatched: (film: FilmSummary) => void;
+  onCompleteReview: (film: FilmSummary) => void;
+  onAddTmdb: (result: TmdbSearchResultItem) => void;
+}) {
+  if (hit.kind === "library") {
+    const { film } = hit;
+    const title = film.year ? `${film.title} (${film.year})` : film.title;
+    return (
+      <div
+        role="listitem"
+        className="flex flex-col gap-3 rounded border border-border p-3 sm:flex-row sm:items-center"
+        data-testid={`library-hit-${film.status}`}
+      >
+        <div className="flex min-w-0 flex-1 gap-3">
+          <FilmPoster src={film.poster_url} alt={film.title} size="sm" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">{title}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">{statusBadgeLabel(film.status)}</Badge>
+              <span className="text-xs text-muted-foreground">Library</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/watchlist/${film.id}`}>View</Link>
+          </Button>
+          {film.status === "active" && (
+            <Button
+              size="sm"
+              variant={emphasizeMarkWatched ? "default" : "secondary"}
+              disabled={isStatusPending}
+              onClick={() => onMarkWatched(film)}
+            >
+              Mark watched
+            </Button>
+          )}
+          {film.status === "pending_watch_review" && (
+            <Button
+              size="sm"
+              variant={emphasizeMarkWatched ? "default" : "secondary"}
+              onClick={() => onCompleteReview(film)}
+            >
+              Complete review
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const { result } = hit;
+  const title = result.year ? `${result.title} (${result.year})` : result.title;
+  return (
+    <div
+      role="listitem"
+      className="flex flex-col gap-3 rounded border border-border p-3 sm:flex-row sm:items-center"
+      data-testid="tmdb-hit"
+    >
+      <div className="flex min-w-0 flex-1 gap-3">
+        <FilmPoster src={result.poster_url} alt={result.title} size="sm" />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{title}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <Badge variant="outline">TMDB</Badge>
+            {result.overview && (
+              <p className="line-clamp-2 text-sm text-muted-foreground">
+                {result.overview}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          disabled={isAddPending}
+          onClick={() => onAddTmdb(result)}
+        >
+          Add to watchlist
+        </Button>
+      </div>
+    </div>
+  );
+}

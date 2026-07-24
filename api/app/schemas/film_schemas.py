@@ -26,6 +26,7 @@ class FilmSummary(BaseModel):
     letterboxd_uri: str
     status: str
     enrichment_status: str
+    tmdb_id: int | None = None
     poster_url: str | None = None
     director: str | None = None
     runtime: int | None = None

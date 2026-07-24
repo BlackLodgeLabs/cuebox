@@ -29,6 +29,8 @@ interface WatchReviewDialogProps {
   mode?: "complete" | "edit";
   /** When true, dismiss/Cancel reverts pending_watch_review to active (manual mark-watched only). */
   cancelOnDismiss?: boolean;
+  /** Called after a successful complete/edit save (before dialog closes). */
+  onCompleted?: () => void;
   watchId?: string;
   initialScore?: number | null;
   initialWatchedAt?: string;
@@ -46,6 +48,7 @@ export function WatchReviewDialog({
   onOpenChange,
   mode = "complete",
   cancelOnDismiss = false,
+  onCompleted,
   watchId,
   initialScore = null,
   initialWatchedAt,
@@ -96,6 +99,7 @@ export function WatchReviewDialog({
         });
         toast({ title: "Watch review saved", description: `${filmTitle} marked as watched.` });
       }
+      onCompleted?.();
       onOpenChange(false);
     } catch {
       // toast handled by mutation hook

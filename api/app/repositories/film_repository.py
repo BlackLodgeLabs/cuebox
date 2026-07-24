@@ -192,6 +192,7 @@ def list_films(
     db: Session,
     *,
     status: FilmStatus | None = None,
+    statuses: list[FilmStatus] | None = None,
     enrichment_status: EnrichmentStatus | None = None,
     on_watchlist: bool = False,
     search: str | None = None,
@@ -216,7 +217,10 @@ def list_films(
         stmt = stmt.join(*watchlist_join)
         count_stmt = count_stmt.join(*watchlist_join)
 
-    if status is not None:
+    if statuses is not None:
+        stmt = stmt.where(Film.status.in_(statuses))
+        count_stmt = count_stmt.where(Film.status.in_(statuses))
+    elif status is not None:
         if status == FilmStatus.WATCHED:
             stmt = stmt.where(Film.status.in_([FilmStatus.WATCHED, FilmStatus.PENDING_WATCH_REVIEW]))
             count_stmt = count_stmt.where(

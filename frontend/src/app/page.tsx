@@ -106,7 +106,7 @@ export default function HomePage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <Card className="hover-glow">
           <CardHeader>
             <CardTitle>New recommendation</CardTitle>
@@ -126,13 +126,28 @@ export default function HomePage() {
           <CardHeader>
             <CardTitle>Add film to watchlist</CardTitle>
             <CardDescription>
-              Search TMDB and add a single film without re-exporting your
-              Letterboxd watchlist.
+              Search your library and TMDB to add a title without re-exporting
+              Letterboxd.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href="/watchlist/add">Add a film</Link>
+              <Link href="/search?intent=add">Add a film</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover-glow">
+          <CardHeader>
+            <CardTitle>Mark watched</CardTitle>
+            <CardDescription>
+              Find a film in your library (including watched) or on TMDB and
+              record a watch.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/search?intent=mark-watched">Mark watched</Link>
             </Button>
           </CardContent>
         </Card>

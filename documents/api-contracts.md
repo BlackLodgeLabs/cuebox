@@ -267,7 +267,8 @@ GET /films
 
 |Parameter          |Type   |Default     |Description                                               |
 |-------------------|-------|------------|----------------------------------------------------------|
-|`status`           |string |—           |Filter by `film_status`: `active` | `pending_watch_review` | `watched` | `archived`. When `status=watched`, results include both `watched` and `pending_watch_review` films (Watched tab).|
+|`status`           |string |—           |Filter by `film_status`: `active` | `pending_watch_review` | `watched` | `archived`. When `status=watched`, results include both `watched` and `pending_watch_review` films (Watched tab). Cannot be combined with `statuses`.|
+|`statuses`         |string |—           |Comma-separated exact `film_status` set (e.g. `active,pending_watch_review,watched`). Unlike singular `status=watched`, does **not** expand `watched` to include `pending_watch_review` — list both explicitly when needed. Cannot be combined with `status`. Empty / blank tokens → `VALIDATION_ERROR`.|
 |`enrichment_status`|string |—           |Filter by `enrichment_status` (see enum in §3.2)          |
 |`on_watchlist`     |boolean|`false`     |When `true`, only films with an active watchlist entry    |
 |`search`           |string |—           |Case-insensitive substring match on title                 |
@@ -293,6 +294,7 @@ GET /films
       "letterboxd_uri": "https://letterboxd.com/film/the-wicker-man/",
       "status": "active",
       "enrichment_status": "ready",
+      "tmdb_id": 11453,
       "poster_url": "https://image.tmdb.org/...",
       "director": "Robin Hardy",
       "runtime": 88,
@@ -301,7 +303,8 @@ GET /films
       "updated_at": "2024-11-01T15:00:00Z",
       "removed_at": null,
       "latest_watched_at": null,
-      "watch_review_incomplete": false
+      "watch_review_incomplete": false,
+      "pending_watch": null
     }
   ],
   "pagination": {
@@ -323,21 +326,23 @@ GET /films
 |`letterboxd_uri`   |string           |Canonical Letterboxd URI         |
 |`status`           |string           |`active` | `pending_watch_review` | `watched` | `archived`|
 |`enrichment_status`|string           |See enrichment status enum       |
+|`tmdb_id`          |integer, nullable|TMDB ID from `film_metadata` when present |
 |`poster_url`       |string, nullable |TMDB poster URL                  |
 |`director`         |string, nullable |Director name                    |
 |`runtime`          |integer, nullable|Runtime in minutes               |
 |`genres`           |array of string  |Genres from TMDB                 |
 |`created_at`       |string           |ISO 8601                         |
 |`updated_at`       |string           |ISO 8601                         |
-|`removed_at`       |string, nullable |Most recent watchlist `removed_at` when listing `status=watched` or `status=archived`; omitted otherwise |
-|`latest_watched_at`|date, nullable   |Latest finalized watch record date when listing `status=watched` |
+|`removed_at`       |string, nullable |Most recent watchlist `removed_at` when listing watched/archived (singular `status` or multi `statuses` that include those values); omitted otherwise |
+|`latest_watched_at`|date, nullable   |Latest finalized watch record date when listing watched/pending/archived extras |
 |`watch_review_incomplete`|boolean  |`true` when `status=pending_watch_review` |
+|`pending_watch`    |object, nullable |Pending watch-review prefill when listing watched/archived or `statuses` including `pending_watch_review` / `watched` / `archived` |
 
 #### Errors
 
 |Code              |HTTP|Trigger                                      |
 |------------------|----|---------------------------------------------|
-|`VALIDATION_ERROR`|400 |Invalid `status`, `enrichment_status`, `sort`, or `sort_dir` value|
+|`VALIDATION_ERROR`|400 |Invalid `status`/`statuses` token, empty `statuses`, combining `status` with `statuses`, invalid `enrichment_status`, `sort`, or `sort_dir` value|
 
 -----
 
@@ -758,7 +763,7 @@ Empty category groups are omitted. When the country object exists but all moneti
 
 ### 4.7 Global TMDB Search
 
-Proxy TMDB movie search without requiring an existing film row. Used by the `/watchlist/add` flow. Requires `TMDB_API_KEY`.
+Proxy TMDB movie search without requiring an existing film row. Used by the `/search` library+TMDB picker (and legacy `/watchlist/add` redirect). Requires `TMDB_API_KEY`.
 
 Letterboxd identity for manual adds is resolved server-side via `https://letterboxd.com/tmdb/{id}` when reachable, with a slug-probe fallback against `/film/{slug}/` when Cloudflare blocks the shortcut.
 

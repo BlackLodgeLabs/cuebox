@@ -593,17 +593,19 @@ sequenceDiagram
 
 ## 13. Manual Watchlist Add
 
-User searches TMDB on `/watchlist/add`, confirms a pick, and the backend resolves Letterboxd via the public TMDB shortcut.
+User searches library + TMDB on `/search` (legacy `/watchlist/add` redirects to `/search?intent=add`), confirms a TMDB-only pick, and the backend resolves Letterboxd via the public TMDB shortcut.
 
 ```mermaid
 sequenceDiagram
-    participant UI as /watchlist/add
+    participant UI as /search
     participant API as FastAPI API
     participant TMDB as TMDB API
     participant LB as letterboxd.com/tmdb/{id}
     participant DB as PostgreSQL
     participant Pipe as Enrichment pipeline
 
+    UI->>API: GET /films?statuses=active,pending_watch_review,watched&search=...
+    API-->>UI: library hits (with tmdb_id)
     UI->>API: GET /films/tmdb-search?q=...
     API->>TMDB: search/movie
     TMDB-->>API: results
