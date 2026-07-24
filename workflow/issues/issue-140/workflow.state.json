@@ -2,29 +2,26 @@
   "issue": 140,
   "branch": "cursor/issue-140-home-inline-search-8d81",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-24T17:34:52Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-24T17:37:08Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-af08e652-3480-4b09-bf1f-8cdcd8453f3f",
     "review-and-spec": "bc-7b9516d2-75d9-4ce2-88e4-28c464a88d81",
     "review-and-spec-continued": null
   },
   "pr": 147,
-  "active_agent_id": "bc-7b9516d2-75d9-4ce2-88e4-28c464a88d81",
+  "active_agent_id": "bc-af08e652-3480-4b09-bf1f-8cdcd8453f3f",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-24T17:34:52Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "handoff_deferred": null
 }
