@@ -1,20 +1,20 @@
 {
   "issue": 136,
   "branch": "cursor/issue-136-home-search-picker-e134",
-  "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-24T11:58:53Z",
+  "stage": "plan-in-progress",
+  "active_skill": "planning",
+  "updated_at": "2026-07-24T11:03:05Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-6fb95dd4-53da-4c90-9e02-ed132e251bbf",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 138,
-  "active_agent_id": null,
+  "active_agent_id": "bc-6fb95dd4-53da-4c90-9e02-ed132e251bbf",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": {
@@ -26,5 +26,6 @@
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "handoff_deferred": null
 }
