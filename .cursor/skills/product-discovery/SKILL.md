@@ -41,7 +41,7 @@ This skill is **ad-hoc** and **domain-agnostic**. It is **not** part of the issu
 
 ## Phase 0 — Goal gate (must complete before discovery Q&A)
 
-Do **not** start the decision agenda until these are explicit and recorded in `discovery.md`. Ask **one topic per turn** until the gate is complete (clarifying questions allowed).
+Do **not** start the decision agenda until these are explicit and recorded in `discovery.md`. Ask **one topic per turn** until the gate is complete (clarifying questions allowed). Persist each accepted lock immediately—use the provisional workspace-root `discovery.md` until **Save path (Y)** is locked, then relocate (see Location below).
 
 ### Required locks
 
@@ -98,13 +98,17 @@ When decisions are locked (or early-stop with explicit open questions section):
 
 ### Location
 
-- Default: **same directory as the artifact save path**, file name `discovery.md` (e.g. artifact `documents/foo-brief.md` → state `documents/discovery.md`).
-- If that would collide with an unrelated file, use `{artifact-basename}-discovery.md` beside the artifact, or a path the user sets during the goal gate.
-- **Verify path** during the goal gate the same way as Y’s save path.
+Persistence must start on the **first accepted goal-gate answer**, even when **Save path (Y)** is not locked yet.
+
+1. **Before Save path (Y) is locked:** write provisional state to **`discovery.md` at the workspace / repo root** (or an explicit path the user sets in that turn). Create the file if missing; keep updating it every turn.
+2. **Once Save path (Y) is locked:** relocate state to the **canonical** location—**same directory as the artifact save path**, file name `discovery.md` (e.g. artifact `documents/foo-brief.md` → state `documents/discovery.md`). Move/rename the provisional file there (do not leave a stale root copy). If the parent directory does not exist yet, create it when relocating.
+3. If the canonical path would collide with an unrelated file, use `{artifact-basename}-discovery.md` beside the artifact, or a path the user sets during the goal gate.
+4. **Verify** the state-file path (provisional and canonical) the same way as Y’s save path.
+5. On resume, look for `discovery.md` at the canonical path first; if absent, check the workspace-root provisional file.
 
 ### Update cadence
 
-**After every accepted answer** (goal-gate field lock, agenda approval, each decision, each revision, mop-up, completion). In **draft in repo** mode, commit when that is already normal for the session; otherwise at least keep the working tree file current every turn.
+**After every accepted answer** (goal-gate field lock, agenda approval, each decision, each revision, mop-up, completion)—including answers given **before** Save path (Y) is known, using the provisional location above. In **draft in repo** mode, commit when that is already normal for the session; otherwise at least keep the working tree file current every turn.
 
 ### Suggested shape
 
@@ -174,9 +178,14 @@ After the user answers: update `discovery.md`, briefly confirm the lock (and ame
 
 If continuing a prior discovery:
 
-1. Read `discovery.md` (and Y if partially written).
-2. Resume at the first incomplete agenda item or mop-up.
-3. Do not re-ask locked decisions unless the user wants to revisit.
+1. Locate and read `discovery.md` (canonical path beside Y’s save path if known; otherwise workspace-root provisional). Also read Y if partially written.
+2. Branch on **Status**—never skip an incomplete earlier phase:
+   - **`goal-gate`:** resume Phase 0 at the next unfilled Goal field (including framing). Do **not** propose or run the agenda.
+   - **`agenda-pending`:** resume Phase 1 agenda proposal/approval. Do **not** start Decision 1 until the agenda is approved (or explicitly waived).
+   - **`in-progress`:** resume at the first incomplete agenda item.
+   - **`mop-up`:** continue coverage mop-up (still one question per turn).
+   - **`complete`:** only reopen if the user wants to revisit, amend, or rewrite Y.
+3. Do not re-ask locked decisions or completed goal-gate fields unless the user wants to revisit.
 
 ## Git / PR
 
