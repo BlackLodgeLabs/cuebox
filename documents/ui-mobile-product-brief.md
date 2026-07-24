@@ -30,16 +30,18 @@ Cuebox is a locally hosted, single-user app that helps someone decide **what to 
 
 - **More** → Settings (sync, etc.)
 - **Review** (ambiguous metadata matches) → **top notification badge**, not a tab
+- **Search** (find / add / mark watched) → **magnifying-glass icon in the top header** on all primary screens; navigates to the Home inline film picker (via `/search` alias)
 - **No FAB**
 
 ### D4 — Hierarchy of jobs
 
-**Home is the default landing** and acts as a hub of quick links:
+**Home is the default landing** and acts as a hub:
 
-1. **Add a film** → opens **search-picker** (see prerequisites)
+1. **Find a film** — inline **search-picker** at the top of Home (library + TMDB; status-aware actions per result). No separate Add vs Mark watched entry points; the picker offers the right action for each hit (see §5 P1).
 2. **Create a recommendation** → Recommend flow
-3. **Mark a film watched** → opens the **same search-picker** (Mark watched vs Add depending on whether the title is already on the list)
-4. **History** → history list (History is **not** a bottom tab)
+3. **History** → history list (History is **not** a bottom tab)
+
+The same picker is reachable from any screen via the **header search icon** (`/search` redirects to Home with the field focused).
 
 **Recommend** remains a primary product job: visible as both a Home CTA and its own tab.
 
@@ -96,7 +98,7 @@ Where-to-watch and questionnaire summary live on **stage 3**, not on the ceremon
 - Developer Mode visual redesign
 - Roadmap placeholder screens
 
-**Prerequisite (must ship before this UI pass):** Home search-picker feature — see §5.
+**Prerequisites (must ship before this UI pass):** Home search-picker (#136) and inline placement + global header search (#140) — see §5.
 
 ### D10 — Success criteria
 
@@ -104,7 +106,7 @@ Use **A–F as a checklist**. **Fail the pass** if **A, D, or B** are not met.
 
 | ID | Criterion | Severity |
 |----|-----------|----------|
-| **A** | Flow efficiency: from Home, start a recommendation in ≤ 2 taps; ceremony 1→2→3 has no dead ends; History opens at stage 3; replay does 1→2 then back to 3 | **Fail if missing** |
+| **A** | Flow efficiency: from Home, start a recommendation in ≤ 2 taps; find/add/mark a film from the inline picker without a separate intent CTA; ceremony 1→2→3 has no dead ends; History opens at stage 3; replay does 1→2 then back to 3 | **Fail if missing** |
 | **D** | Ceremony quality: winner stage is singular; runners-up swipe focus is obvious; stage 3 clearly reads as the durable session record | **Fail if missing** |
 | **B** | Poster-first clarity: watchlist is posters + titles only; actions via ⋯; filters reachable without breaking the grid metaphor | **Fail if missing** |
 | **C** | One-handed usability: primary nav in thumb zone; key CTAs ~≥44px; no essential hover-only actions | Checklist |
@@ -134,7 +136,8 @@ Designers may refine **layout and component composition**; they should not repla
 
 | Surface | Role in this brief |
 |---------|-------------------|
-| Home | Default hub; quick links; Review badge |
+| Home | Default hub; inline film picker; Create recommendation + History quick links; Review badge |
+| Header search | Magnifying-glass icon → Home picker (via `/search` alias) |
 | Watchlist | Poster grid; ⋯ actions; filter sheet; status tabs |
 | Recommend | Questionnaire; entry to ceremony |
 | Ceremony 1–2 | Fresh pick ritual |
@@ -153,18 +156,24 @@ These are **product/API/UX features**, not pure visual redesign. Deliver them (o
 
 ### P1 — Home search-picker (required prerequisite)
 
-From Home quick actions for **add film** and **mark watched**:
+Shipped in two steps: combined search behavior (#136), then Home placement (#140).
 
-1. Open a **search / picker** UI.
-2. Search **both TMDB and the user’s Cuebox watchlist** (combined results).
-3. If the film is **already on the watchlist** → show **Mark watched** (and related status actions as appropriate).
-4. If the film is **not** on the watchlist → show **Add to watchlist** (existing add-film capability wired into this picker).
+**Behavior (picker):**
 
-Notes for implementation planning:
+1. Search **both TMDB and the user’s Cuebox watchlist** (combined results, merged by `tmdb_id`).
+2. **Library hits** — status-aware actions: View; Mark watched (`active`); Complete review (`pending_watch_review`); View only (`watched`). Archived excluded.
+3. **TMDB-only hits** — **Add to watchlist** and **Add & mark watched** (chains add → watch-review dialog).
 
-- Likely needs a unified search API or client merge of TMDB search + local film search.
-- Must respect film lifecycle rules (active / watched / archived) already in the product.
-- UI pass will **style and place** this picker; it should not invent the behavior.
+**Placement (Home + global access):**
+
+1. **Inline on Home** — returning-user Home embeds the picker near the top; no separate Add vs Mark watched CTAs.
+2. **`/search` alias** — redirects to Home with the search field focused (backward-compatible deep links).
+3. **Header search icon** — magnifying glass in the app shell on all primary screens; navigates to `/search` (resolves to Home picker).
+
+Notes for the UI pass:
+
+- **Style** the inline picker, header icon, and results list within Neo-Noir — do not reinvent search/merge/action behavior.
+- Picker copy should read as **find a film in your library or add one**, not open-ended discovery (see §1 tone).
 
 ### Other dependencies to verify before UI kickoff
 
@@ -191,7 +200,7 @@ Notes for implementation planning:
 2. [DESIGN.md](DESIGN.md) + live app on a phone viewport (Chrome, LAN/Tailscale)  
 3. Screenshots of current: Home, questionnaire step, results, watchlist, film detail, import, review  
 4. Sample content: long vs short “why it matches”; missing poster; missing RT; enrichment-not-ready  
-5. Confirmation that **P1 search-picker** is done or scheduled immediately before UI work  
+5. Confirmation that **P1 search-picker** (#136 + #140) is done or scheduled immediately before UI work  
 
 ### Expected design outputs
 
@@ -213,10 +222,10 @@ Treat this document as **hard constraints**. Do not invent a new visual brand. D
 | 1 | Visual scope | Tighten Neo-Noir for mobile |
 | 2 | Platform | Chrome mobile via LAN/Tailscale; no PWA this pass |
 | 3 | Nav | Bottom: Home, Watchlist, Recommend, More; Review = top badge; no FAB |
-| 4 | Hierarchy | Home hub default; Recommend highly visible (CTA + tab); History via Home |
+| 4 | Hierarchy | Home hub default with inline film picker; header search icon; Recommend highly visible (CTA + tab); History via Home |
 | 5 | Results | 3-stage ceremony; short reasons on 1; full record on 3; history→3; replay 1→2→3 |
 | 6 | Watchlist | Poster + title grid; ⋯ actions; filter sheet; no cell metadata |
 | 7 | Optimization | Nightly-first + solid first-run basics |
 | 8 | A11y/motion | Atmosphere + reduced-motion/contrast guardrails |
-| 9 | v1 scope | Full primary reskin; Home picker is **prerequisite**, not in-pass feature work |
+| 9 | v1 scope | Full primary reskin; Home picker + inline placement (#136, #140) are **prerequisites**, not in-pass feature work |
 | 10 | Success | Checklist A–F; fail on A/D/B |
