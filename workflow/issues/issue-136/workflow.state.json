@@ -2,26 +2,22 @@
   "issue": 136,
   "branch": "cursor/issue-136-home-search-picker-e134",
   "stage": "plan-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-24T12:24:39Z",
+  "active_skill": "execute",
+  "updated_at": "2026-07-24T12:26:53Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
-    "execute": null,
+    "execute": "bc-be4a1afe-6c9e-4822-ac2e-81e9d3f94a08",
     "planning": "bc-6fb95dd4-53da-4c90-9e02-ed132e251bbf",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 138,
-  "active_agent_id": "bc-6fb95dd4-53da-4c90-9e02-ed132e251bbf",
+  "active_agent_id": "bc-be4a1afe-6c9e-4822-ac2e-81e9d3f94a08",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "execute",
-    "started_at": "2026-07-24T12:24:39Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
