@@ -174,15 +174,15 @@ Host frontend build: stop compose frontend and clear `frontend/.next` before `np
 
 ## Definition of done
 
-- [ ] `GET /films` supports `statuses=active,pending_watch_review,watched` and returns `tmdb_id` on summaries; archived not included
-- [ ] `/search` picker merges local + TMDB by `tmdb_id` with status-aware actions (no new status machine)
-- [ ] Home returning user has **Add a film** and **Mark watched** → picker; `/watchlist/add` redirects into picker
-- [ ] Empty/loading/no-results/error states handled; scope helper text present
-- [ ] Post-add / post-review navigation matches plan
-- [ ] Automated tests map to acceptance criteria above
-- [ ] `documents/api-contracts.md` updated
-- [ ] `bash $APP_DEFAULT_GATE` passes
-- [ ] No production code outside this plan’s scope (no hub redesign / sync / status-machine expansion)
+- [x] `GET /films` supports `statuses=active,pending_watch_review,watched` and returns `tmdb_id` on summaries; archived not included
+- [x] `/search` picker merges local + TMDB by `tmdb_id` with status-aware actions (no new status machine)
+- [x] Home returning user has **Add a film** and **Mark watched** → picker; `/watchlist/add` redirects into picker
+- [x] Empty/loading/no-results/error states handled; scope helper text present
+- [x] Post-add / post-review navigation matches plan
+- [x] Automated tests map to acceptance criteria above
+- [x] `documents/api-contracts.md` updated
+- [x] `bash $APP_DEFAULT_GATE` passes
+- [x] No production code outside this plan’s scope (no hub redesign / sync / status-machine expansion)
 
 ## PR seed
 
