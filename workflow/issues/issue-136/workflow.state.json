@@ -1,9 +1,15 @@
 {
   "issue": 136,
   "branch": "cursor/issue-136-home-search-picker-e134",
+<<<<<<< HEAD
   "stage": "spec-ready",
   "active_skill": "planning",
   "updated_at": "2026-07-24T12:00:53Z",
+=======
+  "stage": "plan-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-24T12:04:18Z",
+>>>>>>> cursor/issue-136-pr-138-plan-agent-10cf
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
