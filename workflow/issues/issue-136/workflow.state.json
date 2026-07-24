@@ -3,7 +3,11 @@
   "branch": "cursor/issue-136-home-search-picker-e134",
   "stage": "execute-ready",
   "active_skill": "demo",
+<<<<<<< Updated upstream
   "updated_at": "2026-07-24T12:46:26Z",
+=======
+  "updated_at": "2026-07-24T12:44:45Z",
+>>>>>>> Stashed changes
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
