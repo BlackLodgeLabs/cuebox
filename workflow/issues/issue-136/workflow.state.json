@@ -1,9 +1,9 @@
 {
   "issue": 136,
   "branch": "cursor/issue-136-home-search-picker-e134",
-  "stage": "create-pr-ready",
+  "stage": "babysit-in-progress",
   "active_skill": "babysit-pr",
-  "updated_at": "2026-07-24T13:16:20Z",
+  "updated_at": "2026-07-24T13:18:30Z",
   "agents": {
     "babysit-pr": "bc-30256631-9bf2-4edb-b714-7830ebb31062",
     "create-pr": "bc-30c29872-5b06-4256-aac5-befd5dea4f55",
@@ -21,7 +21,8 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   },
-  "handoff_deferred": null
+  "handoff_deferred": null,
+  "schema_version": 1
 }
