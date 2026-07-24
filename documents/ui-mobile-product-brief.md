@@ -1,0 +1,252 @@
+# Cuebox mobile UI — product brief
+
+Status: **Decisions locked** (fact-finding complete). Ready for a UI designer or design-implement pass after prerequisites below.
+
+Audience: UI designer (human or agent) taking over visual/IA work for Cuebox’s phone-first experience.
+
+Related docs: [DESIGN.md](DESIGN.md) (visual system), [PRD.md](PRD.md) (product requirements), [how-cuebox-works.md](how-cuebox-works.md), [ROADMAP.md](ROADMAP.md).
+
+---
+
+## 1. Product in one paragraph
+
+Cuebox is a locally hosted, single-user app that helps someone decide **what to watch tonight from their own Letterboxd-derived watchlist**. It does not discover new films. The tone is a trusted film-loving friend, not a search engine. Recommendations may vary between runs. The app is used ~90% of the time on a phone.
+
+---
+
+## 2. Locked design decisions
+
+### D1 — Scope of visual change
+
+**Tighten Neo-Noir for mobile.** Keep existing tokens, typography, icon language, and cinematic vibe from [DESIGN.md](DESIGN.md). Redesign navigation, hierarchy, density, and phone layouts inside that system. Do not rebrand.
+
+### D2 — Platform reality
+
+**Mobile web in Chrome** over LAN or Tailscale. No PWA / add-to-home-screen requirements in this pass. Design for occasional slow or unreachable API (network hiccups); clear loading, retry, and “can’t reach Cuebox” states matter.
+
+### D3 — Primary navigation
+
+**Bottom tabs:** Home · Watchlist · Recommend · More  
+
+- **More** → Settings (sync, etc.)
+- **Review** (ambiguous metadata matches) → **top notification badge**, not a tab
+- **Search** (find / add / mark watched) → **magnifying-glass icon in the top header** on all primary screens; navigates to the Home inline film picker (via `/search` alias)
+- **No FAB**
+
+### D4 — Hierarchy of jobs
+
+**Home is the default landing** and acts as a hub:
+
+1. **Find a film** — inline **search-picker** at the top of Home (library + TMDB; status-aware actions per result). No separate Add vs Mark watched entry points; the picker offers the right action for each hit (see §5 P1).
+2. **Create a recommendation** → Recommend flow
+3. **History** → history list (History is **not** a bottom tab)
+
+The same picker is reachable from any screen via the **header search icon** (`/search` redirects to Home with the field focused).
+
+**Recommend** remains a primary product job: visible as both a Home CTA and its own tab.
+
+### D5 — Results / recommendation ceremony
+
+Fresh recommendations use a **mandatory 3-stage ceremony** (Continue/Next only between stages; **no skip**):
+
+| Stage | Content |
+|-------|---------|
+| **1 — Winner** | Singular focus. Poster-led winner + **short** reasons only (key factors + short “why it matches”). Must feel special. |
+| **2 — Runners-up** | Swipeable poster row. Focused runner-up uses a **winner-like** layout (poster + reasons). |
+| **3 — Session record** | All five films together with **full** metadata, reasons, where-to-watch, questionnaire/answer summary, and deep access. |
+
+**History** detail views **land on stage 3**. Stage 3 includes a control to **replay the ceremony**: stages **1 → 2**, then return to **3** (not a full 1→2→3 loop unless replay is started again).
+
+Where-to-watch and questionnaire summary live on **stage 3**, not on the ceremony stages.
+
+### D6 — Watchlist metaphor
+
+**Poster-first grid** (posters are the primary visual asset app-wide when they don’t fight the job):
+
+- Poster + **title below only**
+- **more_horiz** icon (or standard ellipsis) on the poster (e.g. top-right) for actions: watched / archive / etc.
+- **No metadata** on grid cells
+- **Filter** control (top-right) opens a filter/sort menu driven by Cuebox-stored metadata
+- Status tabs remain: Watchlist / Watched / Archived (product model per lifecycle work)
+
+### D7 — What this pass optimizes for
+
+**Nightly-first + solid first-run basics.** Hero polish on Home, ceremony, watchlist, film detail, recommend questionnaire. Import, enrichment progress, match review, and settings must be clear and complete—not abandoned—but need not match ceremony-level art direction.
+
+### D8 — Accessibility & motion
+
+**Atmosphere with escapes.** Keep Neo-Noir cinematic default (including grain/scanlines language). Honor `prefers-reduced-motion`. Maintain strong readability for titles and reason text on phone screens. No essential actions that exist only via hover/glow.
+
+### D9 — v1 scope (this UI initiative)
+
+**In scope — full primary app reskin:**
+
+- App shell (tabs + Review badge)
+- Home hub
+- Recommend questionnaire (mobile density)
+- Results ceremony 1→2→3 + history replay
+- Watchlist poster grid + filter sheet
+- Film detail (poster-led, consistent actions)
+- Import / enrichment progress
+- Match review
+- Sync/settings under More
+
+**Out of scope:**
+
+- Insights / Ask ([ROADMAP.md](ROADMAP.md) / #51)
+- PWA
+- Developer Mode visual redesign
+- Roadmap placeholder screens
+
+**Prerequisites (must ship before this UI pass):** Home search-picker (#136) and inline placement + global header search (#140) — see §5.
+
+See §6 for implementation build order.
+
+### D10 — Success criteria
+
+Use **A–F as a checklist**. **Fail the pass** if **A, D, or B** are not met.
+
+| ID | Criterion | Severity |
+|----|-----------|----------|
+| **A** | Flow efficiency: from Home, start a recommendation in ≤ 2 taps; find/add/mark a film from the inline picker without a separate intent CTA; ceremony 1→2→3 has no dead ends; History opens at stage 3; replay does 1→2 then back to 3 | **Fail if missing** |
+| **D** | Ceremony quality: winner stage is singular; runners-up swipe focus is obvious; stage 3 clearly reads as the durable session record | **Fail if missing** |
+| **B** | Poster-first clarity: watchlist is posters + titles only; actions via ⋯; filters reachable without breaking the grid metaphor | **Fail if missing** |
+| **C** | One-handed usability: primary nav in thumb zone; key CTAs ~≥44px; no essential hover-only actions | Checklist |
+| **E** | First-run not broken: empty→import obvious; enrichment progress understandable; Review badge visible when needed and opens review | Checklist |
+| **F** | Atmosphere without harm: Neo-Noir preserved; reduced-motion honored; titles/reasons readable on phone | Checklist |
+
+Also confirm: where-to-watch and full reasons live on stage 3 (per D5).
+
+---
+
+## 3. Design system constraints (sacred)
+
+From [DESIGN.md](DESIGN.md) / `frontend/src/styles/tokens.css`:
+
+- Theme: Modern Neo-Noir Cinema / Used Future
+- Dark surfaces, tactical green + sulfurous lime accents
+- Type: Cabin (headings), Libre Franklin (body), Space Mono (meta/technical)
+- Icons: Material Symbols Outlined (filled only for active/selected)
+- Soft industrial radii; chamfered primary buttons; avoid generic pill-heavy / purple-glow AI defaults
+- Mobile-first breakpoint mindset (`md` ~768px); mobile margins 16px
+
+Designers may refine **layout and component composition**; they should not replace the brand system unless a later decision explicitly reopens D1.
+
+---
+
+## 4. Screen / flow inventory for v1
+
+| Surface | Role in this brief |
+|---------|-------------------|
+| Home | Default hub; inline film picker; Create recommendation + History quick links; Review badge |
+| Header search | Magnifying-glass icon → Home picker (via `/search` alias) |
+| Watchlist | Poster grid; ⋯ actions; filter sheet; status tabs |
+| Recommend | Questionnaire; entry to ceremony |
+| Ceremony 1–2 | Fresh pick ritual |
+| Stage 3 / History detail | Durable record + replay entry |
+| History list | Reachable from Home (not a tab) |
+| Film detail | Poster-led; status actions; metadata |
+| Import + job status | First-run / rare; must be clear |
+| Match review | Via top badge |
+| More → Sync/settings | RSS, CSV, etc. |
+
+---
+
+## 5. Functional prerequisites (before UI review)
+
+These are **product/API/UX features**, not pure visual redesign. Deliver them (or agreed stubs with real behavior) **before** the mobile UI pass starts so Home and watchlist actions are not fake.
+
+### P1 — Home search-picker (required prerequisite)
+
+Shipped in two steps: combined search behavior (#136), then Home placement (#140).
+
+**Behavior (picker):**
+
+1. Search **both TMDB and the user’s Cuebox watchlist** (combined results, merged by `tmdb_id`).
+2. **Library hits** — status-aware actions: View; Mark watched (`active`); Complete review (`pending_watch_review`); View only (`watched`). Archived excluded.
+3. **TMDB-only hits** — **Add to watchlist** and **Add & mark watched** (chains add → watch-review dialog).
+
+**Placement (Home + global access):**
+
+1. **Inline on Home** — returning-user Home embeds the picker near the top; no separate Add vs Mark watched CTAs.
+2. **`/search` alias** — redirects to Home with the search field focused (backward-compatible deep links).
+3. **Header search icon** — magnifying glass in the app shell on all primary screens; navigates to `/search` (resolves to Home picker).
+
+Notes for the UI pass:
+
+- **Style** the inline picker, header icon, and results list within Neo-Noir — do not reinvent search/merge/action behavior.
+- Picker copy should read as **find a film in your library or add one**, not open-ended discovery (see §1 tone).
+
+### Other dependencies to verify before UI kickoff
+
+- Watchlist status transitions and tabs behave as intended on current main (lifecycle model).
+- Watch providers (“where to watch”) available for stage 3.
+- History detail can reopen a full recommendation session payload (needed for stage 3 + ceremony replay).
+
+---
+
+## 6. Build order / decomposition
+
+Implement as **separate GitHub issues** (one workflow pass each). Do not attempt the full D9 reskin in a single PR.
+
+| Order | Slice | Issue | Notes |
+|-------|--------|-------|-------|
+| 0 | P1 prerequisites | #136 (done), #140 | Required before UI pass |
+| 1 | App shell | #141 | Bottom tabs + header + Review badge; everything else renders inside this |
+| 2 | Home hub | #142 | After #141; depends on #140 picker placement |
+| 3 | Watchlist poster grid + filter sheet | #143 | After #141; can parallelize with #142 |
+| 4 | Film detail | #144 | After #141; prefer alongside/after #143 for visual consistency |
+| 5 | Ceremony 1→2→3 + history replay | #145 | After #141; largest product risk — lock back/refresh/deep-link in spec |
+| 6 | Questionnaire density + first-run | #146 | After #141; prefer after #142 so empty→import path is coherent |
+
+**Rule:** Start `@cursoragent spec` on #141 first. Parallelize #142–#146 only after the shell PR has landed (or is clearly merge-ready).
+
+---
+
+## 7. Out of scope reminders
+
+- Multi-user / auth
+- Letterboxd write-back
+- Insights dashboard / Ask
+- Rebrand or new design-token theme
+- Installable PWA
+- Treating Desktop as the primary canvas (desktop may follow mobile patterns)
+
+---
+
+## 8. Suggested designer kickoff pack
+
+1. This brief  
+2. [DESIGN.md](DESIGN.md) + live app on a phone viewport (Chrome, LAN/Tailscale)  
+3. Screenshots of current: Home, questionnaire step, results, watchlist, film detail, import, review  
+4. Sample content: long vs short “why it matches”; missing poster; missing RT; enrichment-not-ready  
+5. Confirmation that **P1 search-picker** (#136 + #140) is done or scheduled immediately before UI work  
+
+### Expected design outputs
+
+- Mobile wireframes: shell, Home, ceremony 1–2–3, watchlist grid + filter sheet, film detail  
+- Hi-fi for those surfaces within Neo-Noir  
+- Motion notes for ceremony (and reduced-motion fallback)  
+- Redlines / token deltas only if composition requires them (not a new brand)
+
+### For a Cursor agent specifically
+
+Treat this document as **hard constraints**. Do not invent a new visual brand. Do not skip ceremony stages. Do not put metadata on watchlist grid cells. Do not add a FAB or a History tab. Fail the PR if success criteria **A, D, or B** are unmet.
+
+---
+
+## 9. Decision log (source)
+
+| # | Topic | Choice |
+|---|--------|--------|
+| 1 | Visual scope | Tighten Neo-Noir for mobile |
+| 2 | Platform | Chrome mobile via LAN/Tailscale; no PWA this pass |
+| 3 | Nav | Bottom: Home, Watchlist, Recommend, More; Review = top badge; no FAB |
+| 4 | Hierarchy | Home hub default with inline film picker; header search icon; Recommend highly visible (CTA + tab); History via Home |
+| 5 | Results | 3-stage ceremony; short reasons on 1; full record on 3; history→3; replay 1→2→3 |
+| 6 | Watchlist | Poster + title grid; ⋯ actions; filter sheet; no cell metadata |
+| 7 | Optimization | Nightly-first + solid first-run basics |
+| 8 | A11y/motion | Atmosphere + reduced-motion/contrast guardrails |
+| 9 | v1 scope | Full primary reskin; Home picker + inline placement (#136, #140) are **prerequisites**, not in-pass feature work |
+| 10 | Success | Checklist A–F; fail on A/D/B |
+
