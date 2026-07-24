@@ -49,4 +49,4 @@ Empty query: idle guidance (“Type a title…”). Nonsense query: “No result
 - **Bugbot:** No Bugbot reviews or unresolved must-fix threads after green CI wait.
 - **Merge:** `mergeStateStatus: CLEAN`, mergeable, no conflicts with `main`.
 - **Loops used:** bugbot 0/3, ci_autofix 0/2, total_runs 5/10.
-- **Mark ready:** GitHub MCP `update_pull_request` (`draft: false`) failed: `Resource not accessible by personal access token`. Manual **Ready for review** toggle needed on https://github.com/BlackLodgeLabs/cuebox/pull/138 — do not block `complete` solely for this (MCP-GITHUB.md).
+- **Mark ready:** GitHub MCP `update_pull_request` (`draft: false`) failed (`Resource not accessible by personal access token`); marked ready via `gh pr ready 138` fallback. PR https://github.com/BlackLodgeLabs/cuebox/pull/138 is **ready for review**.
