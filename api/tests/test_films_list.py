@@ -173,7 +173,7 @@ def test_list_films_includes_tmdb_id(integration_client):
     with SessionLocal() as db:
         film_id = _seed_watchlist_film(db, title="Tmdb Id Film", year=2001)
 
-    response = integration_client.get(f"/api/v1/films?search=Tmdb%20Id%20Film&limit=5")
+    response = integration_client.get("/api/v1/films?search=Tmdb%20Id%20Film&limit=5")
     assert response.status_code == 200
     item = next(row for row in response.json()["data"] if row["id"] == film_id)
     assert item["tmdb_id"] == abs(hash("Tmdb Id Film")) % 1_000_000

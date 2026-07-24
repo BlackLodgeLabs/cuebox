@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { LibrarySearchPicker } from "@/components/library-search-picker";
 import { createQueryWrapper } from "@/test/query-wrapper";
 import type { FilmSummary } from "@/types/api";
@@ -64,6 +64,10 @@ function makeFilm(overrides: Partial<FilmSummary> & Pick<FilmSummary, "id" | "ti
 }
 
 describe("LibrarySearchPicker", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
   it("shows helper copy and merges local over TMDB duplicate", async () => {
     getFilmsMock.mockResolvedValue({
       data: [
