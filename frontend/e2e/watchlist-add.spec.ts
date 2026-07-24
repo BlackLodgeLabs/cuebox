@@ -63,9 +63,34 @@ test.describe("watchlist add flow (mocked API)", () => {
         }),
       });
     });
+
+    await page.route(`**${API_PATH_PREFIX}/films/reviews/pending-count**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          metadata_count: 0,
+          watch_review_count: 0,
+          total: 0,
+        }),
+      });
+    });
+
+    await page.route(`**${API_PATH_PREFIX}/health**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "ok",
+          database: "ok",
+          version: "test",
+          providers: {},
+        }),
+      });
+    });
   });
 
-  test("add film search and confirm via shared picker", async ({ page }) => {
+  test("add film search and confirm via Home picker redirect chain", async ({ page }) => {
     await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -101,6 +126,7 @@ test.describe("watchlist add flow (mocked API)", () => {
           enrichment_status: status,
           metadata: null,
           semantic_profile: null,
+          watches: [],
           created_at: "2024-01-01T00:00:00Z",
           updated_at: "2024-01-01T00:00:00Z",
         }),
@@ -108,32 +134,27 @@ test.describe("watchlist add flow (mocked API)", () => {
     });
 
     await page.goto("/watchlist/add");
-    await expect(page).toHaveURL(/\/search\?intent=add/);
-    await page.getByLabel("Library and TMDB search").fill("Matrix");
+    await expect(page).toHaveURL(/\/$/);
+    await page.getByTestId("library-search-input").fill("Matrix");
     await expect(page.getByText("The Matrix (1999)")).toBeVisible();
     await page.getByRole("button", { name: "Add to watchlist" }).click();
     await expect(page).toHaveURL(new RegExp(`/watchlist/${addedFilmId}$`));
   });
 
-  test("home shows add film CTA between recommendation and history", async ({ page }) => {
+  test("home shows inline search without dual intent CTAs", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
     await expect(page.getByText("12 films on your watchlist")).toBeVisible();
+    await expect(page.getByTestId("library-search-input")).toBeVisible();
     const links = page.getByRole("link");
     await expect(links.filter({ hasText: "View watchlist" })).toHaveAttribute("href", "/watchlist");
     await expect(links.filter({ hasText: "Start questionnaire" })).toBeVisible();
-    await expect(links.filter({ hasText: "Add a film" })).toHaveAttribute(
-      "href",
-      "/search?intent=add",
-    );
-    await expect(links.filter({ hasText: "Mark watched" })).toHaveAttribute(
-      "href",
-      "/search?intent=mark-watched",
-    );
+    await expect(links.filter({ hasText: "Add a film" })).toHaveCount(0);
+    await expect(links.filter({ hasText: "Mark watched" })).toHaveCount(0);
     await expect(links.filter({ hasText: "View history" })).toBeVisible();
   });
 
-  test("watchlist page shows add button to shared picker", async ({ page }) => {
+  test("watchlist page shows add button to /search", async ({ page }) => {
     await page.route(`**${API_PATH_PREFIX}/films?**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -148,7 +169,7 @@ test.describe("watchlist add flow (mocked API)", () => {
     await page.goto("/watchlist");
     await expect(page.getByRole("link", { name: "Add film" })).toHaveAttribute(
       "href",
-      "/search?intent=add",
+      "/search",
     );
   });
 });

@@ -270,7 +270,7 @@ export function WatchlistPageContent() {
           <p className="mt-1 text-body-md text-muted-foreground">{subtitle}</p>
         </div>
         <Button asChild>
-          <Link href="/search?intent=add">Add film</Link>
+          <Link href="/search">Add film</Link>
         </Button>
       </div>
 

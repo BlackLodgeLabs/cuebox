@@ -26,6 +26,17 @@ describe("AppShell", () => {
     expect(homeLink).toHaveAttribute("href", "/");
   });
 
+  it("exposes Search films header link to /search", () => {
+    render(
+      <AppShell>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    const searchLink = screen.getByRole("link", { name: "Search films" });
+    expect(searchLink).toHaveAttribute("href", "/search");
+  });
+
   it("applies text-foreground to active Review nav link", () => {
     render(
       <AppShell>

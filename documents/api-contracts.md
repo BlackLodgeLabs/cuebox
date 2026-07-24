@@ -763,7 +763,7 @@ Empty category groups are omitted. When the country object exists but all moneti
 
 ### 4.7 Global TMDB Search
 
-Proxy TMDB movie search without requiring an existing film row. Used by the `/search` library+TMDB picker (and legacy `/watchlist/add` redirect). Requires `TMDB_API_KEY`.
+Proxy TMDB movie search without requiring an existing film row. Used by the library+TMDB picker embedded on returning-user Home (`LibrarySearchPicker`). `/search` redirects to `/?focus=search`; legacy `/watchlist/add` still chains through `/search`. Requires `TMDB_API_KEY`.
 
 Letterboxd identity for manual adds is resolved server-side via `https://letterboxd.com/tmdb/{id}` when reachable, with a slug-probe fallback against `/film/{slug}/` when Cloudflare blocks the shortcut.
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Legacy add path — shared picker lives at /search. */
+/** Legacy add path — chains through /search → Home focus. */
 export default function AddFilmPage() {
-  redirect("/search?intent=add");
+  redirect("/search");
 }

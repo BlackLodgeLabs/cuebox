@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Icon } from "@/components/icon";
+import { LibrarySearchPicker } from "@/components/library-search-picker";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +25,19 @@ import {
 import { getHealth } from "@/lib/api-client";
 
 export default function HomePage() {
+  return (
+    <Suspense fallback={<CardGridSkeleton count={1} />}>
+      <HomePageContent />
+    </Suspense>
+  );
+}
+
+function HomePageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const focusSearch = searchParams.get("focus") === "search";
   const [healthOpen, setHealthOpen] = useState(false);
+  const focusHandledRef = useRef(false);
   const {
     data: hasWatchlist,
     isLoading: watchlistLoading,
@@ -37,6 +51,25 @@ export default function HomePage() {
     queryFn: getHealth,
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    if (!focusSearch || focusHandledRef.current) return;
+    if (watchlistLoading) return;
+
+    focusHandledRef.current = true;
+
+    if (hasWatchlist) {
+      const input = document.querySelector<HTMLInputElement>(
+        '[data-testid="library-search-input"]',
+      );
+      if (input) {
+        input.scrollIntoView({ block: "center" });
+        input.focus();
+      }
+    }
+
+    router.replace("/", { scroll: false });
+  }, [focusSearch, hasWatchlist, watchlistLoading, router]);
 
   if (watchlistLoading) {
     return <CardGridSkeleton count={1} />;
@@ -84,9 +117,11 @@ export default function HomePage() {
       <div>
         <h1 className="text-h1">What do you want to watch?</h1>
         <p className="mt-2 text-body-md text-muted-foreground">
-          Start a new recommendation or browse your past picks.
+          Find a film, start a recommendation, or browse your past picks.
         </p>
       </div>
+
+      <LibrarySearchPicker autoFocus={focusSearch} />
 
       <Card className="hover-glow">
         <CardHeader>
@@ -118,36 +153,6 @@ export default function HomePage() {
           <CardContent>
             <Button asChild className="w-full">
               <Link href="/recommend">Start questionnaire</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover-glow">
-          <CardHeader>
-            <CardTitle>Add film to watchlist</CardTitle>
-            <CardDescription>
-              Search your library and TMDB to add a title without re-exporting
-              Letterboxd.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/search?intent=add">Add a film</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover-glow">
-          <CardHeader>
-            <CardTitle>Mark watched</CardTitle>
-            <CardDescription>
-              Find a film in your library (including watched) or on TMDB and
-              record a watch.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/search?intent=mark-watched">Mark watched</Link>
             </Button>
           </CardContent>
         </Card>
