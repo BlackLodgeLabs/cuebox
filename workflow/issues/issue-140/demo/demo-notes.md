@@ -55,3 +55,8 @@ Skipped — preserving Part 2 seeded volume (12 ready films). Empty-hub behavior
 
 - No secrets in images.
 - Artifacts reflect current branch behavior after execute commits (`feat(frontend): embed library search on Home for issue #140` and follow-up toast fix).
+
+## Babysit (2026-07-24)
+
+- Frontend CI **success** on `4c5dce8`; merge state **CLEAN**; no Bugbot review threads / must-fix items; loops unused (`bugbot` 0 / `ci_autofix` 0).
+- MCP `update_pull_request` `draft: false` failed (PAT: Resource not accessible); marked ready via `gh pr ready 147` instead.

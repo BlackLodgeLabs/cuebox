@@ -1,9 +1,9 @@
 {
   "issue": 140,
   "branch": "cursor/issue-140-home-inline-search-8d81",
-  "stage": "babysit-in-progress",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-24T18:38:54Z",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-24T18:44:28Z",
   "agents": {
     "babysit-pr": "bc-2bb77532-a08a-4580-98c4-73ae0526ffaa",
     "create-pr": "bc-18adf498-fe7f-4bbf-b1be-9a683bdae438",
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 147,
-  "active_agent_id": "bc-2bb77532-a08a-4580-98c4-73ae0526ffaa",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
