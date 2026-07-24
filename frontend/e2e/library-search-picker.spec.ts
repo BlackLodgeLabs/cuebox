@@ -169,11 +169,11 @@ test.describe("library search picker (mocked API)", () => {
     await page.getByTestId("library-search-input").fill("Wicker");
     await expect(page.getByText("The Wicker Man (1973)")).toBeVisible();
     await expect(page.getByText("The Matrix (1999)")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Mark watched" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mark watched", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add to watchlist" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add & mark watched" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Mark watched" }).click();
+    await page.getByRole("button", { name: "Mark watched", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Review watched film" })).toBeVisible();
     expect(statusBody).toEqual({ status: "pending_watch_review" });
   });

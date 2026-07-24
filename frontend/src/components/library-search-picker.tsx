@@ -151,6 +151,9 @@ export function LibrarySearchPicker({
 
     if (!pendingFilmId) return;
 
+    const filmId = pendingFilmId;
+    setPendingFilmId(null);
+
     if (status === "ready") {
       toast({
         title: "Film added",
@@ -164,7 +167,7 @@ export function LibrarySearchPicker({
         variant: "destructive",
       });
     }
-    router.push(`/watchlist/${pendingFilmId}`);
+    router.push(`/watchlist/${filmId}`);
   }, [
     pollId,
     pendingFilmId,
