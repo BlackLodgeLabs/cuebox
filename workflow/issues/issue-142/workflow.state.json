@@ -1,9 +1,9 @@
 {
   "issue": 142,
   "branch": "cursor/issue-142-home-hub-composition",
-  "stage": "spec-ready",
+  "stage": "plan-in-progress",
   "active_skill": "planning",
-  "updated_at": "2026-07-26T16:37:18Z",
+  "updated_at": "2026-07-25T06:02:38Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
