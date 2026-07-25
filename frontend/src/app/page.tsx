@@ -14,14 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
-import {
-  useHasWatchlist,
-  usePendingReviewCount,
-  useWatchlistCount,
-} from "@/hooks/use-films";
+import { useHasWatchlist } from "@/hooks/use-films";
 import { getHealth } from "@/lib/api-client";
 
 export default function HomePage() {
@@ -44,8 +39,6 @@ function HomePageContent() {
     isError: watchlistError,
     refetch: refetchWatchlist,
   } = useHasWatchlist();
-  const { data: reviewCount = 0 } = usePendingReviewCount();
-  const { data: watchlistCount } = useWatchlistCount();
   const { data: health } = useQuery({
     queryKey: ["health"],
     queryFn: getHealth,
@@ -113,84 +106,31 @@ function HomePageContent() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <header>
         <h1 className="text-h1">What do you want to watch?</h1>
         <p className="mt-2 text-body-md text-muted-foreground">
-          Find a film, start a recommendation, or browse your past picks.
+          Find a film in your library, create a recommendation, or open History.
         </p>
+      </header>
+
+      <LibrarySearchPicker
+        autoFocus={focusSearch}
+        placeholder="Find a film in your library or add one…"
+        helperText="Search your library (including watched films) or add from TMDB. Archived titles are not listed."
+      />
+
+      <div className="space-y-3">
+        <Button asChild size="lg" className="w-full min-h-11">
+          <Link href="/recommend">Create a recommendation</Link>
+        </Button>
+        <Link
+          href="/history"
+          className="block text-center text-body-md text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline motion-reduce:transition-none"
+        >
+          History
+        </Link>
       </div>
-
-      <LibrarySearchPicker autoFocus={focusSearch} />
-
-      <Card className="hover-glow">
-        <CardHeader>
-          <CardTitle>Your watchlist</CardTitle>
-          <CardDescription>
-            {watchlistCount === undefined
-              ? "Loading watchlist…"
-              : watchlistCount === 1
-                ? "1 film on your watchlist"
-                : `${watchlistCount} films on your watchlist`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild className="w-full">
-            <Link href="/watchlist">View watchlist</Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="hover-glow">
-          <CardHeader>
-            <CardTitle>New recommendation</CardTitle>
-            <CardDescription>
-              Answer a few questions and we&apos;ll pick a film from your
-              watchlist.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/recommend">Start questionnaire</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover-glow">
-          <CardHeader>
-            <CardTitle>History</CardTitle>
-            <CardDescription>
-              Browse past recommendations and revisit your picks.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/history">View history</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {reviewCount > 0 && (
-        <Card className="warning-banner">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Films need review
-              <Badge variant="secondary">{reviewCount}</Badge>
-            </CardTitle>
-            <CardDescription>
-              Some films need metadata confirmation or a watch diary entry before
-              they are fully ready.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/review">Review now</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       <HealthPanel health={health} open={healthOpen} onToggle={setHealthOpen} />
     </div>

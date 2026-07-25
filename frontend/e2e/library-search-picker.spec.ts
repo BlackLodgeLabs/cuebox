@@ -100,13 +100,17 @@ test.describe("library search picker (mocked API)", () => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
     await expect(page.getByTestId("library-search-input")).toBeVisible();
-    await expect(page.getByPlaceholder("Find a film…")).toBeVisible();
+    await expect(
+      page.getByPlaceholder("Find a film in your library or add one…"),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "Add a film" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Mark watched" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "View watchlist" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Review now" })).toHaveCount(0);
 
     const searchBox = page.getByTestId("library-search-input");
-    const recommend = page.getByRole("link", { name: "Start questionnaire" });
-    const history = page.getByRole("link", { name: "View history" });
+    const recommend = page.getByRole("link", { name: "Create a recommendation" });
+    const history = page.getByRole("link", { name: "History" });
     await expect(recommend).toBeVisible();
     await expect(history).toBeVisible();
 
@@ -164,7 +168,7 @@ test.describe("library search picker (mocked API)", () => {
 
     await page.goto("/");
     await expect(
-      page.getByText(/Searches your library \(including watched films\) and TMDB/i),
+      page.getByText(/Search your library \(including watched films\) or add from TMDB/i),
     ).toBeVisible();
     await page.getByTestId("library-search-input").fill("Wicker");
     await expect(page.getByText("The Wicker Man (1973)")).toBeVisible();

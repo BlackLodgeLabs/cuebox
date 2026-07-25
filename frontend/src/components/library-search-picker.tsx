@@ -35,6 +35,10 @@ import type { FilmSummary, TmdbSearchResultItem } from "@/types/api";
 
 interface LibrarySearchPickerProps {
   autoFocus?: boolean;
+  /** Input placeholder; default keeps the shared picker tone. */
+  placeholder?: string;
+  /** Intro helper above the input; default explains library + TMDB search. */
+  helperText?: string;
 }
 
 interface ReviewDialogState {
@@ -47,8 +51,14 @@ interface ReviewDialogState {
   watchId?: string;
 }
 
+const DEFAULT_PLACEHOLDER = "Find a film…";
+const DEFAULT_HELPER_TEXT =
+  "Searches your library (including watched films) and TMDB. Archived titles are not listed.";
+
 export function LibrarySearchPicker({
   autoFocus = false,
+  placeholder = DEFAULT_PLACEHOLDER,
+  helperText = DEFAULT_HELPER_TEXT,
 }: LibrarySearchPickerProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -368,15 +378,12 @@ export function LibrarySearchPicker({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Searches your library (including watched films) and TMDB. Archived titles
-        are not listed.
-      </p>
+      <p className="text-sm text-muted-foreground">{helperText}</p>
 
       <Input
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Find a film…"
+        placeholder={placeholder}
         aria-label="Library and TMDB search"
         autoFocus={autoFocus}
         data-testid="library-search-input"
