@@ -66,3 +66,9 @@ Also: `npm run test:unit -- --run src/components/app-shell.test.tsx` — 15 pass
 - Captured via Playwright against the live Compose frontend (`localhost:3000`).
 - Next.js floating “N” portal hidden via CSS for cleaner chrome shots.
 - No secrets in images or notes.
+
+## Babysit notes
+
+- 2026-07-26: PR marked ready for review via `gh pr ready 149` after GitHub MCP `update_pull_request` (`draft: false`) failed with PAT scope error (`Resource not accessible by personal access token`).
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
+- Required checks at ready: Frontend CI success on `43e848a`; no Bugbot review threads; mergeable CLEAN prior to ready toggle.
