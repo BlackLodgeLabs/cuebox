@@ -140,6 +140,7 @@ spacing:
 ## Component Layout & Shapes
 - **Spacing Scale:** Multiples of 8px (`xs: 4px`, `sm: 8px`, `md: 16px`, `lg: 24px`, `xl: 32px`) to guarantee geometric balance. Desktop margins are `48px` and mobile margins are `16px`.
 - **Breakpoints:** Mobile-first architecture transitioning to desktop layouts at `md: 768px`. Maximum container width is locked at `1280px` (`max-w-7xl`).
+- **App chrome (IA):** Phone-first shell — slim top header (Cuebox brand, search icon → `/search`, conditional Review badge) plus a fixed bottom tab bar (**Home · Watchlist · Recommend · More**). More opens Settings (`/settings/sync`); History is not a primary tab. Same four-destination chrome at all breakpoints; main content uses bottom safe-area padding so tabs never obscure page content.
 - **Hardware Borders (Sci-Fi Brutalism):** Avoid fully rounded pills. Utilize soft industrial `4px` (`rounded-DEFAULT`) corners on all container frames and image wrappers to maintain a durable feel. Primary interaction buttons utilize CSS `clip-path` to create chamfered (angled cut-off) corners.
 - **Outlines:** Thin `1px` crisp borders utilizing translucent variations of `--color-outline` to separate UI segments without adding visual clutter.
 
