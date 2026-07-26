@@ -2,8 +2,8 @@
   "issue": 141,
   "branch": "cursor/issue-141-mobile-ui-app-shell",
   "stage": "demo-ready",
-  "active_skill": "demo",
-  "updated_at": "2026-07-26T14:55:40Z",
+  "active_skill": null,
+  "updated_at": "2026-07-26T14:56:03Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 149,
-  "active_agent_id": "bc-923f5439-4d71-4d53-b2cd-8eda06c27979",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,

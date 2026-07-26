@@ -1,7 +1,7 @@
 # Demo notes — issue #141
 
 - **Date:** 2026-07-26T14:55:00Z
-- **Commit:** 9c22d7d ()
+- **Commit:** 4204524
 - **Branch:** `cursor/issue-141-pr-149-demo-agent-49e6` (base `cursor/issue-141-mobile-ui-app-shell`)
 - **PR:** #149
 - **Tier:** application
