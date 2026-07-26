@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { WatchlistPosterGrid } from "@/components/watchlist-poster-grid";
 import type { FilmSummary } from "@/types/api";
 
@@ -41,6 +41,10 @@ const baseFilm: FilmSummary = {
 };
 
 describe("WatchlistPosterGrid", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders poster + title only without year/enrichment/date metadata", () => {
     const { container } = render(
       <WatchlistPosterGrid
@@ -98,11 +102,11 @@ describe("WatchlistPosterGrid", () => {
     expect(onMarkWatched).toHaveBeenCalledWith(baseFilm);
   });
 
-  it("shows Return to watchlist for watched films and Re-enable for archived", async () => {
+  it("shows Return to watchlist for watched films", async () => {
     const user = userEvent.setup();
     const onStatusTransition = vi.fn();
 
-    const { rerender } = render(
+    render(
       <WatchlistPosterGrid
         films={[{ ...baseFilm, status: "watched" }]}
         tab="watched"
@@ -113,8 +117,13 @@ describe("WatchlistPosterGrid", () => {
     await user.click(screen.getByRole("button", { name: /Actions for Test Film/i }));
     await user.click(await screen.findByRole("menuitem", { name: /Return to watchlist/i }));
     expect(onStatusTransition).toHaveBeenCalledWith("film-1", "active");
+  });
 
-    rerender(
+  it("shows Re-enable on watchlist for archived films", async () => {
+    const user = userEvent.setup();
+    const onStatusTransition = vi.fn();
+
+    render(
       <WatchlistPosterGrid
         films={[{ ...baseFilm, status: "archived" }]}
         tab="archived"

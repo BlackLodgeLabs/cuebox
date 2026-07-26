@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WatchlistPageContent } from "@/app/watchlist/watchlist-page-content";
 
 const mockReplace = vi.fn();
@@ -103,8 +103,13 @@ function mockEmptyFilms() {
 }
 
 describe("WatchlistPageContent", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
     mockReplace.mockReset();
+    mockUseFilms.mockReset();
     searchParams = new URLSearchParams("tab=watched&search=matrix");
     mockUseFilmStatusTransition.mockReturnValue({
       mutate: vi.fn(),
@@ -130,7 +135,7 @@ describe("WatchlistPageContent", () => {
     expect(screen.queryByTestId("watchlist-table")).not.toBeInTheDocument();
   });
 
-  it("maps archived tab to status=archived and active to on_watchlist", () => {
+  it("maps archived tab to status=archived", () => {
     searchParams = new URLSearchParams("tab=archived");
     mockEmptyFilms();
     render(<WatchlistPageContent />);
@@ -140,9 +145,10 @@ describe("WatchlistPageContent", () => {
     );
     expect(archivedCall?.[0]).toMatchObject({ status: "archived" });
     expect(screen.getByText(/No archived films/i)).toBeInTheDocument();
+  });
 
+  it("maps active tab to on_watchlist", () => {
     searchParams = new URLSearchParams("");
-    mockUseFilms.mockClear();
     mockEmptyFilms();
     render(<WatchlistPageContent />);
     const activeCall = mockUseFilms.mock.calls.find(
@@ -219,6 +225,6 @@ describe("WatchlistPageContent", () => {
 
     render(<WatchlistPageContent />);
     expect(screen.getByTestId("watchlist-poster-grid")).toBeInTheDocument();
-    expect(screen.queryByText("Enrichment")).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader")).not.toBeInTheDocument();
   });
 });

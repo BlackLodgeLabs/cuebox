@@ -1,6 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_WATCHLIST_FILTERS,
   WatchlistFilterSheet,
@@ -18,6 +17,11 @@ const seeded: WatchlistFilterValues = {
 };
 
 describe("WatchlistFilterSheet", () => {
+  afterEach(() => {
+    cleanup();
+    document.body.style.pointerEvents = "";
+  });
+
   it("prefills drafts from values when opened", () => {
     render(
       <WatchlistFilterSheet
@@ -35,8 +39,7 @@ describe("WatchlistFilterSheet", () => {
     expect(screen.getByRole("button", { name: /Clear/i })).toBeInTheDocument();
   });
 
-  it("Apply commits draft values and Clear commits defaults", async () => {
-    const user = userEvent.setup();
+  it("Apply commits draft values and Clear commits defaults", () => {
     const onApply = vi.fn();
     const onClear = vi.fn();
 
@@ -50,20 +53,19 @@ describe("WatchlistFilterSheet", () => {
       />,
     );
 
-    await user.clear(screen.getByLabelText(/^Search$/i));
-    await user.type(screen.getByLabelText(/^Search$/i), "blade");
-    await user.click(screen.getByRole("button", { name: /Apply/i }));
+    const search = screen.getByLabelText(/^Search$/i);
+    fireEvent.change(search, { target: { value: "blade" } });
+    fireEvent.click(screen.getByRole("button", { name: /Apply/i }));
 
     expect(onApply).toHaveBeenCalledWith(
       expect.objectContaining({ search: "blade" }),
     );
 
-    await user.click(screen.getByRole("button", { name: /Clear/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Clear/i }));
     expect(onClear).toHaveBeenCalled();
   });
 
-  it("discards draft edits when closed without Apply", async () => {
-    const user = userEvent.setup();
+  it("discards draft edits when closed without Apply", () => {
     const onApply = vi.fn();
     const onOpenChange = vi.fn();
 
@@ -77,7 +79,9 @@ describe("WatchlistFilterSheet", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText(/^Search$/i), "ghost");
+    fireEvent.change(screen.getByLabelText(/^Search$/i), {
+      target: { value: "ghost" },
+    });
 
     rerender(
       <WatchlistFilterSheet
