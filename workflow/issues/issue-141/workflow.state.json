@@ -1,0 +1,26 @@
+{
+  "issue": 141,
+  "branch": "cursor/issue-141-mobile-ui-app-shell",
+  "stage": "spec-in-progress",
+  "active_skill": "review-and-spec",
+  "updated_at": "2026-07-26T13:58:16Z",
+  "agents": {
+    "babysit-pr": null,
+    "create-pr": null,
+    "demo": null,
+    "execute": null,
+    "planning": null,
+    "review-and-spec": null,
+    "review-and-spec-continued": null
+  },
+  "pr": null,
+  "active_agent_id": "bc-e00e09c8-437e-4bfc-8f9d-719ccfed0862",
+  "passback_to": null,
+  "passback_reason": null,
+  "handoff_pending": null,
+  "loops": {
+    "bugbot": 0,
+    "ci_autofix": 0,
+    "total_runs": 1
+  }
+}
