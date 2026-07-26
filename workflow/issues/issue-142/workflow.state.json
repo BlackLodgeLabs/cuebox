@@ -2,26 +2,22 @@
   "issue": 142,
   "branch": "cursor/issue-142-home-hub-composition",
   "stage": "execute-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-26T17:03:34Z",
+  "active_skill": "demo",
+  "updated_at": "2026-07-26T17:05:26Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
-    "demo": null,
+    "demo": "bc-15557316-a28f-4251-8161-f9931fb05a18",
     "execute": "bc-edb4fb3b-72cf-4d7e-84a0-6bcc0b2fdbc5",
     "planning": "bc-1ddaaaf3-0ae0-4a39-9398-2043813437ba",
     "review-and-spec": "bc-5e33b412-f22f-4b1f-95a1-33c20d963677",
     "review-and-spec-continued": null
   },
   "pr": 150,
-  "active_agent_id": null,
+  "active_agent_id": "bc-15557316-a28f-4251-8161-f9931fb05a18",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "demo",
-    "started_at": "2026-07-26T17:03:34Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
