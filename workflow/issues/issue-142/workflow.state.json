@@ -1,16 +1,16 @@
 {
   "issue": 142,
   "branch": "cursor/issue-142-home-hub-composition",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-26T16:25:07Z",
+  "updated_at": "2026-07-26T16:26:30Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
     "planning": null,
-    "review-and-spec": null,
+    "review-and-spec": "bc-5e33b412-f22f-4b1f-95a1-33c20d963677",
     "review-and-spec-continued": null
   },
   "pr": null,
