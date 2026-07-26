@@ -10,11 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import type { FilmStatus } from "@/types/api";
 
 interface FilmStatusActionsProps {
   status: FilmStatus;
-  variant?: "table" | "detail";
+  variant?: "table" | "detail" | "menu";
   onTransition: (status: FilmStatus) => void;
   onMarkWatched?: () => void;
   onCompleteReview?: () => void;
@@ -31,10 +32,29 @@ export function FilmStatusActions({
 }: FilmStatusActionsProps) {
   const [archiveOpen, setArchiveOpen] = useState(false);
 
-  const renderButton = (label: string, onClick: () => void) => {
+  const renderAction = (label: string, onClick: () => void) => {
+    if (variant === "menu") {
+      return (
+        <DropdownMenuItem
+          key={label}
+          disabled={isPending}
+          onSelect={(event) => {
+            // Keep menu from stealing focus before archive dialog opens.
+            if (label === "Archive") {
+              event.preventDefault();
+            }
+            onClick();
+          }}
+        >
+          {label}
+        </DropdownMenuItem>
+      );
+    }
+
     if (variant === "table") {
       return (
         <Button
+          key={label}
           type="button"
           variant="ghost"
           size="sm"
@@ -51,6 +71,7 @@ export function FilmStatusActions({
 
     return (
       <Button
+        key={label}
         type="button"
         variant="outline"
         size="sm"
@@ -67,26 +88,26 @@ export function FilmStatusActions({
   if (status === "active") {
     actions = (
       <>
-        {renderButton("Mark watched", () => {
+        {renderAction("Mark watched", () => {
           if (onMarkWatched) {
             onMarkWatched();
           } else {
             onTransition("pending_watch_review");
           }
         })}
-        {renderButton("Archive", () => setArchiveOpen(true))}
+        {renderAction("Archive", () => setArchiveOpen(true))}
       </>
     );
   } else if (status === "pending_watch_review") {
-    actions = renderButton("Complete review", () => {
+    actions = renderAction("Complete review", () => {
       if (onCompleteReview) {
         onCompleteReview();
       }
     });
   } else if (status === "watched") {
-    actions = renderButton("Return to watchlist", () => onTransition("active"));
+    actions = renderAction("Return to watchlist", () => onTransition("active"));
   } else if (status === "archived") {
-    actions = renderButton("Re-enable on watchlist", () => onTransition("active"));
+    actions = renderAction("Re-enable on watchlist", () => onTransition("active"));
   }
 
   if (actions === null) {
@@ -95,15 +116,19 @@ export function FilmStatusActions({
 
   return (
     <>
-      <div
-        className={
-          variant === "table"
-            ? "flex items-center justify-end gap-1"
-            : "flex flex-wrap gap-2"
-        }
-      >
-        {actions}
-      </div>
+      {variant === "menu" ? (
+        actions
+      ) : (
+        <div
+          className={
+            variant === "table"
+              ? "flex items-center justify-end gap-1"
+              : "flex flex-wrap gap-2"
+          }
+        >
+          {actions}
+        </div>
+      )}
       <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>
         <DialogContent>
           <DialogHeader>
