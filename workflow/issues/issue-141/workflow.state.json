@@ -3,7 +3,7 @@
   "branch": "cursor/issue-141-mobile-ui-app-shell",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-26T13:58:42Z",
+  "updated_at": "2026-07-26T14:04:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 149,
   "active_agent_id": "bc-e00e09c8-437e-4bfc-8f9d-719ccfed0862",
   "passback_to": null,
   "passback_reason": null,
