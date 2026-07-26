@@ -3,7 +3,7 @@
   "branch": "cursor/issue-142-home-hub-composition",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-26T16:39:05Z",
+  "updated_at": "2026-07-26T16:39:11Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
