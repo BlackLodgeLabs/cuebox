@@ -1,9 +1,9 @@
 {
   "issue": 143,
   "branch": "cursor/issue-143-watchlist-poster-grid",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-26T16:47:39Z",
+  "updated_at": "2026-07-26T16:48:07Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
