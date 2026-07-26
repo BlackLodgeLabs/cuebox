@@ -3,7 +3,7 @@
   "branch": "cursor/issue-142-home-hub-composition",
   "stage": "create-pr-ready",
   "active_skill": null,
-  "updated_at": "2026-07-26T18:16:30Z",
+  "updated_at": "2026-07-26T18:23:29Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-4810224a-ec25-4b63-b33d-e877702caec7",
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-26T18:23:29Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
