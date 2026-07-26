@@ -67,3 +67,10 @@ Watchlist is a phone-first poster grid: posters and titles only, status actions 
 
 - No secrets in images or logs
 - Capture used live Docker stack at `http://localhost:3000` via Playwright Chromium
+
+## Babysit notes
+
+- 2026-07-26: PR #151 marked ready for review after Frontend CI success on `652279c`; no Bugbot review threads; mergeable CLEAN prior to ready toggle.
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
+- Cursor/Vercel check suites remain queued (same non-blocking pattern as #141/#142); required GitHub Actions checks green.
+
