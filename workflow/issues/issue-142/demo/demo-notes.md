@@ -60,3 +60,10 @@
 ## Narrative
 
 Returning-user Home now reads as one phone-first hub: picker near the top, one primary Create CTA, and a lighter History link. Watchlist and Review stay in the #141 shell (tab + badge) instead of competing Home cards. Empty-state Import and header-search focus remain intact.
+
+## Babysit notes
+
+- 2026-07-26: PR #150 marked ready for review after Frontend CI success on `9b7ca23`; no Bugbot review threads; mergeable CLEAN prior to ready toggle.
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=4/10.
+- Cursor/Vercel check suites remain queued (same non-blocking pattern as #141); required GitHub Actions checks green.
+

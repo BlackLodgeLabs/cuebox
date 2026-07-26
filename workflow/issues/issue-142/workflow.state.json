@@ -1,9 +1,9 @@
 {
   "issue": 142,
   "branch": "cursor/issue-142-home-hub-composition",
-  "stage": "babysit-in-progress",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-26T18:27:05Z",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-26T18:31:48Z",
   "agents": {
     "babysit-pr": "bc-3a40cc74-02ba-4c88-9c03-a9855639aa36",
     "create-pr": "bc-4810224a-ec25-4b63-b33d-e877702caec7",
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 150,
-  "active_agent_id": "bc-3a40cc74-02ba-4c88-9c03-a9855639aa36",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
