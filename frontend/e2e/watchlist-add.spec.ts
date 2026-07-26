@@ -144,14 +144,17 @@ test.describe("watchlist add flow (mocked API)", () => {
   test("home shows inline search without dual intent CTAs", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
-    await expect(page.getByText("12 films on your watchlist")).toBeVisible();
     await expect(page.getByTestId("library-search-input")).toBeVisible();
     const links = page.getByRole("link");
-    await expect(links.filter({ hasText: "View watchlist" })).toHaveAttribute("href", "/watchlist");
-    await expect(links.filter({ hasText: "Start questionnaire" })).toBeVisible();
+    await expect(links.filter({ hasText: "Create a recommendation" })).toHaveAttribute(
+      "href",
+      "/recommend",
+    );
+    await expect(links.filter({ hasText: "History" })).toHaveAttribute("href", "/history");
+    await expect(links.filter({ hasText: "View watchlist" })).toHaveCount(0);
+    await expect(links.filter({ hasText: "Start questionnaire" })).toHaveCount(0);
     await expect(links.filter({ hasText: "Add a film" })).toHaveCount(0);
     await expect(links.filter({ hasText: "Mark watched" })).toHaveCount(0);
-    await expect(links.filter({ hasText: "View history" })).toBeVisible();
   });
 
   test("watchlist page shows add button to /search", async ({ page }) => {
