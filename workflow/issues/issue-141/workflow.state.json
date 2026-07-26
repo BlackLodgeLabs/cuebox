@@ -3,7 +3,7 @@
   "branch": "cursor/issue-141-mobile-ui-app-shell",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-26T14:14:42Z",
+  "updated_at": "2026-07-26T14:19:33Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-caf9c408-27a4-4742-a542-ca217ff80398",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-26T14:19:33Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
