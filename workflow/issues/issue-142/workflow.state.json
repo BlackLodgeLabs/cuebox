@@ -1,9 +1,9 @@
 {
   "issue": 142,
   "branch": "cursor/issue-142-home-hub-composition",
-  "stage": "demo-ready",
+  "stage": "create-pr-in-progress",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-26T18:12:23Z",
+  "updated_at": "2026-07-26T18:14:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-4810224a-ec25-4b63-b33d-e877702caec7",
