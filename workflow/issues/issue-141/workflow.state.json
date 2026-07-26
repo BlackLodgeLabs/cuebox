@@ -3,7 +3,7 @@
   "branch": "cursor/issue-141-mobile-ui-app-shell",
   "stage": "execute-in-progress",
   "active_skill": "execute",
-  "updated_at": "2026-07-26T14:22:53Z",
+  "updated_at": "2026-07-26T14:23:04Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -23,5 +23,6 @@
     "ci_autofix": 0,
     "total_runs": 2
   },
-  "handoff_deferred": null
+  "handoff_deferred": null,
+  "schema_version": 1
 }
