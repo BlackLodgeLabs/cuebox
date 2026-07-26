@@ -3,7 +3,7 @@
   "branch": "cursor/issue-142-home-hub-composition",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-26T16:30:47Z",
+  "updated_at": "2026-07-26T16:35:07Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-5e33b412-f22f-4b1f-95a1-33c20d963677",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "planning",
+    "started_at": "2026-07-26T16:35:07Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
