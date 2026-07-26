@@ -1,9 +1,9 @@
 {
   "issue": 141,
   "branch": "cursor/issue-141-mobile-ui-app-shell",
-  "stage": "demo-ready",
+  "stage": "create-pr-in-progress",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-26T15:46:33Z",
+  "updated_at": "2026-07-26T15:47:36Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-08f04666-1369-4eed-a8ba-2a868355c743",
