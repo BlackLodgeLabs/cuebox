@@ -2,19 +2,19 @@
   "issue": 143,
   "branch": "cursor/issue-143-watchlist-poster-grid",
   "stage": "execute-ready",
-  "active_skill": null,
+  "active_skill": "demo",
   "updated_at": "2026-07-26T19:04:41Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
-    "demo": null,
+    "demo": "bc-f8059baf-02b5-4ecd-8c4a-f301d7bcf409",
     "execute": "bc-6e9980d2-b9f4-4465-9e53-4f14317fa1e3",
     "planning": "bc-9f9c47fb-9a1d-4b7f-892a-94f4658d383c",
     "review-and-spec": "bc-1973a0a1-ac88-4847-a3c9-a48b004e4e11",
     "review-and-spec-continued": null
   },
   "pr": 151,
-  "active_agent_id": null,
+  "active_agent_id": "bc-f8059baf-02b5-4ecd-8c4a-f301d7bcf409",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": {
