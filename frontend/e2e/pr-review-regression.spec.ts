@@ -15,7 +15,7 @@ test.describe("PR review regression checks", () => {
       buffer: Buffer.from("not a csv"),
     });
 
-    await expect(page.getByText("Invalid file type")).toBeVisible();
+    await expect(page.getByText("Invalid file type", { exact: true })).toBeVisible();
   });
 
   test("home nav stays on / when review badge is visible", async ({ page }) => {
