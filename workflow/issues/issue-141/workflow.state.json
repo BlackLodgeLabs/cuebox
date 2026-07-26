@@ -1,9 +1,9 @@
 {
   "issue": 141,
   "branch": "cursor/issue-141-mobile-ui-app-shell",
-  "stage": "babysit-in-progress",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-26T15:55:44Z",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-26T16:05:57Z",
   "agents": {
     "babysit-pr": "bc-d5da7045-1277-4378-9ee8-d3555d97c9ac",
     "create-pr": "bc-08f04666-1369-4eed-a8ba-2a868355c743",
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 149,
-  "active_agent_id": "bc-d5da7045-1277-4378-9ee8-d3555d97c9ac",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
