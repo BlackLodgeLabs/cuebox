@@ -1,9 +1,9 @@
 {
   "issue": 141,
   "branch": "cursor/issue-141-mobile-ui-app-shell",
-  "stage": "execute-ready",
+  "stage": "demo-in-progress",
   "active_skill": "demo",
-  "updated_at": "2026-07-26T14:45:44Z",
+  "updated_at": "2026-07-26T14:48:45Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
