@@ -98,7 +98,7 @@ Application-tier UI demo on Compose stack (phone 390×844, Playwright `iPhone 13
 
 - [x] Phase 6 gate + frontend unit/tsc + targeted E2E green at execute-ready (`fc1397b`) — per execute commit message
 - [x] Demo: six scenarios PASS (phone 390×844) — `demo/demo-notes.md`
-- [x] `Workflow regression: scripts/verify-workflow-paths.sh exit 0` at `2477dc9` (create-pr)
+- [x] `Workflow regression: scripts/verify-workflow-paths.sh exit 0` at `4e595ed` (create-pr)
 
 ## Checklist
 
