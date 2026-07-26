@@ -1,9 +1,9 @@
 {
   "issue": 141,
   "branch": "cursor/issue-141-mobile-ui-app-shell",
-  "stage": "plan-in-progress",
-  "active_skill": "planning",
-  "updated_at": "2026-07-25T11:15:00Z",
+  "stage": "plan-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-26T14:14:32Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,7 +21,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
   "handoff_deferred": null
 }
