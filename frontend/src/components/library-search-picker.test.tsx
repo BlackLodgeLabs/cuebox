@@ -89,6 +89,34 @@ describe("LibrarySearchPicker", () => {
     expect(screen.getByLabelText("Library and TMDB search")).toBe(input);
   });
 
+  it("accepts Home hub placeholder and helper overrides", async () => {
+    getFilmsMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+    });
+    searchTmdbGlobalMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+    });
+
+    const { Wrapper } = createQueryWrapper();
+    render(
+      <LibrarySearchPicker
+        placeholder="Find a film in your library or add one…"
+        helperText="Search your library or add from TMDB."
+      />,
+      { wrapper: Wrapper },
+    );
+
+    expect(screen.getByTestId("library-search-input")).toHaveAttribute(
+      "placeholder",
+      "Find a film in your library or add one…",
+    );
+    expect(
+      screen.getByText("Search your library or add from TMDB."),
+    ).toBeInTheDocument();
+  });
+
   it("shows helper copy and merges local over TMDB duplicate", async () => {
     getFilmsMock.mockResolvedValue({
       data: [
