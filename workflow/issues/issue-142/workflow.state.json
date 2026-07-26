@@ -1,9 +1,15 @@
 {
   "issue": 142,
   "branch": "cursor/issue-142-home-hub-composition",
+<<<<<<< HEAD
   "stage": "execute-in-progress",
   "active_skill": "execute",
   "updated_at": "2026-07-26T16:46:04Z",
+=======
+  "stage": "plan-ready",
+  "active_skill": "execute",
+  "updated_at": "2026-07-26T16:45:06Z",
+>>>>>>> origin/cursor/issue-142-home-hub-composition
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
