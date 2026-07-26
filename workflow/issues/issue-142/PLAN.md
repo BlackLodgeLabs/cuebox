@@ -197,16 +197,16 @@ cd frontend && PLAYWRIGHT_E2E_STACK=1 npx playwright test \
 
 ## Definition of done
 
-- [ ] Returning Home is a single hub stack: picker → **Create a recommendation** → **History** (no peer card grid)
-- [ ] One tap from Home to `/recommend` via primary CTA (≤ 2 taps criterion A)
-- [ ] No Home **View watchlist** or **Review now** peer cards
-- [ ] Picker library-or-add copy; `data-testid="library-search-input"` preserved; no dual intent CTAs
-- [ ] Empty Import CTA still obvious
-- [ ] System status secondary / not first-viewport dominant
-- [ ] Unit + E2E coverage mapped above green
-- [ ] `bash scripts/verify-phase6-gates.sh` exit 0
+- [x] Returning Home is a single hub stack: picker → **Create a recommendation** → **History** (no peer card grid)
+- [x] One tap from Home to `/recommend` via primary CTA (≤ 2 taps criterion A)
+- [x] No Home **View watchlist** or **Review now** peer cards
+- [x] Picker library-or-add copy; `data-testid="library-search-input"` preserved; no dual intent CTAs
+- [x] Empty Import CTA still obvious
+- [x] System status secondary / not first-viewport dominant
+- [x] Unit + E2E coverage mapped above green
+- [x] `bash scripts/verify-phase6-gates.sh` exit 0
 - [ ] Demo artifacts per `demo/demo-spec.md`
-- [ ] `workflow.state.json` → `execute-ready` after execute (planning ends at `plan-ready`)
+- [x] `workflow.state.json` → `execute-ready` after execute (planning ends at `plan-ready`)
 
 ## PR seed
 
