@@ -60,3 +60,26 @@ Skipped — preserving Part 2 seeded volume (12 ready films). Empty-hub behavior
 
 - Frontend CI **success** on `4c5dce8`; merge state **CLEAN**; no Bugbot review threads / must-fix items; loops unused (`bugbot` 0 / `ci_autofix` 0).
 - MCP `update_pull_request` `draft: false` failed (PAT: Resource not accessible); marked ready via `gh pr ready 147` instead.
+
+## Lite demo — SPEC/PLAN revision (`d8f80cb`)
+
+**Date:** 2026-07-26  
+**Base commit:** `d8f80cb` (`fix(frontend): reorder header search; return watched films to watchlist`)  
+**Scope:** post-execute feedback only — no workflow stage change / no handoff.
+
+| Change | Result | Artifact |
+|--------|--------|----------|
+| A — Header Search after Settings, before Review | **PASS** | `revision-a-header-search-order.png` |
+| B — Watched hit **View** + **Return to watchlist** | **PASS** | `revision-b-return-to-watchlist.png` |
+
+### A — Header Search order
+
+![revision-a-header-search-order](revision-a-header-search-order.png)
+
+- Nav order after brand: Home → Watchlist → Recommend → History → Settings → **Search** → **Review** (badge `1` from seeded `pending_watch_review`).
+
+### B — Return to watchlist
+
+![revision-b-return-to-watchlist](revision-b-return-to-watchlist.png)
+
+- Query `Ready Film 1` (status `watched`) → library hit with **Watched** badge, **View**, and **Return to watchlist**.
