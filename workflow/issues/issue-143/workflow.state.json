@@ -1,9 +1,9 @@
 {
   "issue": 143,
   "branch": "cursor/issue-143-watchlist-poster-grid",
-  "stage": "demo-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-26T21:09:03Z",
+  "stage": "create-pr-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-26T21:14:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-f97808ea-8d21-49d9-8bf3-5e3fd214dda9",
@@ -14,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 151,
-  "active_agent_id": "bc-f97808ea-8d21-49d9-8bf3-5e3fd214dda9",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   },
   "handoff_deferred": null,
   "schema_version": 1
