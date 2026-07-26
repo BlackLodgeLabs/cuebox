@@ -3,7 +3,7 @@
   "branch": "cursor/issue-143-watchlist-poster-grid",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-26T16:48:07Z",
+  "updated_at": "2026-07-26T16:52:34Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": "bc-1973a0a1-ac88-4847-a3c9-a48b004e4e11",
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 151,
   "active_agent_id": "bc-1973a0a1-ac88-4847-a3c9-a48b004e4e11",
   "passback_to": null,
   "passback_reason": null,
