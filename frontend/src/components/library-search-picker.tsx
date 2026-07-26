@@ -24,7 +24,7 @@ import {
   useGlobalTmdbSearch,
 } from "@/hooks/use-films";
 import { useToast } from "@/hooks/use-toast";
-import { ApiClientError } from "@/lib/api-client";
+import { ApiClientError, getFilm } from "@/lib/api-client";
 import {
   mergeLibraryAndTmdbResults,
   PICKER_LIBRARY_STATUSES,
@@ -33,10 +33,8 @@ import {
 } from "@/lib/library-search-merge";
 import type { FilmSummary, TmdbSearchResultItem } from "@/types/api";
 
-export type SearchPickerIntent = "add" | "mark-watched";
-
 interface LibrarySearchPickerProps {
-  intent?: SearchPickerIntent;
+  autoFocus?: boolean;
 }
 
 interface ReviewDialogState {
@@ -49,7 +47,9 @@ interface ReviewDialogState {
   watchId?: string;
 }
 
-export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
+export function LibrarySearchPicker({
+  autoFocus = false,
+}: LibrarySearchPickerProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,6 +58,9 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
     null,
   );
   const [pendingFilmId, setPendingFilmId] = useState<string | null>(null);
+  const [pendingMarkWatchedFilmId, setPendingMarkWatchedFilmId] = useState<
+    string | null
+  >(null);
   const [alreadyOnWatchlistId, setAlreadyOnWatchlistId] = useState<string | null>(
     null,
   );
@@ -67,7 +70,8 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
 
   const addToWatchlist = useAddToWatchlist();
   const statusTransition = useFilmStatusTransition();
-  const polling = useFilm(pendingFilmId ?? "", { pollWhileEnriching: true });
+  const pollId = pendingMarkWatchedFilmId ?? pendingFilmId;
+  const polling = useFilm(pollId ?? "", { pollWhileEnriching: true });
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -94,9 +98,61 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
   );
 
   useEffect(() => {
-    if (!pendingFilmId || !polling.data) return;
+    if (!pollId || !polling.data) return;
     const status = polling.data.enrichment_status;
     if (status !== "ready" && status !== "failed") return;
+
+    if (pendingMarkWatchedFilmId) {
+      const filmId = pendingMarkWatchedFilmId;
+      const filmTitle = polling.data.title;
+      const filmStatus = polling.data.status;
+      setPendingMarkWatchedFilmId(null);
+
+      if (status === "failed") {
+        toast({
+          title: "Enrichment failed",
+          description:
+            "The film was added but enrichment failed. Check the watchlist.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (filmStatus !== "active") {
+        toast({
+          title: "Film added",
+          description: `${filmTitle} is on your watchlist.`,
+        });
+        void libraryQuery.refetch();
+        return;
+      }
+
+      void (async () => {
+        try {
+          await statusTransition.mutateAsync({
+            filmId,
+            status: "pending_watch_review",
+          });
+          setReviewDialog({
+            filmId,
+            filmTitle,
+            cancelOnDismiss: true,
+          });
+          toast({
+            title: "Ready to review",
+            description: `${filmTitle} is ready — add your watch details.`,
+          });
+        } catch {
+          // useFilmStatusTransition toasts on error
+        }
+      })();
+      return;
+    }
+
+    if (!pendingFilmId) return;
+
+    const filmId = pendingFilmId;
+    setPendingFilmId(null);
 
     if (status === "ready") {
       toast({
@@ -111,8 +167,17 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
         variant: "destructive",
       });
     }
-    router.push(`/watchlist/${pendingFilmId}`);
-  }, [pendingFilmId, polling.data, router, toast]);
+    router.push(`/watchlist/${filmId}`);
+  }, [
+    pollId,
+    pendingFilmId,
+    pendingMarkWatchedFilmId,
+    polling.data,
+    router,
+    toast,
+    statusTransition,
+    libraryQuery.refetch,
+  ]);
 
   const libraryFilms = hasQuery ? (libraryQuery.data?.data ?? []) : [];
   const tmdbResults = hasQuery ? (tmdbQuery.data?.data ?? []) : [];
@@ -129,6 +194,11 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
   const partialError = (libraryError || tmdbError) && !bothFailed;
   const noResults =
     hasQuery && !isLoading && !bothFailed && hits.length === 0 && !partialError;
+
+  const isAddPending =
+    addToWatchlist.isPending ||
+    Boolean(pendingFilmId) ||
+    Boolean(pendingMarkWatchedFilmId);
 
   function clearInlineMessages() {
     setAlreadyOnWatchlistId(null);
@@ -159,6 +229,23 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
       cancelOnDismiss: false,
       ...pendingProps,
     });
+  }
+
+  async function handleReturnToWatchlist(film: FilmSummary) {
+    clearInlineMessages();
+    try {
+      await statusTransition.mutateAsync({
+        filmId: film.id,
+        status: "active",
+      });
+      toast({
+        title: "Returned to watchlist",
+        description: `${film.title} is active again for recommendations.`,
+      });
+      void libraryQuery.refetch();
+    } catch {
+      // useFilmStatusTransition toasts on error
+    }
   }
 
   async function handleAddTmdb(selected: TmdbSearchResultItem) {
@@ -210,11 +297,72 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
     }
   }
 
-  function handleReviewSuccessNavigate() {
-    if (intent === "mark-watched") {
-      router.push("/");
-      return;
+  async function handleAddAndMarkWatched(selected: TmdbSearchResultItem) {
+    clearInlineMessages();
+    try {
+      const result = await addToWatchlist.mutateAsync({
+        tmdb_id: selected.tmdb_id,
+      });
+
+      if (result.already_on_watchlist) {
+        const film = await getFilm(result.film_id);
+        if (film.status === "active") {
+          await statusTransition.mutateAsync({
+            filmId: film.id,
+            status: "pending_watch_review",
+          });
+          setReviewDialog({
+            filmId: film.id,
+            filmTitle: film.title,
+            cancelOnDismiss: true,
+          });
+          return;
+        }
+        if (film.status === "pending_watch_review") {
+          const pending = film.watches.find((watch) => watch.is_pending);
+          setReviewDialog({
+            filmId: film.id,
+            filmTitle: film.title,
+            cancelOnDismiss: false,
+            ...(pending
+              ? watchToDialogProps(pending)
+              : {}),
+          });
+          return;
+        }
+        setAlreadyOnWatchlistId(result.film_id);
+        return;
+      }
+
+      if (result.enrichment_status === "review_required") {
+        setPendingReviewId(result.review_id ?? null);
+        toast({
+          title: "Letterboxd link needed",
+          description:
+            "Cuebox could not auto-link this film. Paste the Letterboxd URL on the review page.",
+        });
+        return;
+      }
+
+      setPendingMarkWatchedFilmId(result.film_id);
+      toast({
+        title: "Adding film…",
+        description: "Enriching before opening the watch review.",
+      });
+    } catch (error) {
+      if (error instanceof ApiClientError && error.code === "CONFLICT") {
+        const filmId = error.details?.find((detail) => detail.field === "film_id")
+          ?.message;
+        if (filmId) {
+          setConflictFilmId(filmId);
+          setConflictMessage(error.message);
+          return;
+        }
+      }
     }
+  }
+
+  function handleReviewSuccessNavigate() {
     void libraryQuery.refetch();
   }
 
@@ -228,13 +376,11 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
       <Input
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder={
-          intent === "mark-watched"
-            ? "Find a film to mark watched…"
-            : "Search library and TMDB…"
-        }
+        placeholder="Find a film…"
         aria-label="Library and TMDB search"
-        autoFocus={intent === "add" || intent === "mark-watched"}
+        autoFocus={autoFocus}
+        data-testid="library-search-input"
+        id="library-search-input"
       />
 
       <div className="max-h-[32rem] space-y-2 overflow-y-auto pr-1" role="list">
@@ -276,12 +422,13 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
             <SearchHitRow
               key={hit.key}
               hit={hit}
-              emphasizeMarkWatched={intent === "mark-watched"}
               isStatusPending={statusTransition.isPending}
-              isAddPending={addToWatchlist.isPending || Boolean(pendingFilmId)}
+              isAddPending={isAddPending}
               onMarkWatched={(film) => void openMarkWatchedDialog(film)}
               onCompleteReview={openCompleteReviewDialog}
+              onReturnToWatchlist={(film) => void handleReturnToWatchlist(film)}
               onAddTmdb={(result) => void handleAddTmdb(result)}
+              onAddAndMarkWatched={(result) => void handleAddAndMarkWatched(result)}
             />
           ))}
       </div>
@@ -296,7 +443,7 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
           message={conflictMessage}
         />
       ) : null}
-      {pendingFilmId && (
+      {(pendingFilmId || pendingMarkWatchedFilmId) && (
         <p className="text-sm text-muted-foreground">
           Enriching film… this may take a moment.
         </p>
@@ -327,20 +474,22 @@ export function LibrarySearchPicker({ intent }: LibrarySearchPickerProps) {
 
 function SearchHitRow({
   hit,
-  emphasizeMarkWatched,
   isStatusPending,
   isAddPending,
   onMarkWatched,
   onCompleteReview,
+  onReturnToWatchlist,
   onAddTmdb,
+  onAddAndMarkWatched,
 }: {
   hit: LibrarySearchHit;
-  emphasizeMarkWatched: boolean;
   isStatusPending: boolean;
   isAddPending: boolean;
   onMarkWatched: (film: FilmSummary) => void;
   onCompleteReview: (film: FilmSummary) => void;
+  onReturnToWatchlist: (film: FilmSummary) => void;
   onAddTmdb: (result: TmdbSearchResultItem) => void;
+  onAddAndMarkWatched: (result: TmdbSearchResultItem) => void;
 }) {
   if (hit.kind === "library") {
     const { film } = hit;
@@ -368,7 +517,7 @@ function SearchHitRow({
           {film.status === "active" && (
             <Button
               size="sm"
-              variant={emphasizeMarkWatched ? "default" : "secondary"}
+              variant="secondary"
               disabled={isStatusPending}
               onClick={() => onMarkWatched(film)}
             >
@@ -378,10 +527,20 @@ function SearchHitRow({
           {film.status === "pending_watch_review" && (
             <Button
               size="sm"
-              variant={emphasizeMarkWatched ? "default" : "secondary"}
+              variant="secondary"
               onClick={() => onCompleteReview(film)}
             >
               Complete review
+            </Button>
+          )}
+          {film.status === "watched" && (
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={isStatusPending}
+              onClick={() => onReturnToWatchlist(film)}
+            >
+              Return to watchlist
             </Button>
           )}
         </div>
@@ -418,6 +577,14 @@ function SearchHitRow({
           onClick={() => onAddTmdb(result)}
         >
           Add to watchlist
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={isAddPending}
+          onClick={() => onAddAndMarkWatched(result)}
+        >
+          Add & mark watched
         </Button>
       </div>
     </div>

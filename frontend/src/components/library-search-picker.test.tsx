@@ -10,12 +10,14 @@ const {
   searchTmdbGlobalMock,
   addToWatchlistMock,
   setFilmStatusMock,
+  getFilmMock,
   pushMock,
 } = vi.hoisted(() => ({
   getFilmsMock: vi.fn(),
   searchTmdbGlobalMock: vi.fn(),
   addToWatchlistMock: vi.fn(),
   setFilmStatusMock: vi.fn(),
+  getFilmMock: vi.fn(),
   pushMock: vi.fn(),
 }));
 
@@ -32,7 +34,7 @@ vi.mock("@/lib/api-client", () => ({
   searchTmdbGlobal: searchTmdbGlobalMock,
   addToWatchlist: addToWatchlistMock,
   setFilmStatus: setFilmStatusMock,
-  getFilm: vi.fn(),
+  getFilm: getFilmMock,
   completeWatchReview: vi.fn(),
   cancelWatchReview: vi.fn(),
   updateFilmWatch: vi.fn(),
@@ -68,6 +70,25 @@ describe("LibrarySearchPicker", () => {
     cleanup();
     vi.clearAllMocks();
   });
+
+  it("uses unified Find a film placeholder without intent", async () => {
+    getFilmsMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+    });
+    searchTmdbGlobalMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+    });
+
+    const { Wrapper } = createQueryWrapper();
+    render(<LibrarySearchPicker />, { wrapper: Wrapper });
+
+    const input = screen.getByTestId("library-search-input");
+    expect(input).toHaveAttribute("placeholder", "Find a film…");
+    expect(screen.getByLabelText("Library and TMDB search")).toBe(input);
+  });
+
   it("shows helper copy and merges local over TMDB duplicate", async () => {
     getFilmsMock.mockResolvedValue({
       data: [
@@ -104,7 +125,7 @@ describe("LibrarySearchPicker", () => {
     });
 
     const { Wrapper } = createQueryWrapper();
-    render(<LibrarySearchPicker intent="add" />, { wrapper: Wrapper });
+    render(<LibrarySearchPicker />, { wrapper: Wrapper });
 
     expect(
       screen.getByText(/Searches your library \(including watched films\) and TMDB/i),
@@ -126,6 +147,7 @@ describe("LibrarySearchPicker", () => {
     );
     expect(screen.getByText("Other Film (2020)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add to watchlist" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add & mark watched" })).toBeInTheDocument();
     // Duplicate TMDB row must not appear as a second Add for The Wicker Man
     expect(screen.getAllByText(/The Wicker Man/)).toHaveLength(1);
 
@@ -137,7 +159,7 @@ describe("LibrarySearchPicker", () => {
     );
   });
 
-  it("shows Complete review for pending_watch_review and View only for watched", async () => {
+  it("shows Complete review for pending_watch_review and Return to watchlist for watched", async () => {
     getFilmsMock.mockResolvedValue({
       data: [
         makeFilm({
@@ -159,9 +181,14 @@ describe("LibrarySearchPicker", () => {
       data: [],
       pagination: { total: 0, limit: 20, offset: 0, has_more: false },
     });
+    setFilmStatusMock.mockResolvedValue({
+      id: "film-watched",
+      title: "Watched Film",
+      status: "active",
+    });
 
     const { Wrapper } = createQueryWrapper();
-    render(<LibrarySearchPicker intent="mark-watched" />, { wrapper: Wrapper });
+    render(<LibrarySearchPicker />, { wrapper: Wrapper });
 
     await userEvent.type(
       screen.getByLabelText("Library and TMDB search"),
@@ -176,6 +203,16 @@ describe("LibrarySearchPicker", () => {
     expect(screen.queryByRole("button", { name: "Mark watched" })).not.toBeInTheDocument();
     const viewed = screen.getAllByRole("link", { name: "View" });
     expect(viewed).toHaveLength(2);
+    expect(
+      screen.getByRole("button", { name: "Return to watchlist" }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Return to watchlist" }),
+    );
+    await waitFor(() => {
+      expect(setFilmStatusMock).toHaveBeenCalledWith("film-watched", "active");
+    });
   });
 
   it("shows empty idle, no-results, and TMDB partial error states", async () => {
@@ -202,5 +239,81 @@ describe("LibrarySearchPicker", () => {
         screen.getByText(/TMDB search failed\. Showing library results only/i),
       ).toBeInTheDocument();
     });
+  });
+
+  it("Add & mark watched polls until ready then opens review dialog", async () => {
+    const addedFilmId = "film-new-mark";
+    getFilmsMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+    });
+    searchTmdbGlobalMock.mockResolvedValue({
+      data: [
+        {
+          tmdb_id: 603,
+          title: "The Matrix",
+          original_title: "The Matrix",
+          year: 1999,
+          overview: "Reality glitch.",
+          poster_url: null,
+        },
+      ],
+      pagination: { total: 1, limit: 20, offset: 0, has_more: false },
+    });
+    addToWatchlistMock.mockResolvedValue({
+      film_id: addedFilmId,
+      enrichment_status: "enriching",
+    });
+
+    // Ready on first poll — covers status PUT + dialog; multi-poll race is E2E.
+    getFilmMock.mockResolvedValue({
+      id: addedFilmId,
+      title: "The Matrix",
+      year: 1999,
+      letterboxd_uri: "https://letterboxd.com/film/the-matrix/",
+      status: "active",
+      enrichment_status: "ready",
+      metadata: null,
+      semantic_profile: null,
+      watches: [],
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+    });
+    setFilmStatusMock.mockResolvedValue({
+      id: addedFilmId,
+      title: "The Matrix",
+      status: "pending_watch_review",
+    });
+
+    const { Wrapper } = createQueryWrapper();
+    render(<LibrarySearchPicker />, { wrapper: Wrapper });
+
+    await userEvent.type(
+      screen.getByLabelText("Library and TMDB search"),
+      "Matrix",
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("The Matrix (1999)")).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add & mark watched" }),
+    );
+
+    await waitFor(() => {
+      expect(setFilmStatusMock).toHaveBeenCalledWith(
+        addedFilmId,
+        "pending_watch_review",
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Review watched film" }),
+      ).toBeInTheDocument();
+    });
+
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

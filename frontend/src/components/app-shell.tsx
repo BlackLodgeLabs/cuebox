@@ -49,6 +49,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+            <Link
+              href="/search"
+              aria-label="Search films"
+              className="flex items-center gap-1.5 rounded px-3 py-2 text-label-md normal-case tracking-normal text-muted-foreground transition-all hover-glow hover:text-foreground"
+            >
+              <Icon name="search" size={20} />
+              <span className="hidden sm:inline">Search</span>
+            </Link>
             {reviewCount > 0 && (
               <Link
                 href="/review"
