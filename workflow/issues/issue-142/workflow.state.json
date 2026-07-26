@@ -1,9 +1,9 @@
 {
   "issue": 142,
   "branch": "cursor/issue-142-home-hub-composition",
-  "stage": "execute-ready",
+  "stage": "demo-in-progress",
   "active_skill": "demo",
-  "updated_at": "2026-07-26T17:05:26Z",
+  "updated_at": "2026-07-26T17:08:52Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -23,5 +23,6 @@
     "ci_autofix": 0,
     "total_runs": 2
   },
-  "handoff_deferred": null
+  "handoff_deferred": null,
+  "schema_version": 1
 }
