@@ -65,12 +65,39 @@ async function stubShellApis(page: Page, pendingTotal = 0) {
   });
 
   await page.route(`**${API_PATH_PREFIX}/films/review-required**`, async (route) => {
+    const data =
+      pendingTotal > 0
+        ? [
+            {
+              review_id: "review-1",
+              film_id: "seed-film",
+              title: "Seed Film",
+              year: 1973,
+              poster_url: null,
+              letterboxd_uri: "https://letterboxd.com/film/seed-film/",
+              review_type: "tmdb_match",
+              candidate_tmdb_id: 550,
+              confidence_score: 0.42,
+              candidate_payload: {
+                title: "Demo Candidate",
+                year: 1973,
+                director: null,
+              },
+              created_at: "2024-01-01T00:00:00Z",
+            },
+          ]
+        : [];
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        data: [],
-        pagination: { total: 0, limit: 50, offset: 0, has_more: false },
+        data,
+        pagination: {
+          total: data.length,
+          limit: 50,
+          offset: 0,
+          has_more: false,
+        },
       }),
     });
   });
@@ -97,12 +124,13 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     await page.goto("/");
 
     const primary = page.getByRole("navigation", { name: "Primary" });
-    await expect(primary.getByRole("link")).toHaveText([
-      "Home",
-      "Watchlist",
-      "Recommend",
-      "More",
-    ]);
+    const hrefs = await primary.getByRole("link").evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")),
+    );
+    expect(hrefs).toEqual(["/", "/watchlist", "/recommend", "/settings/sync"]);
+    for (const label of ["Home", "Watchlist", "Recommend", "More"]) {
+      await expect(primary.getByRole("link", { name: label })).toBeVisible();
+    }
     await expect(primary.getByRole("link", { name: /history/i })).toHaveCount(0);
     await expect(primary.getByRole("link", { name: /^settings$/i })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Home" })).toHaveAttribute(
@@ -131,7 +159,9 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     await expect(review).toBeVisible();
     await review.click();
     await expect(page).toHaveURL(/\/review/);
-    await expect(page.getByRole("heading", { name: "Review" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Review", exact: true }),
+    ).toBeVisible();
   });
 
   test("Search films lands on Home picker via /search", async ({ page }) => {
