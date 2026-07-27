@@ -3,7 +3,7 @@
   "branch": "cursor/issue-145-recommendation-ceremony",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-27T17:10:14Z",
+  "updated_at": "2026-07-27T17:16:36Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 154,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
