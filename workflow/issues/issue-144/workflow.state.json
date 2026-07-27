@@ -1,9 +1,9 @@
 {
   "issue": 144,
   "branch": "cursor/issue-144-mobile-ui-film-detail",
-  "stage": "plan-ready",
+  "stage": "execute-in-progress",
   "active_skill": "execute",
-  "updated_at": "2026-07-27T07:25:21Z",
+  "updated_at": "2026-07-27T07:26:28Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
