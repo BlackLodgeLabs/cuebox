@@ -2,29 +2,26 @@
   "issue": 145,
   "branch": "cursor/issue-145-recommendation-ceremony",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-27T17:21:42Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-27T17:24:21Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-4130c969-9451-4959-a10f-4a5b4fae8250",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 154,
-  "active_agent_id": null,
+  "active_agent_id": "bc-4130c969-9451-4959-a10f-4a5b4fae8250",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-27T17:21:42Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "handoff_deferred": null
 }
