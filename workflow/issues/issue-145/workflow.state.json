@@ -1,9 +1,9 @@
 {
   "issue": 145,
   "branch": "cursor/issue-145-recommendation-ceremony",
-  "stage": "demo-ready",
+  "stage": "create-pr-in-progress",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-27T18:32:45Z",
+  "updated_at": "2026-07-27T18:34:12Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-03660d55-db30-4c12-a70b-3acd011ee4f4",
