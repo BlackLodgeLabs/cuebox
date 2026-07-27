@@ -1,9 +1,9 @@
 {
   "issue": 145,
   "branch": "cursor/issue-145-recommendation-ceremony",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-27T17:09:44Z",
+  "updated_at": "2026-07-27T17:10:14Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
