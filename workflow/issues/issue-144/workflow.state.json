@@ -2,8 +2,8 @@
   "issue": 144,
   "branch": "cursor/issue-144-mobile-ui-film-detail",
   "stage": "execute-ready",
-  "active_skill": "execute",
-  "updated_at": "2026-07-27T07:33:09Z",
+  "active_skill": null,
+  "updated_at": "2026-07-27T07:33:25Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 152,
-  "active_agent_id": "bc-8acca2a6-3b6a-4d21-af0c-9b8b14a6f1ae",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
