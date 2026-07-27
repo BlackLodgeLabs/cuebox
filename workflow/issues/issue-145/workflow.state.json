@@ -2,10 +2,10 @@
   "issue": 145,
   "branch": "cursor/issue-145-recommendation-ceremony",
   "stage": "create-pr-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-27T18:44:08Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-27T18:46:28Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-7459d1b0-9c35-4148-a857-13025bc839ed",
     "create-pr": "bc-03660d55-db30-4c12-a70b-3acd011ee4f4",
     "demo": "bc-46412df7-7b8a-4c9a-a406-f065092cd01f",
     "execute": "bc-66c54f68-6439-4689-822d-7bc6a4866c2d",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 154,
-  "active_agent_id": null,
+  "active_agent_id": "bc-7459d1b0-9c35-4148-a857-13025bc839ed",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-27T18:44:08Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
