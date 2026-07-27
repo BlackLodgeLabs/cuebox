@@ -2,29 +2,26 @@
   "issue": 144,
   "branch": "cursor/issue-144-mobile-ui-film-detail",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-27T07:16:40Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-27T07:16:48Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-d0b93ea7-2345-412b-9ef9-46f21df3db8d",
     "review-and-spec": "bc-cde1bedd-719b-4356-8e4b-95be08b3dcee",
     "review-and-spec-continued": null
   },
   "pr": 152,
-  "active_agent_id": "bc-cde1bedd-719b-4356-8e4b-95be08b3dcee",
+  "active_agent_id": "bc-d0b93ea7-2345-412b-9ef9-46f21df3db8d",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-27T07:16:40Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "handoff_deferred": null
 }
