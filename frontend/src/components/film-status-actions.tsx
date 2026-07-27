@@ -53,7 +53,8 @@ export function FilmStatusActions({
       <Button
         type="button"
         variant="outline"
-        size="sm"
+        size="lg"
+        className="min-h-11"
         onClick={onClick}
         disabled={isPending}
       >

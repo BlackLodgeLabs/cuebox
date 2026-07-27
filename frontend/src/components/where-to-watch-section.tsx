@@ -157,7 +157,7 @@ export function WhereToWatchSection({
       <CardHeader>
         <CardTitle>Where to Watch</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-5">
         {data.categories.map((category) => (
           <ProviderRow key={category.type} category={category} />
         ))}

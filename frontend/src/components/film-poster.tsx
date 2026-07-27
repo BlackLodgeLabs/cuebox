@@ -4,7 +4,7 @@ interface FilmPosterProps {
   src: string | null | undefined;
   alt: string;
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "fill";
 }
 
 const SIZES = {
@@ -19,6 +19,32 @@ export function FilmPoster({
   className = "",
   size = "md",
 }: FilmPosterProps) {
+  if (size === "fill") {
+    if (!src) {
+      return (
+        <div
+          className={`flex aspect-[2/3] w-full items-center justify-center rounded bg-surface-high text-label-md text-muted-foreground ${className}`}
+        >
+          NO POSTER
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className={`relative aspect-[2/3] w-full overflow-hidden rounded ${className}`}
+      >
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="(max-width: 768px) 20rem, 18rem"
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
   const dims = SIZES[size];
 
   if (!src) {
