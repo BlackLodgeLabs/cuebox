@@ -3,7 +3,7 @@
   "branch": "cursor/issue-145-recommendation-ceremony",
   "stage": "demo-ready",
   "active_skill": null,
-  "updated_at": "2026-07-27T18:07:10Z",
+  "updated_at": "2026-07-27T18:23:23Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
