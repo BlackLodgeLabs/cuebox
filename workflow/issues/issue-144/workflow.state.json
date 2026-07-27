@@ -3,7 +3,7 @@
   "branch": "cursor/issue-144-mobile-ui-film-detail",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-27T07:19:16Z",
+  "updated_at": "2026-07-27T07:23:22Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-d0b93ea7-2345-412b-9ef9-46f21df3db8d",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-27T07:23:22Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
