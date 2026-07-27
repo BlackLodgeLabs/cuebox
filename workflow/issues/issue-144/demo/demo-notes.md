@@ -73,3 +73,9 @@ Film detail on this branch reads as a poster-led phone screen: dominant poster p
 
 - Watchlist entry metaphor may still be table (#143) — not in scope; demo entered detail via direct URL
 - Scenario 3 composite documents both W2W and Links; live provider lists also work when unmocked (earlier capture showed STREAM/RENT/BUY for Matrix)
+
+## Babysit notes
+
+- 2026-07-27: PR #152 marked ready for review via `gh pr ready 152` after GitHub MCP `update_pull_request` (`draft: false`) failed with PAT scope error (`Resource not accessible by personal access token`). Required checks at ready: Frontend CI success on `28527f0`; no Bugbot review threads; mergeable CLEAN prior to ready toggle.
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=5/10.
+- Cursor/Vercel check suites remain queued (same non-blocking pattern as #141/#142); required GitHub Actions checks green.
