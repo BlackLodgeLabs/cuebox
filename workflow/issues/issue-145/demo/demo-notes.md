@@ -81,7 +81,7 @@ Recommendation results are no longer a single flat dump: fresh/replay walks a po
 
 ## Babysit notes
 
-- 2026-07-27: PR #154 ready for review after Frontend CI success on `fe4992a`; mergeable CLEAN; no Bugbot review threads / must-fix items.
+- 2026-07-27: PR #154 marked ready for review via `gh pr ready 154` after GitHub MCP `update_pull_request` (`draft: false`) failed with PAT scope error (`Resource not accessible by personal access token`). Frontend CI success on `fe4992a` / complete tip; mergeable CLEAN; no Bugbot review threads / must-fix items.
 - Cursor Bugbot check suite remained `queued` (no check run) across all PR #154 commits — same pattern as #143/#151; not treated as a required blocking check (mergeStateStatus CLEAN).
 - Vercel suite also stayed queued (not required for this local-first app).
 - Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
