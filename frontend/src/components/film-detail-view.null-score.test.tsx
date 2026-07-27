@@ -1,7 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FilmDetailView } from "@/components/film-detail-view";
 import type { FilmDetail } from "@/types/api";
+
+afterEach(() => {
+  cleanup();
+});
 
 vi.mock("next/image", () => ({
   default: (props: { alt: string }) => <img alt={props.alt} />,

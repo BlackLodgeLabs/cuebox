@@ -1,7 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FilmDetailView } from "@/components/film-detail-view";
 import type { FilmDetail, FilmMetadataBlock } from "@/types/api";
+
+afterEach(() => {
+  cleanup();
+});
 
 vi.mock("next/image", () => ({
   default: (props: { alt: string }) => {
@@ -194,7 +198,7 @@ describe("FilmDetailView poster-led layout", () => {
     const { container } = render(<FilmDetailView film={emptyFilm} />);
 
     expect(screen.getByText(/enrichment data is not available yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/pending/i)).toBeInTheDocument();
+    expect(screen.getByText("Pending")).toBeInTheDocument();
     // Plain status line — no Card chrome wrapping the empty message
     const emptyCopy = screen.getByText(/enrichment data is not available yet/i);
     expect(emptyCopy.closest("[class*='rounded']")).toBeNull();
