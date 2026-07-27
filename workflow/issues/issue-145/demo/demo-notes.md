@@ -78,3 +78,11 @@ Recommendation results are no longer a single flat dump: fresh/replay walks a po
 - Capture helper was a local Playwright script against the running Compose frontend (`PLAYWRIGHT_E2E_STACK=1`); not committed
 - Mock posters are intentionally null (NO POSTER) — layout/pass criteria do not require live TMDB art
 - PR #154 base is already `feature/mobile-ui` (confirmed)
+
+## Babysit notes
+
+- 2026-07-27: PR #154 ready for review after Frontend CI success on `fe4992a`; mergeable CLEAN; no Bugbot review threads / must-fix items.
+- Cursor Bugbot check suite remained `queued` (no check run) across all PR #154 commits — same pattern as #143/#151; not treated as a required blocking check (mergeStateStatus CLEAN).
+- Vercel suite also stayed queued (not required for this local-first app).
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
+- No CI autofix or Bugbot fix cycles needed.
