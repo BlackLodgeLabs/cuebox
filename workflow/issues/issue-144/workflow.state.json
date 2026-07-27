@@ -3,7 +3,7 @@
   "branch": "cursor/issue-144-mobile-ui-film-detail",
   "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-27T07:00:45Z",
+  "updated_at": "2026-07-27T07:15:20Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": "bc-cde1bedd-719b-4356-8e4b-95be08b3dcee",
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 152,
   "active_agent_id": "bc-cde1bedd-719b-4356-8e4b-95be08b3dcee",
   "passback_to": null,
   "passback_reason": null,
