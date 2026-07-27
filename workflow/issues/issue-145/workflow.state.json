@@ -3,7 +3,7 @@
   "branch": "cursor/issue-145-recommendation-ceremony",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-27T17:27:41Z",
+  "updated_at": "2026-07-27T17:32:07Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": "bc-4130c969-9451-4959-a10f-4a5b4fae8250",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "execute",
+    "started_at": "2026-07-27T17:32:07Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
