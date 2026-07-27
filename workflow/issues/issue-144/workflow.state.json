@@ -1,9 +1,15 @@
 {
   "issue": 144,
   "branch": "cursor/issue-144-mobile-ui-film-detail",
+<<<<<<< HEAD
   "stage": "demo-in-progress",
   "active_skill": "demo",
   "updated_at": "2026-07-25T17:03:17Z",
+=======
+  "stage": "execute-ready",
+  "active_skill": "demo",
+  "updated_at": "2026-07-27T07:38:33Z",
+>>>>>>> origin/cursor/issue-144-mobile-ui-film-detail
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
