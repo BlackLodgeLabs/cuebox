@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { EditFilmMatchDialog } from "@/components/edit-film-match-dialog";
 import { FilmPoster } from "@/components/film-poster";
@@ -10,12 +9,6 @@ import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review
 import { WhereToWatchSection } from "@/components/where-to-watch-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { formatEnrichmentStatus } from "@/lib/enrichment-status";
 import type { FilmDetail, FilmStatus, FilmWatch, WatchlistTab } from "@/types/api";
 
@@ -61,6 +54,21 @@ function formatRating(value: number | null): string {
   return value.toFixed(1);
 }
 
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-h3">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
 export function FilmDetailView({
   film,
   autoOpenEditMatch = false,
@@ -76,7 +84,6 @@ export function FilmDetailView({
   } | null>(null);
   const metadata = film.metadata;
   const semantic = film.semantic_profile;
-  const backdropUrl = metadata?.backdrop_url ?? null;
   const isEnriching = film.enrichment_status === "enriching";
 
   useEffect(() => {
@@ -95,99 +102,111 @@ export function FilmDetailView({
   const backHref =
     backTab === "active" ? "/watchlist" : `/watchlist?tab=${backTab}`;
 
+  const hasKeyMeta = Boolean(
+    metadata?.director ||
+      metadata?.original_title ||
+      metadata?.runtime != null ||
+      metadata?.original_language ||
+      metadata?.country ||
+      metadata?.synopsis,
+  );
+
+  const hasScores =
+    metadata != null &&
+    (metadata.tmdb_rating !== null ||
+      metadata.rotten_tomatoes_score !== null ||
+      metadata.letterboxd_rating !== null ||
+      metadata.genres.length > 0 ||
+      metadata.keywords.length > 0);
+
+  const hasSemanticContent =
+    semantic != null &&
+    Boolean(
+      semantic.semantic_summary ||
+        semantic.subgenres.length > 0 ||
+        semantic.themes.length > 0 ||
+        semantic.tones.length > 0 ||
+        semantic.visual_descriptors.length > 0 ||
+        semantic.emotional_outcomes.length > 0 ||
+        semantic.viewing_contexts.length > 0 ||
+        semantic.complexity !== null ||
+        semantic.pacing !== null ||
+        semantic.energy !== null ||
+        semantic.obscurity !== null,
+    );
+
+  const enrichmentPending = !metadata && !semantic;
+
   return (
     <div className="space-y-8">
       <Link
         href={backHref}
-        className="inline-flex text-body-md text-muted-foreground hover:text-foreground"
+        className="inline-flex min-h-11 items-center text-body-md text-muted-foreground hover:text-foreground"
       >
         ← Watchlist
       </Link>
 
-      <div className="relative -mx-4 overflow-hidden rounded-lg md:-mx-0">
-        <div className="relative h-56 md:h-72">
-          {backdropUrl ? (
-            <>
-              <Image
-                src={backdropUrl}
-                alt=""
-                fill
-                priority
-                className="object-cover object-top"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/20" />
-            </>
-          ) : (
-            <div className="h-full bg-surface-container-high" />
-          )}
-          <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 px-4 pb-4 md:px-6 md:pb-6">
-            <FilmPoster
-              src={metadata?.poster_url ?? null}
-              alt={film.title}
-              size="md"
-              className="shadow-glow"
-            />
-            <div className="min-w-0 flex-1 pb-1">
-              <h1 className="text-h1">
-                {film.title}
-                {film.year ? ` (${film.year})` : ""}
-              </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge variant="secondary">
-                  {formatEnrichmentStatus(film.enrichment_status)}
-                </Badge>
-                {isEnriching && (
-                  <span className="text-label-md text-muted-foreground">
-                    Updating metadata…
-                  </span>
-                )}
-                <Badge variant="outline">{film.status}</Badge>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-                  Edit film match
-                </Button>
-                {onStatusTransition && (
-                  <FilmStatusActions
-                    status={film.status}
-                    variant="detail"
-                    isPending={isStatusPending}
-                    onTransition={onStatusTransition}
-                    onMarkWatched={onMarkWatched}
-                    onCompleteReview={() => {
-                      const pending = film.watches.find((watch) => watch.is_pending);
-                      setWatchDialog({
-                        mode: "complete",
-                        watch: pending,
-                      });
-                    }}
-                  />
-                )}
-              </div>
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+        <div className="relative mx-auto aspect-[2/3] w-full max-w-xs shrink-0 overflow-hidden rounded md:mx-0 md:w-64 lg:w-72">
+          <FilmPoster
+            src={metadata?.poster_url ?? null}
+            alt={film.title}
+            size="fill"
+            className="shadow-glow"
+          />
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-4">
+          <div>
+            <h1 className="text-h1">
+              {film.title}
+              {film.year ? ` (${film.year})` : ""}
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">
+                {formatEnrichmentStatus(film.enrichment_status)}
+              </Badge>
+              {isEnriching && (
+                <span className="text-label-md text-muted-foreground">
+                  Updating metadata…
+                </span>
+              )}
+              <Badge variant="outline">{film.status}</Badge>
             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="lg"
+              variant="outline"
+              className="min-h-11"
+              onClick={() => setEditOpen(true)}
+            >
+              Edit film match
+            </Button>
+            {onStatusTransition && (
+              <FilmStatusActions
+                status={film.status}
+                variant="detail"
+                isPending={isStatusPending}
+                onTransition={onStatusTransition}
+                onMarkWatched={onMarkWatched}
+                onCompleteReview={() => {
+                  const pending = film.watches.find((watch) => watch.is_pending);
+                  setWatchDialog({
+                    mode: "complete",
+                    watch: pending,
+                  });
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Overview</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {hasKeyMeta && (
+        <Section title="Overview">
           <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-label-md text-muted-foreground">Letterboxd</dt>
-              <dd>
-                <a
-                  href={film.letterboxd_uri}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  View on Letterboxd
-                </a>
-              </dd>
-            </div>
             {metadata?.director && (
               <div>
                 <dt className="text-label-md text-muted-foreground">Director</dt>
@@ -196,7 +215,9 @@ export function FilmDetailView({
             )}
             {metadata?.original_title && (
               <div>
-                <dt className="text-label-md text-muted-foreground">Original title</dt>
+                <dt className="text-label-md text-muted-foreground">
+                  Original title
+                </dt>
                 <dd>{metadata.original_title}</dd>
               </div>
             )}
@@ -227,118 +248,7 @@ export function FilmDetailView({
               </p>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {(film.watches.length > 0 || film.status === "pending_watch_review") && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Watch history</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {film.status === "pending_watch_review" && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/60 p-4">
-                <p className="text-body-md text-muted-foreground">
-                  This film is waiting for a watch diary entry.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const pending = film.watches.find((watch) => watch.is_pending);
-                    setWatchDialog({ mode: "complete", watch: pending });
-                  }}
-                >
-                  Complete review
-                </Button>
-              </div>
-            )}
-            {film.watches
-              .filter((watch) => !watch.is_pending)
-              .map((watch) => (
-                <div
-                  key={watch.id}
-                  className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 py-3 last:border-0"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {watch.score == null
-                        ? `Unrated · ${watch.watched_at}`
-                        : `${watch.score}★ · ${watch.watched_at}`}
-                    </p>
-                    {watch.notes && (
-                      <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                        {watch.notes}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setWatchDialog({ mode: "edit", watch })}
-                  >
-                    Edit
-                  </Button>
-                </div>
-              ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {metadata && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Metadata</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-4 text-body-md">
-              {metadata.tmdb_rating !== null && (
-                <span>TMDB: {formatRating(metadata.tmdb_rating)}</span>
-              )}
-              {metadata.rotten_tomatoes_score !== null && (
-                <span>RT: {metadata.rotten_tomatoes_score}%</span>
-              )}
-              {metadata.letterboxd_rating !== null && (
-                <span>LBX: {formatRating(metadata.letterboxd_rating)}</span>
-              )}
-            </div>
-            <TagGroup label="Genres" tags={metadata.genres} />
-            <TagGroup label="Keywords" tags={metadata.keywords} />
-            {(metadata.imdb_id || metadata.tmdb_id) && (
-              <dl className="grid gap-4 sm:grid-cols-2">
-                {metadata.tmdb_id !== null && (
-                  <div>
-                    <dt className="text-label-md text-muted-foreground">TMDB</dt>
-                    <dd>
-                      <a
-                        href={`https://www.themoviedb.org/movie/${metadata.tmdb_id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        View on TMDB
-                      </a>
-                    </dd>
-                  </div>
-                )}
-                {metadata.imdb_id && (
-                  <div>
-                    <dt className="text-label-md text-muted-foreground">IMDb</dt>
-                    <dd>
-                      <a
-                        href={`https://www.imdb.com/title/${metadata.imdb_id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        View on IMDB
-                      </a>
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            )}
-          </CardContent>
-        </Card>
+        </Section>
       )}
 
       <WhereToWatchSection
@@ -347,43 +257,144 @@ export function FilmDetailView({
         onEditMatch={() => setEditOpen(true)}
       />
 
-      {semantic && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Semantic profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {semantic.semantic_summary && (
-              <div>
-                <p className="text-label-md text-muted-foreground">Summary</p>
-                <p className="mt-1 text-body-lg text-muted-foreground">
-                  {semantic.semantic_summary}
-                </p>
-              </div>
-            )}
-            <TagGroup label="Subgenres" tags={semantic.subgenres} />
-            <TagGroup label="Themes" tags={semantic.themes} />
-            <TagGroup label="Tones" tags={semantic.tones} />
-            <TagGroup label="Visual descriptors" tags={semantic.visual_descriptors} />
-            <TagGroup label="Emotional outcomes" tags={semantic.emotional_outcomes} />
-            <TagGroup label="Viewing contexts" tags={semantic.viewing_contexts} />
-            <div>
-              <p className="mb-2 text-label-md text-muted-foreground">Scores</p>
-              <ScoreRow label="Complexity" value={semantic.complexity} />
-              <ScoreRow label="Pacing" value={semantic.pacing} />
-              <ScoreRow label="Energy" value={semantic.energy} />
-              <ScoreRow label="Obscurity" value={semantic.obscurity} />
+      {(film.watches.length > 0 || film.status === "pending_watch_review") && (
+        <Section title="Watch history">
+          {film.status === "pending_watch_review" && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/60 p-4">
+              <p className="text-body-md text-muted-foreground">
+                This film is waiting for a watch diary entry.
+              </p>
+              <Button
+                size="lg"
+                className="min-h-11"
+                onClick={() => {
+                  const pending = film.watches.find((watch) => watch.is_pending);
+                  setWatchDialog({ mode: "complete", watch: pending });
+                }}
+              >
+                Complete review
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          )}
+          {film.watches
+            .filter((watch) => !watch.is_pending)
+            .map((watch) => (
+              <div
+                key={watch.id}
+                className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 py-3 last:border-0"
+              >
+                <div>
+                  <p className="font-medium">
+                    {watch.score == null
+                      ? `Unrated · ${watch.watched_at}`
+                      : `${watch.score}★ · ${watch.watched_at}`}
+                  </p>
+                  {watch.notes && (
+                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                      {watch.notes}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="min-h-11"
+                  onClick={() => setWatchDialog({ mode: "edit", watch })}
+                >
+                  Edit
+                </Button>
+              </div>
+            ))}
+        </Section>
       )}
 
-      {!metadata && !semantic && (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            Enrichment data is not available yet for this film.
-          </CardContent>
-        </Card>
+      {hasScores && metadata && (
+        <Section title="Scores & tags">
+          <div className="flex flex-wrap gap-4 text-body-md">
+            {metadata.tmdb_rating !== null && (
+              <span>TMDB: {formatRating(metadata.tmdb_rating)}</span>
+            )}
+            {metadata.rotten_tomatoes_score !== null && (
+              <span>RT: {metadata.rotten_tomatoes_score}%</span>
+            )}
+            {metadata.letterboxd_rating !== null && (
+              <span>LBX: {formatRating(metadata.letterboxd_rating)}</span>
+            )}
+          </div>
+          <TagGroup label="Genres" tags={metadata.genres} />
+          <TagGroup label="Keywords" tags={metadata.keywords} />
+        </Section>
+      )}
+
+      {hasSemanticContent && semantic && (
+        <Section title="Semantic profile">
+          {semantic.semantic_summary && (
+            <div>
+              <p className="text-label-md text-muted-foreground">Summary</p>
+              <p className="mt-1 text-body-lg text-muted-foreground">
+                {semantic.semantic_summary}
+              </p>
+            </div>
+          )}
+          <TagGroup label="Subgenres" tags={semantic.subgenres} />
+          <TagGroup label="Themes" tags={semantic.themes} />
+          <TagGroup label="Tones" tags={semantic.tones} />
+          <TagGroup label="Visual descriptors" tags={semantic.visual_descriptors} />
+          <TagGroup label="Emotional outcomes" tags={semantic.emotional_outcomes} />
+          <TagGroup label="Viewing contexts" tags={semantic.viewing_contexts} />
+          <div>
+            <p className="mb-2 text-label-md text-muted-foreground">Scores</p>
+            <ScoreRow label="Complexity" value={semantic.complexity} />
+            <ScoreRow label="Pacing" value={semantic.pacing} />
+            <ScoreRow label="Energy" value={semantic.energy} />
+            <ScoreRow label="Obscurity" value={semantic.obscurity} />
+          </div>
+        </Section>
+      )}
+
+      <Section title="Links">
+        <ul className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-3">
+          <li>
+            <a
+              href={film.letterboxd_uri}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center text-body-md text-primary hover:underline"
+            >
+              View on Letterboxd
+            </a>
+          </li>
+          {metadata?.tmdb_id != null && (
+            <li>
+              <a
+                href={`https://www.themoviedb.org/movie/${metadata.tmdb_id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center text-body-md text-primary hover:underline"
+              >
+                View on TMDB
+              </a>
+            </li>
+          )}
+          {metadata?.imdb_id && (
+            <li>
+              <a
+                href={`https://www.imdb.com/title/${metadata.imdb_id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center text-body-md text-primary hover:underline"
+              >
+                View on IMDB
+              </a>
+            </li>
+          )}
+        </ul>
+      </Section>
+
+      {enrichmentPending && (
+        <p className="text-body-md text-muted-foreground">
+          Enrichment data is not available yet for this film.
+        </p>
       )}
 
       <EditFilmMatchDialog

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { FilmDetailView } from "@/components/film-detail-view";
 import { WatchReviewDialog } from "@/components/watch-review-dialog";
-import { CardGridSkeleton } from "@/components/loading-state";
+import { FilmDetailSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilm, useFilmStatusTransition } from "@/hooks/use-films";
 import { useToast } from "@/hooks/use-toast";
@@ -55,7 +55,7 @@ export default function WatchlistFilmPage() {
   }, [data, toast]);
 
   if (isLoading) {
-    return <CardGridSkeleton count={2} />;
+    return <FilmDetailSkeleton />;
   }
 
   if (isError) {

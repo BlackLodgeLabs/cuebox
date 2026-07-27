@@ -34,3 +34,30 @@ export function PosterGridSkeleton({ count = 6 }: { count?: number }) {
     </div>
   );
 }
+
+export function FilmDetailSkeleton() {
+  return (
+    <div className="space-y-8" aria-busy="true" aria-label="Loading film">
+      <Skeleton className="h-5 w-28 bg-surface-high" />
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+        <Skeleton className="mx-auto aspect-[2/3] w-full max-w-xs rounded bg-surface-high md:mx-0 md:w-64 lg:w-72" />
+        <div className="min-w-0 flex-1 space-y-4">
+          <Skeleton className="h-9 w-3/4 bg-surface-high" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-20 bg-surface-high" />
+            <Skeleton className="h-6 w-16 bg-surface-high" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-11 w-36 bg-surface-high" />
+            <Skeleton className="h-11 w-32 bg-surface-high" />
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-6 w-24 bg-surface-high" />
+        <Skeleton className="h-20 w-full bg-surface-high" />
+        <Skeleton className="h-4 w-2/3 bg-surface-high" />
+      </div>
+    </div>
+  );
+}
