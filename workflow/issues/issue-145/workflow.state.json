@@ -1,9 +1,9 @@
 {
   "issue": 145,
   "branch": "cursor/issue-145-recommendation-ceremony",
-  "stage": "create-pr-in-progress",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-27T18:34:12Z",
+  "stage": "create-pr-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-27T18:38:49Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-03660d55-db30-4c12-a70b-3acd011ee4f4",
@@ -14,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 154,
-  "active_agent_id": "bc-03660d55-db30-4c12-a70b-3acd011ee4f4",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   },
   "handoff_deferred": null
 }
