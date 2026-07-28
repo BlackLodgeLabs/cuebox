@@ -13,6 +13,8 @@ interface FileUploadProps {
   accept?: string;
   disabled?: boolean;
   label?: string;
+  /** Phone-first density: smaller chrome, Choose file primary. */
+  variant?: "default" | "compact";
 }
 
 export function FileUpload({
@@ -21,11 +23,13 @@ export function FileUpload({
   accept = ".csv",
   disabled = false,
   label = "Upload CSV",
+  variant = "default",
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const { toast } = useToast();
+  const compact = variant === "compact";
 
   useEffect(() => {
     if (selectedFile === undefined) return;
@@ -55,7 +59,8 @@ export function FileUpload({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-4 rounded border-2 border-dashed border-border bg-card p-8 transition-all",
+        "flex flex-col items-center justify-center rounded border-2 border-dashed border-border bg-card transition-all",
+        compact ? "gap-2 p-4" : "gap-4 p-8",
         dragOver && "border-secondary shadow-glow",
         disabled && "pointer-events-none opacity-50 grayscale",
       )}
@@ -70,14 +75,29 @@ export function FileUpload({
         handleFile(e.dataTransfer.files[0]);
       }}
     >
-      <Icon name="upload" size={40} className="text-muted-foreground" />
+      <Icon
+        name="upload"
+        size={compact ? 28 : 40}
+        className="text-muted-foreground"
+      />
       <div className="text-center">
         <p className="text-body-lg font-medium">{label}</p>
-        <p className="text-body-md text-muted-foreground">
-          Drag and drop a Letterboxd watchlist CSV, or click to browse
-        </p>
+        {compact ? (
+          <>
+            <p className="text-body-md text-muted-foreground md:hidden">
+              Tap to choose a CSV
+            </p>
+            <p className="hidden text-body-md text-muted-foreground md:block">
+              Drag and drop a Letterboxd watchlist CSV, or click to browse
+            </p>
+          </>
+        ) : (
+          <p className="text-body-md text-muted-foreground">
+            Drag and drop a Letterboxd watchlist CSV, or click to browse
+          </p>
+        )}
         {selectedName && (
-          <p className="mt-2 text-label-md normal-case tracking-normal text-primary">
+          <p className="mt-2 min-w-0 break-all text-label-md normal-case tracking-normal text-primary">
             Selected: {selectedName}
           </p>
         )}
@@ -92,6 +112,8 @@ export function FileUpload({
       <Button
         type="button"
         variant="secondary"
+        size={compact ? "lg" : "default"}
+        className={cn(compact && "min-h-11")}
         onClick={() => inputRef.current?.click()}
         disabled={disabled}
       >

@@ -3,8 +3,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import ReviewPage from "@/app/review/page";
 
 vi.mock("next/link", () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }));
 
@@ -90,5 +100,17 @@ describe("ReviewPage", () => {
       screen.getByRole("heading", { name: "Watched films to review" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Heat (1995)")).toBeInTheDocument();
+  });
+
+  it("uses ≥44px resolve actions instead of compact sm buttons", () => {
+    render(<ReviewPage />);
+
+    for (const name of ["Accept", "Reject", "Choose different match"]) {
+      const control = screen.getByRole(name === "Choose different match" ? "link" : "button", {
+        name,
+      });
+      expect(control.className).toMatch(/min-h-11/);
+      expect(control.className).not.toMatch(/\bh-8\b/);
+    }
   });
 });

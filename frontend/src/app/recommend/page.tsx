@@ -4,14 +4,9 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MultiSelectChips } from "@/components/multi-select-chips";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateRecommendation } from "@/hooks/use-recommendations";
@@ -33,6 +28,9 @@ import {
   VISUAL_TONAL_VIBES,
 } from "@/lib/questionnaire-vocabulary";
 import type { Questionnaire } from "@/types/api";
+
+const API_REACH_MESSAGE =
+  "Could not reach the API. Make sure the backend is running.";
 
 const STEPS = [
   { id: "genres", title: "Genres", description: "What genres are you in the mood for?" },
@@ -68,6 +66,7 @@ export default function RecommendPage() {
   const step = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
   const isNotesStep = step.id === "notes";
+  const progressPercent = ((stepIndex + 1) / STEPS.length) * 100;
 
   const validateStep = (): boolean => {
     setStepError(null);
@@ -138,40 +137,49 @@ export default function RecommendPage() {
           }),
         );
       } else {
-        setSubmitError("Recommendation failed. Please try again.");
+        setSubmitError(API_REACH_MESSAGE);
       }
     }
   };
 
   if (isSubmitting) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 py-16 text-center">
+      <div className="mx-auto max-w-lg space-y-3 py-10 text-center">
         <h1 className="text-h1">Finding your film…</h1>
         <p className="text-body-md text-muted-foreground">
           This can take up to 30 seconds while we search and rank your
           watchlist.
         </p>
-        <div className="mx-auto h-2 w-48 animate-pulse rounded-full bg-muted" />
+        <div className="mx-auto h-1.5 w-40 animate-pulse rounded-full bg-muted" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <p className="text-label-md normal-case tracking-normal text-secondary">
-          Step {stepIndex + 1} of {STEPS.length}
-        </p>
+    <div className="mx-auto flex max-w-xl flex-col space-y-4 pb-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-label-md normal-case tracking-normal text-secondary">
+            Step {stepIndex + 1} of {STEPS.length}
+          </p>
+          <span className="text-label-md normal-case tracking-normal text-muted-foreground">
+            {stepIndex + 1} / {STEPS.length}
+          </span>
+        </div>
+        <Progress
+          value={progressPercent}
+          className="h-1.5"
+          aria-label={`Questionnaire progress, step ${stepIndex + 1} of ${STEPS.length}`}
+        />
         <h1 className="text-h1">{step.title}</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">{step.description}</p>
+        <p className="text-body-md text-muted-foreground">{step.description}</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{step.title}</CardTitle>
-          <CardDescription>{step.description}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Card
+        key={step.id}
+        className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200 motion-reduce:animate-none"
+      >
+        <CardContent className="space-y-4 p-4 pt-4 sm:p-6">
           <StepContent
             stepId={step.id}
             questionnaire={questionnaire}
@@ -181,20 +189,41 @@ export default function RecommendPage() {
             error={stepError}
           />
           {submitError && (
-            <p className="text-sm text-destructive">{submitError}</p>
+            <div
+              role="alert"
+              className="space-y-3 rounded border border-destructive/40 bg-destructive/10 p-3"
+            >
+              <p className="text-body-md text-destructive">{submitError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="min-h-11 w-full sm:w-auto"
+                onClick={() => void handleSubmit()}
+              >
+                Try again
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      <div className="flex justify-between">
+      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-30 flex gap-3 border-t border-border bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <Button
           variant="outline"
+          size="lg"
+          className="min-h-11"
           disabled={stepIndex === 0 || isSubmitting}
           onClick={() => setStepIndex((i) => i - 1)}
         >
           Back
         </Button>
-        <Button onClick={handleNext} disabled={isSubmitting}>
+        <Button
+          size="lg"
+          className="min-h-11 flex-1"
+          onClick={handleNext}
+          disabled={isSubmitting}
+        >
           {isLastStep ? "Get recommendation" : "Next"}
         </Button>
       </div>
@@ -348,14 +377,20 @@ function RadioOptions<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <RadioGroup value={value} onValueChange={(v) => onChange(v as T)}>
+    <RadioGroup
+      value={value}
+      onValueChange={(v) => onChange(v as T)}
+      className="gap-1"
+    >
       {options.map((opt) => (
-        <div key={opt.value} className="flex items-center space-x-2">
+        <Label
+          key={opt.value}
+          htmlFor={opt.value}
+          className="flex min-h-11 cursor-pointer items-center gap-3 rounded px-1 font-normal"
+        >
           <RadioGroupItem value={opt.value} id={opt.value} />
-          <Label htmlFor={opt.value} className="cursor-pointer font-normal">
-            {opt.label}
-          </Label>
-        </div>
+          <span>{opt.label}</span>
+        </Label>
       ))}
     </RadioGroup>
   );

@@ -52,7 +52,7 @@ export default function ImportStatusPage() {
   const isRunning = data.status === "running";
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-xl space-y-4">
       <div>
         <h1 className="text-h1">Import progress</h1>
         <p className="mt-1 text-body-md text-muted-foreground">
@@ -61,7 +61,7 @@ export default function ImportStatusPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-1 p-4 pb-2 sm:p-6 sm:pb-2">
           <CardTitle>
             {isRunning && "Enriching films…"}
             {isComplete && "Import complete"}
@@ -74,7 +74,7 @@ export default function ImportStatusPage() {
             {isFailed && "The import job encountered an error."}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 pt-2 sm:p-6 sm:pt-2">
           {isRunning && (
             <div className="space-y-2">
               {progressPercent !== null ? (
@@ -114,7 +114,7 @@ export default function ImportStatusPage() {
             <div>
               <button
                 type="button"
-                className="text-sm font-medium text-primary hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
                 onClick={() => setFailuresOpen(!failuresOpen)}
               >
                 {failuresOpen ? "Hide" : "Show"} failure details ({data.failed_films})
@@ -122,8 +122,10 @@ export default function ImportStatusPage() {
               {failuresOpen && (
                 <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto text-sm">
                   {data.failure_summary.map((item) => (
-                    <li key={item.letterboxd_uri} className="rounded border p-2">
-                      <p className="font-mono text-xs text-secondary">{item.letterboxd_uri}</p>
+                    <li key={item.letterboxd_uri} className="min-w-0 rounded border p-2">
+                      <p className="break-all font-mono text-xs text-secondary">
+                        {item.letterboxd_uri}
+                      </p>
                       <p className="text-muted-foreground">{item.reason}</p>
                     </li>
                   ))}
@@ -138,13 +140,13 @@ export default function ImportStatusPage() {
             </p>
           )}
           {isComplete && !reviewLoading && (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               {reviewCount > 0 ? (
-                <Button asChild>
+                <Button asChild size="lg" className="min-h-11 w-full sm:w-auto">
                   <Link href="/review">Review matches ({reviewCount})</Link>
                 </Button>
               ) : (
-                <Button asChild>
+                <Button asChild size="lg" className="min-h-11 w-full sm:w-auto">
                   <Link href="/recommend">Get a recommendation</Link>
                 </Button>
               )}
@@ -152,7 +154,7 @@ export default function ImportStatusPage() {
           )}
 
           {isFailed && (
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="lg" className="min-h-11 w-full sm:w-auto">
               <Link href="/import">Try again</Link>
             </Button>
           )}
