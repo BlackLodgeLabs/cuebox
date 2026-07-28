@@ -5,10 +5,9 @@ import { useState } from "react";
 import { DeleteHistoryDialog } from "@/components/delete-history-dialog";
 import { DevModePanel } from "@/components/dev-mode/dev-mode-panel";
 import { DevModeProvider } from "@/components/dev-mode/dev-mode-provider";
-import { ResultsView } from "@/components/results-view";
+import { RecommendationCeremony } from "@/components/recommendation-ceremony";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
-import { Button } from "@/components/ui/button";
 import {
   useDeleteRecommendation,
   useRecommendation,
@@ -51,22 +50,18 @@ export default function HistoryDetailPage() {
   return (
     <DevModeProvider>
       <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-h1">{data.winner.title}</h1>
-            <p className="mt-1 text-body-md text-muted-foreground">
-              Recommended on {new Date(data.created_at).toLocaleString()}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setDialogOpen(true)}
-          >
-            Remove from history
-          </Button>
+        <div>
+          <h1 className="text-h1">{data.winner.title}</h1>
+          <p className="mt-1 text-body-md text-muted-foreground">
+            Recommended on {new Date(data.created_at).toLocaleString()}
+          </p>
         </div>
-        <ResultsView data={data} showActions />
+        <RecommendationCeremony
+          mode="history"
+          data={data}
+          sessionId={params.sessionId}
+          onRequestDelete={() => setDialogOpen(true)}
+        />
         <DevModePanel sessionId={params.sessionId} />
       </div>
 

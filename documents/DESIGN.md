@@ -152,12 +152,20 @@ spacing:
 - **Disabled States:** Elements shift to `50%` opacity, desaturate to greyscale, and apply a `cursor-not-allowed` property, visually communicating an offline or disconnected terminal state.
 - **Environmental Texture (The Used Future):** The main application viewport (`<main>`) applies a fixed, subtle CSS film grain or horizontal CRT scanline overlay. This breaks up perfect pixels, establishing a gritty, analog, and deeply cinematic atmosphere.
 
-### Results screen (`results-view.tsx`)
-- **Winner card:** two-column layout — full-height poster column flush to the left edge; text column with TOP PICK badge, title, director/runtime, TMDB/RT scores, synopsis, key factors, then why it matches (plus why it beat alternatives and caveats when present).
-- **Ratings row:** `Space Mono` (`font-mono`); display **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on results cards (film detail still shows all ratings).
+### Recommendation ceremony (`recommendation-ceremony.tsx`)
+Mandatory 3-stage ritual shared by fresh results (`/recommend/results/{id}?stage=`) and history detail (`/history/{id}?stage=`). Chrome is driven by URL `stage` + mode only (no parallel stage store). Progress cue shows `1 / 2 / 3`; primary CTAs use `min-h-11` (≥44×44). No Skip control.
+
+| Stage | Composition |
+|-------|-------------|
+| **1 — Winner** | Singular poster-led focus; TOP PICK + title/year/director; **short reasons only** (`most_influential_factors` + `why_it_matches`). Omit synopsis, caveats, beat-alternatives, ratings clutter, where-to-watch, questionnaire summary. |
+| **2 — Runners-up** | Horizontal **CSS scroll-snap** poster row; focused runner uses the same short-reason layout. No where-to-watch / full metadata dump. |
+| **3 — Session record** | Durable five-film record: full explanations, TMDB/RT ratings, **where-to-watch icons** (providers fetched only on stage 3), optional answer-summary sheet, constraint-relaxation banner, watchlist deep links, exits (Done / Replay / New recommendation / History; history mode keeps Remove). |
+
+- **Cold-load / refresh:** unarmed `?stage=1\|2` coerces to stage 3 (module-scoped SPA gate armed only by questionnaire submit or Replay). Stage 2→3 uses `replace` so Back from stage 3 leaves the route.
+- **Motion:** short enter/advance fade; `@media (prefers-reduced-motion: reduce)` → instant / no travel (`data-reduced-motion` on the ceremony root).
+- **Ratings row (stage 3):** `Space Mono` (`font-mono`); **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on ceremony cards (film detail still shows all ratings).
 - **Key factor tags:** `Badge variant="secondary"` (lime secondary tokens).
-- **Runners-up grid:** standard cards with `hover-glow`; same ratings row as winner.
-- **Card navigation:** full-card hit target via a positioned overlay `Link` with a concise `aria-label` (e.g. “View {title} in watchlist”); explanation text stays outside the link’s accessible name. Page-level actions (answer summary, new recommendation) remain separate controls.
+- **Card navigation (stage 3):** full-card overlay `Link` with concise `aria-label` (e.g. “View {title} in watchlist”).
 
 ## Iconography
 - **Library:** Material Symbols Outlined.

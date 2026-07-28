@@ -66,12 +66,14 @@ test.describe("First-time user journey", () => {
 
     await page.getByRole("button", { name: /get recommendation/i }).click();
 
-    await expect(page).toHaveURL(/\/recommend\/results\/[a-f0-9-]+$/i, {
+    await expect(page).toHaveURL(/\/recommend\/results\/[a-f0-9-]+\?stage=1/i, {
       timeout: 60_000,
     });
     await expect(page.getByRole("heading", { name: /your pick/i })).toBeVisible();
+    await expect(page.getByTestId("ceremony-stage-winner")).toBeVisible();
     const winnerTitleEl = page
-      .locator('[class*="border-primary"] .font-heading')
+      .getByTestId("ceremony-stage-winner")
+      .locator(".font-heading")
       .first();
     await expect(winnerTitleEl).toBeVisible();
     const winnerTitle =

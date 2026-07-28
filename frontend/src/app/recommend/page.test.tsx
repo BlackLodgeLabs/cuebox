@@ -7,9 +7,10 @@ import { createQueryWrapper } from "@/test/query-wrapper";
 import type { RecommendationResponse } from "@/types/api";
 
 const pushMock = vi.fn();
+const replaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ push: pushMock, replace: replaceMock }),
 }));
 
 vi.mock("@/lib/api-client", async (importOriginal) => {
@@ -86,6 +87,7 @@ describe("RecommendPage", () => {
     cleanup();
     postRecommendationMock.mockReset();
     pushMock.mockReset();
+    replaceMock.mockReset();
   });
 
   it("keeps loading UI visible after mutation settles but before navigation completes", async () => {
@@ -109,7 +111,9 @@ describe("RecommendPage", () => {
 
     resolveMutation(mockRecommendationResponse);
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/recommend/results/session-abc");
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/recommend/results/session-abc?stage=1",
+      );
     });
 
     expect(screen.getByRole("heading", { name: /finding your film/i })).toBeInTheDocument();

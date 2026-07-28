@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ResultsView } from "@/components/results-view";
+import { CeremonyStageRecord } from "@/components/ceremony/ceremony-stage-record";
 import type { RecommendationResponse } from "@/types/api";
 
 vi.mock("next/link", () => ({
@@ -81,13 +81,14 @@ const recommendation: RecommendationResponse = {
   ],
 };
 
-describe("ResultsView", () => {
+describe("CeremonyStageRecord (stage 3 session record)", () => {
   afterEach(() => {
     cleanup();
+    useFilmsWatchProvidersMock.mockReturnValue(new Map());
   });
 
   it("shows winner synopsis, key factors before why it matches, and extra winner sections", () => {
-    render(<ResultsView data={recommendation} showActions={false} />);
+    render(<CeremonyStageRecord data={recommendation} />);
 
     expect(screen.getByText("TOP PICK")).toBeInTheDocument();
     expect(screen.getByText("Synopsis")).toBeInTheDocument();
@@ -119,7 +120,7 @@ describe("ResultsView", () => {
   });
 
   it("renders TMDB and RT scores without Letterboxd and links cards to watchlist detail", () => {
-    render(<ResultsView data={recommendation} showActions={false} />);
+    render(<CeremonyStageRecord data={recommendation} />);
 
     expect(screen.getByText("TMDB: 7.8")).toBeInTheDocument();
     expect(screen.getByText("RT: 92%")).toBeInTheDocument();
@@ -170,7 +171,7 @@ describe("ResultsView", () => {
       ]),
     );
 
-    render(<ResultsView data={recommendation} showActions={false} />);
+    render(<CeremonyStageRecord data={recommendation} />);
 
     expect(screen.getByTestId("watch-provider-icons")).toBeInTheDocument();
     expect(screen.getByLabelText("Netflix")).toBeInTheDocument();

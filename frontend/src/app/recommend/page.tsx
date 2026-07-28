@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateRecommendation } from "@/hooks/use-recommendations";
 import { ApiClientError } from "@/lib/api-client";
+import { armCeremonyGate } from "@/lib/ceremony-gate";
 import { getErrorMessage } from "@/lib/error-messages";
 import {
   ALL_GENRE_LABELS,
@@ -123,7 +124,8 @@ export default function RecommendPage() {
         questionnaire,
         notes: notes.trim() || undefined,
       });
-      router.push(`/recommend/results/${result.session_id}`);
+      armCeremonyGate(result.session_id);
+      router.replace(`/recommend/results/${result.session_id}?stage=1`);
     } catch (error) {
       setIsNavigatingToResults(false);
       submittingRef.current = false;
