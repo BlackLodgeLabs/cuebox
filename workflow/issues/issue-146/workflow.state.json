@@ -2,26 +2,22 @@
   "issue": 146,
   "branch": "cursor/issue-146-questionnaire-first-run",
   "stage": "execute-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-28T21:09:09Z",
+  "active_skill": "demo",
+  "updated_at": "2026-07-28T21:11:46Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
-    "demo": null,
+    "demo": "bc-feaadaad-1d43-4881-aee4-9b9a6a4e10cb",
     "execute": "bc-d0fc17aa-b176-44b8-a636-5e65c979d41e",
     "planning": "bc-af5e87d2-f343-41fc-9ff4-6ad7c69570a1",
     "review-and-spec": "bc-d01acbfe-53f2-48e3-aabc-a6f25cb0208d",
     "review-and-spec-continued": null
   },
   "pr": 156,
-  "active_agent_id": null,
+  "active_agent_id": "bc-feaadaad-1d43-4881-aee4-9b9a6a4e10cb",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "demo",
-    "started_at": "2026-07-28T21:09:09Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
