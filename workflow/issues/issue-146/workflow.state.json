@@ -1,9 +1,9 @@
 {
   "issue": 146,
   "branch": "cursor/issue-146-questionnaire-first-run",
-  "stage": "demo-in-progress",
-  "active_skill": "demo",
-  "updated_at": "2026-07-28T21:12:54Z",
+  "stage": "demo-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-28T21:19:28Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 156,
-  "active_agent_id": "bc-feaadaad-1d43-4881-aee4-9b9a6a4e10cb",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   },
   "schema_version": 1,
   "handoff_deferred": null
