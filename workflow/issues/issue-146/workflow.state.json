@@ -1,20 +1,20 @@
 {
   "issue": 146,
   "branch": "cursor/issue-146-questionnaire-first-run",
-  "stage": "spec-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-28T19:53:52Z",
+  "stage": "plan-in-progress",
+  "active_skill": "planning",
+  "updated_at": "2026-07-28T19:56:33Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-af5e87d2-f343-41fc-9ff4-6ad7c69570a1",
     "review-and-spec": "bc-d01acbfe-53f2-48e3-aabc-a6f25cb0208d",
     "review-and-spec-continued": null
   },
   "pr": 156,
-  "active_agent_id": null,
+  "active_agent_id": "bc-af5e87d2-f343-41fc-9ff4-6ad7c69570a1",
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": {
@@ -27,5 +27,6 @@
     "ci_autofix": 0,
     "total_runs": 1
   },
-  "schema_version": 1
+  "schema_version": 1,
+  "handoff_deferred": null
 }
