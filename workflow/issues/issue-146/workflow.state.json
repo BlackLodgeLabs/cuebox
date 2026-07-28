@@ -2,8 +2,8 @@
   "issue": 146,
   "branch": "cursor/issue-146-questionnaire-first-run",
   "stage": "execute-ready",
-  "active_skill": "execute",
-  "updated_at": "2026-07-28T21:05:00Z",
+  "active_skill": null,
+  "updated_at": "2026-07-28T21:05:30Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 156,
-  "active_agent_id": "bc-d0fc17aa-b176-44b8-a636-5e65c979d41e",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
