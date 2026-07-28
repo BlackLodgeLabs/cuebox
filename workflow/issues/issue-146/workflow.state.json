@@ -3,7 +3,7 @@
   "branch": "cursor/issue-146-questionnaire-first-run",
   "stage": "create-pr-ready",
   "active_skill": null,
-  "updated_at": "2026-07-28T21:34:39Z",
+  "updated_at": "2026-07-28T21:41:39Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-dc08c5c9-8aa4-45bd-9675-82bf7a639e23",
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "babysit-pr",
+    "started_at": "2026-07-28T21:41:39Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
