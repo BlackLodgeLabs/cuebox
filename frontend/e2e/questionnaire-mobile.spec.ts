@@ -53,13 +53,13 @@ test.describe("Questionnaire mobile density (mocked API)", () => {
     await expect(page.getByRole("heading", { name: "Genres", level: 1 })).toBeVisible();
     await expect(page.getByLabel(/questionnaire progress/i)).toBeVisible();
 
-    const next = page.getByRole("button", { name: "Next" });
+    const next = page.getByRole("button", { name: "Next", exact: true });
     await expect(next).toBeVisible();
     const nextBox = await next.boundingBox();
     expect(nextBox).toBeTruthy();
     expect(nextBox!.height).toBeGreaterThanOrEqual(44);
 
-    const chip = page.getByRole("button", { name: "No Preference" });
+    const chip = page.getByRole("button", { name: "No Preference", exact: true });
     const chipBox = await chip.boundingBox();
     expect(chipBox).toBeTruthy();
     expect(chipBox!.height).toBeGreaterThanOrEqual(44);
