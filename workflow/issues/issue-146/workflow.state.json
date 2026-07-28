@@ -1,15 +1,9 @@
 {
   "issue": 146,
   "branch": "cursor/issue-146-questionnaire-first-run",
-<<<<<<< HEAD
-  "stage": "spec-ready",
-  "active_skill": "planning",
-  "updated_at": "2026-07-28T19:56:05Z",
-=======
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-28T20:00:35Z",
->>>>>>> cursor/issue-146-pr-156-plan-agent-9f89
+  "updated_at": "2026-07-28T20:01:15Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -20,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 156,
-  "active_agent_id": "bc-af5e87d2-f343-41fc-9ff4-6ad7c69570a1",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
