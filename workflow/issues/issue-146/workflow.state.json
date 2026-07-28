@@ -3,7 +3,7 @@
   "branch": "cursor/issue-146-questionnaire-first-run",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-28T20:01:15Z",
+  "updated_at": "2026-07-28T20:35:04Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
