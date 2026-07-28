@@ -66,7 +66,7 @@ First-run and supporting surfaces are phone-usable: questionnaire shows one titl
 
 ## Babysit notes
 
-- 2026-07-28: PR #156 Frontend CI success on babysit start tip `f9a32ef`; mergeable CLEAN; no Bugbot review threads / must-fix items.
+- 2026-07-28: PR #156 marked ready for review via `gh pr ready 156` after GitHub MCP `update_pull_request` (`draft: false`) failed with PAT scope error (`Resource not accessible by personal access token`). Frontend CI success on babysit start tip `f9a32ef` / complete tip; mergeable CLEAN; no Bugbot review threads / must-fix items.
 - Cursor Bugbot and Vercel check suites remained `queued` (no check run) — same pattern as #145/#154; not treated as required blocking checks (mergeStateStatus CLEAN).
 - Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
 - No CI autofix or Bugbot fix cycles needed.
