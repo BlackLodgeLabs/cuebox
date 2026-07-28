@@ -2,10 +2,10 @@
   "issue": 146,
   "branch": "cursor/issue-146-questionnaire-first-run",
   "stage": "create-pr-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-28T21:41:39Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-28T21:44:20Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-24b723f1-4fe7-4372-b95d-1f37ea1eb286",
     "create-pr": "bc-dc08c5c9-8aa4-45bd-9675-82bf7a639e23",
     "demo": "bc-feaadaad-1d43-4881-aee4-9b9a6a4e10cb",
     "execute": "bc-d0fc17aa-b176-44b8-a636-5e65c979d41e",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 156,
-  "active_agent_id": null,
+  "active_agent_id": "bc-24b723f1-4fe7-4372-b95d-1f37ea1eb286",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-28T21:41:39Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
