@@ -63,3 +63,10 @@ First-run and supporting surfaces are phone-usable: questionnaire shows one titl
 - Scenario 2a empty-home Import CTA skipped (would require emptying Part 2 volume); home already links Import watchlist → `/import` per #142 unit/e2e coverage
 - PR #156 base confirmed `feature/mobile-ui`
 - No secrets in images or notes
+
+## Babysit notes
+
+- 2026-07-28: PR #156 Frontend CI success on babysit start tip `f9a32ef`; mergeable CLEAN; no Bugbot review threads / must-fix items.
+- Cursor Bugbot and Vercel check suites remained `queued` (no check run) — same pattern as #145/#154; not treated as required blocking checks (mergeStateStatus CLEAN).
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
+- No CI autofix or Bugbot fix cycles needed.
