@@ -3,7 +3,7 @@
   "branch": "cursor/issue-159-ceremony-quality-405d",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-29T19:27:10Z",
+  "updated_at": "2026-07-29T19:27:21Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
