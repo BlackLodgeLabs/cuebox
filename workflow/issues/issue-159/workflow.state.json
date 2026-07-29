@@ -1,9 +1,9 @@
 {
   "issue": 159,
   "branch": "cursor/issue-159-ceremony-quality-405d",
-  "stage": "create-pr-in-progress",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-29T20:21:00Z",
+  "stage": "create-pr-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-29T20:21:02Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-69d6c1ff-7871-4fda-af2a-baed3761e805",
@@ -14,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 162,
-  "active_agent_id": "bc-69d6c1ff-7871-4fda-af2a-baed3761e805",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 4
+    "total_runs": 5
   },
   "handoff_deferred": null,
   "schema_version": 1
