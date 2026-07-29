@@ -541,6 +541,7 @@ def _film_result(film, explanation, *, is_winner: bool) -> FilmResult:
         expl = Explanation(
             why_it_matches="Matches your stated preferences.",
             most_influential_factors=["semantic fit"],
+            why_it_matches_short="Strong preference match.",
             why_it_beat_alternatives="Highest overall score." if is_winner else None,
             caveats=None,
         )
@@ -573,10 +574,18 @@ def _factors_from_payload(payload: dict[str, Any]) -> list[str]:
     return []
 
 
+def _optional_short_reason(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 def _explanation_to_payload(explanation: Explanation | Any) -> dict[str, Any]:
     if isinstance(explanation, Explanation):
         return {
             "why_it_matches": explanation.why_it_matches,
+            "why_it_matches_short": explanation.why_it_matches_short,
             "most_influential_factors": list(explanation.most_influential_factors or [])[:5],
             "why_it_beat_alternatives": explanation.why_it_beat_alternatives,
             "caveats": explanation.caveats,
@@ -584,6 +593,9 @@ def _explanation_to_payload(explanation: Explanation | Any) -> dict[str, Any]:
     if hasattr(explanation, "why_it_matches"):
         return {
             "why_it_matches": explanation.why_it_matches,
+            "why_it_matches_short": _optional_short_reason(
+                getattr(explanation, "why_it_matches_short", None)
+            ),
             "most_influential_factors": list(explanation.most_influential_factors or [])[:5],
             "why_it_beat_alternatives": explanation.why_it_beat_alternatives,
             "caveats": explanation.caveats,
@@ -591,12 +603,16 @@ def _explanation_to_payload(explanation: Explanation | Any) -> dict[str, Any]:
     if isinstance(explanation, dict):
         return {
             "why_it_matches": str(explanation.get("why_it_matches", "")),
+            "why_it_matches_short": _optional_short_reason(
+                explanation.get("why_it_matches_short")
+            ),
             "most_influential_factors": _factors_from_payload(explanation),
             "why_it_beat_alternatives": explanation.get("why_it_beat_alternatives"),
             "caveats": explanation.get("caveats"),
         }
     return {
         "why_it_matches": "Matches your stated preferences.",
+        "why_it_matches_short": "Strong preference match.",
         "most_influential_factors": ["semantic fit"],
         "why_it_beat_alternatives": None,
         "caveats": None,
@@ -608,6 +624,9 @@ def _explanation_from_payload(payload: dict | Any) -> Explanation:
         return Explanation(
             why_it_matches=payload.why_it_matches,
             most_influential_factors=list(payload.most_influential_factors or [])[:5],
+            why_it_matches_short=_optional_short_reason(
+                getattr(payload, "why_it_matches_short", None)
+            ),
             why_it_beat_alternatives=payload.why_it_beat_alternatives,
             caveats=payload.caveats,
         )
@@ -616,12 +635,16 @@ def _explanation_from_payload(payload: dict | Any) -> Explanation:
         return Explanation(
             why_it_matches=str(payload.get("why_it_matches", "")),
             most_influential_factors=factors,
+            why_it_matches_short=_optional_short_reason(
+                payload.get("why_it_matches_short")
+            ),
             why_it_beat_alternatives=payload.get("why_it_beat_alternatives"),
             caveats=payload.get("caveats"),
         )
     return Explanation(
         why_it_matches="Matches your stated preferences.",
         most_influential_factors=["semantic fit"],
+        why_it_matches_short="Strong preference match.",
         why_it_beat_alternatives=None,
         caveats=None,
     )

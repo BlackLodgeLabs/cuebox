@@ -99,6 +99,13 @@ def _factors_from_ranking_payload(payload: dict[str, Any]) -> list[str]:
     return ["semantic fit", "score alignment"]
 
 
+def _optional_short_reason(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 def _parse_ranking_json(
     raw: str,
     candidates: list[RankingCandidateInput],
@@ -153,6 +160,9 @@ def _parse_ranking_json(
         explanations[film_id_str] = RankingExplanation(
             why_it_matches=str(payload.get("why_it_matches", "")),
             most_influential_factors=_factors_from_ranking_payload(payload),
+            why_it_matches_short=_optional_short_reason(
+                payload.get("why_it_matches_short")
+            ),
             why_it_beat_alternatives=payload.get("why_it_beat_alternatives"),
             caveats=payload.get("caveats"),
         )
@@ -163,6 +173,7 @@ def _parse_ranking_json(
             explanations[key] = RankingExplanation(
                 why_it_matches="Strong match for your stated preferences.",
                 most_influential_factors=["semantic fit", "score alignment"],
+                why_it_matches_short="Strong preference match.",
                 why_it_beat_alternatives=(
                     "Highest combined retrieval and scoring signals."
                     if candidate == winner_id
