@@ -83,6 +83,32 @@ describe("SyncSettingsPage", () => {
     expect(importButton).toBeDisabled();
   });
 
+  it("uses compact uploads and ≥44px primary actions without truncating section copy", () => {
+    rssStatusState.username = undefined;
+    render(<SyncSettingsPage />);
+
+    expect(screen.getAllByText(/tap to choose a csv/i).length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByText(/upload a fresh letterboxd watchlist export/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/upload letterboxd.s watched, ratings, and diary/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/configure automatic polling of your letterboxd rss/i),
+    ).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: /^sync watchlist$/i }).className).toMatch(
+      /min-h-11/,
+    );
+    expect(
+      screen.getByRole("button", { name: /^import watched history$/i }).className,
+    ).toMatch(/min-h-11/);
+    expect(screen.getByRole("button", { name: /^save rss config$/i }).className).toMatch(
+      /min-h-11/,
+    );
+  });
+
   it("imports when all three files are selected and shows summary", async () => {
     rssStatusState.username = undefined;
     syncWatchedMutate.mockResolvedValue({

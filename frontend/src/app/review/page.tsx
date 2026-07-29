@@ -158,7 +158,8 @@ export default function ReviewPage() {
                           aria-label="Letterboxd film URL"
                         />
                         <Button
-                          size="sm"
+                          size="lg"
+                          className="min-h-11 w-full sm:w-auto"
                           disabled={isPending || !uriDrafts[film.review_id]?.trim()}
                           onClick={() =>
                             resolveLetterboxd.mutate({
@@ -171,23 +172,30 @@ export default function ReviewPage() {
                         </Button>
                       </>
                     ) : (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                         <Button
-                          size="sm"
+                          size="lg"
+                          className="min-h-11 w-full sm:w-auto"
                           disabled={isPending}
                           onClick={() => accept.mutate(film.review_id)}
                         >
                           Accept
                         </Button>
                         <Button
-                          size="sm"
+                          size="lg"
                           variant="outline"
+                          className="min-h-11 w-full sm:w-auto"
                           disabled={isPending}
                           onClick={() => reject.mutate(film.review_id)}
                         >
                           Reject
                         </Button>
-                        <Button size="sm" variant="outline" asChild>
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="min-h-11 w-full sm:w-auto"
+                          asChild
+                        >
                           <Link href={`/watchlist/${film.film_id}?editMatch=1`}>
                             Choose different match
                           </Link>

@@ -134,7 +134,7 @@ export default function SyncSettingsPage() {
   const watchedReady = Boolean(watchedFile && ratingsFile && diaryFile);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-h1">Sync settings</h1>
         <p className="mt-1 text-body-md text-muted-foreground">
@@ -143,15 +143,16 @@ export default function SyncSettingsPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-1 p-4 pb-2 sm:p-6 sm:pb-2">
           <CardTitle>CSV re-sync</CardTitle>
           <CardDescription>
             Upload a fresh Letterboxd watchlist export to add new films. Existing
             films are never removed or reclassified.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 pt-2 sm:p-6 sm:pt-2">
           <FileUpload
+            variant="compact"
             label="Re-sync watchlist"
             selectedFile={csvFile}
             onFileSelect={(f) => {
@@ -162,6 +163,8 @@ export default function SyncSettingsPage() {
           />
           {csvError && <p className="text-sm text-destructive">{csvError}</p>}
           <Button
+            size="lg"
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => void handleCsvSync()}
             disabled={!csvFile || syncCsv.isPending}
           >
@@ -183,7 +186,7 @@ export default function SyncSettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-1 p-4 pb-2 sm:p-6 sm:pb-2">
           <CardTitle>Import watched history</CardTitle>
           <CardDescription>
             Upload Letterboxd&apos;s watched, ratings, and diary CSVs to seed your
@@ -191,8 +194,9 @@ export default function SyncSettingsPage() {
             toward the 500 active-film cap.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 p-4 pt-2 sm:space-y-4 sm:p-6 sm:pt-2">
           <FileUpload
+            variant="compact"
             label="watched.csv"
             selectedFile={watchedFile}
             onFileSelect={(f) => {
@@ -202,6 +206,7 @@ export default function SyncSettingsPage() {
             disabled={syncWatched.isPending}
           />
           <FileUpload
+            variant="compact"
             label="ratings.csv"
             selectedFile={ratingsFile}
             onFileSelect={(f) => {
@@ -211,6 +216,7 @@ export default function SyncSettingsPage() {
             disabled={syncWatched.isPending}
           />
           <FileUpload
+            variant="compact"
             label="diary.csv"
             selectedFile={diaryFile}
             onFileSelect={(f) => {
@@ -223,6 +229,8 @@ export default function SyncSettingsPage() {
             <p className="text-sm text-destructive">{watchedError}</p>
           )}
           <Button
+            size="lg"
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => void handleWatchedImport()}
             disabled={!watchedReady || syncWatched.isPending}
           >
@@ -268,14 +276,14 @@ export default function SyncSettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-1 p-4 pb-2 sm:p-6 sm:pb-2">
           <CardTitle>RSS sync</CardTitle>
           <CardDescription>
             Configure automatic polling of your Letterboxd RSS feed every 15
             minutes.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 pt-2 sm:p-6 sm:pt-2">
           <div className="space-y-2">
             <Label htmlFor="username">Letterboxd username</Label>
             <Input
@@ -290,6 +298,8 @@ export default function SyncSettingsPage() {
           </div>
           {rssError && <p className="text-sm text-destructive">{rssError}</p>}
           <Button
+            size="lg"
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => void handleRssSave()}
             disabled={!username.trim() || syncRss.isPending}
           >
