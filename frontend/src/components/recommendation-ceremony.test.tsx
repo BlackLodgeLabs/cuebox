@@ -91,6 +91,7 @@ const recommendation: RecommendationResponse & {
     poster_url: null,
     explanation: {
       why_it_matches: "Matches your slow-burn horror preferences.",
+      why_it_matches_short: "Slow-burn horror fit.",
       most_influential_factors: ["theme fit", "pacing"],
       why_it_beat_alternatives: "Stronger emotional alignment than runners-up.",
       caveats: "Runtime is at the upper end of your preference.",
@@ -110,6 +111,7 @@ const recommendation: RecommendationResponse & {
       poster_url: null,
       explanation: {
         why_it_matches: "Solid alternative with overlapping themes.",
+        why_it_matches_short: "Overlapping themes.",
         most_influential_factors: ["semantic fit"],
         why_it_beat_alternatives: null,
         caveats: null,
@@ -165,15 +167,20 @@ describe("RecommendationCeremony", () => {
     );
 
     expect(screen.getByTestId("ceremony-progress")).toHaveTextContent("1 / 3");
+    expect(screen.getByTestId("ceremony-sticky-chrome")).toBeInTheDocument();
+    expect(screen.getByTestId("ceremony-sticky-chrome").className).toMatch(
+      /sticky/,
+    );
     expect(screen.getByTestId("ceremony-stage-winner")).toBeInTheDocument();
     expect(screen.queryByTestId("watch-provider-icons")).not.toBeInTheDocument();
     expect(screen.queryByText("Synopsis")).not.toBeInTheDocument();
     expect(screen.queryByText("Caveats")).not.toBeInTheDocument();
     expect(screen.queryByText("Why it beat alternatives")).not.toBeInTheDocument();
     expect(screen.getByText("theme fit")).toBeInTheDocument();
+    expect(screen.getByText("Slow-burn horror fit.")).toBeInTheDocument();
     expect(
-      screen.getByText("Matches your slow-burn horror preferences."),
-    ).toBeInTheDocument();
+      screen.queryByText("Matches your slow-burn horror preferences."),
+    ).not.toBeInTheDocument();
 
     const next = screen.getByTestId("ceremony-next");
     expect(next.className).toMatch(/min-h-11/);
@@ -194,6 +201,10 @@ describe("RecommendationCeremony", () => {
     expect(screen.getByTestId("ceremony-progress")).toHaveTextContent("2 / 3");
     expect(screen.getByTestId("ceremony-stage-runners-up")).toBeInTheDocument();
     expect(screen.getByTestId("runner-focus-panel")).toBeInTheDocument();
+    expect(screen.getByText("Overlapping themes.")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Solid alternative with overlapping themes."),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText("Should not appear on stage 2 short layout."),
     ).not.toBeInTheDocument();
@@ -205,7 +216,8 @@ describe("RecommendationCeremony", () => {
     );
   });
 
-  it("stage 3 shows full record, providers hook, and profile summary", async () => {
+  it("stage 3 shows full record, Done sole primary, and demoted More actions", async () => {
+    const user = userEvent.setup();
     searchParams = new URLSearchParams("stage=3");
     useFilmsWatchProvidersMock.mockReturnValue(
       new Map([
@@ -255,13 +267,38 @@ describe("RecommendationCeremony", () => {
     expect(screen.getByText("Synopsis")).toBeInTheDocument();
     expect(screen.getByText("Why it beat alternatives")).toBeInTheDocument();
     expect(screen.getByText("Caveats")).toBeInTheDocument();
+    expect(
+      screen.getByText("Matches your slow-burn horror preferences."),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("watch-provider-icons")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /view answer summary/i })).toBeInTheDocument();
-    expect(screen.getByTestId("ceremony-done").className).toMatch(/min-h-11/);
+
+    const done = screen.getByTestId("ceremony-done");
+    expect(done.className).toMatch(/min-h-11/);
+    expect(done.className).toMatch(/bg-primary/);
     expect(screen.getByTestId("ceremony-replay").className).toMatch(/min-h-11/);
+    expect(screen.getByTestId("ceremony-replay").className).not.toMatch(
+      /bg-primary/,
+    );
+    expect(screen.getByTestId("ceremony-more-actions").className).not.toMatch(
+      /bg-primary/,
+    );
+    expect(
+      screen.queryByRole("link", { name: /new recommendation/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId("ceremony-more-actions"));
+    expect(
+      await screen.findByTestId("ceremony-new-recommendation"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("ceremony-view-history")).toBeInTheDocument();
+    expect(screen.getByTestId("ceremony-answer-summary")).toBeInTheDocument();
+    expect(screen.getByTestId("ceremony-new-recommendation").className).not.toMatch(
+      /bg-primary/,
+    );
   });
 
-  it("history mode with missing stage lands on stage 3", () => {
+  it("history mode with missing stage lands on stage 3", async () => {
+    const user = userEvent.setup();
     pathname = "/history/session-1";
     searchParams = new URLSearchParams("");
     __resetCeremonyGatesForTests();
@@ -277,7 +314,8 @@ describe("RecommendationCeremony", () => {
 
     expect(screen.getByTestId("ceremony-progress")).toHaveTextContent("3 / 3");
     expect(screen.getByTestId("ceremony-stage-record")).toBeInTheDocument();
-    expect(screen.getByTestId("ceremony-delete")).toBeInTheDocument();
+    await user.click(screen.getByTestId("ceremony-more-actions"));
+    expect(await screen.findByTestId("ceremony-delete")).toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();
   });
 

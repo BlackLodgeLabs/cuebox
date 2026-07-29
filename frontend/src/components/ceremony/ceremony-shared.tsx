@@ -62,10 +62,12 @@ export function WhyItMatchesSection({ text }: { text: string }) {
 }
 
 export function ShortReasons({ film }: { film: FilmResult }) {
+  const shortWhy = film.explanation.why_it_matches_short?.trim() || null;
+
   return (
     <div className="space-y-3" data-testid="short-reasons">
       <KeyFactorsSection factors={film.explanation.most_influential_factors} />
-      <WhyItMatchesSection text={film.explanation.why_it_matches} />
+      {shortWhy ? <WhyItMatchesSection text={shortWhy} /> : null}
     </div>
   );
 }
