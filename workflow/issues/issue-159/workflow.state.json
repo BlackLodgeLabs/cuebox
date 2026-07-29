@@ -1,9 +1,9 @@
 {
   "issue": 159,
   "branch": "cursor/issue-159-ceremony-quality-405d",
-  "stage": "spec-ready",
+  "stage": "plan-in-progress",
   "active_skill": "planning",
-  "updated_at": "2026-07-29T19:22:33Z",
+  "updated_at": "2026-07-29T19:23:14Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
