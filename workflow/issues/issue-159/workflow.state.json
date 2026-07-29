@@ -2,8 +2,8 @@
   "issue": 159,
   "branch": "cursor/issue-159-ceremony-quality-405d",
   "stage": "spec-ready",
-  "active_skill": "review-and-spec",
-  "updated_at": "2026-07-29T19:19:49Z",
+  "active_skill": null,
+  "updated_at": "2026-07-29T19:20:08Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 162,
-  "active_agent_id": "bc-01695a13-ddea-408f-a293-9d184504405d",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
