@@ -1,9 +1,9 @@
 {
   "issue": 159,
   "branch": "cursor/issue-159-ceremony-quality-405d",
-  "stage": "demo-ready",
+  "stage": "create-pr-in-progress",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-29T20:14:57Z",
+  "updated_at": "2026-07-29T20:21:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-69d6c1ff-7871-4fda-af2a-baed3761e805",
