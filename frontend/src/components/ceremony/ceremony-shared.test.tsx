@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { ShortReasons } from "@/components/ceremony/ceremony-shared";
 import type { FilmResult } from "@/types/api";
 
@@ -22,13 +22,17 @@ function filmWithExplanation(
 }
 
 describe("ShortReasons", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("shows short why and factors when short is present", () => {
     render(
       <ShortReasons
         film={filmWithExplanation({
           why_it_matches: "Full multi-sentence rationale that must stay hidden.",
           why_it_matches_short: "Phone-friendly why.",
-          most_influential_factors: ["theme fit", "pacing"],
+          most_influential_factors: ["theme fit", "mood"],
           why_it_beat_alternatives: "Beat alternatives.",
           caveats: "A caveat.",
         })}
@@ -70,14 +74,14 @@ describe("ShortReasons", () => {
         film={filmWithExplanation({
           why_it_matches: "Full why still omitted.",
           why_it_matches_short: "   ",
-          most_influential_factors: ["pacing"],
+          most_influential_factors: ["runtime fit"],
           why_it_beat_alternatives: null,
           caveats: null,
         })}
       />,
     );
 
-    expect(screen.getByText("pacing")).toBeInTheDocument();
+    expect(screen.getByText("runtime fit")).toBeInTheDocument();
     expect(screen.queryByText("Why it matches")).not.toBeInTheDocument();
     expect(screen.queryByText("Full why still omitted.")).not.toBeInTheDocument();
   });
