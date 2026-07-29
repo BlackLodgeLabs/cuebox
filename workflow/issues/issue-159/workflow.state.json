@@ -1,9 +1,9 @@
 {
   "issue": 159,
   "branch": "cursor/issue-159-ceremony-quality-405d",
-  "stage": "babysit-in-progress",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-29T20:31:30Z",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-29T20:33:02Z",
   "agents": {
     "babysit-pr": "bc-3b10c007-4997-4bf0-80d5-45a7742d42dd",
     "create-pr": "bc-69d6c1ff-7871-4fda-af2a-baed3761e805",
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 162,
-  "active_agent_id": "bc-3b10c007-4997-4bf0-80d5-45a7742d42dd",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,

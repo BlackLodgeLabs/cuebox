@@ -62,3 +62,10 @@ Ceremony quality gaps from planning repro are closed on the full stack: sticky C
 - Volume had 2 ready films (Tier-3-like); Matrix history session sufficient for live Scenario 0; Scenarios 1–5 used route mocks
 - PR #162 base confirmed `feature/mobile-ui`
 - No secrets in images or notes
+
+## Babysit notes
+
+- 2026-07-29: PR #162 API CI + Frontend CI success on babysit tip `cbb9529`; mergeable CLEAN; no Bugbot review threads / must-fix items.
+- Marked ready for review via `gh pr ready 162` after GitHub MCP `update_pull_request` (`draft: false`) failed with PAT scope error (`Resource not accessible by personal access token`) — same fallback as #146.
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
+- No CI autofix or Bugbot fix cycles needed.
