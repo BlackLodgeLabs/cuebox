@@ -2,26 +2,22 @@
   "issue": 159,
   "branch": "cursor/issue-159-ceremony-quality-405d",
   "stage": "execute-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-29T19:55:29Z",
+  "active_skill": "demo",
+  "updated_at": "2026-07-29T19:57:56Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
-    "demo": null,
+    "demo": "bc-28027384-8ffc-4675-bc4a-25cc501a76d8",
     "execute": "bc-d4fdbe5b-5a7f-4bce-9a69-e599a302c8da",
     "planning": "bc-10318747-6e98-45d7-aa83-b75b08d876a5",
     "review-and-spec": null,
     "review-and-spec-continued": null
   },
   "pr": 162,
-  "active_agent_id": null,
+  "active_agent_id": "bc-28027384-8ffc-4675-bc4a-25cc501a76d8",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "demo",
-    "started_at": "2026-07-29T19:55:29Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
