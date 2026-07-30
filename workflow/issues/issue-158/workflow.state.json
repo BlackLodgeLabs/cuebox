@@ -3,7 +3,7 @@
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
   "stage": "spec-ready",
   "active_skill": null,
-  "updated_at": "2026-07-30T13:59:05Z",
+  "updated_at": "2026-07-30T13:59:23Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": "bc-6be5344f-8be9-4230-994f-80e7ea9f8cee",
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 164,
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
