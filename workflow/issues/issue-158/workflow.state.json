@@ -1,9 +1,9 @@
 {
   "issue": 158,
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
-  "stage": "execute-in-progress",
-  "active_skill": "execute",
-  "updated_at": "2026-07-30T14:18:20Z",
+  "stage": "execute-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-30T14:27:24Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -14,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 164,
-  "active_agent_id": "bc-fa34e1b0-e447-487f-9e7e-a60f3f082c82",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   },
   "handoff_deferred": null
 }
