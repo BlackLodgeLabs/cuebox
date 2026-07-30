@@ -63,3 +63,11 @@ Phone shell wayfinding gaps from #158 are closed on the running Compose stack: M
 - Next.js dev-tools badge hidden via CSS/DOM for screenshots
 - PR #164 base confirmed `feature/mobile-ui`
 - No secrets in images or notes
+
+## Babysit outcome (2026-07-30)
+
+- **Frontend CI:** success on `dd12e9b` (run 30555354656); API CI path-skipped (no `api/**` changes)
+- **Merge:** `MERGEABLE` / `CLEAN` vs `feature/mobile-ui`; no review threads
+- **Bugbot:** check suite remained `queued` across PR SHAs with **no** review comments / must-fix items; not treated as blocking (merge already CLEAN)
+- **PR ready:** marked ready for review (`draft: false`); MCP `update_pull_request` lacked PAT scope — used `gh pr ready` fallback
+- **Loops:** bugbot 0/3, ci_autofix 0/2, total_runs 6/10 → `stage: complete`
