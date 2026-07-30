@@ -1,7 +1,7 @@
 # Demo notes — issue #158
 
 - **Date:** 2026-07-30T14:40:16Z
-- **Commit:** `cae28802295bc38d716781ed40dea1fe808c74c6` (demo-ready on canonical `cursor/issue-158-shell-wayfinding-8cee`)
+- **Commit:** `79902b7b239596c1a1e07d1df0a46e5989e89268`
 - **Branch:** `cursor/issue-158-shell-wayfinding-8cee` (artifacts merged from demo agent side-branch)
 - **PR:** #164 (base `feature/mobile-ui`)
 - **Tier:** application
