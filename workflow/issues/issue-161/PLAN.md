@@ -170,3 +170,7 @@ Narrower while iterating: Phase 6 / 6.5 + targeted Playwright. **Final execute h
 **Gate:** `$APP_DEFAULT_GATE` (`scripts/verify-phase8-gates.sh`) + targeted mobile Playwright specs.  
 **How to test:** 390×844 — last genre chips clear sticky Next; picker/History/remove ≥44px; focus search/notes scrolls into view; manual iPhone keyboard check.  
 **Base branch:** `feature/mobile-ui` (PR #163).
+
+## Plan revision (execute)
+
+**Picker row layout:** Larger `size="lg"` / `min-h-11` actions compressed the title to zero width under the previous `sm:flex-row` hit-row layout (title `getBoundingClientRect().width === 0` → Playwright “hidden”). Execute keeps stacked `flex-col` rows for library/TMDB hits so ≥44px actions never squeeze the title/meta column. Touch-target sizing is unchanged.

@@ -149,13 +149,23 @@ test.describe("library search picker (mocked API)", () => {
     await page.goto("/");
     await page.getByTestId("library-search-input").fill("Wicker");
     await expect(page.getByText("The Wicker Man (1973)")).toBeVisible();
-    await expect(page.getByText("The Matrix (1999)")).toBeVisible();
 
-    for (const name of ["View", "Mark watched", "Add to watchlist", "Add & mark watched"] as const) {
-      const control =
-        name === "View"
-          ? page.getByRole("link", { name, exact: true })
-          : page.getByRole("button", { name, exact: true });
+    const view = page.getByRole("link", { name: "View", exact: true });
+    const mark = page.getByRole("button", { name: "Mark watched", exact: true });
+    for (const control of [view, mark]) {
+      const box = await control.boundingBox();
+      expect(box).toBeTruthy();
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+      expect(box!.width).toBeGreaterThanOrEqual(44);
+    }
+
+    const matrix = page.getByText("The Matrix (1999)");
+    await matrix.scrollIntoViewIfNeeded();
+    await expect(matrix).toBeVisible();
+
+    for (const name of ["Add to watchlist", "Add & mark watched"] as const) {
+      const control = page.getByRole("button", { name, exact: true });
+      await control.scrollIntoViewIfNeeded();
       const box = await control.boundingBox();
       expect(box, name).toBeTruthy();
       expect(box!.height, `${name} height`).toBeGreaterThanOrEqual(44);
@@ -164,25 +174,44 @@ test.describe("library search picker (mocked API)", () => {
   });
 
   test("focusing search scrolls input into view", async ({ page }) => {
+    await page.addInitScript(() => {
+      const w = window as unknown as {
+        __scrollIntoViewLog: { id: string; block?: string }[];
+      };
+      w.__scrollIntoViewLog = [];
+      const original = HTMLElement.prototype.scrollIntoView;
+      HTMLElement.prototype.scrollIntoView = function (
+        this: HTMLElement,
+        arg?: boolean | ScrollIntoViewOptions,
+      ) {
+        const block =
+          typeof arg === "object" && arg && "block" in arg
+            ? String(arg.block)
+            : undefined;
+        w.__scrollIntoViewLog.push({
+          id: this.getAttribute("data-testid") ?? this.id ?? "",
+          block,
+        });
+        return original.call(this, arg as ScrollIntoViewOptions);
+      };
+    });
+
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
+    await page.getByTestId("library-search-input").click();
 
-    const scrolled = await page.evaluate(async () => {
-      const input = document.querySelector<HTMLInputElement>(
-        '[data-testid="library-search-input"]',
-      );
-      if (!input) return false;
-      let called = false;
-      const original = input.scrollIntoView.bind(input);
-      input.scrollIntoView = ((...args: Parameters<Element["scrollIntoView"]>) => {
-        called = true;
-        return original(...args);
-      }) as typeof input.scrollIntoView;
-      input.focus();
-      input.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
-      return called;
+    const log = await page.evaluate(() => {
+      const w = window as unknown as {
+        __scrollIntoViewLog: { id: string; block?: string }[];
+      };
+      return w.__scrollIntoViewLog ?? [];
     });
-    expect(scrolled).toBe(true);
+    expect(
+      log.some(
+        (entry) =>
+          entry.id === "library-search-input" && entry.block === "center",
+      ),
+    ).toBe(true);
   });
 
   test("search merges local and TMDB; mark watched posts status", async ({ page }) => {
@@ -238,7 +267,9 @@ test.describe("library search picker (mocked API)", () => {
     ).toBeVisible();
     await page.getByTestId("library-search-input").fill("Wicker");
     await expect(page.getByText("The Wicker Man (1973)")).toBeVisible();
-    await expect(page.getByText("The Matrix (1999)")).toBeVisible();
+    const matrix = page.getByText("The Matrix (1999)");
+    await matrix.scrollIntoViewIfNeeded();
+    await expect(matrix).toBeVisible();
     await expect(page.getByRole("button", { name: "Mark watched", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add to watchlist" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add & mark watched" })).toBeVisible();
@@ -329,7 +360,9 @@ test.describe("library search picker (mocked API)", () => {
     await page.goto("/watchlist/add");
     await expect(page.getByTestId("library-search-input")).toBeVisible();
     await page.getByTestId("library-search-input").fill("Matrix");
-    await expect(page.getByText("The Matrix (1999)")).toBeVisible();
+    const matrixAdd = page.getByText("The Matrix (1999)");
+    await matrixAdd.scrollIntoViewIfNeeded();
+    await expect(matrixAdd).toBeVisible();
     await page.getByRole("button", { name: "Add to watchlist" }).click();
     await expect(page).toHaveURL(new RegExp(`/watchlist/${addedFilmId}$`));
   });
@@ -416,7 +449,9 @@ test.describe("library search picker (mocked API)", () => {
 
     await page.goto("/");
     await page.getByTestId("library-search-input").fill("Matrix");
-    await expect(page.getByText("The Matrix (1999)")).toBeVisible();
+    const matrixReview = page.getByText("The Matrix (1999)");
+    await matrixReview.scrollIntoViewIfNeeded();
+    await expect(matrixReview).toBeVisible();
     await page.getByRole("button", { name: "Add & mark watched" }).click();
     await expect(page.getByRole("heading", { name: "Review watched film" })).toBeVisible();
     expect(statusBody).toEqual({ status: "pending_watch_review" });

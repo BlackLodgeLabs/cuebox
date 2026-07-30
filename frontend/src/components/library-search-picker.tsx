@@ -506,7 +506,7 @@ function SearchHitRow({
     return (
       <div
         role="listitem"
-        className="flex flex-col gap-3 rounded border border-border p-3 sm:flex-row sm:items-center"
+        className="flex flex-col gap-3 rounded border border-border p-3"
         data-testid={`library-hit-${film.status}`}
       >
         <div className="flex min-w-0 flex-1 gap-3">
@@ -565,7 +565,7 @@ function SearchHitRow({
   return (
     <div
       role="listitem"
-      className="flex flex-col gap-3 rounded border border-border p-3 sm:flex-row sm:items-center"
+      className="flex flex-col gap-3 rounded border border-border p-3"
       data-testid="tmdb-hit"
     >
       <div className="flex min-w-0 flex-1 gap-3">
