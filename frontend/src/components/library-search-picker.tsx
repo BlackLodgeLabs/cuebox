@@ -25,6 +25,7 @@ import {
 } from "@/hooks/use-films";
 import { useToast } from "@/hooks/use-toast";
 import { ApiClientError, getFilm } from "@/lib/api-client";
+import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 import {
   mergeLibraryAndTmdbResults,
   PICKER_LIBRARY_STATUSES,
@@ -383,6 +384,7 @@ export function LibrarySearchPicker({
       <Input
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
+        onFocus={(event) => scrollFieldIntoView(event.currentTarget, "start")}
         placeholder={placeholder}
         aria-label="Library and TMDB search"
         autoFocus={autoFocus}
@@ -504,7 +506,7 @@ function SearchHitRow({
     return (
       <div
         role="listitem"
-        className="flex flex-col gap-3 rounded border border-border p-3 sm:flex-row sm:items-center"
+        className="flex flex-col gap-3 rounded border border-border p-3"
         data-testid={`library-hit-${film.status}`}
       >
         <div className="flex min-w-0 flex-1 gap-3">
@@ -518,12 +520,13 @@ function SearchHitRow({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="lg" className="min-h-11">
             <Link href={`/watchlist/${film.id}`}>View</Link>
           </Button>
           {film.status === "active" && (
             <Button
-              size="sm"
+              size="lg"
+              className="min-h-11"
               variant="secondary"
               disabled={isStatusPending}
               onClick={() => onMarkWatched(film)}
@@ -533,7 +536,8 @@ function SearchHitRow({
           )}
           {film.status === "pending_watch_review" && (
             <Button
-              size="sm"
+              size="lg"
+              className="min-h-11"
               variant="secondary"
               onClick={() => onCompleteReview(film)}
             >
@@ -542,7 +546,8 @@ function SearchHitRow({
           )}
           {film.status === "watched" && (
             <Button
-              size="sm"
+              size="lg"
+              className="min-h-11"
               variant="secondary"
               disabled={isStatusPending}
               onClick={() => onReturnToWatchlist(film)}
@@ -560,7 +565,7 @@ function SearchHitRow({
   return (
     <div
       role="listitem"
-      className="flex flex-col gap-3 rounded border border-border p-3 sm:flex-row sm:items-center"
+      className="flex flex-col gap-3 rounded border border-border p-3"
       data-testid="tmdb-hit"
     >
       <div className="flex min-w-0 flex-1 gap-3">
@@ -579,14 +584,16 @@ function SearchHitRow({
       </div>
       <div className="flex flex-wrap gap-2">
         <Button
-          size="sm"
+          size="lg"
+          className="min-h-11"
           disabled={isAddPending}
           onClick={() => onAddTmdb(result)}
         >
           Add to watchlist
         </Button>
         <Button
-          size="sm"
+          size="lg"
+          className="min-h-11"
           variant="secondary"
           disabled={isAddPending}
           onClick={() => onAddAndMarkWatched(result)}

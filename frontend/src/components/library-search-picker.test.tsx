@@ -89,6 +89,26 @@ describe("LibrarySearchPicker", () => {
     expect(screen.getByLabelText("Library and TMDB search")).toBe(input);
   });
 
+  it("scrolls search input into view on focus", async () => {
+    getFilmsMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+    });
+    searchTmdbGlobalMock.mockResolvedValue({
+      data: [],
+      pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+    });
+
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    const { Wrapper } = createQueryWrapper();
+    render(<LibrarySearchPicker />, { wrapper: Wrapper });
+
+    await userEvent.click(screen.getByTestId("library-search-input"));
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" });
+  });
+
   it("accepts Home hub placeholder and helper overrides", async () => {
     getFilmsMock.mockResolvedValue({
       data: [],
@@ -173,9 +193,21 @@ describe("LibrarySearchPicker", () => {
       "href",
       "/watchlist/film-active",
     );
+    expect(screen.getByRole("link", { name: "View" }).className).toMatch(
+      /min-h-11|h-11/,
+    );
+    expect(screen.getByRole("button", { name: "Mark watched" }).className).toMatch(
+      /min-h-11|h-11/,
+    );
     expect(screen.getByText("Other Film (2020)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add to watchlist" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add to watchlist" }).className).toMatch(
+      /min-h-11|h-11/,
+    );
     expect(screen.getByRole("button", { name: "Add & mark watched" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add & mark watched" }).className).toMatch(
+      /min-h-11|h-11/,
+    );
     // Duplicate TMDB row must not appear as a second Add for The Wicker Man
     expect(screen.getAllByText(/The Wicker Man/)).toHaveLength(1);
 

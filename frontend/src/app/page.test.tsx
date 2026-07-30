@@ -108,9 +108,14 @@ describe("HomePage hub", () => {
       name: "Create a recommendation",
     });
     expect(recommend).toHaveAttribute("href", "/recommend");
+    expect(recommend.className).toMatch(/min-h-11/);
+    // Create stays filled primary (no outline border treatment)
+    expect(recommend.className).not.toMatch(/\bborder-border\b/);
 
     const history = screen.getByRole("link", { name: "History" });
     expect(history).toHaveAttribute("href", "/history");
+    expect(history.className).toMatch(/min-h-11/);
+    expect(history.className).toMatch(/border/);
 
     expect(
       screen.queryByRole("link", { name: "View watchlist" }),
