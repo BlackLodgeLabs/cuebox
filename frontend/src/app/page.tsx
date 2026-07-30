@@ -57,7 +57,7 @@ function HomePageContent() {
         '[data-testid="library-search-input"]',
       );
       if (input) {
-        scrollFieldIntoView(input);
+        scrollFieldIntoView(input, "start");
         input.focus();
       }
     }

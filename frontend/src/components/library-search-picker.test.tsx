@@ -106,7 +106,7 @@ describe("LibrarySearchPicker", () => {
     render(<LibrarySearchPicker />, { wrapper: Wrapper });
 
     await userEvent.click(screen.getByTestId("library-search-input"));
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: "center" });
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" });
   });
 
   it("accepts Home hub placeholder and helper overrides", async () => {

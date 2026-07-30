@@ -209,7 +209,7 @@ test.describe("library search picker (mocked API)", () => {
     expect(
       log.some(
         (entry) =>
-          entry.id === "library-search-input" && entry.block === "center",
+          entry.id === "library-search-input" && entry.block === "start",
       ),
     ).toBe(true);
   });

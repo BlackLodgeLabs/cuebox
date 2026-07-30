@@ -384,7 +384,7 @@ export function LibrarySearchPicker({
       <Input
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        onFocus={(event) => scrollFieldIntoView(event.currentTarget)}
+        onFocus={(event) => scrollFieldIntoView(event.currentTarget, "start")}
         placeholder={placeholder}
         aria-label="Library and TMDB search"
         autoFocus={autoFocus}
