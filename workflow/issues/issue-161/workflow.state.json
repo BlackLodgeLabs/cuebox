@@ -1,9 +1,9 @@
 {
   "issue": 161,
   "branch": "cursor/issue-161-thumb-ergonomics-sticky-chrome-4647",
-  "stage": "demo-ready",
-  "active_skill": "create-pr",
-  "updated_at": "2026-07-30T10:22:29Z",
+  "stage": "create-pr-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-30T10:24:54Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-e38de999-8413-4df2-b53a-b250acd67c15",
@@ -14,14 +14,14 @@
     "review-and-spec-continued": null
   },
   "pr": 163,
-  "active_agent_id": "bc-e38de999-8413-4df2-b53a-b250acd67c15",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   },
   "handoff_deferred": null
 }
