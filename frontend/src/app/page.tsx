@@ -18,6 +18,7 @@ import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useHasWatchlist } from "@/hooks/use-films";
 import { getHealth } from "@/lib/api-client";
+import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 
 export default function HomePage() {
   return (
@@ -56,7 +57,7 @@ function HomePageContent() {
         '[data-testid="library-search-input"]',
       );
       if (input) {
-        input.scrollIntoView({ block: "center" });
+        scrollFieldIntoView(input);
         input.focus();
       }
     }
@@ -124,12 +125,14 @@ function HomePageContent() {
         <Button asChild size="lg" className="w-full min-h-11">
           <Link href="/recommend">Create a recommendation</Link>
         </Button>
-        <Link
-          href="/history"
-          className="block text-center text-body-md text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline motion-reduce:transition-none"
+        <Button
+          asChild
+          variant="outline"
+          size="lg"
+          className="w-full min-h-11"
         >
-          History
-        </Link>
+          <Link href="/history">History</Link>
+        </Button>
       </div>
 
       <HealthPanel health={health} open={healthOpen} onToggle={setHealthOpen} />

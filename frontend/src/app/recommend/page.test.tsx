@@ -107,6 +107,24 @@ describe("RecommendPage", () => {
 
     const chip = screen.getByRole("button", { name: "No Preference" });
     expect(chip.className).toMatch(/min-h-11/);
+
+    const content = screen.getByTestId("questionnaire-content");
+    expect(content.className).toMatch(/pb-24/);
+    expect(screen.getByTestId("questionnaire-sticky-chrome")).toBeInTheDocument();
+  });
+
+  it("scrolls notes into view on focus", async () => {
+    const user = userEvent.setup();
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    renderRecommendPage();
+    await advanceToNotesStep(user);
+
+    const notes = screen.getByTestId("questionnaire-notes");
+    await user.click(notes);
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "center" });
   });
 
   it("uses ≥44px radio option rows on runtime step", async () => {

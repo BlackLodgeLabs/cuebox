@@ -27,6 +27,7 @@ import {
   VIEWING_CONTEXT_OPTIONS,
   VISUAL_TONAL_VIBES,
 } from "@/lib/questionnaire-vocabulary";
+import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 import type { Questionnaire } from "@/types/api";
 
 const API_REACH_MESSAGE =
@@ -156,7 +157,10 @@ export default function RecommendPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col space-y-4 pb-4">
+    <div
+      className="mx-auto flex max-w-xl flex-col space-y-4 pb-24"
+      data-testid="questionnaire-content"
+    >
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <p className="text-label-md normal-case tracking-normal text-secondary">
@@ -208,7 +212,10 @@ export default function RecommendPage() {
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-30 flex gap-3 border-t border-border bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div
+        className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-30 flex gap-3 border-t border-border bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+        data-testid="questionnaire-sticky-chrome"
+      >
         <Button
           variant="outline"
           size="lg"
@@ -352,9 +359,11 @@ function StepContent({
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            onFocus={(e) => scrollFieldIntoView(e.currentTarget)}
             maxLength={1000}
             rows={5}
             placeholder="e.g. I've been enjoying slow-burn atmospheric horror lately."
+            data-testid="questionnaire-notes"
           />
           <p className="text-right text-xs text-muted-foreground">
             {notes.length}/1000

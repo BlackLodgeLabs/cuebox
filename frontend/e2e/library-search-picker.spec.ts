@@ -117,6 +117,72 @@ test.describe("library search picker (mocked API)", () => {
     const searchY = (await searchBox.boundingBox())?.y ?? 0;
     const recommendY = (await recommend.boundingBox())?.y ?? 0;
     expect(searchY).toBeLessThan(recommendY);
+
+    const historyBox = await history.boundingBox();
+    expect(historyBox).toBeTruthy();
+    expect(historyBox!.height).toBeGreaterThanOrEqual(44);
+  });
+
+  test("picker row actions meet ≥44px touch targets", async ({ page }) => {
+    await page.route(`**${API_PATH_PREFIX}/films?statuses=**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [localActive],
+          pagination: { total: 1, limit: 20, offset: 0, has_more: false },
+        }),
+      });
+    });
+
+    await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [tmdbOnly],
+          pagination: { total: 1, limit: 20, offset: 0, has_more: false },
+        }),
+      });
+    });
+
+    await page.goto("/");
+    await page.getByTestId("library-search-input").fill("Wicker");
+    await expect(page.getByText("The Wicker Man (1973)")).toBeVisible();
+    await expect(page.getByText("The Matrix (1999)")).toBeVisible();
+
+    for (const name of ["View", "Mark watched", "Add to watchlist", "Add & mark watched"] as const) {
+      const control =
+        name === "View"
+          ? page.getByRole("link", { name, exact: true })
+          : page.getByRole("button", { name, exact: true });
+      const box = await control.boundingBox();
+      expect(box, name).toBeTruthy();
+      expect(box!.height, `${name} height`).toBeGreaterThanOrEqual(44);
+      expect(box!.width, `${name} width`).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test("focusing search scrolls input into view", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+
+    const scrolled = await page.evaluate(async () => {
+      const input = document.querySelector<HTMLInputElement>(
+        '[data-testid="library-search-input"]',
+      );
+      if (!input) return false;
+      let called = false;
+      const original = input.scrollIntoView.bind(input);
+      input.scrollIntoView = ((...args: Parameters<Element["scrollIntoView"]>) => {
+        called = true;
+        return original(...args);
+      }) as typeof input.scrollIntoView;
+      input.focus();
+      input.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
+      return called;
+    });
+    expect(scrolled).toBe(true);
   });
 
   test("search merges local and TMDB; mark watched posts status", async ({ page }) => {

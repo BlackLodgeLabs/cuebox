@@ -70,4 +70,59 @@ test.describe("Questionnaire mobile density (mocked API)", () => {
     });
     expect(overflow).toBe(true);
   });
+
+  test("last genre chips clear sticky Back/Next at max scroll", async ({
+    page,
+  }) => {
+    await stubRecommendApis(page);
+    await page.goto("/recommend");
+
+    const sticky = page.getByTestId("questionnaire-sticky-chrome");
+    await expect(sticky).toBeVisible();
+
+    const content = page.getByTestId("questionnaire-content");
+    await expect(content).toBeVisible();
+
+    // Scroll document to bottom so last chips can clear sticky chrome
+    await page.evaluate(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+    });
+    await page.waitForTimeout(100);
+
+    const clearance = await page.evaluate(() => {
+      const chips = Array.from(
+        document.querySelectorAll('[role="button"], button'),
+      ).filter((el) => {
+        const label = el.textContent?.trim() ?? "";
+        return (
+          label.length > 0 &&
+          !["Back", "Next", "Home", "Watchlist", "More"].includes(label) &&
+          !label.match(/^\d+ \/ \d+$/)
+        );
+      });
+      const lastChip = chips[chips.length - 1] as HTMLElement | undefined;
+      const stickyEl = document.querySelector(
+        '[data-testid="questionnaire-sticky-chrome"]',
+      ) as HTMLElement | null;
+      if (!lastChip || !stickyEl) return null;
+      const chipBottom = lastChip.getBoundingClientRect().bottom;
+      const stickyTop = stickyEl.getBoundingClientRect().top;
+      return { chipBottom, stickyTop, clears: chipBottom <= stickyTop + 1 };
+    });
+
+    expect(clearance).toBeTruthy();
+    expect(clearance!.clears).toBe(true);
+
+    // Sticky remains above the bottom tab bar
+    const stickyAboveTab = await page.evaluate(() => {
+      const stickyEl = document.querySelector(
+        '[data-testid="questionnaire-sticky-chrome"]',
+      ) as HTMLElement;
+      const tabBar = document.querySelector("nav") as HTMLElement | null;
+      const stickyBottom = stickyEl.getBoundingClientRect().bottom;
+      if (!tabBar) return stickyBottom < window.innerHeight;
+      return stickyBottom <= tabBar.getBoundingClientRect().top + 1;
+    });
+    expect(stickyAboveTab).toBe(true);
+  });
 });

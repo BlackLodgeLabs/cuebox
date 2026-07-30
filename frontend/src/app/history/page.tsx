@@ -177,8 +177,7 @@ export default function HistoryPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
+                    className="min-h-11 min-w-11 shrink-0 text-muted-foreground hover:text-destructive"
                     aria-label="Remove from history"
                     onClick={(e) => {
                       e.preventDefault();
