@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { FilmPoster } from "@/components/film-poster";
 import { WatchProviderIcons } from "@/components/watch-provider-icons";
 import {
@@ -13,7 +12,6 @@ import {
   WhyItMatchesSection,
 } from "@/components/ceremony/ceremony-shared";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -21,14 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { useFilmsWatchProviders } from "@/hooks/use-watch-providers";
 import type {
   ConstraintRelaxation,
@@ -221,47 +211,6 @@ export function CeremonyStageRecord({
           </div>
         </div>
       )}
-
-      {data.profile_summary && (
-        <div className="flex flex-wrap gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="min-h-11">
-                View answer summary
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Your preferences</SheetTitle>
-                <SheetDescription>
-                  Profile used for this recommendation
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <p className="text-body-lg">
-                  {data.profile_summary.narrative_profile}
-                </p>
-                <pre className="overflow-auto rounded bg-surface-high p-3 font-mono text-xs text-muted-foreground">
-                  {JSON.stringify(
-                    data.profile_summary.structured_profile,
-                    null,
-                    2,
-                  )}
-                </pre>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-3">
-        <Button asChild className="min-h-11">
-          <Link href="/recommend">New recommendation</Link>
-        </Button>
-        <Button variant="outline" asChild className="min-h-11">
-          <Link href="/history">View history</Link>
-        </Button>
-      </div>
     </section>
   );
 }

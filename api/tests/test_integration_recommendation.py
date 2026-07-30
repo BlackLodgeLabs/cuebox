@@ -28,6 +28,7 @@ def test_end_to_end_recommendation(integration_client, db_session):
     body = response.json()
     assert body["winner"]["film_id"]
     assert body["winner"]["explanation"]["why_it_matches"]
+    assert body["winner"]["explanation"]["why_it_matches_short"]
     assert body["winner"]["explanation"]["most_influential_factors"]
     assert body["winner"]["explanation"]["why_it_beat_alternatives"]
     assert body["winner"]["synopsis"]
@@ -40,6 +41,16 @@ def test_end_to_end_recommendation(integration_client, db_session):
     ).json()
     assert detail["winner"]["explanation"]["most_influential_factors"]
     assert detail["winner"]["explanation"]["why_it_beat_alternatives"]
+    assert (
+        detail["winner"]["explanation"]["why_it_matches_short"]
+        == body["winner"]["explanation"]["why_it_matches_short"]
+    )
+    if body["runners_up"]:
+        assert body["runners_up"][0]["explanation"]["why_it_matches_short"]
+        assert (
+            detail["runners_up"][0]["explanation"]["why_it_matches_short"]
+            == body["runners_up"][0]["explanation"]["why_it_matches_short"]
+        )
     assert detail["winner"]["synopsis"] == body["winner"]["synopsis"]
     assert detail["winner"]["tmdb_rating"] == body["winner"]["tmdb_rating"]
 

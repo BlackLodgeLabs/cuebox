@@ -263,12 +263,14 @@ def _default_ranking_response() -> dict:
         "explanations": {
             "00000000-0000-0000-0000-000000000001": {
                 "why_it_matches": "Strong thematic and tonal alignment with your profile.",
+                "why_it_matches_short": "Strong theme and tone fit.",
                 "most_influential_factors": ["theme fit", "pacing"],
                 "why_it_beat_alternatives": "Highest combined semantic and scoring signals.",
                 "caveats": None,
             },
             "00000000-0000-0000-0000-000000000002": {
                 "why_it_matches": "Close runner-up with similar mood.",
+                "why_it_matches_short": "Similar mood alternative.",
                 "most_influential_factors": ["emotional fit"],
                 "why_it_beat_alternatives": None,
                 "caveats": None,
@@ -327,6 +329,7 @@ def _build_ranking_response_from_request(request: httpx.Request) -> dict:
     explanations = {
         winner: {
             "why_it_matches": "Strong thematic and tonal alignment with your profile.",
+            "why_it_matches_short": "Strong theme and tone fit.",
             "most_influential_factors": ["theme fit", "pacing"],
             "why_it_beat_alternatives": "Highest combined semantic and scoring signals.",
             "caveats": None,
@@ -335,6 +338,7 @@ def _build_ranking_response_from_request(request: httpx.Request) -> dict:
     for film_id in runners:
         explanations[film_id] = {
             "why_it_matches": "Solid alternative with overlapping themes.",
+            "why_it_matches_short": "Overlapping themes.",
             "most_influential_factors": ["semantic fit"],
             "why_it_beat_alternatives": None,
             "caveats": None,

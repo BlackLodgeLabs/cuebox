@@ -22,6 +22,7 @@ const ceremonyDetail = {
     poster_url: null,
     explanation: {
       why_it_matches: "Folk horror atmosphere matches your mood.",
+      why_it_matches_short: "Folk horror mood fit.",
       most_influential_factors: ["theme fit", "pacing"],
       why_it_beat_alternatives: "Stronger ritual tone than runners-up.",
       caveats: "May feel slow early on.",
@@ -41,6 +42,7 @@ const ceremonyDetail = {
       poster_url: null,
       explanation: {
         why_it_matches: "Close alternative with overlapping vibes.",
+        why_it_matches_short: "Overlapping vibes.",
         most_influential_factors: ["semantic fit"],
         why_it_beat_alternatives: null,
         caveats: null,

@@ -346,6 +346,7 @@ export interface CreateRecommendationRequest {
 
 export interface FilmExplanation {
   why_it_matches: string;
+  why_it_matches_short?: string | null;
   most_influential_factors: string[];
   why_it_beat_alternatives: string | null;
   caveats: string | null;

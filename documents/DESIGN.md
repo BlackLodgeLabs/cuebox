@@ -153,16 +153,18 @@ spacing:
 - **Environmental Texture (The Used Future):** The main application viewport (`<main>`) applies a fixed, subtle CSS film grain or horizontal CRT scanline overlay. This breaks up perfect pixels, establishing a gritty, analog, and deeply cinematic atmosphere.
 
 ### Recommendation ceremony (`recommendation-ceremony.tsx`)
-Mandatory 3-stage ritual shared by fresh results (`/recommend/results/{id}?stage=`) and history detail (`/history/{id}?stage=`). Chrome is driven by URL `stage` + mode only (no parallel stage store). Progress cue shows `1 / 2 / 3`; primary CTAs use `min-h-11` (≥44×44). No Skip control.
+Mandatory 3-stage ritual shared by fresh results (`/recommend/results/{id}?stage=`) and history detail (`/history/{id}?stage=`). Chrome is driven by URL `stage` + mode only (no parallel stage store). Progress cue shows `n / 3`; primary CTAs use `min-h-11` (≥44×44). No Skip control and no FAB.
+
+Sticky chrome (progress + Next on stages 1–2; Done sole filled primary on stage 3) sits above the bottom tab bar with `bottom-[calc(4.5rem+env(safe-area-inset-bottom))]`, matching questionnaire sticky clearance. Stage 3 secondaries (Replay outline; More sheet for New recommendation / View history / answer summary / Remove) are demoted — never peer filled primaries beside Done.
 
 | Stage | Composition |
 |-------|-------------|
-| **1 — Winner** | Singular poster-led focus; TOP PICK + title/year/director; **short reasons only** (`most_influential_factors` + `why_it_matches`). Omit synopsis, caveats, beat-alternatives, ratings clutter, where-to-watch, questionnaire summary. |
+| **1 — Winner** | Singular poster-led focus; TOP PICK + title/year/director; **short reasons only** (`most_influential_factors` + `why_it_matches_short` when present; omit full `why_it_matches` on 1–2). Omit synopsis, caveats, beat-alternatives, ratings clutter, where-to-watch, questionnaire summary. |
 | **2 — Runners-up** | Horizontal **CSS scroll-snap** poster row; focused runner uses the same short-reason layout. No where-to-watch / full metadata dump. |
-| **3 — Session record** | Durable five-film record: full explanations, TMDB/RT ratings, **where-to-watch icons** (providers fetched only on stage 3), optional answer-summary sheet, constraint-relaxation banner, watchlist deep links, exits (Done / Replay / New recommendation / History; history mode keeps Remove). |
+| **3 — Session record** | Durable five-film record: full `why_it_matches` explanations, TMDB/RT ratings, **where-to-watch icons** (providers fetched only on stage 3), optional answer-summary in More, constraint-relaxation banner, watchlist deep links; sticky Done + demoted exits. |
 
 - **Cold-load / refresh:** unarmed `?stage=1\|2` coerces to stage 3 (module-scoped SPA gate armed only by questionnaire submit or Replay). Stage 2→3 uses `replace` so Back from stage 3 leaves the route.
-- **Motion:** short enter/advance fade; `@media (prefers-reduced-motion: reduce)` → instant / no travel (`data-reduced-motion` on the ceremony root).
+- **Motion:** short enter/advance fade; `.ceremony-reduced-motion` and `@media (prefers-reduced-motion: reduce)` disable ceremony fades/transitions (`data-reduced-motion` on the ceremony root).
 - **Ratings row (stage 3):** `Space Mono` (`font-mono`); **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on ceremony cards (film detail still shows all ratings).
 - **Key factor tags:** `Badge variant="secondary"` (lime secondary tokens).
 - **Card navigation (stage 3):** full-card overlay `Link` with concise `aria-label` (e.g. “View {title} in watchlist”).
