@@ -1,8 +1,8 @@
 # Demo notes — issue #158
 
 - **Date:** 2026-07-30T14:40:16Z
-- **Commit:** `80f046c777a9e7fa64aa0964195350c6baaf8d48` (`docs(workflow): demo evidence for issue #158` on `cursor/issue-158-pr-164-demo-agent-4b7a`)
-- **Branch:** `cursor/issue-158-pr-164-demo-agent-4b7a` (base `cursor/issue-158-shell-wayfinding-8cee`)
+- **Commit:** `cae28802295bc38d716781ed40dea1fe808c74c6` (demo-ready on canonical `cursor/issue-158-shell-wayfinding-8cee`)
+- **Branch:** `cursor/issue-158-shell-wayfinding-8cee` (artifacts merged from demo agent side-branch)
 - **PR:** #164 (base `feature/mobile-ui`)
 - **Tier:** application
 - **Viewport:** 390×844 (Playwright `devices['iPhone 13']`, `deviceScaleFactor: 2`)
