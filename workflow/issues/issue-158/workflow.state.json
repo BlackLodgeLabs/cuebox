@@ -3,7 +3,7 @@
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
   "stage": "spec-ready",
   "active_skill": null,
-  "updated_at": "2026-07-30T13:59:23Z",
+  "updated_at": "2026-07-30T14:02:55Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "planning",
+    "started_at": "2026-07-30T14:02:55Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
