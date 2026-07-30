@@ -18,7 +18,7 @@ import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useHasWatchlist } from "@/hooks/use-films";
 import { getHealth } from "@/lib/api-client";
-import { scrollSearchFieldToTop } from "@/lib/scroll-field-into-view";
+import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 
 export default function HomePage() {
   return (
@@ -57,7 +57,7 @@ function HomePageContent() {
         '[data-testid="library-search-input"]',
       );
       if (input) {
-        scrollSearchFieldToTop(input);
+        scrollFieldIntoView(input, "start");
         input.focus();
       }
     }

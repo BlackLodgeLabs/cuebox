@@ -25,7 +25,7 @@ import {
 } from "@/hooks/use-films";
 import { useToast } from "@/hooks/use-toast";
 import { ApiClientError, getFilm } from "@/lib/api-client";
-import { scrollSearchFieldToTop } from "@/lib/scroll-field-into-view";
+import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 import {
   mergeLibraryAndTmdbResults,
   PICKER_LIBRARY_STATUSES,
@@ -384,13 +384,12 @@ export function LibrarySearchPicker({
       <Input
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        onFocus={(event) => scrollSearchFieldToTop(event.currentTarget)}
+        onFocus={(event) => scrollFieldIntoView(event.currentTarget, "start")}
         placeholder={placeholder}
         aria-label="Library and TMDB search"
         autoFocus={autoFocus}
         data-testid="library-search-input"
         id="library-search-input"
-        className="scroll-mt-14"
       />
 
       <div className="max-h-[32rem] space-y-2 overflow-y-auto pr-1" role="list">
