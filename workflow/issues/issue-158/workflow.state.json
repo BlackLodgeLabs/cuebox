@@ -2,29 +2,26 @@
   "issue": 158,
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
   "stage": "spec-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-30T14:02:55Z",
+  "active_skill": "planning",
+  "updated_at": "2026-07-30T14:03:02Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
     "execute": null,
-    "planning": null,
+    "planning": "bc-fb312e51-3866-47c1-b983-b249200246b7",
     "review-and-spec": "bc-6be5344f-8be9-4230-994f-80e7ea9f8cee",
     "review-and-spec-continued": null
   },
   "pr": 164,
-  "active_agent_id": null,
+  "active_agent_id": "bc-fb312e51-3866-47c1-b983-b249200246b7",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "planning",
-    "started_at": "2026-07-30T14:02:55Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
     "total_runs": 1
-  }
+  },
+  "handoff_deferred": null
 }
