@@ -1,0 +1,84 @@
+{
+  "date": "2026-07-30T14:05:07.813Z",
+  "commit": "635701f",
+  "viewport": "390x844",
+  "base": "http://localhost:3000",
+  "findings": {
+    "moreHref": "/settings/sync",
+    "header": {
+      "className": "sticky top-0 z-40 border-b border-border bg-card",
+      "paddingTop": "0px",
+      "styleAttr": null,
+      "innerPaddingTop": "0px",
+      "innerClass": "mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 md:px-12",
+      "hasSafeAreaClass": false
+    },
+    "activeHomeTab": {
+      "className": "flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 normal-case tracking-normal transition-colors duration-150 motion-reduce:transition-none text-foreground",
+      "ariaCurrent": "page",
+      "color": "rgb(227, 227, 222)",
+      "fontWeight": "400",
+      "borderTop": "0px solid rgb(67, 72, 64)",
+      "borderBottom": "0px solid rgb(67, 72, 64)",
+      "boxShadow": "none",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    "inactiveWatchlistTab": {
+      "className": "flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 normal-case tracking-normal transition-colors duration-150 motion-reduce:transition-none text-muted-foreground hover:text-foreground",
+      "ariaCurrent": null,
+      "color": "rgb(195, 200, 189)",
+      "fontWeight": "400"
+    },
+    "moreLandsOn": "http://localhost:3000/settings/sync",
+    "syncHeading": "Sync settings",
+    "moreActiveOnSync": "page",
+    "viewportMeta": "width=device-width, initial-scale=1",
+    "historyChrome": {
+      "h1": "Recommendation history",
+      "anyBack": [
+        {
+          "href": "/",
+          "text": "homeHome"
+        }
+      ]
+    },
+    "moreActiveOnHistory": null,
+    "importChrome": {
+      "h1": "Import watchlist",
+      "anyBack": [
+        {
+          "href": "/",
+          "text": "homeHome"
+        }
+      ]
+    },
+    "reviewChrome": {
+      "h1": "All caught up",
+      "anyBack": [
+        {
+          "href": "/",
+          "text": "homeHome"
+        }
+      ]
+    },
+    "moreRouteStatus": 404,
+    "moreRouteUrl": "http://localhost:3000/more",
+    "morePageH1": "404",
+    "filmDetailBack": {
+      "href": "/watchlist",
+      "text": "← Watchlist",
+      "className": "inline-flex min-h-11 items-center text-body-md text-muted-foreground hover:text-foreground",
+      "height": 44
+    },
+    "mainAreaOffTabChrome": {
+      "history": "none — title + subtitle only",
+      "import": "none — title + subtitle only",
+      "review": "none — title only (empty state)"
+    },
+    "tabContrast": {
+      "home": "rgb(227, 227, 222)",
+      "inactive": "rgb(195, 200, 189)",
+      "euclideanRgbDistance": 53.3
+    }
+  }
+}
