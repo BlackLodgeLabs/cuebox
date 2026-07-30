@@ -1,7 +1,7 @@
 # Demo notes — issue #161
 
 - **Date:** 2026-07-30T10:10:00Z
-- **Commit:** `8f9a037` (`8f9a03758a06654578f821c1823d9f02a4f04e50`) — demo evidence tip
+- **Commit:** `585e3d2` (`585e3d2ffad8ebed8b2999d9404d39b9b139a771`) — demo evidence tip
 - **Branch:** `cursor/issue-161-pr-163-demo-agent-fa70` → canonical `cursor/issue-161-thumb-ergonomics-sticky-chrome-4647`
 - **PR:** #163 (base `feature/mobile-ui`)
 - **Tier:** application
