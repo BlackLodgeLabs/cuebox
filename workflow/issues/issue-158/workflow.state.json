@@ -1,9 +1,9 @@
 {
   "issue": 158,
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
-  "stage": "demo-ready",
+  "stage": "create-pr-in-progress",
   "active_skill": "create-pr",
-  "updated_at": "2026-07-30T14:55:58Z",
+  "updated_at": "2026-07-30T14:57:05Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": "bc-05476334-71c8-4a3e-ba67-8130bb211116",
@@ -23,5 +23,6 @@
     "ci_autofix": 0,
     "total_runs": 4
   },
-  "handoff_deferred": null
+  "handoff_deferred": null,
+  "schema_version": 1
 }
