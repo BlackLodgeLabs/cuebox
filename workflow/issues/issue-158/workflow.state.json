@@ -1,9 +1,15 @@
 {
   "issue": 158,
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
+<<<<<<< HEAD
   "stage": "execute-ready",
   "active_skill": "demo",
   "updated_at": "2026-07-30T14:36:31Z",
+=======
+  "stage": "demo-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-30T14:40:35Z",
+>>>>>>> cursor/issue-158-pr-164-demo-agent-4b7a
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,7 +27,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 3
+    "total_runs": 4
   },
   "handoff_deferred": null
 }
