@@ -2,10 +2,10 @@
   "issue": 158,
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
   "stage": "create-pr-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-30T15:04:28Z",
+  "active_skill": "babysit-pr",
+  "updated_at": "2026-07-30T15:07:29Z",
   "agents": {
-    "babysit-pr": null,
+    "babysit-pr": "bc-781daa89-b31b-4d74-99c7-a86fd4ceddd1",
     "create-pr": "bc-05476334-71c8-4a3e-ba67-8130bb211116",
     "demo": "bc-ef199502-f9d0-4c18-bdb0-920a5f70b637",
     "execute": "bc-fa34e1b0-e447-487f-9e7e-a60f3f082c82",
@@ -14,14 +14,10 @@
     "review-and-spec-continued": null
   },
   "pr": 164,
-  "active_agent_id": null,
+  "active_agent_id": "bc-781daa89-b31b-4d74-99c7-a86fd4ceddd1",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "babysit-pr",
-    "started_at": "2026-07-30T15:04:28Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
