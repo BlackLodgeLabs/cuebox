@@ -173,27 +173,18 @@ test.describe("library search picker (mocked API)", () => {
     }
   });
 
-  test("focusing search scrolls input into view", async ({ page }) => {
+  test("focusing search scrolls input under sticky header", async ({ page }) => {
     await page.addInitScript(() => {
-      const w = window as unknown as {
-        __scrollIntoViewLog: { id: string; block?: string }[];
-      };
-      w.__scrollIntoViewLog = [];
-      const original = HTMLElement.prototype.scrollIntoView;
-      HTMLElement.prototype.scrollIntoView = function (
-        this: HTMLElement,
-        arg?: boolean | ScrollIntoViewOptions,
-      ) {
-        const block =
-          typeof arg === "object" && arg && "block" in arg
-            ? String(arg.block)
-            : undefined;
-        w.__scrollIntoViewLog.push({
-          id: this.getAttribute("data-testid") ?? this.id ?? "",
-          block,
-        });
-        return original.call(this, arg as ScrollIntoViewOptions);
-      };
+      const w = window as unknown as { __scrollByLog: { top: number }[] };
+      w.__scrollByLog = [];
+      const original = window.scrollBy.bind(window);
+      window.scrollBy = ((...args: unknown[]) => {
+        const opts = args[0];
+        if (opts && typeof opts === "object" && "top" in opts) {
+          w.__scrollByLog.push({ top: Number((opts as { top: number }).top) });
+        }
+        return original(...(args as Parameters<typeof window.scrollBy>));
+      }) as typeof window.scrollBy;
     });
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -201,17 +192,10 @@ test.describe("library search picker (mocked API)", () => {
     await page.getByTestId("library-search-input").click();
 
     const log = await page.evaluate(() => {
-      const w = window as unknown as {
-        __scrollIntoViewLog: { id: string; block?: string }[];
-      };
-      return w.__scrollIntoViewLog ?? [];
+      const w = window as unknown as { __scrollByLog: { top: number }[] };
+      return w.__scrollByLog ?? [];
     });
-    expect(
-      log.some(
-        (entry) =>
-          entry.id === "library-search-input" && entry.block === "start",
-      ),
-    ).toBe(true);
+    expect(log.length).toBeGreaterThan(0);
   });
 
   test("search merges local and TMDB; mark watched posts status", async ({ page }) => {

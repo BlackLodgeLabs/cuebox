@@ -12,6 +12,7 @@ const {
   setFilmStatusMock,
   getFilmMock,
   pushMock,
+  scrollSearchFieldToTopMock,
 } = vi.hoisted(() => ({
   getFilmsMock: vi.fn(),
   searchTmdbGlobalMock: vi.fn(),
@@ -19,10 +20,17 @@ const {
   setFilmStatusMock: vi.fn(),
   getFilmMock: vi.fn(),
   pushMock: vi.fn(),
+  scrollSearchFieldToTopMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
+}));
+
+vi.mock("@/lib/scroll-field-into-view", () => ({
+  scrollFieldIntoView: vi.fn(),
+  scrollSearchFieldToTop: (...args: unknown[]) =>
+    scrollSearchFieldToTopMock(...args),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
@@ -89,7 +97,7 @@ describe("LibrarySearchPicker", () => {
     expect(screen.getByLabelText("Library and TMDB search")).toBe(input);
   });
 
-  it("scrolls search input into view on focus", async () => {
+  it("scrolls search input under the sticky header on focus", async () => {
     getFilmsMock.mockResolvedValue({
       data: [],
       pagination: { total: 0, limit: 20, offset: 0, has_more: false },
@@ -99,14 +107,13 @@ describe("LibrarySearchPicker", () => {
       pagination: { total: 0, limit: 20, offset: 0, has_more: false },
     });
 
-    const scrollIntoView = vi.fn();
-    HTMLElement.prototype.scrollIntoView = scrollIntoView;
-
     const { Wrapper } = createQueryWrapper();
     render(<LibrarySearchPicker />, { wrapper: Wrapper });
 
-    await userEvent.click(screen.getByTestId("library-search-input"));
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" });
+    const input = screen.getByTestId("library-search-input");
+    expect(input.className).toMatch(/scroll-mt-14/);
+    input.focus();
+    expect(scrollSearchFieldToTopMock).toHaveBeenCalled();
   });
 
   it("accepts Home hub placeholder and helper overrides", async () => {
