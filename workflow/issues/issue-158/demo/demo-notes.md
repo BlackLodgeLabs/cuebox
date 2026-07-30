@@ -68,6 +68,6 @@ Phone shell wayfinding gaps from #158 are closed on the running Compose stack: M
 
 - **Frontend CI:** success on `dd12e9b` (run 30555354656); API CI path-skipped (no `api/**` changes)
 - **Merge:** `MERGEABLE` / `CLEAN` vs `feature/mobile-ui`; no review threads
-- **Bugbot:** check suite remained `queued` across PR SHAs with **no** review comments / must-fix items; not treated as blocking (merge already CLEAN)
+- **Bugbot:** SUCCESS on tip `80f3bb8` with **no** review comments / must-fix items (earlier SHAs stayed queued until the complete push)
 - **PR ready:** marked ready for review (`draft: false`); MCP `update_pull_request` lacked PAT scope — used `gh pr ready` fallback
 - **Loops:** bugbot 0/3, ci_autofix 0/2, total_runs 6/10 → `stage: complete`
