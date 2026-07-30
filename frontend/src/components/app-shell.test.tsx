@@ -97,7 +97,7 @@ describe("AppShell", () => {
       expect(
         activeLink.querySelector("[data-active-indicator]"),
       ).not.toBeNull();
-      expect(activeLink.className).toMatch(/font-bold|font-semibold/);
+      expect(activeLink.querySelector("span.font-bold")).not.toBeNull();
 
       for (const label of ["Home", "Watchlist", "Recommend", "More"] as const) {
         if (label === active) continue;
