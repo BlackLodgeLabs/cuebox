@@ -3,7 +3,7 @@
   "branch": "cursor/issue-158-shell-wayfinding-8cee",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-30T14:07:28Z",
+  "updated_at": "2026-07-30T14:07:37Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
