@@ -41,6 +41,13 @@ describe("ImportPage", () => {
   it("uses compact upload and ≥44px Start import", () => {
     renderImportPage();
 
+    expect(screen.getByRole("link", { name: /← home/i })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(screen.getByRole("link", { name: /← home/i }).className).toMatch(
+      /min-h-11/,
+    );
     expect(screen.getByText(/tap to choose a csv/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /choose file/i }).className).toMatch(
       /min-h-11/,

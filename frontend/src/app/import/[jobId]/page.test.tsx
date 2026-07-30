@@ -62,6 +62,14 @@ describe("ImportStatusPage", () => {
     const user = userEvent.setup();
     render(<ImportStatusPage />);
 
+    expect(screen.getByRole("link", { name: /← home/i })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(screen.getByRole("link", { name: /← home/i }).className).toMatch(
+      /min-h-11/,
+    );
+
     const failureToggle = screen.getByRole("button", {
       name: /show failure details/i,
     });

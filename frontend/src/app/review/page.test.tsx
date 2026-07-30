@@ -95,6 +95,10 @@ describe("ReviewPage", () => {
     render(<ReviewPage />);
 
     expect(screen.getByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /← home/i })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(screen.getByRole("heading", { name: "Match review" })).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Watched films to review" }),

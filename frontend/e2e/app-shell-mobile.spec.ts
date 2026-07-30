@@ -64,6 +64,17 @@ async function stubShellApis(page: Page, pendingTotal = 0) {
     });
   });
 
+  await page.route(`**${API_PATH_PREFIX}/recommendations**`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [],
+        pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+      }),
+    });
+  });
+
   await page.route(`**${API_PATH_PREFIX}/films/review-required**`, async (route) => {
     const data =
       pendingTotal > 0
@@ -127,7 +138,7 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     const hrefs = await primary.getByRole("link").evaluateAll((links) =>
       links.map((link) => link.getAttribute("href")),
     );
-    expect(hrefs).toEqual(["/", "/watchlist", "/recommend", "/settings/sync"]);
+    expect(hrefs).toEqual(["/", "/watchlist", "/recommend", "/more"]);
     for (const label of ["Home", "Watchlist", "Recommend", "More"]) {
       await expect(primary.getByRole("link", { name: label })).toBeVisible();
     }
@@ -139,15 +150,77 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     );
   });
 
-  test("More navigates to sync settings", async ({ page }) => {
+  test("More opens hub then Sync; More stays active on settings", async ({
+    page,
+  }) => {
     await stubShellApis(page);
     await page.goto("/");
-    await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "More" }).click();
+    await page
+      .getByRole("navigation", { name: "Primary" })
+      .getByRole("link", { name: "More" })
+      .click();
+    await expect(page).toHaveURL(/\/more$/);
+    await expect(page.getByRole("heading", { name: "More" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    const destinations = page.getByRole("navigation", {
+      name: "More destinations",
+    });
+    await expect(destinations.getByRole("link", { name: /sync/i })).toBeVisible();
+    await expect(destinations.getByRole("link", { name: /import/i })).toBeVisible();
+    await expect(destinations.getByRole("link", { name: /history/i })).toBeVisible();
+
+    await destinations.getByRole("link", { name: /sync/i }).click();
     await expect(page).toHaveURL(/\/settings\/sync/);
     await expect(page.getByRole("heading", { name: "Sync settings" })).toBeVisible();
     await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
       "aria-current",
       "page",
+    );
+  });
+
+  test("active tab uses primary tint and indicator", async ({ page }) => {
+    await stubShellApis(page);
+    await page.goto("/");
+
+    const home = page
+      .getByRole("navigation", { name: "Primary" })
+      .getByRole("link", { name: "Home" });
+    await expect(home).toHaveClass(/text-primary/);
+    await expect(home.locator("[data-active-indicator]")).toHaveCount(1);
+  });
+
+  test("sticky header includes top safe-area padding class", async ({ page }) => {
+    await stubShellApis(page);
+    await page.goto("/");
+
+    const header = page.locator("header").first();
+    await expect(header).toHaveClass(/safe-area-inset-top/);
+  });
+
+  test("off-tab pages expose ← Home chrome", async ({ page }) => {
+    await stubShellApis(page);
+
+    await page.goto("/history");
+    await expect(page.getByRole("link", { name: /← home/i })).toHaveAttribute(
+      "href",
+      "/",
+    );
+
+    await page.goto("/import");
+    await expect(page.getByRole("link", { name: /← home/i })).toHaveAttribute(
+      "href",
+      "/",
+    );
+
+    await stubShellApis(page, 2);
+    await page.goto("/review");
+    await expect(page.getByRole("link", { name: /← home/i })).toHaveAttribute(
+      "href",
+      "/",
     );
   });
 

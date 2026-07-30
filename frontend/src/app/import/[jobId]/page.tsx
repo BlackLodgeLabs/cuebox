@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -53,12 +54,10 @@ export default function ImportStatusPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <div>
-        <h1 className="text-h1">Import progress</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Job {data.job_id.slice(0, 8)}…
-        </p>
-      </div>
+      <OffTabPageHeader
+        title="Import progress"
+        subtitle={`Job ${data.job_id.slice(0, 8)}…`}
+      />
 
       <Card>
         <CardHeader className="space-y-1 p-4 pb-2 sm:p-6 sm:pb-2">

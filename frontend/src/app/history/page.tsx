@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DeleteHistoryDialog } from "@/components/delete-history-dialog";
 import { FilmPoster } from "@/components/film-poster";
+import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,12 +78,10 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-h1">Recommendation history</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Browse past picks and revisit your preferences.
-        </p>
-      </div>
+      <OffTabPageHeader
+        title="Recommendation history"
+        subtitle="Browse past picks and revisit your preferences."
+      />
 
       <div className="flex flex-wrap gap-3">
         <Input

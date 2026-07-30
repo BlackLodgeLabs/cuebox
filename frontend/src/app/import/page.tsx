@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/file-upload";
+import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,13 +52,10 @@ export default function ImportPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <div>
-        <h1 className="text-h1">Import watchlist</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Upload your Letterboxd watchlist CSV to import films and start
-          enrichment.
-        </p>
-      </div>
+      <OffTabPageHeader
+        title="Import watchlist"
+        subtitle="Upload your Letterboxd watchlist CSV to import films and start enrichment."
+      />
 
       <Card>
         <CardHeader className="space-y-1 p-4 pb-2 sm:p-6 sm:pb-2">

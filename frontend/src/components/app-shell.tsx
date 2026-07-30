@@ -27,10 +27,13 @@ const BOTTOM_TABS = [
     isActive: (pathname: string) => pathname.startsWith("/recommend"),
   },
   {
-    href: "/settings/sync",
+    href: "/more",
     label: "More",
     icon: "more_horiz",
-    isActive: (pathname: string) => pathname.startsWith("/settings"),
+    isActive: (pathname: string) =>
+      pathname === "/more" ||
+      pathname.startsWith("/more/") ||
+      pathname.startsWith("/settings"),
   },
 ] as const;
 
@@ -41,7 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-card">
+      <header className="sticky top-0 z-40 border-b border-border bg-card pt-[env(safe-area-inset-top,0px)]">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 md:px-12">
           <Link href="/" className="text-h2 font-heading text-foreground">
             Cuebox
@@ -91,14 +94,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-label-md normal-case tracking-normal transition-colors duration-150 motion-reduce:transition-none",
+                  "relative flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-label-md normal-case tracking-normal transition-colors duration-150 motion-reduce:transition-none",
                   active
-                    ? "text-foreground"
+                    ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
+                {active && (
+                  <span
+                    aria-hidden
+                    data-active-indicator
+                    className="absolute inset-x-3 top-0 h-0.5 bg-primary"
+                  />
+                )}
                 <Icon name={tab.icon} filled={active} size={22} />
-                <span className="text-[11px] font-mono font-semibold leading-4 tracking-[0.04em]">
+                <span
+                  className={cn(
+                    "text-[11px] font-mono leading-4 tracking-[0.04em]",
+                    active ? "font-bold" : "font-semibold",
+                  )}
+                >
                   {tab.label}
                 </span>
               </Link>

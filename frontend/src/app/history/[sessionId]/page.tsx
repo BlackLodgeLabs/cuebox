@@ -5,6 +5,7 @@ import { useState } from "react";
 import { DeleteHistoryDialog } from "@/components/delete-history-dialog";
 import { DevModePanel } from "@/components/dev-mode/dev-mode-panel";
 import { DevModeProvider } from "@/components/dev-mode/dev-mode-provider";
+import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { RecommendationCeremony } from "@/components/recommendation-ceremony";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
@@ -50,12 +51,10 @@ export default function HistoryDetailPage() {
   return (
     <DevModeProvider>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-h1">{data.winner.title}</h1>
-          <p className="mt-1 text-body-md text-muted-foreground">
-            Recommended on {new Date(data.created_at).toLocaleString()}
-          </p>
-        </div>
+        <OffTabPageHeader
+          title={data.winner.title}
+          subtitle={`Recommended on ${new Date(data.created_at).toLocaleString()}`}
+        />
         <RecommendationCeremony
           mode="history"
           data={data}
