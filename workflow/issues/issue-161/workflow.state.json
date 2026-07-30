@@ -1,9 +1,15 @@
 {
   "issue": 161,
   "branch": "cursor/issue-161-thumb-ergonomics-sticky-chrome-4647",
+<<<<<<< HEAD
   "stage": "execute-ready",
   "active_skill": "demo",
   "updated_at": "2026-07-30T10:04:59Z",
+=======
+  "stage": "demo-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-30T10:14:26Z",
+>>>>>>> cursor/issue-161-pr-163-demo-agent-fa70
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,7 +27,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 2
+    "total_runs": 3
   },
   "handoff_deferred": null
 }
