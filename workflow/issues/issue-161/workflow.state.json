@@ -3,7 +3,7 @@
   "branch": "cursor/issue-161-thumb-ergonomics-sticky-chrome-4647",
   "stage": "plan-ready",
   "active_skill": null,
-  "updated_at": "2026-07-30T09:30:15Z",
+  "updated_at": "2026-07-30T09:30:28Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
