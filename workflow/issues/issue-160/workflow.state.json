@@ -1,9 +1,9 @@
 {
   "issue": 160,
   "branch": "cursor/issue-160-mobile-surface-clarity-ccba",
-  "stage": "plan-in-progress",
-  "active_skill": "planning",
-  "updated_at": "2026-07-31T07:52:56Z",
+  "stage": "plan-ready",
+  "active_skill": null,
+  "updated_at": "2026-07-31T08:12:00Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -21,7 +21,7 @@
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
-    "total_runs": 1
+    "total_runs": 2
   },
   "handoff_deferred": null
 }
