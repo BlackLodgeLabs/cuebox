@@ -3,7 +3,7 @@
   "branch": "cursor/issue-160-mobile-surface-clarity-ccba",
   "stage": "spec-ready",
   "active_skill": null,
-  "updated_at": "2026-07-31T07:39:37Z",
+  "updated_at": "2026-07-31T07:44:12Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -13,7 +13,7 @@
     "review-and-spec": "bc-eb179e5e-6910-4313-bddf-599317c8ccba",
     "review-and-spec-continued": null
   },
-  "pr": null,
+  "pr": 165,
   "active_agent_id": "bc-eb179e5e-6910-4313-bddf-599317c8ccba",
   "passback_to": null,
   "passback_reason": null,
