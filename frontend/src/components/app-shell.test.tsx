@@ -53,7 +53,7 @@ describe("AppShell", () => {
       "/",
       "/watchlist",
       "/recommend",
-      "/settings/sync",
+      "/more",
     ]);
     for (const label of ["Home", "Watchlist", "Recommend", "More"]) {
       expect(
@@ -68,12 +68,12 @@ describe("AppShell", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("routes More to /settings/sync", () => {
+  it("routes More to /more", () => {
     renderShell();
 
     expect(screen.getByRole("link", { name: "More" })).toHaveAttribute(
       "href",
-      "/settings/sync",
+      "/more",
     );
   });
 
@@ -83,6 +83,7 @@ describe("AppShell", () => {
     { pathname: "/watchlist/add", active: "Watchlist" },
     { pathname: "/recommend", active: "Recommend" },
     { pathname: "/recommend/abc", active: "Recommend" },
+    { pathname: "/more", active: "More" },
     { pathname: "/settings/sync", active: "More" },
   ] as const)(
     "marks $active active on $pathname",
@@ -92,26 +93,42 @@ describe("AppShell", () => {
 
       const activeLink = screen.getByRole("link", { name: active });
       expect(activeLink).toHaveAttribute("aria-current", "page");
-      expect(activeLink.className).toContain("text-foreground");
+      expect(activeLink.className).toContain("text-primary");
+      expect(
+        activeLink.querySelector("[data-active-indicator]"),
+      ).not.toBeNull();
+      expect(activeLink.querySelector("span.font-bold")).not.toBeNull();
 
       for (const label of ["Home", "Watchlist", "Recommend", "More"] as const) {
         if (label === active) continue;
-        expect(
-          screen.getByRole("link", { name: label }),
-        ).not.toHaveAttribute("aria-current");
+        const inactive = screen.getByRole("link", { name: label });
+        expect(inactive).not.toHaveAttribute("aria-current");
+        expect(inactive.className).toContain("text-muted-foreground");
+        expect(inactive.querySelector("[data-active-indicator]")).toBeNull();
       }
     },
   );
 
-  it("does not force a bottom tab active on /history", () => {
-    navigationState.pathname = "/history";
+  it("does not force More active on /import or /history", () => {
+    for (const pathname of ["/import", "/history"] as const) {
+      navigationState.pathname = pathname;
+      const { unmount } = renderShell();
+
+      for (const label of ["Home", "Watchlist", "Recommend", "More"]) {
+        expect(screen.getByRole("link", { name: label })).not.toHaveAttribute(
+          "aria-current",
+        );
+      }
+      unmount();
+    }
+  });
+
+  it("pads sticky header with top safe-area inset", () => {
     renderShell();
 
-    for (const label of ["Home", "Watchlist", "Recommend", "More"]) {
-      expect(screen.getByRole("link", { name: label })).not.toHaveAttribute(
-        "aria-current",
-      );
-    }
+    const header = document.querySelector("header");
+    expect(header).not.toBeNull();
+    expect(header!.className).toMatch(/safe-area-inset-top/);
   });
 
   it("exposes Search films header link to /search", () => {

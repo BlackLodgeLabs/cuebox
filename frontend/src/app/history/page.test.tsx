@@ -73,6 +73,14 @@ describe("HistoryPage touch targets", () => {
 
     renderHistory();
 
+    expect(screen.getByRole("link", { name: /← home/i })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(screen.getByRole("link", { name: /← home/i }).className).toMatch(
+      /min-h-11/,
+    );
+
     const remove = screen.getByRole("button", { name: /remove from history/i });
     expect(remove.className).toMatch(/min-h-11/);
     expect(remove.className).toMatch(/min-w-11/);

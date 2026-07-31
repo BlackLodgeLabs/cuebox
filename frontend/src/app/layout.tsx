@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cabin, Libre_Franklin, Space_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import { Providers } from "@/components/providers";
@@ -27,6 +27,10 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "Cuebox",
   description: "Choose what to watch from your Letterboxd watchlist",
+};
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

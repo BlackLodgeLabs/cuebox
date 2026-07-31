@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FilmPoster } from "@/components/film-poster";
+import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -61,26 +62,26 @@ export default function ReviewPage() {
 
   if (matchFilms.length === 0 && watchFilms.length === 0) {
     return (
-      <div className="mx-auto max-w-lg space-y-6 text-center">
-        <h1 className="text-h1">All caught up</h1>
-        <p className="text-muted-foreground">
-          There are no metadata matches or watch diary entries waiting for review.
-        </p>
-        <Button asChild>
-          <Link href="/recommend">Get a recommendation</Link>
-        </Button>
+      <div className="mx-auto max-w-lg space-y-6">
+        <OffTabPageHeader
+          title="All caught up"
+          subtitle="There are no metadata matches or watch diary entries waiting for review."
+        />
+        <div className="text-center">
+          <Button asChild>
+            <Link href="/recommend">Get a recommendation</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-h1">Review</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Confirm metadata matches and complete watch diary entries.
-        </p>
-      </div>
+      <OffTabPageHeader
+        title="Review"
+        subtitle="Confirm metadata matches and complete watch diary entries."
+      />
 
       {matchFilms.length > 0 && (
         <section className="space-y-4">
