@@ -1,9 +1,9 @@
 {
   "issue": 160,
   "branch": "cursor/issue-160-mobile-surface-clarity-ccba",
-  "stage": "spec-in-progress",
+  "stage": "spec-ready",
   "active_skill": "review-and-spec",
-  "updated_at": "2026-07-31T07:40:00Z",
+  "updated_at": "2026-07-31T07:39:26Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
