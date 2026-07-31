@@ -3,7 +3,7 @@
   "branch": "cursor/issue-160-mobile-surface-clarity-ccba",
   "stage": "demo-ready",
   "active_skill": null,
-  "updated_at": "2026-07-31T09:27:58Z",
+  "updated_at": "2026-07-31T09:31:48Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
@@ -17,7 +17,11 @@
   "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": null,
+  "handoff_pending": {
+    "skill": "create-pr",
+    "started_at": "2026-07-31T09:31:48Z",
+    "attempt": 0
+  },
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
