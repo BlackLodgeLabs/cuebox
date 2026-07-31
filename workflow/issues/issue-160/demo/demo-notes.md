@@ -1,7 +1,7 @@
 # Demo notes — issue #160
 
 - **Date:** 2026-07-31T09:21:00Z
-- **Commit:**  () — demo evidence tip
+- **Commit:** `b731372` (`b7313728586f8e4e4edce36631a1164022753335`) — demo evidence tip
 - **Branch:** `cursor/issue-160-pr-165-demo-agent-d1ed` → canonical `cursor/issue-160-mobile-surface-clarity-ccba`
 - **PR:** #165 (base `feature/mobile-ui`)
 - **Tier:** application
