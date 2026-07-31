@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { FilmPoster } from "@/components/film-poster";
 import {
   formatDirectorRuntime,
   formatFilmTitle,
@@ -110,19 +110,12 @@ export function CeremonyStageRunnersUp({ films }: { films: FilmResult[] }) {
                 isFocused ? "border border-primary shadow-glow" : "opacity-80",
               )}
             >
-              {film.poster_url ? (
-                <Image
-                  src={film.poster_url}
-                  alt=""
-                  fill
-                  sizes="(max-width: 640px) 160px, 224px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-label-md text-muted-foreground">
-                  NO POSTER
-                </div>
-              )}
+              <FilmPoster
+                src={film.poster_url}
+                alt=""
+                size="fill"
+                sizes="(max-width: 640px) 160px, 224px"
+              />
             </button>
           );
         })}
