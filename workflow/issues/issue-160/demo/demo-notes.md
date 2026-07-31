@@ -60,3 +60,12 @@ Phone-review surface-clarity gaps from #160 are closed on the full stack: return
 - Planning `bug-repro-*` artifacts retained for before/after contrast
 - PR #165 base confirmed `feature/mobile-ui`
 - No secrets in images or notes
+
+## Babysit notes
+
+- 2026-07-31: PR #165 Frontend CI success on babysit tip `7b037fe`; mergeable CLEAN; no Bugbot review threads / must-fix items.
+- Cursor Bugbot and Vercel check suites remained `queued` (no check run) — same non-blocking pattern as #145/#146/#158; not treated as required checks (mergeStateStatus CLEAN).
+- API CI path-filtered (frontend-only PR); earlier API CI `action_required` rows were github-actions[bot]-triggered no-ops, not real failures.
+- Marked ready for review via MCP `update_pull_request` (`draft: false`) with `gh pr ready` fallback if PAT scope fails.
+- Loops at complete: bugbot=0/3, ci_autofix=0/2, total_runs=6/10.
+- No CI autofix or Bugbot fix cycles needed.

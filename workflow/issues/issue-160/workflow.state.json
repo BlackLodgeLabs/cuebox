@@ -1,9 +1,9 @@
 {
   "issue": 160,
   "branch": "cursor/issue-160-mobile-surface-clarity-ccba",
-  "stage": "babysit-in-progress",
-  "active_skill": "babysit-pr",
-  "updated_at": "2026-07-31T09:58:42Z",
+  "stage": "complete",
+  "active_skill": null,
+  "updated_at": "2026-07-31T10:01:08Z",
   "agents": {
     "babysit-pr": "bc-4d3e9576-f683-4bad-aeb5-024d5922edd0",
     "create-pr": "bc-82532ad0-7671-4e50-9bb2-7b4ae000fd2b",
@@ -14,7 +14,7 @@
     "review-and-spec-continued": null
   },
   "pr": 165,
-  "active_agent_id": "bc-4d3e9576-f683-4bad-aeb5-024d5922edd0",
+  "active_agent_id": null,
   "passback_to": null,
   "passback_reason": null,
   "handoff_pending": null,
