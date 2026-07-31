@@ -2,26 +2,22 @@
   "issue": 160,
   "branch": "cursor/issue-160-mobile-surface-clarity-ccba",
   "stage": "plan-ready",
-  "active_skill": null,
-  "updated_at": "2026-07-31T08:49:51Z",
+  "active_skill": "execute",
+  "updated_at": "2026-07-31T08:51:58Z",
   "agents": {
     "babysit-pr": null,
     "create-pr": null,
     "demo": null,
-    "execute": null,
+    "execute": "bc-eb97d0c9-4608-4d0f-964c-93289e688af4",
     "planning": "bc-e9353848-5b79-42be-85d3-070a22e5eec6",
     "review-and-spec": "bc-eb179e5e-6910-4313-bddf-599317c8ccba",
     "review-and-spec-continued": null
   },
   "pr": 165,
-  "active_agent_id": "bc-e9353848-5b79-42be-85d3-070a22e5eec6",
+  "active_agent_id": "bc-eb97d0c9-4608-4d0f-964c-93289e688af4",
   "passback_to": null,
   "passback_reason": null,
-  "handoff_pending": {
-    "skill": "execute",
-    "started_at": "2026-07-31T08:49:51Z",
-    "attempt": 0
-  },
+  "handoff_pending": null,
   "loops": {
     "bugbot": 0,
     "ci_autofix": 0,
