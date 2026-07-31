@@ -5,17 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DeleteHistoryDialog } from "@/components/delete-history-dialog";
 import { FilmPoster } from "@/components/film-poster";
+import {
+  DEFAULT_HISTORY_FILTERS,
+  HistoryFilterSheet,
+  type HistoryFilterValues,
+} from "@/components/history-filter-sheet";
+import { Icon } from "@/components/icon";
 import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Card,
   CardDescription,
@@ -29,7 +28,16 @@ import {
   useRecommendationHistory,
 } from "@/hooks/use-recommendations";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
+import { cn } from "@/lib/utils";
 import type { WatchStatusFilter } from "@/types/api";
+
+function historyFiltersActive(values: HistoryFilterValues): boolean {
+  return (
+    values.dateFrom !== "" ||
+    values.dateTo !== "" ||
+    values.watchStatus !== "all"
+  );
+}
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -42,6 +50,7 @@ export default function HistoryPage() {
   const [watchStatus, setWatchStatus] = useState<WatchStatusFilter | "all">(
     "all",
   );
+  const [filterOpen, setFilterOpen] = useState(false);
   const [offset, setOffset] = useState(0);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
     null,
@@ -57,6 +66,13 @@ export default function HistoryPage() {
     setOffset(0);
   }, [debouncedSearch, dateFrom, dateTo, watchStatus]);
 
+  const filterValues: HistoryFilterValues = {
+    dateFrom,
+    dateTo,
+    watchStatus,
+  };
+  const filtersActive = historyFiltersActive(filterValues);
+
   const { data, isLoading, isError, refetch } = useRecommendationHistory({
     search: debouncedSearch || undefined,
     date_from: dateFrom || undefined,
@@ -65,6 +81,17 @@ export default function HistoryPage() {
     limit,
     offset,
   });
+
+  const applyFilters = (values: HistoryFilterValues) => {
+    setDateFrom(values.dateFrom);
+    setDateTo(values.dateTo);
+    setWatchStatus(values.watchStatus);
+    setFilterOpen(false);
+  };
+
+  const clearFilters = () => {
+    applyFilters(DEFAULT_HISTORY_FILTERS);
+  };
 
   const handleConfirmDelete = () => {
     if (!deletingSessionId) return;
@@ -83,40 +110,27 @@ export default function HistoryPage() {
         subtitle="Browse past picks and revisit your preferences."
       />
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Input
           placeholder="Search by title…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+          className="min-w-0 flex-1 max-w-xs"
+          aria-label="Search by title"
         />
-        <Input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-          className="max-w-[160px]"
-        />
-        <Input
-          type="date"
-          value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
-          className="max-w-[160px]"
-        />
-        <Select
-          value={watchStatus}
-          onValueChange={(v) =>
-            setWatchStatus(v as WatchStatusFilter | "all")
-          }
+        <Button
+          type="button"
+          variant="outline"
+          aria-label="Filter history"
+          className={cn(
+            "min-h-[44px] min-w-[44px] gap-2",
+            filtersActive && "border-primary text-primary",
+          )}
+          onClick={() => setFilterOpen(true)}
         >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Watch status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="watched">Watched</SelectItem>
-            <SelectItem value="unwatched">Unwatched</SelectItem>
-          </SelectContent>
-        </Select>
+          <Icon name="filter_list" size={20} />
+          Filter
+        </Button>
       </div>
 
       {isLoading && <CardGridSkeleton count={4} />}
@@ -209,6 +223,14 @@ export default function HistoryPage() {
           </div>
         </>
       )}
+
+      <HistoryFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        values={filterValues}
+        onApply={applyFilters}
+        onClear={clearFilters}
+      />
 
       <DeleteHistoryDialog
         open={deletingSessionId !== null}
