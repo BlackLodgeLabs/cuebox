@@ -160,14 +160,14 @@ Narrower intermediate OK while iterating; **final execute handoff** expects `$AP
 
 ## Definition of done
 
-- [ ] `FilmPoster` handles null **and** load error with one placeholder; ceremony listed stages migrated
-- [ ] Film detail shows user lifecycle labels; enrichment badges gone; actions unchanged
-- [ ] Home has no System status (empty + returning); copy stays one sentence + helper
-- [ ] History date/status behind Filter sheet; search may stay; results higher when filters closed
-- [ ] Unit tests map to each AC; `tsc --noEmit` + `test:unit` green
-- [ ] `$APP_DEFAULT_GATE` green (or documented narrower + reason)
+- [x] `FilmPoster` handles null **and** load error with one placeholder; ceremony listed stages migrated
+- [x] Film detail shows user lifecycle labels; enrichment badges gone; actions unchanged
+- [x] Home has no System status (empty + returning); copy stays one sentence + helper
+- [x] History date/status behind Filter sheet; search may stay; results higher when filters closed
+- [x] Unit tests map to each AC; `tsc --noEmit` + `test:unit` green
+- [x] `$APP_DEFAULT_GATE` green (or documented narrower + reason)
 - [ ] Demo artifacts per `demo/demo-spec.md`
-- [ ] Draft PR **#165** remains based on **`feature/mobile-ui`**
+- [x] Draft PR **#165** remains based on **`feature/mobile-ui`**
 
 ## PR seed
 
