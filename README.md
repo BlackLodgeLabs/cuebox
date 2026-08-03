@@ -109,6 +109,17 @@ If an update breaks the app:
 
 Compose publishes port **3000** (frontend) and **8000** (API). From other devices on your network, open `http://<server-lan-ip>:3000`. Ensure the host firewall allows inbound traffic on those ports.
 
+### Running multiple copies (dev + prod) on one host
+
+To run a separate "dev" checkout (sample data, active development) alongside a "prod" checkout (your real watchlist) on the same machine, use a separate clone/directory per copy and set these in each copy's `.env`:
+
+| Setting | Dev copy | Prod copy |
+|---------|----------|-----------|
+| `FRONTEND_MODE` | `development` (default) — `next dev`, hot reload | `production` — `next build` + `next start`, optimized |
+| `FRONTEND_PORT` / `API_PORT` / `POSTGRES_PORT` | e.g. `3001` / `8001` / `5434` | defaults (`3000` / `8000` / `5433`) |
+
+Each copy also needs its own `POSTGRES_DB`/`POSTGRES_USER`/`POSTGRES_PASSWORD` (or its own `postgres_data` volume via a distinct Compose project name, e.g. run `docker compose -p cuebox-dev up` in the dev checkout) so the two stacks don't share a database. Keep `FRONTEND_MODE=production` on the copy serving real data — `next dev` is slower and heavier and is meant for active iteration, not everyday use.
+
 ## Documentation
 
 | Document | Purpose |

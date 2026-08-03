@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cuebox}
       POSTGRES_DB: ${POSTGRES_DB:-cuebox}
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -15,7 +15,7 @@ services:
     build:
       context: ./api
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     depends_on:
       - postgres
     env_file: .env
@@ -28,11 +28,12 @@ services:
     build:
       context: ./frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - api
     environment:
       API_UPSTREAM_URL: http://api:8000
+      FRONTEND_MODE: ${FRONTEND_MODE:-development}
     volumes:
       - ./frontend:/app
       - /app/node_modules
