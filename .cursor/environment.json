@@ -1,6 +1,6 @@
 {
   "snapshot": "snapshot-20260620-76b9f6ab-b336-4f87-b006-c878c5a6a7f5",
-  "install": "bash scripts/cloud-bootstrap-env.sh && cd api && pip install -e \".[dev]\" && cd ../frontend && npm ci",
+  "install": "bash scripts/cloud-install.sh",
   "start": "bash scripts/cloud-ensure-docker.sh",
   "terminals": [
     {
@@ -10,4 +10,3 @@
     }
   ]
 }
-
