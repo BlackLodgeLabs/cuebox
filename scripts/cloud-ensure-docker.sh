@@ -5,6 +5,7 @@ set -euo pipefail
 
 DOCKER_DAEMON_JSON="/etc/docker/daemon.json"
 DOCKER_PACKAGES=(docker.io docker-compose-v2 fuse-overlayfs)
+NEED_DOCKER_RESTART=0
 
 log() {
   echo "[cloud-ensure-docker] $*" >&2
@@ -53,33 +54,47 @@ install_docker_packages() {
     log "ERROR: dockerd binary missing after package install"
     return 1
   fi
+  NEED_DOCKER_RESTART=1
 }
 
 ensure_daemon_json() {
-  local desired
-  desired='{"storage-driver":"fuse-overlayfs"}'
+  # Merge storage-driver into existing daemon.json (do not clobber other keys).
   sudo mkdir -p /etc/docker
+  local status
+  status="$(sudo python3 - "$DOCKER_DAEMON_JSON" <<'PY'
+import json
+import os
+import sys
 
-  if [[ -f "$DOCKER_DAEMON_JSON" ]]; then
-    if python3 - "$DOCKER_DAEMON_JSON" <<'PY'
-import json, sys
 path = sys.argv[1]
-try:
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-except Exception:
-    sys.exit(1)
-sys.exit(0 if data.get("storage-driver") == "fuse-overlayfs" else 1)
-PY
-    then
-      return 0
-    fi
-    log "Updating $DOCKER_DAEMON_JSON for fuse-overlayfs"
-  else
-    log "Writing $DOCKER_DAEMON_JSON for fuse-overlayfs"
-  fi
+data = {}
+if os.path.isfile(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            loaded = json.load(f)
+        if isinstance(loaded, dict):
+            data = loaded
+    except Exception:
+        data = {}
 
-  printf '%s\n' "$desired" | sudo tee "$DOCKER_DAEMON_JSON" >/dev/null
+if data.get("storage-driver") == "fuse-overlayfs":
+    print("unchanged")
+    raise SystemExit(0)
+
+data["storage-driver"] = "fuse-overlayfs"
+tmp_path = path + ".tmp"
+with open(tmp_path, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2, sort_keys=True)
+    f.write("\n")
+os.replace(tmp_path, path)
+print("changed")
+PY
+)"
+
+  if [[ "$status" == "changed" ]]; then
+    log "Updated $DOCKER_DAEMON_JSON for fuse-overlayfs (merged)"
+    NEED_DOCKER_RESTART=1
+  fi
 }
 
 ensure_nested_bridge_networking() {
@@ -101,6 +116,7 @@ ensure_nested_bridge_networking() {
 
   # Prefer iptables-legacy when both backends exist; dual nft+legacy tables
   # leave FORWARD policy DROP on one backend and break published ports.
+  # Switching backends requires a dockerd restart so rules are rewritten.
   if [[ -x /usr/sbin/iptables-legacy ]]; then
     local alt
     alt="$(readlink /etc/alternatives/iptables 2>/dev/null || true)"
@@ -110,6 +126,7 @@ ensure_nested_bridge_networking() {
       if [[ -x /usr/sbin/ip6tables-legacy ]]; then
         sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy >/dev/null 2>&1 || true
       fi
+      NEED_DOCKER_RESTART=1
     fi
   fi
 }
@@ -141,17 +158,40 @@ storage_driver_ok() {
   [[ "$driver" == "fuse-overlayfs" || "$driver" == "overlay2" || "$driver" == "overlay" ]]
 }
 
+finish_ready() {
+  local driver
+  ensure_nested_bridge_networking
+  if ! storage_driver_ok; then
+    driver="$(docker info --format '{{.Driver}}' 2>/dev/null || echo unknown)"
+    log "ERROR: unsupported Docker storage driver '$driver' (need fuse-overlayfs, overlay2, or overlay)"
+    tail -30 /tmp/dockerd.log 2>/dev/null || true
+    exit 1
+  fi
+  sudo chmod 666 /var/run/docker.sock 2>/dev/null || true
+  driver="$(docker info --format '{{.Driver}}' 2>/dev/null || echo unknown)"
+  log "Docker ready (storage-driver=$driver)"
+  exit 0
+}
+
 install_docker_packages
 ensure_daemon_json
 ensure_nested_bridge_networking
 
+docker_already_up=0
 if docker info >/dev/null 2>&1; then
-  if storage_driver_ok; then
-    sudo chmod 666 /var/run/docker.sock 2>/dev/null || true
-    exit 0
+  docker_already_up=1
+fi
+
+if (( docker_already_up )) && storage_driver_ok && (( NEED_DOCKER_RESTART == 0 )); then
+  finish_ready
+fi
+
+if (( docker_already_up )); then
+  if ! storage_driver_ok; then
+    log "Docker is up but storage driver is unexpected; restarting dockerd"
+  elif (( NEED_DOCKER_RESTART )); then
+    log "Restarting dockerd to apply daemon.json / iptables-legacy changes"
   fi
-  log "Docker is up but storage driver is unexpected; restarting dockerd"
-  stop_dockerd_if_running
 fi
 
 # Package install may have attempted a systemd start that left a half-ready daemon.
@@ -159,10 +199,7 @@ stop_dockerd_if_running
 start_dockerd
 
 if wait_for_docker; then
-  ensure_nested_bridge_networking
-  driver="$(docker info --format '{{.Driver}}' 2>/dev/null || echo unknown)"
-  log "Docker ready (storage-driver=$driver)"
-  exit 0
+  finish_ready
 fi
 
 log "ERROR: dockerd did not become ready within 120s"
