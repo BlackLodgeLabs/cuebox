@@ -19,7 +19,24 @@ Manual fallback if `docker` is still unavailable:
 1. `bash scripts/cloud-ensure-docker.sh`
 2. Or: `sudo dockerd > /tmp/dockerd.log 2>&1 &` then `sudo chmod 666 /var/run/docker.sock`
 
-After a successful environment build that includes Docker, update the top-level `"snapshot"` field in [`.cursor/environment.json`](.cursor/environment.json) to the new build/snapshot id so later agents boot from the Docker-ready image.
+### When to rebuild + re-pin the Cloud snapshot
+
+The `"snapshot"` field in [`.cursor/environment.json`](.cursor/environment.json) pins the prebuilt Cloud image agents boot from (install bake: Docker, deps, Playwright, warmed Compose images). **Normal app/feature work does not need a rebuild** — agents get code from git.
+
+After you change Cloud bootstrap and a **promotable** environment build from `main` succeeds, update `"snapshot"` to that build’s id (e.g. `bld-YYYYMMDD-…`) and merge. Dashboard UI may not expose build logs; ask an agent to fetch them via Cloud diagnostics if needed.
+
+**Rebuild from `main`, verify Part 1 (and Part 2 if data/bootstrap changed), then re-pin `"snapshot"` when your work did any of:**
+
+| Trigger | Examples |
+|---------|----------|
+| Cloud install / start scripts | [`scripts/cloud-install.sh`](scripts/cloud-install.sh), [`scripts/cloud-ensure-docker.sh`](scripts/cloud-ensure-docker.sh), [`scripts/cloud-start-stack.sh`](scripts/cloud-start-stack.sh), [`scripts/cloud-bootstrap-env.sh`](scripts/cloud-bootstrap-env.sh), [`scripts/agent-bootstrap.sh`](scripts/agent-bootstrap.sh) |
+| `.cursor/environment.json` bootstrap | `install`, `start`, or `terminals` commands (not app source alone) |
+| Heavy baked dependencies | Major Node/Python lockfile shifts that agents must re-install slowly; Playwright browser/dep changes; Compose base images that should be pre-warmed |
+| Fresh agents fail Part 1/2 | Docker missing, nested networking broken, stack won’t healthy, seed/bootstrap broken |
+| Baked test-data tier change | Switch Tier 2 ↔ Tier 3 (or empty DB) and want that baked into the boot image — see [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md) |
+| Base VM / Cursor image drift | OS or nested-Docker behavior changes so the current pin no longer boots healthy |
+
+**Do not rebuild/re-pin for:** ordinary API/frontend/feature PRs, docs-only changes, or workflow skill edits that do not touch the Cloud install path above.
 
 ### First-time config (not committed)
 
@@ -49,9 +66,9 @@ curl -sf http://localhost:3000/api/v1/health | python3 -m json.tool
 curl -sf -o /dev/null -w "frontend HTTP %{http_code}\n" http://localhost:3000
 ```
 
-Pass criteria: all four containers (`postgres`, `api`, `frontend`, `backup`) `Up`; both health URLs return `"status":"ok"` and `"database":"ok"`; frontend HTTP 200. Provider keys may show `"error"` until dashboard secrets are set — that is expected for Part 1.
+Pass criteria: all four containers (`postgres`, `api`, `frontend`, `backup`) `Up`; both health URLs return `"status":"ok"` and `"database":"ok"`; frontend HTTP 200. Provider keys may show `"error"` until dashboard secrets are set — that is expected for Part 1. If Compose is not up yet (stack terminal still starting), `docker compose up -d` then re-check.
 
-Optional: add your dashboard snapshot ID as a top-level `"snapshot"` field in `.cursor/environment.json` (not inside `terminals`).
+The boot image pin lives in [`.cursor/environment.json`](.cursor/environment.json) `"snapshot"` — see [When to rebuild + re-pin the Cloud snapshot](#when-to-rebuild--re-pin-the-cloud-snapshot).
 
 **Part 2 (persistent test data):** see [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md).
 
