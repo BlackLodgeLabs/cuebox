@@ -1,5 +1,5 @@
 {
-  "snapshot": "snapshot-20260620-76b9f6ab-b336-4f87-b006-c878c5a6a7f5",
+  "snapshot": "bld-20260809-20cc4dd6-2b6d-48e8-8703-35baab053e7e",
   "install": "bash scripts/cloud-install.sh",
   "start": "bash scripts/cloud-ensure-docker.sh",
   "terminals": [
