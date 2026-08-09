@@ -12,11 +12,14 @@ Specifications live under `documents/`; see [README.md](README.md) for human set
 
 ### Docker daemon
 
-Docker is **not** pre-installed on fresh Cloud VMs. If `docker` is unavailable:
+Cloud `install` runs [`scripts/cloud-install.sh`](scripts/cloud-install.sh), which calls [`scripts/cloud-ensure-docker.sh`](scripts/cloud-ensure-docker.sh) to **apt-install** `docker.io`, `docker-compose-v2`, and `fuse-overlayfs` when missing, write `/etc/docker/daemon.json` (`storage-driver: fuse-overlayfs` for nested VMs), prefer `iptables-legacy`, disable `bridge-nf-call-iptables` (required for container-to-container traffic on nested Cloud VMs), start `dockerd` (systemd is often unavailable), and `chmod 666` the Docker socket (the VM user is not in the `docker` group).
 
-1. Start `dockerd` manually (systemd may not run in the VM): `sudo dockerd > /tmp/dockerd.log 2>&1 &`
-2. Ensure socket access: `sudo chmod 666 /var/run/docker.sock` (or add user to `docker` group)
-3. Storage driver: `fuse-overlayfs` is required in nested VMs (`/etc/docker/daemon.json`)
+Manual fallback if `docker` is still unavailable:
+
+1. `bash scripts/cloud-ensure-docker.sh`
+2. Or: `sudo dockerd > /tmp/dockerd.log 2>&1 &` then `sudo chmod 666 /var/run/docker.sock`
+
+After a successful environment build that includes Docker, update the top-level `"snapshot"` field in [`.cursor/environment.json`](.cursor/environment.json) to the new build/snapshot id so later agents boot from the Docker-ready image.
 
 ### First-time config (not committed)
 
@@ -31,7 +34,7 @@ For **Docker Compose**, set in `.env`:
 DATABASE_URL=postgresql+psycopg://cuebox:cuebox@postgres:5432/cuebox
 ```
 
-Cloud agents run `scripts/cloud-bootstrap-env.sh` during `install` (via `.cursor/environment.json`) to create `.env` from `.env.example` and set that `DATABASE_URL` automatically. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment. `scripts/cloud-ensure-docker.sh` starts `dockerd` if needed and `chmod`s `/var/run/docker.sock` before waiting on `docker info` (the VM user is not in the `docker` group). The stack terminal runs `scripts/cloud-start-stack.sh`, which calls `cloud-ensure-docker.sh`, starts Compose in detached mode, runs `scripts/agent-bootstrap.sh` to seed the database when empty, then follows container logs in the foreground.
+Cloud agents run `scripts/cloud-install.sh` during `install` (via `.cursor/environment.json`): bootstrap `.env`/`config.yaml`, install/start Docker, `pip install -e ".[dev]"`, `npm ci`, Playwright Chromium, and warm Compose images. Dashboard **Secrets** for `TMDB_API_KEY`, `OPENAI_API_KEY`, etc. are mirrored into `.env` when present in the VM environment. `start` re-runs `cloud-ensure-docker.sh`. The stack terminal runs `scripts/cloud-start-stack.sh`, which ensures Docker, starts Compose in detached mode, runs `scripts/agent-bootstrap.sh` to seed the database when empty, then follows container logs in the foreground.
 
 For **local API/tests against the compose Postgres**, use `@localhost:5433` on the host (`5433:5432` in `docker-compose.yml`). Gate scripts use a separate ephemeral Postgres container on `localhost:5432`.
 
