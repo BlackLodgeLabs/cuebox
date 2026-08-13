@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { FilmPoster } from "@/components/film-poster";
 import { WatchProviderIcons } from "@/components/watch-provider-icons";
 import {
@@ -42,20 +41,13 @@ function WinnerRecordCard({
     <Card className="relative overflow-hidden border-primary bg-surface-high shadow-glow hover-glow">
       <div className="flex min-h-[320px]">
         <div className="relative w-[120px] shrink-0 sm:w-[160px] md:w-[200px]">
-          {film.poster_url ? (
-            <Image
-              src={film.poster_url}
-              alt={film.title}
-              fill
-              priority
-              sizes="(max-width: 768px) 120px, 200px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-surface-high text-label-md text-muted-foreground">
-              NO POSTER
-            </div>
-          )}
+          <FilmPoster
+            src={film.poster_url}
+            alt={film.title}
+            size="fill"
+            priority
+            sizes="(max-width: 768px) 120px, 200px"
+          />
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-3 p-6">

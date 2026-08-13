@@ -3,12 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import HomePage from "@/app/page";
 import { createQueryWrapper } from "@/test/query-wrapper";
 
-const {
-  useHasWatchlistMock,
-  getHealthMock,
-} = vi.hoisted(() => ({
+const { useHasWatchlistMock } = vi.hoisted(() => ({
   useHasWatchlistMock: vi.fn(),
-  getHealthMock: vi.fn(),
 }));
 
 vi.mock("next/link", () => ({
@@ -35,14 +31,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/hooks/use-films", () => ({
   useHasWatchlist: () => useHasWatchlistMock(),
 }));
-
-vi.mock("@/lib/api-client", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/api-client")>();
-  return {
-    ...actual,
-    getHealth: getHealthMock,
-  };
-});
 
 vi.mock("@/components/library-search-picker", () => ({
   LibrarySearchPicker: ({
@@ -76,7 +64,6 @@ describe("HomePage hub", () => {
   afterEach(() => {
     cleanup();
     useHasWatchlistMock.mockReset();
-    getHealthMock.mockReset();
   });
 
   it("returning user shows picker, Create a recommendation, and History", () => {
@@ -86,17 +73,16 @@ describe("HomePage hub", () => {
       isError: false,
       refetch: vi.fn(),
     });
-    getHealthMock.mockResolvedValue({
-      status: "ok",
-      database: "ok",
-      version: "test",
-      providers: {},
-    });
 
     renderHome();
 
     expect(
       screen.getByRole("heading", { name: "What do you want to watch?" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Find a film in your library, create a recommendation, or open History.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByTestId("library-search-input")).toBeInTheDocument();
     expect(screen.getByTestId("library-search-input")).toHaveAttribute(
@@ -132,6 +118,7 @@ describe("HomePage hub", () => {
     expect(
       screen.queryByRole("link", { name: "View history" }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByText(/System status/i)).not.toBeInTheDocument();
 
     const picker = screen.getByTestId("library-search-input");
     const recommendTop = recommend.getBoundingClientRect().top;
@@ -139,18 +126,12 @@ describe("HomePage hub", () => {
     expect(pickerTop).toBeLessThanOrEqual(recommendTop);
   });
 
-  it("empty watchlist shows Import watchlist and no picker", () => {
+  it("empty watchlist shows Import watchlist and no System status", () => {
     useHasWatchlistMock.mockReturnValue({
       data: false,
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
-    });
-    getHealthMock.mockResolvedValue({
-      status: "ok",
-      database: "ok",
-      version: "test",
-      providers: {},
     });
 
     renderHome();
@@ -164,5 +145,6 @@ describe("HomePage hub", () => {
     expect(
       screen.queryByRole("link", { name: "Create a recommendation" }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByText(/System status/i)).not.toBeInTheDocument();
   });
 });

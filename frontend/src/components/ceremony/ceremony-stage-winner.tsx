@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { FilmPoster } from "@/components/film-poster";
 import {
   formatDirectorRuntime,
   formatFilmTitle,
@@ -21,20 +21,13 @@ export function CeremonyStageWinner({ film }: { film: FilmResult }) {
       aria-label="Ceremony stage 1 — winner"
     >
       <div className="relative mx-auto aspect-[2/3] w-full max-w-xs overflow-hidden rounded bg-surface-high shadow-glow sm:max-w-sm">
-        {film.poster_url ? (
-          <Image
-            src={film.poster_url}
-            alt={film.title}
-            fill
-            priority
-            sizes="(max-width: 640px) 320px, 384px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-label-md text-muted-foreground">
-            NO POSTER
-          </div>
-        )}
+        <FilmPoster
+          src={film.poster_url}
+          alt={film.title}
+          size="fill"
+          priority
+          sizes="(max-width: 640px) 320px, 384px"
+        />
       </div>
 
       <div className="space-y-3 text-center sm:text-left">
