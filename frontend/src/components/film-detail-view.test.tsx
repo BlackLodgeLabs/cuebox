@@ -198,7 +198,8 @@ describe("FilmDetailView poster-led layout", () => {
     const { container } = render(<FilmDetailView film={emptyFilm} />);
 
     expect(screen.getByText(/enrichment data is not available yet/i)).toBeInTheDocument();
-    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(screen.getByText("On watchlist")).toBeInTheDocument();
+    expect(screen.queryByText("Pending")).not.toBeInTheDocument();
     // Plain status line — no Card chrome wrapping the empty message
     const emptyCopy = screen.getByText(/enrichment data is not available yet/i);
     expect(emptyCopy.closest("[class*='rounded']")).toBeNull();
@@ -209,5 +210,43 @@ describe("FilmDetailView poster-led layout", () => {
     expect(
       screen.getByRole("link", { name: /view on letterboxd/i }),
     ).toBeInTheDocument();
+  });
+
+  it("shows user-facing lifecycle labels and hides enrichment badges", () => {
+    render(<FilmDetailView film={readyFilm} />);
+
+    expect(screen.getByText("On watchlist")).toBeInTheDocument();
+    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("Failed")).not.toBeInTheDocument();
+    expect(screen.queryByText("active")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["pending_watch_review", "Needs watch review"],
+    ["watched", "Watched"],
+    ["archived", "Archived"],
+  ] as const)("maps status %s to %s", (status, label) => {
+    render(
+      <FilmDetailView
+        film={{
+          ...readyFilm,
+          status,
+        }}
+      />,
+    );
+    expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  it("keeps updating metadata hint while enriching", () => {
+    render(
+      <FilmDetailView
+        film={{
+          ...readyFilm,
+          enrichment_status: "enriching",
+        }}
+      />,
+    );
+    expect(screen.getByText("Updating metadata…")).toBeInTheDocument();
+    expect(screen.queryByText("Enriching")).not.toBeInTheDocument();
   });
 });

@@ -9,7 +9,7 @@ import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review
 import { WhereToWatchSection } from "@/components/where-to-watch-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatEnrichmentStatus } from "@/lib/enrichment-status";
+import { formatFilmStatusLabel } from "@/lib/film-status-label";
 import type { FilmDetail, FilmStatus, FilmWatch, WatchlistTab } from "@/types/api";
 
 interface FilmDetailViewProps {
@@ -163,15 +163,12 @@ export function FilmDetailView({
               {film.year ? ` (${film.year})` : ""}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">
-                {formatEnrichmentStatus(film.enrichment_status)}
-              </Badge>
+              <Badge variant="outline">{formatFilmStatusLabel(film.status)}</Badge>
               {isEnriching && (
                 <span className="text-label-md text-muted-foreground">
                   Updating metadata…
                 </span>
               )}
-              <Badge variant="outline">{film.status}</Badge>
             </div>
           </div>
 

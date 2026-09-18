@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Icon } from "@/components/icon";
+import { Suspense, useEffect, useRef } from "react";
 import { LibrarySearchPicker } from "@/components/library-search-picker";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +15,6 @@ import {
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useHasWatchlist } from "@/hooks/use-films";
-import { getHealth } from "@/lib/api-client";
 import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 
 export default function HomePage() {
@@ -32,7 +29,6 @@ function HomePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const focusSearch = searchParams.get("focus") === "search";
-  const [healthOpen, setHealthOpen] = useState(false);
   const focusHandledRef = useRef(false);
   const {
     data: hasWatchlist,
@@ -40,11 +36,6 @@ function HomePageContent() {
     isError: watchlistError,
     refetch: refetchWatchlist,
   } = useHasWatchlist();
-  const { data: health } = useQuery({
-    queryKey: ["health"],
-    queryFn: getHealth,
-    staleTime: 60_000,
-  });
 
   useEffect(() => {
     if (!focusSearch || focusHandledRef.current) return;
@@ -101,7 +92,6 @@ function HomePageContent() {
             </Button>
           </CardContent>
         </Card>
-        <HealthPanel health={health} open={healthOpen} onToggle={setHealthOpen} />
       </div>
     );
   }
@@ -134,44 +124,6 @@ function HomePageContent() {
           <Link href="/history">History</Link>
         </Button>
       </div>
-
-      <HealthPanel health={health} open={healthOpen} onToggle={setHealthOpen} />
-    </div>
-  );
-}
-
-function HealthPanel({
-  health,
-  open,
-  onToggle,
-}: {
-  health: Awaited<ReturnType<typeof getHealth>> | undefined;
-  open: boolean;
-  onToggle: (open: boolean) => void;
-}) {
-  if (!health) return null;
-
-  return (
-    <div className="text-left">
-      <button
-        type="button"
-        onClick={() => onToggle(!open)}
-        className="flex items-center gap-1 text-label-md normal-case tracking-normal text-muted-foreground hover:text-foreground"
-      >
-        System status
-        <Icon name={open ? "expand_less" : "expand_more"} size={16} />
-      </button>
-      {open && (
-        <div className="mt-2 rounded border border-border bg-surface-high px-3 py-2 font-mono text-xs text-muted-foreground">
-          <p>
-            API: <span className="text-foreground">{health.status}</span>
-          </p>
-          <p>
-            DB: <span className="text-foreground">{health.database}</span>
-          </p>
-          <p>VER {health.version}</p>
-        </div>
-      )}
     </div>
   );
 }

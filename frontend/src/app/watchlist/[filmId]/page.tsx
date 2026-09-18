@@ -42,14 +42,14 @@ export default function WatchlistFilmPage() {
 
     if (prev === "enriching" && current === "ready") {
       toast({
-        title: "Enrichment complete",
-        description: "Film metadata and semantic profile are up to date.",
+        title: "Film details updated",
+        description: "Metadata and profile are up to date.",
       });
     } else if (prev === "enriching" && current === "failed") {
       toast({
         variant: "destructive",
-        title: "Enrichment failed",
-        description: "Could not regenerate semantic data for this film.",
+        title: "Couldn’t update film details",
+        description: "Try again later, or edit the film match.",
       });
     }
   }, [data, toast]);
