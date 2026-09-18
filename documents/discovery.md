@@ -1,7 +1,7 @@
 # Discovery
 
 **Status:** goal-gate
-**Updated:** 2026-09-18T18:43:00Z
+**Updated:** 2026-09-18T18:48:00Z
 
 ## Goal
 
@@ -15,7 +15,8 @@
 - **Context sources:**
   - Figma Make prototype: https://www.figma.com/make/BPNMmiDcofEVbYLHOCfVJz (public Cuebox Mobile home preview)
   - `feature/mobile-ui` branch — homepage and overall mobile UI
-  - Comparison scope (visual vs product IA): _unfilled_
+  - `documents/ui-mobile-product-brief.md` — current locked Cuebox mobile product IA (amendable; not treated as untouchable)
+  - Comparison scope: **both, kept separate** — visual/layout diffs vs product-IA diffs; preference questions follow that split
 
 ## Agenda
 
@@ -27,12 +28,14 @@ _Not proposed yet (goal gate incomplete)._
 - **Status:** locked (from request)
 - **Choice:** Findings doc at `documents/Figma-Comparison-Findings.md`; draft in repo; used to define the merged target design.
 
+### G2 — Comparison scope
+- **Status:** locked
+- **Choice:** Both, kept separate. Visual/layout diffs and product-IA diffs live in different sections. Preference questions do not mix taste (e.g. coral CTA) with product job changes (e.g. share from list). Existing mobile product brief is context, not a hard freeze.
+
 ## Coverage / open questions
 
 - Persona (X)
-- Comparison scope (visual/layout vs product IA vs both)
 - Greatest-Y framing and 100% done criteria
-- Whether `documents/ui-mobile-product-brief.md` is a hard constraint or open to amendment
 
 ## Artifact
 
