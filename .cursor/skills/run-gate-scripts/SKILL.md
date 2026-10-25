@@ -11,7 +11,7 @@ paths:
 
 # Run gate scripts
 
-Run the appropriate `scripts/verify-*-gates.sh` gate before pushing. **Execute** and **babysit-pr** skills require gates to pass first.
+Run the appropriate `scripts/verify-*-gates.sh` gate before pushing.
 
 ## Pick the right gate
 

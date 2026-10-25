@@ -1,16 +1,8 @@
-name: Cursor feature
-description: New feature or enhancement for the Cursor agent workflow
+name: Feature request
+description: Suggest a feature or enhancement for Cuebox
 title: "[Feature]: "
 labels: []
 body:
-  - type: markdown
-    attributes:
-      value: |
-        After creating this issue, comment **`@cursoragent spec`** to start the spec agent.
-        If it asks questions, reply then comment **`@cursoragent continue spec`**.
-
-        See [workflow/cursor-workflow/WORKFLOW.md](../blob/main/workflow/cursor-workflow/WORKFLOW.md).
-
   - type: textarea
     id: problem
     attributes:

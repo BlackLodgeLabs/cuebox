@@ -1,12 +1,12 @@
 # Cuebox product roadmap (pointer)
 
-This document is a **direction pointer** for humans and agents. It is not a commitment, schedule, or implementation plan. Concrete feature shapes live in GitHub issues and in per-issue `workflow/issues/issue-NNN/SPEC.md` / `PLAN.md` once work is triaged.
+This document is a **direction pointer** for humans and agents. It is not a commitment, schedule, or implementation plan. Concrete feature shapes live in GitHub issues once work is triaged.
 
 **How to use this file**
 
 - Read it when scoping adjacent work so new features fit the product direction.
 - Prefer linked GitHub issues as the source of truth for *what* to build.
-- Do not invent timelines, phase numbers, or scope beyond what issues and specs say.
+- Do not invent timelines, phase numbers, or scope beyond what linked issues say.
 - When a theme below is picked up or shipped, update this file lightly (status + links) rather than turning it into a long design doc.
 - Shipped themes stay in [Shipped themes](#shipped-themes) with the PR that landed them — do not re-open those product rules without a new issue.
 

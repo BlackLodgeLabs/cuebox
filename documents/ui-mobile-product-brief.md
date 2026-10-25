@@ -187,7 +187,7 @@ Notes for the UI pass:
 
 ## 6. Build order / decomposition
 
-Implement as **separate GitHub issues** (one workflow pass each). Do not attempt the full D9 reskin in a single PR.
+Implement as **separate GitHub issues**. Do not attempt the full D9 reskin in a single PR.
 
 | Order | Slice | Issue | Notes |
 |-------|--------|-------|-------|
@@ -199,7 +199,7 @@ Implement as **separate GitHub issues** (one workflow pass each). Do not attempt
 | 5 | Ceremony 1→2→3 + history replay | #145 | After #141; largest product risk — lock back/refresh/deep-link in spec |
 | 6 | Questionnaire density + first-run | #146 | After #141; prefer after #142 so empty→import path is coherent |
 
-**Rule:** Start `@cursoragent spec` on #141 first. Parallelize #142–#146 only after the shell PR has landed (or is clearly merge-ready).
+**Rule:** Start with #141 first. Parallelize #142–#146 only after the shell PR has landed (or is clearly merge-ready).
 
 ---
 

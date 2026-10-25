@@ -36,7 +36,7 @@ After you change Cloud bootstrap and a **promotable** environment build from `ma
 | Baked test-data tier change | Switch Tier 2 ↔ Tier 3 (or empty DB) and want that baked into the boot image — see [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md) |
 | Base VM / Cursor image drift | OS or nested-Docker behavior changes so the current pin no longer boots healthy |
 
-**Do not rebuild/re-pin for:** ordinary API/frontend/feature PRs, docs-only changes, or workflow skill edits that do not touch the Cloud install path above.
+**Do not rebuild/re-pin for:** ordinary API/frontend/feature PRs, docs-only changes, or skill edits that do not touch the Cloud install path above.
 
 ### First-time config (not committed)
 
@@ -137,7 +137,6 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 | PRD success criteria audit | `bash scripts/verify-prd-success-criteria.sh` |
 | Live stack smoke test | `bash scripts/smoke-test.sh` (requires `docker compose up` and `letterboxd/watchlist.csv`) |
 | Backup retention test | `bash scripts/test-backup-retention.sh` (no Docker or Postgres required) |
-| Workflow path regression | `bash scripts/verify-workflow-paths.sh` (no Docker or Postgres required) |
 | Phase 2.5 gate script | `bash scripts/verify-phase2.5-gates.sh` (Postgres required; regression after Phase 3+ changes) |
 | CI parity | PRs must pass GitHub Actions workflows `.github/workflows/api-ci.yml` and `.github/workflows/frontend-ci.yml` |
 | Frontend types | `cd frontend && npx tsc --noEmit` |
@@ -175,22 +174,3 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 - **Running host pytest / `verify-*-gates.sh` while `docker compose up` is live:** the Compose `.env` sets `DATABASE_URL=...@postgres:5432` (a Compose-internal hostname), and importing `app.main` calls `load_dotenv()`, so a host `pytest` inherits the unresolvable `postgres` host. Export `DATABASE_URL`/`TEST_DATABASE_URL` to a reachable URL first, e.g. `export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox; export TEST_DATABASE_URL=$DATABASE_URL`. The gate's Gate 2 ("no DB" unit tests) runs *before* the gate starts its own Postgres, so it also needs a Postgres already listening on `localhost:5432`; the gate reuses any container already publishing 5432 (use a separate ephemeral `pgvector/pgvector:pg16` on 5432 — not the seeded Compose DB on 5433, which the autouse fixture would truncate).
 - **Host frontend production build vs the running dev container:** the Compose `frontend` dev container writes root-owned files into the bind-mounted host `frontend/.next`, so a host `npm run build` (and Phase 8 Gate 7 / Phase 7 regression) fails with `EACCES`. Before building on the host, `docker compose stop frontend` and `sudo rm -rf frontend/.next`, then `docker compose up -d frontend` afterward. Playwright E2E gates need the chromium browser binary (`npx playwright install chromium` plus its apt system deps) which the snapshot is expected to carry.
 - The mocked Playwright test `e2e/dev-mode.spec.ts` "history detail shows dev panel" currently fails on a pre-existing strict-mode selector clash (heading `The Wicker Man` matches both the `h1` title and the `h3` card `The Wicker Man (1973)`); this is unrelated to environment setup.
-
-## Cursor issue workflow (multi-agent)
-
-GitHub issue → spec → plan → execute → demo → create-pr → babysit → human review. **Setup:** [workflow/cursor-workflow/SETUP.md](workflow/cursor-workflow/SETUP.md). **Stages:** [workflow/cursor-workflow/WORKFLOW.md](workflow/cursor-workflow/WORKFLOW.md). **Skill tiering:** [workflow/cursor-workflow/SKILL-TIERING.md](workflow/cursor-workflow/SKILL-TIERING.md). **Human communication** (complete, stalled, genuine questions, pass-back): [workflow/cursor-workflow/WORKFLOW.md#human-communication](workflow/cursor-workflow/WORKFLOW.md#human-communication). **GitHub MCP:** [workflow/cursor-workflow/MCP-GITHUB.md](workflow/cursor-workflow/MCP-GITHUB.md) — tool mapping, idempotency markers, fallback when MCP unavailable. **State merge / pass-back / handoff hardening (`handoff_pending`, 8 in-flight run cap, babysit recovery):** [workflow/cursor-workflow/WORKFLOW.md#state-merge](workflow/cursor-workflow/WORKFLOW.md#state-merge). **Handoff performance (skip discovery, list cache, batched writes):** [workflow/cursor-workflow/WORKFLOW.md#performance-optimizations-issue-77](workflow/cursor-workflow/WORKFLOW.md#performance-optimizations-issue-77). **Cap diagnostic (Windows):** `.\scripts\cursor-workflow-list-agents.ps1` — counts `RUNNING`/`CREATING` runs, not `ACTIVE` workspaces after `FINISHED`.
-
-| You do | Skill |
-|--------|-------|
-| `@cursoragent spec` on issue | `review-and-spec` |
-| `@cursoragent continue spec` | `review-and-spec` |
-| Handoff (automated) | `planning` → `execute` → `demo` → `create-pr` → `babysit-pr` |
-| `@cursoragent workflow-review` on issue (optional) | `workflow-review` ([#79](https://github.com/BlackLodgeLabs/cuebox/issues/79)) |
-
-- Skills: `.cursor/skills/{review-and-spec,planning,execute,demo,create-pr,babysit-pr,run-gate-scripts,workflow-review}/SKILL.md`
-- Retrospectives index: [workflow/cursor-workflow/RETROSPECTIVES.md](workflow/cursor-workflow/RETROSPECTIVES.md)
-- Specs: `workflow/issues/issue-NNN/SPEC.md`
-- Plans: `workflow/issues/issue-NNN/PLAN.md`
-- Demo spec + artifacts: `workflow/issues/issue-NNN/demo/`
-- State / handoffs: `workflow/issues/issue-NNN/workflow.state.json` + `.github/workflows/cursor-workflow-handoff.yml`
-- Pre-PR gates: `run-gate-scripts` skill
