@@ -1,0 +1,115 @@
+name: Implement ready-for-agent
+
+on:
+  issues:
+    types:
+      - labeled
+
+# Comment on the issue after the webhook returns an agent id. No other scope is used.
+permissions:
+  issues: write
+
+jobs:
+  start-cursor-agent:
+    name: Start Cursor cloud agent
+    # `issues: labeled` can describe a pull request. Only issues with this label should start an agent.
+    if: ${{ github.event.label.name == 'ready-for-agent' && github.event.issue.pull_request == null }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post issue to Cursor automation webhook
+        id: dispatch
+        env:
+          WEBHOOK_URL: ${{ secrets.CURSOR_AUTOMATION_WEBHOOK_URL }}
+          WEBHOOK_KEY: ${{ secrets.CURSOR_AUTOMATION_WEBHOOK_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          missing=0
+          if [ -z "${WEBHOOK_URL}" ]; then
+            echo "::error::Repository secret CURSOR_AUTOMATION_WEBHOOK_URL is unset"
+            missing=1
+          fi
+          if [ -z "${WEBHOOK_KEY}" ]; then
+            echo "::error::Repository secret CURSOR_AUTOMATION_WEBHOOK_KEY is unset"
+            missing=1
+          fi
+          if [ "${missing}" -ne 0 ]; then
+            exit 1
+          fi
+
+          payload="$(jq -nc \
+            --arg title "${ISSUE_TITLE}" \
+            --argjson issue "${ISSUE_NUMBER}" \
+            '{action:"labeled",label:"ready-for-agent",issue:$issue,title:$title,repo:"BlackLodgeLabs/cuebox"}')"
+
+          response_file="$(mktemp)"
+          trap 'rm -f "${response_file}"' EXIT
+
+          if ! http_code="$(
+            curl -sS --connect-timeout 10 --max-time 120 \
+              -o "${response_file}" -w '%{http_code}' \
+              -X POST "${WEBHOOK_URL}" \
+              -H "Authorization: Bearer ${WEBHOOK_KEY}" \
+              -H "Content-Type: application/json" \
+              --data-binary "${payload}"
+          )"; then
+            echo "::error::Request to the Cursor automation webhook failed"
+            exit 1
+          fi
+
+          case "${http_code}" in
+            2[0-9][0-9]) ;;
+            *)
+              echo "::error::Cursor automation webhook returned HTTP ${http_code}"
+              exit 1
+              ;;
+          esac
+
+          if ! id_status="$(jq -r '
+            if (.backgroundComposerId | type) != "string" or .backgroundComposerId == "" then
+              "missing"
+            elif (.backgroundComposerId | test("^[A-Za-z0-9._-]+$")) then
+              "ok"
+            else
+              "invalid"
+            end
+          ' "${response_file}")"; then
+            echo "::error::Cursor webhook response was not valid JSON"
+            exit 1
+          fi
+
+          case "${id_status}" in
+            ok) ;;
+            missing)
+              echo "::error::Cursor webhook response is missing backgroundComposerId"
+              exit 1
+              ;;
+            *)
+              echo "::error::backgroundComposerId does not match ^[A-Za-z0-9._-]+$"
+              exit 1
+              ;;
+          esac
+
+          agent_id="$(jq -er '.backgroundComposerId' "${response_file}")"
+          echo "agent_id=${agent_id}" >> "${GITHUB_OUTPUT}"
+
+      - name: Comment on the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          AGENT_ID: ${{ steps.dispatch.outputs.agent_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${AGENT_ID}" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::error::Refusing to comment because the agent id is missing or invalid"
+            exit 1
+          fi
+
+          gh issue comment "${ISSUE_NUMBER}" \
+            --body "Cursor agent started: [${AGENT_ID}](https://cursor.com/agents/${AGENT_ID})"
