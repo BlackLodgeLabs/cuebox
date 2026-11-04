@@ -287,8 +287,10 @@ def _is_unknown_watched_date():
 def _newest_watched_day():
     """Newest real watch day, including pending drafts and staged extra days.
 
-    Unknown watched dates are skipped. A film whose only watch is an unknown
-    watched date sorts as a dateless film.
+    An unknown watched date on ``watched_at`` is skipped. Later staged days on
+    that same row still count. A staged value that is itself the unknown
+    watched date is skipped, and a film whose only days are unknown sorts as
+    a dateless film.
     """
     watched_max = (
         select(func.max(FilmWatch.watched_at))
@@ -307,12 +309,30 @@ def _newest_watched_day():
     staged_days = lateral(
         func.jsonb_array_elements_text(safe_staged).table_valued("value")
     ).alias("staged_day")
+    staged_text = staged_days.c.value
+    # Letterboxd import stores the earliest day on watched_at, so the unknown
+    # watched date is that column and the real later days are staged values.
+    unknown_staged_value = and_(
+        FilmWatch.source == WatchSource.LETTERBOXD_IMPORT,
+        staged_text == DEFAULT_WATCHED_AT.isoformat(),
+    )
+    # CASE does not evaluate the cast unless the value is an ISO day, so a
+    # malformed staged string cannot fail the list query.
+    staged_day = case(
+        (
+            and_(
+                staged_text.op("~")(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"),
+                ~unknown_staged_value,
+            ),
+            cast(staged_text, Date),
+        ),
+        else_=None,
+    )
     staged_max = (
-        select(func.max(cast(staged_days.c.value, Date)))
+        select(func.max(staged_day))
         .select_from(FilmWatch)
         .join(staged_days, true())
         .where(FilmWatch.film_id == Film.id)
-        .where(~_is_unknown_watched_date())
         .correlate(Film)
         .scalar_subquery()
     )

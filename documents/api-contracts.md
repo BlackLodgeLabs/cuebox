@@ -282,7 +282,7 @@ GET /films
 |`limit`            |integer|20          |Page size                                                 |
 |`offset`           |integer|0           |Page offset                                               |
 
-`sort=watched_at` orders by each film's date watched: the newest of every `film_watches.watched_at` (completed and pending) and any `staged_watched_dates` on a row that is not an unknown watched date. An unknown watched date (`source=letterboxd_import` and `watched_at=1984-09-28`) is ignored and the stored row is not rewritten. A manual or RSS watch on that calendar day still sorts as that day. Dateless films sort last in both directions (`NULLS LAST`). Films that share a date watched, including the dateless group, break ties by title ascending, then film id. This does not change `latest_watched_at`.
+`sort=watched_at` orders by each film's date watched: the newest of every `film_watches.watched_at` (completed and pending) and any `staged_watched_dates`. An unknown watched date (`source=letterboxd_import` and the day `1984-09-28`) is ignored on `watched_at` and inside the staged list. Later staged days on that same row still count. The stored row is not rewritten. A staged value that is not an ISO date (`YYYY-MM-DD`) is ignored. A manual or RSS watch on that calendar day still sorts as that day. Dateless films sort last in both directions (`NULLS LAST`). Films that share a date watched, including the dateless group, break ties by title ascending, then film id. This does not change `latest_watched_at`.
 
 #### Response `200 OK`
 

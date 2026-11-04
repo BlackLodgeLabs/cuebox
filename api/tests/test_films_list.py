@@ -537,6 +537,129 @@ def test_pending_watch_sorts_by_the_newest_staged_date(integration_client):
     ]
 
 
+def test_staged_day_on_an_unknown_watched_date_sorts_as_that_day(integration_client):
+    with SessionLocal() as db:
+        staged_id = _seed_watchlist_film(
+            db,
+            title="Staged Real Day",
+            year=1984,
+            film_status=FilmStatus.PENDING_WATCH_REVIEW,
+            on_watchlist=False,
+        )
+        only_unknown_id = _seed_watchlist_film(
+            db,
+            title="Only Unknown Dates",
+            year=1984,
+            film_status=FilmStatus.PENDING_WATCH_REVIEW,
+            on_watchlist=False,
+            tmdb_id=910028,
+        )
+        earlier_id = _seed_watchlist_film(
+            db,
+            title="Before Staged",
+            year=2024,
+            film_status=FilmStatus.WATCHED,
+            on_watchlist=False,
+        )
+        later_id = _seed_watchlist_film(
+            db,
+            title="After Staged",
+            year=2026,
+            film_status=FilmStatus.WATCHED,
+            on_watchlist=False,
+        )
+        film_watch_repository.create_pending(
+            db,
+            film_id=uuid.UUID(staged_id),
+            source=WatchSource.LETTERBOXD_IMPORT,
+            watched_at=date(1984, 9, 28),
+            staged_watched_dates=["2025-03-01"],
+        )
+        film_watch_repository.create_pending(
+            db,
+            film_id=uuid.UUID(only_unknown_id),
+            source=WatchSource.LETTERBOXD_IMPORT,
+            watched_at=date(1984, 9, 28),
+            staged_watched_dates=["1984-09-28"],
+        )
+        film_watch_repository.create_completed(
+            db,
+            film_id=uuid.UUID(earlier_id),
+            source=WatchSource.MANUAL,
+            watched_at=date(2024, 6, 1),
+        )
+        film_watch_repository.create_completed(
+            db,
+            film_id=uuid.UUID(later_id),
+            source=WatchSource.MANUAL,
+            watched_at=date(2026, 1, 1),
+        )
+        db.commit()
+
+    newest_first = integration_client.get(
+        "/api/v1/films?status=watched&sort=watched_at&sort_dir=desc"
+    )
+    assert newest_first.status_code == 200
+    assert [item["title"] for item in newest_first.json()["data"]] == [
+        "After Staged",
+        "Staged Real Day",
+        "Before Staged",
+        "Only Unknown Dates",
+    ]
+
+    oldest_first = integration_client.get(
+        "/api/v1/films?status=watched&sort=watched_at&sort_dir=asc"
+    )
+    assert oldest_first.status_code == 200
+    assert [item["title"] for item in oldest_first.json()["data"]] == [
+        "Before Staged",
+        "Staged Real Day",
+        "After Staged",
+        "Only Unknown Dates",
+    ]
+
+
+def test_malformed_staged_date_does_not_fail_the_list(integration_client):
+    with SessionLocal() as db:
+        film_id = _seed_watchlist_film(
+            db,
+            title="Malformed Staged",
+            year=2024,
+            film_status=FilmStatus.PENDING_WATCH_REVIEW,
+            on_watchlist=False,
+        )
+        earlier_id = _seed_watchlist_film(
+            db,
+            title="Earlier Real Watch",
+            year=2024,
+            film_status=FilmStatus.WATCHED,
+            on_watchlist=False,
+        )
+        film_watch_repository.create_pending(
+            db,
+            film_id=uuid.UUID(film_id),
+            source=WatchSource.LETTERBOXD_IMPORT,
+            watched_at=date(2020, 1, 1),
+            staged_watched_dates=["not-a-date", "2024-08-08"],
+        )
+        film_watch_repository.create_completed(
+            db,
+            film_id=uuid.UUID(earlier_id),
+            source=WatchSource.MANUAL,
+            watched_at=date(2024, 1, 1),
+        )
+        db.commit()
+
+    response = integration_client.get(
+        "/api/v1/films?status=watched&sort=watched_at&sort_dir=desc"
+    )
+    assert response.status_code == 200
+    assert [item["title"] for item in response.json()["data"]] == [
+        "Malformed Staged",
+        "Earlier Real Watch",
+    ]
+
+
 def test_unknown_watched_date_sorts_with_dateless_films(integration_client):
     with SessionLocal() as db:
         unknown_id = _seed_watchlist_film(
