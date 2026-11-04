@@ -188,8 +188,156 @@ describe("WatchlistPageContent", () => {
     expect(mockReplace).toHaveBeenCalled();
     const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
     expect(url).not.toContain("search=matrix");
+    expect(url).toContain("tab=watched");
+    expect(url).toContain("sort=watched_at");
+    expect(url).toContain("sort_dir=desc");
+  });
+
+  it("Clear on the Watchlist view restores Date added, descending", async () => {
+    const user = userEvent.setup();
+    searchParams = new URLSearchParams("search=matrix&sort=title&sort_dir=asc");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    await user.click(screen.getByRole("button", { name: /Filter and sort/i }));
+    await user.click(screen.getByRole("button", { name: /^Clear$/i }));
+
+    const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    expect(url).not.toContain("search=");
     expect(url).toContain("sort=created_at");
     expect(url).toContain("sort_dir=desc");
+    expect(url).not.toContain("sort=watched_at");
+  });
+
+  it("requests date watched, newest first, when the Watched view has no sort param", () => {
+    searchParams = new URLSearchParams("tab=watched");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    const gridCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
+    expect(gridCall?.[0]).toMatchObject({
+      status: "watched",
+      sort: "watched_at",
+      sort_dir: "desc",
+    });
+  });
+
+  it("requests date added, descending, when Watchlist or Archived has no sort param", () => {
+    searchParams = new URLSearchParams("");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    const watchlistCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
+    expect(watchlistCall?.[0]).toMatchObject({
+      on_watchlist: true,
+      sort: "created_at",
+      sort_dir: "desc",
+    });
+
+    cleanup();
+    mockUseFilms.mockClear();
+    searchParams = new URLSearchParams("tab=archived");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    const archivedCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
+    expect(archivedCall?.[0]).toMatchObject({
+      status: "archived",
+      sort: "created_at",
+      sort_dir: "desc",
+    });
+  });
+
+  it("drops date watched when leaving the Watched view and keeps search and a title sort", async () => {
+    const user = userEvent.setup();
+    searchParams = new URLSearchParams(
+      "tab=watched&sort=watched_at&sort_dir=asc&search=matrix",
+    );
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    await user.click(screen.getByRole("tab", { name: /^Watchlist/i }));
+    const toWatchlist = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    expect(toWatchlist).not.toContain("sort=");
+    expect(toWatchlist).not.toContain("sort_dir=");
+    expect(toWatchlist).toContain("search=matrix");
+    expect(toWatchlist).not.toContain("tab=");
+
+    cleanup();
+    mockReplace.mockClear();
+    searchParams = new URLSearchParams(
+      "tab=watched&sort=title&sort_dir=asc&search=matrix",
+    );
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    await user.click(screen.getByRole("tab", { name: /^Archived/i }));
+    const toArchived = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    expect(toArchived).toContain("tab=archived");
+    expect(toArchived).toContain("sort=title");
+    expect(toArchived).toContain("sort_dir=asc");
+    expect(toArchived).toContain("search=matrix");
+  });
+
+  it("drops a direct date-watched sort on Watchlist and Archived", () => {
+    searchParams = new URLSearchParams("sort=watched_at&sort_dir=asc");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    const watchlistCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
+    expect(watchlistCall?.[0]).toMatchObject({
+      on_watchlist: true,
+      sort: "created_at",
+      sort_dir: "desc",
+    });
+    const watchlistUrl = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    expect(watchlistUrl).not.toContain("sort=");
+    expect(watchlistUrl).not.toContain("sort_dir=");
+
+    cleanup();
+    mockReplace.mockClear();
+    mockUseFilms.mockClear();
+    searchParams = new URLSearchParams("tab=archived&sort=watched_at&sort_dir=desc");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    const archivedCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
+    expect(archivedCall?.[0]).toMatchObject({
+      status: "archived",
+      sort: "created_at",
+      sort_dir: "desc",
+    });
+    const archivedUrl = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    expect(archivedUrl).toContain("tab=archived");
+    expect(archivedUrl).not.toContain("sort=");
+    expect(archivedUrl).not.toContain("sort_dir=");
+  });
+
+  it("highlights Filter only when the view's own default sort is changed", () => {
+    const filter = () => screen.getByRole("button", { name: "Filter and sort" });
+
+    searchParams = new URLSearchParams("tab=watched");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+    expect(filter().className).not.toMatch(/border-primary/);
+
+    cleanup();
+    searchParams = new URLSearchParams("tab=watched&sort=title&sort_dir=desc");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+    expect(filter().className).toMatch(/border-primary/);
+
+    cleanup();
+    searchParams = new URLSearchParams("tab=watched&sort=watched_at&sort_dir=asc");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+    expect(filter().className).toMatch(/border-primary/);
+
+    cleanup();
+    searchParams = new URLSearchParams("");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+    expect(filter().className).not.toMatch(/border-primary/);
   });
 
   it("renders poster grid when films are present", () => {
