@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_WATCHLIST_FILTERS,
   WatchlistFilterSheet,
@@ -21,16 +21,21 @@ import type { FilmSortField, FilmStatus, FilmSummary, SortDirection, WatchlistTa
 
 const LIMIT = 20;
 
-function parseSort(value: string | null): FilmSortField {
+function viewDefaultSort(tab: WatchlistTab): FilmSortField {
+  return tab === "watched" ? "watched_at" : "created_at";
+}
+
+function parseSort(value: string | null, tab: WatchlistTab): FilmSortField {
   if (
     value === "title" ||
     value === "year" ||
     value === "created_at" ||
-    value === "enrichment_status"
+    value === "enrichment_status" ||
+    value === "watched_at"
   ) {
     return value;
   }
-  return "created_at";
+  return viewDefaultSort(tab);
 }
 
 function parseSortDir(value: string | null): SortDirection {
@@ -54,15 +59,15 @@ function tabLabel(tab: WatchlistTab, count: number | undefined): string {
   return `${names[tab]} (${total})`;
 }
 
-function filtersAreActive(values: WatchlistFilterValues): boolean {
+function filtersAreActive(values: WatchlistFilterValues, tab: WatchlistTab): boolean {
   return (
     values.search !== "" ||
     values.enrichmentStatus !== "all" ||
     values.year !== "" ||
     values.createdFrom !== "" ||
     values.createdTo !== "" ||
-    values.sort !== DEFAULT_WATCHLIST_FILTERS.sort ||
-    values.sortDir !== DEFAULT_WATCHLIST_FILTERS.sortDir
+    values.sort !== viewDefaultSort(tab) ||
+    values.sortDir !== "desc"
   );
 }
 
@@ -71,8 +76,10 @@ export function WatchlistPageContent() {
   const searchParams = useSearchParams();
 
   const tab = parseTab(searchParams.get("tab"));
-  const sort = parseSort(searchParams.get("sort"));
-  const sortDir = parseSortDir(searchParams.get("sort_dir"));
+  const rawSort = searchParams.get("sort");
+  const dateWatchedOffView = rawSort === "watched_at" && tab !== "watched";
+  const sort = dateWatchedOffView ? viewDefaultSort(tab) : parseSort(rawSort, tab);
+  const sortDir = dateWatchedOffView ? "desc" : parseSortDir(searchParams.get("sort_dir"));
   const offset = Number(searchParams.get("offset") ?? "0") || 0;
   const yearFromUrl = searchParams.get("year") ?? "";
   const createdFrom = searchParams.get("created_from") ?? "";
@@ -138,8 +145,18 @@ export function WatchlistPageContent() {
   );
 
   const clearFilters = useCallback(() => {
-    applyFilters(DEFAULT_WATCHLIST_FILTERS);
-  }, [applyFilters]);
+    applyFilters({
+      ...DEFAULT_WATCHLIST_FILTERS,
+      sort: viewDefaultSort(tab),
+      sortDir: "desc",
+    });
+  }, [applyFilters, tab]);
+
+  useEffect(() => {
+    if (searchParams.get("sort") === "watched_at" && tab !== "watched") {
+      updateParams({ sort: null, sort_dir: null, offset: null });
+    }
+  }, [searchParams, tab, updateParams]);
 
   const sharedFilters = useMemo(
     () => ({
@@ -218,6 +235,9 @@ export function WatchlistPageContent() {
     updateParams({
       tab: value === "active" ? null : value,
       offset: null,
+      ...(sort === "watched_at" && value !== "watched"
+        ? { sort: null, sort_dir: null }
+        : {}),
     });
   };
 
@@ -272,7 +292,7 @@ export function WatchlistPageContent() {
     );
   })();
 
-  const filtersActive = filtersAreActive(filterValues);
+  const filtersActive = filtersAreActive(filterValues, tab);
 
   return (
     <div className="space-y-6">
@@ -366,6 +386,7 @@ export function WatchlistPageContent() {
       <WatchlistFilterSheet
         open={filterOpen}
         onOpenChange={setFilterOpen}
+        view={tab}
         values={filterValues}
         onApply={applyFilters}
         onClear={clearFilters}

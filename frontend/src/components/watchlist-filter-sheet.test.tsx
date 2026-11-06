@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_WATCHLIST_FILTERS,
   WatchlistFilterSheet,
@@ -17,6 +18,14 @@ const seeded: WatchlistFilterValues = {
 };
 
 describe("WatchlistFilterSheet", () => {
+  beforeAll(() => {
+    // Radix Select calls pointer-capture APIs that jsdom does not implement.
+    Element.prototype.hasPointerCapture = () => false;
+    Element.prototype.setPointerCapture = () => {};
+    Element.prototype.releasePointerCapture = () => {};
+    Element.prototype.scrollIntoView = () => {};
+  });
+
   afterEach(() => {
     cleanup();
     document.body.style.pointerEvents = "";
@@ -26,6 +35,7 @@ describe("WatchlistFilterSheet", () => {
     render(
       <WatchlistFilterSheet
         open
+        view="active"
         onOpenChange={vi.fn()}
         values={seeded}
         onApply={vi.fn()}
@@ -46,6 +56,7 @@ describe("WatchlistFilterSheet", () => {
     render(
       <WatchlistFilterSheet
         open
+        view="active"
         onOpenChange={vi.fn()}
         values={DEFAULT_WATCHLIST_FILTERS}
         onApply={onApply}
@@ -72,6 +83,7 @@ describe("WatchlistFilterSheet", () => {
     const { rerender } = render(
       <WatchlistFilterSheet
         open
+        view="active"
         onOpenChange={onOpenChange}
         values={DEFAULT_WATCHLIST_FILTERS}
         onApply={onApply}
@@ -86,6 +98,7 @@ describe("WatchlistFilterSheet", () => {
     rerender(
       <WatchlistFilterSheet
         open={false}
+        view="active"
         onOpenChange={onOpenChange}
         values={DEFAULT_WATCHLIST_FILTERS}
         onApply={onApply}
@@ -96,6 +109,7 @@ describe("WatchlistFilterSheet", () => {
     rerender(
       <WatchlistFilterSheet
         open
+        view="active"
         onOpenChange={onOpenChange}
         values={DEFAULT_WATCHLIST_FILTERS}
         onApply={onApply}
@@ -105,5 +119,52 @@ describe("WatchlistFilterSheet", () => {
 
     expect(screen.getByLabelText(/^Search$/i)).toHaveValue("");
     expect(onApply).not.toHaveBeenCalled();
+  });
+
+  it("shows Date watched and Descending when those are the Watched view values", () => {
+    render(
+      <WatchlistFilterSheet
+        open
+        view="watched"
+        onOpenChange={vi.fn()}
+        values={{ ...DEFAULT_WATCHLIST_FILTERS, sort: "watched_at", sortDir: "desc" }}
+        onApply={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveTextContent(
+      "Date watched",
+    );
+    expect(screen.getByRole("combobox", { name: "Sort direction" })).toHaveTextContent(
+      "Descending",
+    );
+  });
+
+  it("offers Date watched on the Watched view and hides it on the other views", async () => {
+    const user = userEvent.setup();
+    const props = {
+      open: true,
+      onOpenChange: vi.fn(),
+      values: DEFAULT_WATCHLIST_FILTERS,
+      onApply: vi.fn(),
+      onClear: vi.fn(),
+    };
+
+    const { rerender } = render(<WatchlistFilterSheet {...props} view="watched" />);
+    await user.click(screen.getByRole("combobox", { name: "Sort by" }));
+    expect(screen.getByRole("option", { name: "Date watched" })).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    rerender(<WatchlistFilterSheet {...props} view="active" />);
+    await user.click(screen.getByRole("combobox", { name: "Sort by" }));
+    expect(screen.queryByRole("option", { name: "Date watched" })).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Date added" })).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    rerender(<WatchlistFilterSheet {...props} view="archived" />);
+    await user.click(screen.getByRole("combobox", { name: "Sort by" }));
+    expect(screen.queryByRole("option", { name: "Date watched" })).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Title" })).toBeInTheDocument();
   });
 });

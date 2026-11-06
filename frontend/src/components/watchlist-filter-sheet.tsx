@@ -20,7 +20,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { formatEnrichmentStatus } from "@/lib/enrichment-status";
-import type { FilmSortField, SortDirection } from "@/types/api";
+import type { FilmSortField, SortDirection, WatchlistTab } from "@/types/api";
 
 const ENRICHMENT_OPTIONS = [
   "pending",
@@ -54,6 +54,7 @@ export const DEFAULT_WATCHLIST_FILTERS: WatchlistFilterValues = {
 interface WatchlistFilterSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  view: WatchlistTab;
   values: WatchlistFilterValues;
   onApply: (values: WatchlistFilterValues) => void;
   onClear: () => void;
@@ -62,6 +63,7 @@ interface WatchlistFilterSheetProps {
 export function WatchlistFilterSheet({
   open,
   onOpenChange,
+  view,
   values,
   onApply,
   onClear,
@@ -151,6 +153,9 @@ export function WatchlistFilterSheet({
                   <SelectItem value="title">Title</SelectItem>
                   <SelectItem value="year">Year</SelectItem>
                   <SelectItem value="created_at">Date added</SelectItem>
+                  {view === "watched" ? (
+                    <SelectItem value="watched_at">Date watched</SelectItem>
+                  ) : null}
                   <SelectItem value="enrichment_status">Enrichment</SelectItem>
                 </SelectContent>
               </Select>

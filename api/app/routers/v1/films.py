@@ -45,7 +45,7 @@ from app.services.watch_provider_service import WatchProviderService
 
 router = APIRouter(prefix="/films", tags=["films"])
 
-_VALID_SORT_FIELDS = {"title", "year", "created_at", "enrichment_status"}
+_VALID_SORT_FIELDS = {"title", "year", "created_at", "enrichment_status", "watched_at"}
 _VALID_SORT_DIRS = {"asc", "desc"}
 
 

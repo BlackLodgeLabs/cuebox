@@ -403,7 +403,12 @@ export interface HistoryCard {
   created_at: string;
 }
 
-export type FilmSortField = "title" | "year" | "created_at" | "enrichment_status";
+export type FilmSortField =
+  | "title"
+  | "year"
+  | "created_at"
+  | "enrichment_status"
+  | "watched_at";
 export type SortDirection = "asc" | "desc";
 
 export interface FilmsQueryParams {
