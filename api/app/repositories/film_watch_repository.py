@@ -214,6 +214,22 @@ def get_pending_watch_batch(
     return {watch.film_id: watch for watch in db.scalars(stmt).all()}
 
 
+def list_watched_dates_by_film(
+    db: Session,
+    film_ids: list[uuid.UUID],
+) -> dict[uuid.UUID, list[date]]:
+    """Every view date for each film, including pending reviews."""
+    if not film_ids:
+        return {}
+    stmt = select(FilmWatch.film_id, FilmWatch.watched_at).where(
+        FilmWatch.film_id.in_(film_ids)
+    )
+    grouped: dict[uuid.UUID, list[date]] = {}
+    for film_id, watched_at in db.execute(stmt).all():
+        grouped.setdefault(film_id, []).append(watched_at)
+    return grouped
+
+
 def get_latest_watched_at_batch(
     db: Session,
     film_ids: list[uuid.UUID],

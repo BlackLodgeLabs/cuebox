@@ -399,6 +399,8 @@ export interface HistoryCard {
   winner_year: number | null;
   winner_poster_url: string | null;
   winner_watch_status: FilmStatus | null;
+  /** Badge value for the history card. `runner_up_watched` is not a film status. */
+  history_status_tag: string | null;
   preference_summary: string;
   created_at: string;
 }

@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 import uuid
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any
 
 from sqlalchemy import text
@@ -16,6 +16,7 @@ from app.core.exceptions import AppError
 from app.database.enums import ArtifactType, EmbeddingType
 from app.repositories import (
     film_repository,
+    film_watch_repository,
     recommendation_candidate_repository,
     recommendation_exposure_repository,
     recommendation_result_repository,
@@ -299,9 +300,24 @@ class RecommendationService:
             limit=limit,
             offset=offset,
         )
+        runner_ids_by_session = {
+            session.id: _runner_up_film_ids(
+                session.result.runner_up_explanations if session.result else None
+            )
+            for session in sessions
+        }
+        film_ids: set[uuid.UUID] = set()
+        for session in sessions:
+            if session.winner_film_id is not None:
+                film_ids.add(session.winner_film_id)
+            film_ids.update(runner_ids_by_session[session.id])
+        watched_on = film_watch_repository.list_watched_dates_by_film(db, list(film_ids))
+
         items: list[RecommendationHistoryItem] = []
         for session in sessions:
             winner = film_repository.get_by_id_with_relations(db, session.winner_film_id)
+            winner_status = winner.status.value if winner else None
+            runner_ids = runner_ids_by_session[session.id]
             items.append(
                 RecommendationHistoryItem(
                     session_id=session.id,
@@ -313,7 +329,19 @@ class RecommendationService:
                         if winner and winner.metadata_
                         else None
                     ),
-                    winner_watch_status=winner.status.value if winner else None,
+                    winner_watch_status=winner_status,
+                    history_status_tag=_history_status_tag(
+                        winner_status=winner_status,
+                        winner_watched_after=_film_watched_on_or_after(
+                            session.winner_film_id,
+                            watched_on,
+                            session.created_at,
+                        ),
+                        runner_up_watched_after=any(
+                            _film_watched_on_or_after(film_id, watched_on, session.created_at)
+                            for film_id in runner_ids
+                        ),
+                    ),
                     preference_summary=session.profile.narrative_profile or "",
                     created_at=session.created_at,
                 )
@@ -533,6 +561,60 @@ class RecommendationService:
             if rows:
                 versions[key] = rows[0].version
         return versions
+
+
+def _runner_up_film_ids(explanations: dict[str, Any] | None) -> list[uuid.UUID]:
+    if not explanations:
+        return []
+    film_ids: list[uuid.UUID] = []
+    for key in explanations:
+        try:
+            film_ids.append(uuid.UUID(str(key)))
+        except ValueError:
+            continue
+    return film_ids
+
+
+def _recommendation_utc_date(created_at: datetime) -> date:
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+    return created_at.astimezone(timezone.utc).date()
+
+
+def _film_watched_on_or_after(
+    film_id: uuid.UUID | None,
+    watched_on: dict[uuid.UUID, list[date]],
+    created_at: datetime,
+) -> bool:
+    if film_id is None:
+        return False
+    return _watched_on_or_after(watched_on.get(film_id, []), created_at)
+
+
+def _watched_on_or_after(watched_on: list[date], created_at: datetime) -> bool:
+    """A date-only view counts from the recommendation's UTC calendar day onward.
+
+    Earlier days are watches from before the recommendation and are ignored.
+    """
+    cutoff = _recommendation_utc_date(created_at)
+    return any(watched_at >= cutoff for watched_at in watched_on)
+
+
+def _history_status_tag(
+    *,
+    winner_status: str | None,
+    winner_watched_after: bool,
+    runner_up_watched_after: bool,
+) -> str | None:
+    if winner_watched_after:
+        return "watched"
+    if runner_up_watched_after:
+        return "runner_up_watched"
+    if winner_status is None:
+        return None
+    if winner_status == "watched":
+        return "active"
+    return winner_status
 
 
 def _film_result(film, explanation, *, is_winner: bool) -> FilmResult:

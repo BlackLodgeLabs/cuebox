@@ -72,7 +72,10 @@ def list_history(
     limit: int = 20,
     offset: int = 0,
 ) -> tuple[list[RecommendationSession], int]:
-    stmt = select(RecommendationSession).options(selectinload(RecommendationSession.profile))
+    stmt = select(RecommendationSession).options(
+        selectinload(RecommendationSession.profile),
+        selectinload(RecommendationSession.result),
+    )
     count_stmt = select(func.count()).select_from(RecommendationSession)
 
     if search or watch_status:

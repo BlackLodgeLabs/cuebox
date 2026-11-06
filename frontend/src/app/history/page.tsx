@@ -31,6 +31,13 @@ import { useToastOnError } from "@/hooks/use-toast-on-error";
 import { cn } from "@/lib/utils";
 import type { WatchStatusFilter } from "@/types/api";
 
+function historyStatusBadgeLabel(tag: string): string {
+  if (tag === "runner_up_watched") {
+    return "Runner-up watched";
+  }
+  return tag;
+}
+
 function historyFiltersActive(values: HistoryFilterValues): boolean {
   return (
     values.dateFrom !== "" ||
@@ -179,9 +186,11 @@ export default function HistoryPage() {
                         <span className="text-xs text-muted-foreground">
                           {new Date(item.created_at).toLocaleDateString()}
                         </span>
-                        {item.winner_watch_status && (
+                        {(item.history_status_tag ?? item.winner_watch_status) && (
                           <Badge variant="secondary" className="text-xs">
-                            {item.winner_watch_status}
+                            {historyStatusBadgeLabel(
+                              item.history_status_tag ?? item.winner_watch_status ?? "",
+                            )}
                           </Badge>
                         )}
                       </div>
