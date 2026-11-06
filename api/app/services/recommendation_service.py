@@ -311,7 +311,9 @@ class RecommendationService:
             if session.winner_film_id is not None:
                 film_ids.add(session.winner_film_id)
             film_ids.update(runner_ids_by_session[session.id])
-        watched_on = film_watch_repository.list_watched_dates_by_film(db, list(film_ids))
+        watched_dates_by_film = film_watch_repository.list_watched_dates_by_film(
+            db, list(film_ids)
+        )
 
         items: list[RecommendationHistoryItem] = []
         for session in sessions:
@@ -334,11 +336,13 @@ class RecommendationService:
                         winner_status=winner_status,
                         winner_watched_after=_film_watched_on_or_after(
                             session.winner_film_id,
-                            watched_on,
+                            watched_dates_by_film,
                             session.created_at,
                         ),
                         runner_up_watched_after=any(
-                            _film_watched_on_or_after(film_id, watched_on, session.created_at)
+                            _film_watched_on_or_after(
+                                film_id, watched_dates_by_film, session.created_at
+                            )
                             for film_id in runner_ids
                         ),
                     ),
@@ -583,21 +587,21 @@ def _recommendation_utc_date(created_at: datetime) -> date:
 
 def _film_watched_on_or_after(
     film_id: uuid.UUID | None,
-    watched_on: dict[uuid.UUID, list[date]],
+    watched_dates_by_film: dict[uuid.UUID, list[date]],
     created_at: datetime,
 ) -> bool:
     if film_id is None:
         return False
-    return _watched_on_or_after(watched_on.get(film_id, []), created_at)
+    return _watched_on_or_after(watched_dates_by_film.get(film_id, []), created_at)
 
 
-def _watched_on_or_after(watched_on: list[date], created_at: datetime) -> bool:
+def _watched_on_or_after(watched_dates: list[date], created_at: datetime) -> bool:
     """A date-only view counts from the recommendation's UTC calendar day onward.
 
     Earlier days are watches from before the recommendation and are ignored.
     """
     cutoff = _recommendation_utc_date(created_at)
-    return any(watched_at >= cutoff for watched_at in watched_on)
+    return any(watched_at >= cutoff for watched_at in watched_dates)
 
 
 def _history_status_tag(
