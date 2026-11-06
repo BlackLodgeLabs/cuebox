@@ -18,6 +18,15 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
 
 File issues only into the user's own repo. Never file into `mattpocock/skills` (the repo these skills come from) unless the user owns it. In a fork, `gh` can default to the upstream parent, so before the first `gh issue create` of a session, check the target with `gh repo view --json nameWithOwner` and confirm it with the user if it is not their repo.
 
+## Cursor cloud agent (`ready-for-agent`)
+
+Adding the `ready-for-agent` label to an issue starts a Cursor cloud agent through [`.github/workflows/implement-ready-for-agent.yml`](../../.github/workflows/implement-ready-for-agent.yml). The workflow runs only for that label, and only when the labeled item is an issue rather than a pull request. It POSTs the issue to a Cursor automation webhook, then comments on the issue with a link to the agent.
+
+The repository needs both of these Actions secrets, plus a Cursor automation for BlackLodgeLabs/cuebox whose trigger is that webhook and which implements the labelled issue:
+
+- `CURSOR_AUTOMATION_WEBHOOK_URL` — webhook URL
+- `CURSOR_AUTOMATION_WEBHOOK_KEY` — Bearer token sent in the `Authorization` header
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
