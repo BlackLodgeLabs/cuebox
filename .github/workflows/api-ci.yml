@@ -12,7 +12,24 @@ on:
 
 jobs:
   api-tests:
+    # Service container instead of apt postgresql-16: ubuntu-latest (26.04
+    # resolute) does not ship postgresql-16 or postgresql-16-pgvector.
+    # Nothing else in this job uses apt, so the runner stays ubuntu-latest.
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cuebox
+          POSTGRES_PASSWORD: cuebox
+          POSTGRES_DB: cuebox
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: api
@@ -21,17 +38,13 @@ jobs:
       TEST_DATABASE_URL: postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox
     steps:
       - uses: actions/checkout@v4.3.1
-      # Use apt Postgres + pgvector instead of a Docker Hub service image to avoid
-      # intermittent registry pull timeouts on GitHub-hosted runners.
       - name: Set up PostgreSQL with pgvector
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-16 postgresql-16-pgvector
-          sudo pg_ctlcluster 16 main start
-          sudo -u postgres psql -c "CREATE USER cuebox WITH PASSWORD 'cuebox' CREATEDB;"
-          sudo -u postgres psql -c "CREATE DATABASE cuebox OWNER cuebox;"
-          sudo -u postgres psql -d cuebox -c "CREATE EXTENSION IF NOT EXISTS vector;"
-          sudo -u postgres psql -d cuebox -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+          cid="$(docker ps -q --filter ancestor=pgvector/pgvector:pg16)"
+          test -n "$cid"
+          docker exec "$cid" psql -v ON_ERROR_STOP=1 -U cuebox -d cuebox \
+            -c "CREATE EXTENSION IF NOT EXISTS vector;" \
+            -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
