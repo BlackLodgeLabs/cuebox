@@ -140,6 +140,9 @@ spacing:
 ## Component Layout & Shapes
 - **Spacing Scale:** Multiples of 8px (`xs: 4px`, `sm: 8px`, `md: 16px`, `lg: 24px`, `xl: 32px`) to guarantee geometric balance. Desktop margins are `48px` and mobile margins are `16px`.
 - **Breakpoints:** Mobile-first architecture transitioning to desktop layouts at `md: 768px`. Maximum container width is locked at `1280px` (`max-w-7xl`).
+- **App chrome (IA):** Phone-first shell — slim top header (Cuebox brand, search icon → `/search`, conditional Review badge) plus a fixed bottom tab bar (**Home · Watchlist · Recommend · More**). More opens Settings (`/settings/sync`); History is not a primary tab. Same four-destination chrome at all breakpoints; main content uses bottom safe-area padding so tabs never obscure page content.
+- **Home hub:** Returning-user Home is a single vertical hub (inline library search → primary **Create a recommendation** → secondary **History** link), not a peer-card dashboard; Watchlist and Review stay in chrome (tab / header badge), not Home cards.
+- **Watchlist grid:** `/watchlist` is a poster-first grid (poster + title below only); status actions sit behind a ⋯ overflow on each poster; search/filter/sort live in a Filter sheet (draft → Apply / Clear), not an always-visible inline form.
 - **Hardware Borders (Sci-Fi Brutalism):** Avoid fully rounded pills. Utilize soft industrial `4px` (`rounded-DEFAULT`) corners on all container frames and image wrappers to maintain a durable feel. Primary interaction buttons utilize CSS `clip-path` to create chamfered (angled cut-off) corners.
 - **Outlines:** Thin `1px` crisp borders utilizing translucent variations of `--color-outline` to separate UI segments without adding visual clutter.
 
@@ -149,12 +152,22 @@ spacing:
 - **Disabled States:** Elements shift to `50%` opacity, desaturate to greyscale, and apply a `cursor-not-allowed` property, visually communicating an offline or disconnected terminal state.
 - **Environmental Texture (The Used Future):** The main application viewport (`<main>`) applies a fixed, subtle CSS film grain or horizontal CRT scanline overlay. This breaks up perfect pixels, establishing a gritty, analog, and deeply cinematic atmosphere.
 
-### Results screen (`results-view.tsx`)
-- **Winner card:** two-column layout — full-height poster column flush to the left edge; text column with TOP PICK badge, title, director/runtime, TMDB/RT scores, synopsis, key factors, then why it matches (plus why it beat alternatives and caveats when present).
-- **Ratings row:** `Space Mono` (`font-mono`); display **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on results cards (film detail still shows all ratings).
+### Recommendation ceremony (`recommendation-ceremony.tsx`)
+Mandatory 3-stage ritual shared by fresh results (`/recommend/results/{id}?stage=`) and history detail (`/history/{id}?stage=`). Chrome is driven by URL `stage` + mode only (no parallel stage store). Progress cue shows `n / 3`; primary CTAs use `min-h-11` (≥44×44). No Skip control and no FAB.
+
+Sticky chrome (progress + Next on stages 1–2; Done sole filled primary on stage 3) sits above the bottom tab bar with `bottom-[calc(4.5rem+env(safe-area-inset-bottom))]`, matching questionnaire sticky clearance. Stage 3 secondaries (Replay outline; More sheet for New recommendation / View history / answer summary / Remove) are demoted — never peer filled primaries beside Done.
+
+| Stage | Composition |
+|-------|-------------|
+| **1 — Winner** | Singular poster-led focus; TOP PICK + title/year/director; **short reasons only** (`most_influential_factors` + `why_it_matches_short` when present; omit full `why_it_matches` on 1–2). Omit synopsis, caveats, beat-alternatives, ratings clutter, where-to-watch, questionnaire summary. |
+| **2 — Runners-up** | Horizontal **CSS scroll-snap** poster row; focused runner uses the same short-reason layout. No where-to-watch / full metadata dump. |
+| **3 — Session record** | Durable five-film record: full `why_it_matches` explanations, TMDB/RT ratings, **where-to-watch icons** (providers fetched only on stage 3), optional answer-summary in More, constraint-relaxation banner, watchlist deep links; sticky Done + demoted exits. |
+
+- **Cold-load / refresh:** unarmed `?stage=1\|2` coerces to stage 3 (module-scoped SPA gate armed only by questionnaire submit or Replay). Stage 2→3 uses `replace` so Back from stage 3 leaves the route.
+- **Motion:** short enter/advance fade; `.ceremony-reduced-motion` and `@media (prefers-reduced-motion: reduce)` disable ceremony fades/transitions (`data-reduced-motion` on the ceremony root).
+- **Ratings row (stage 3):** `Space Mono` (`font-mono`); **TMDB** (0–10, one decimal) and **RT** (`%` or `—`). Letterboxd is not shown on ceremony cards (film detail still shows all ratings).
 - **Key factor tags:** `Badge variant="secondary"` (lime secondary tokens).
-- **Runners-up grid:** standard cards with `hover-glow`; same ratings row as winner.
-- **Card navigation:** full-card hit target via a positioned overlay `Link` with a concise `aria-label` (e.g. “View {title} in watchlist”); explanation text stays outside the link’s accessible name. Page-level actions (answer summary, new recommendation) remain separate controls.
+- **Card navigation (stage 3):** full-card overlay `Link` with concise `aria-label` (e.g. “View {title} in watchlist”).
 
 ## Iconography
 - **Library:** Material Symbols Outlined.

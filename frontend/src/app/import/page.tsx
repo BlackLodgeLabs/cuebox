@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/file-upload";
+import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +15,9 @@ import {
 import { useImportUpload } from "@/hooks/use-import";
 import { ApiClientError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/error-messages";
+
+const API_REACH_MESSAGE =
+  "Could not reach the API. Make sure the backend is running.";
 
 export default function ImportPage() {
   const router = useRouter();
@@ -41,23 +45,20 @@ export default function ImportPage() {
           }),
         );
       } else {
-        setInlineError("Upload failed. Please try again.");
+        setInlineError(API_REACH_MESSAGE);
       }
     }
   };
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <h1 className="text-h1">Import watchlist</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Upload your Letterboxd watchlist CSV to import films and start
-          enrichment.
-        </p>
-      </div>
+    <div className="mx-auto max-w-xl space-y-4">
+      <OffTabPageHeader
+        title="Import watchlist"
+        subtitle="Upload your Letterboxd watchlist CSV to import films and start enrichment."
+      />
 
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-1 p-4 pb-2 sm:p-6 sm:pb-2">
           <CardTitle>Upload CSV</CardTitle>
           <CardDescription>
             Export your watchlist from Letterboxd (Settings → Data → Export your
@@ -65,8 +66,10 @@ export default function ImportPage() {
             columns.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 pt-2 sm:p-6 sm:pt-2">
           <FileUpload
+            variant="compact"
+            selectedFile={file}
             onFileSelect={(f) => {
               setFile(f);
               setInlineError(null);
@@ -74,12 +77,28 @@ export default function ImportPage() {
             disabled={upload.isPending}
           />
           {inlineError && (
-            <p className="text-sm text-destructive">{inlineError}</p>
+            <div
+              role="alert"
+              className="space-y-3 rounded border border-destructive/40 bg-destructive/10 p-3"
+            >
+              <p className="text-body-md text-destructive">{inlineError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="min-h-11 w-full sm:w-auto"
+                onClick={() => void handleUpload()}
+                disabled={!file || upload.isPending}
+              >
+                Try again
+              </Button>
+            </div>
           )}
           <Button
+            size="lg"
             onClick={() => void handleUpload()}
             disabled={!file || upload.isPending}
-            className="w-full"
+            className="w-full min-h-11"
           >
             {upload.isPending ? "Uploading…" : "Start import"}
           </Button>

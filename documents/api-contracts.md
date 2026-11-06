@@ -277,10 +277,12 @@ GET /films
 |`year_to`          |integer|—           |Maximum release year (inclusive)                          |
 |`created_from`     |date   |—           |Minimum `created_at` date (inclusive)                     |
 |`created_to`       |date   |—           |Maximum `created_at` date (inclusive)                     |
-|`sort`             |string |`created_at`|Sort field: `title` | `year` | `created_at` | `enrichment_status`|
-|`sort_dir`         |string |`desc`      |Sort direction: `asc` | `desc`                          |
+|`sort`             |string |`created_at`|Sort field: `title` | `year` | `created_at` | `enrichment_status` | `watched_at`. Omitted `sort` stays `created_at`, including when `status=watched`. `watched_at` is accepted on every list.|
+|`sort_dir`         |string |`desc`      |Sort direction: `asc` | `desc`. For `sort=watched_at`, `desc` is newest date watched first and `asc` is oldest first.|
 |`limit`            |integer|20          |Page size                                                 |
 |`offset`           |integer|0           |Page offset                                               |
+
+`sort=watched_at` orders by each film's date watched: the newest of every `film_watches.watched_at` (completed and pending) and any `staged_watched_dates`. An unknown watched date (`source=letterboxd_import` and the day `1984-09-28`) is ignored on `watched_at` and inside the staged list. Later staged days on that same row still count. The stored row is not rewritten. A staged value that is not an ISO date (`YYYY-MM-DD`) is ignored. A manual or RSS watch on that calendar day still sorts as that day. Dateless films sort last in both directions (`NULLS LAST`). Films that share a date watched, including the dateless group, break ties by title ascending, then film id. This does not change `latest_watched_at`.
 
 #### Response `200 OK`
 

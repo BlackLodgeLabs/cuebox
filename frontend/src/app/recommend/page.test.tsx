@@ -7,9 +7,10 @@ import { createQueryWrapper } from "@/test/query-wrapper";
 import type { RecommendationResponse } from "@/types/api";
 
 const pushMock = vi.fn();
+const replaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ push: pushMock, replace: replaceMock }),
 }));
 
 vi.mock("@/lib/api-client", async (importOriginal) => {
@@ -86,6 +87,55 @@ describe("RecommendPage", () => {
     cleanup();
     postRecommendationMock.mockReset();
     pushMock.mockReset();
+    replaceMock.mockReset();
+  });
+
+  it("shows a single title stack, progress cue, and ≥44px nav controls", () => {
+    renderRecommendPage();
+
+    expect(screen.getByRole("heading", { name: "Genres", level: 1 })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Genres" })).toHaveLength(1);
+    expect(screen.getByText(/step 1 of 11/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/questionnaire progress, step 1 of 11/i),
+    ).toBeInTheDocument();
+
+    const next = screen.getByRole("button", { name: "Next" });
+    const back = screen.getByRole("button", { name: "Back" });
+    expect(next.className).toMatch(/min-h-11/);
+    expect(back.className).toMatch(/min-h-11/);
+
+    const chip = screen.getByRole("button", { name: "No Preference" });
+    expect(chip.className).toMatch(/min-h-11/);
+
+    const content = screen.getByTestId("questionnaire-content");
+    expect(content.className).toMatch(/pb-24/);
+    expect(screen.getByTestId("questionnaire-sticky-chrome")).toBeInTheDocument();
+  });
+
+  it("scrolls notes into view on focus", async () => {
+    const user = userEvent.setup();
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    renderRecommendPage();
+    await advanceToNotesStep(user);
+
+    const notes = screen.getByTestId("questionnaire-notes");
+    await user.click(notes);
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "center" });
+  });
+
+  it("uses ≥44px radio option rows on runtime step", async () => {
+    const user = userEvent.setup();
+    renderRecommendPage();
+
+    await user.click(screen.getByRole("button", { name: "No Preference" }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    const runtimeLabel = screen.getByText("No limit").closest("label");
+    expect(runtimeLabel?.className).toMatch(/min-h-11/);
   });
 
   it("keeps loading UI visible after mutation settles but before navigation completes", async () => {
@@ -109,7 +159,9 @@ describe("RecommendPage", () => {
 
     resolveMutation(mockRecommendationResponse);
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/recommend/results/session-abc");
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/recommend/results/session-abc?stage=1",
+      );
     });
 
     expect(screen.getByRole("heading", { name: /finding your film/i })).toBeInTheDocument();
@@ -117,7 +169,7 @@ describe("RecommendPage", () => {
     expect(screen.queryByRole("heading", { name: "Notes" })).not.toBeInTheDocument();
   });
 
-  it("clears loading and shows submit error on API failure", async () => {
+  it("clears loading and shows submit error with retry on API failure", async () => {
     const user = userEvent.setup();
     postRecommendationMock.mockRejectedValue(
       new ApiClientError({
@@ -137,6 +189,24 @@ describe("RecommendPage", () => {
     expect(screen.queryByRole("heading", { name: /finding your film/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Get recommendation" })).toBeEnabled();
     expect(screen.getByText(/something went wrong on our end/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+  });
+
+  it("shows reach copy and retry when the API is unreachable", async () => {
+    const user = userEvent.setup();
+    postRecommendationMock.mockRejectedValue(new TypeError("Failed to fetch"));
+
+    renderRecommendPage();
+    await advanceToNotesStep(user);
+
+    await user.click(screen.getByRole("button", { name: "Get recommendation" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/could not reach the api\. make sure the backend is running/i),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
   });
 
   it("calls postRecommendation only once on rapid double-click", async () => {

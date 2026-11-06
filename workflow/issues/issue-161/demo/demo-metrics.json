@@ -1,0 +1,180 @@
+{
+  "date": "2026-07-30T10:08:55.366Z",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "scenarios": {
+    "home": {
+      "create": {
+        "box": {
+          "x": 16,
+          "y": 401,
+          "width": 358,
+          "height": 44
+        },
+        "classes": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 btn-chamfer bg-primary text-primary-foreground hover-glow active-flicker hover:bg-primary/90 h-11 rounded px-8 w-full min-h-11"
+      },
+      "history": {
+        "box": {
+          "x": 16,
+          "y": 457,
+          "width": 358,
+          "height": 44
+        },
+        "classes": "space-y-3"
+      },
+      "historyHeightOk": true,
+      "createHeightOk": true,
+      "historyIsOutline": true,
+      "createIsPrimary": true
+    },
+    "picker": {
+      "view": {
+        "box": {
+          "x": 29,
+          "y": 502,
+          "width": 100,
+          "height": 44
+        }
+      },
+      "markOrStatus": {
+        "box": {
+          "x": 137,
+          "y": 502,
+          "width": 162,
+          "height": 44
+        }
+      },
+      "viewOk": true,
+      "markOk": true
+    },
+    "searchFocus": {
+      "focusedBox": {
+        "x": 16,
+        "y": 301,
+        "width": 358,
+        "height": 40
+      },
+      "visibleInViewport": true,
+      "scrollLog": [
+        {
+          "id": "library-search-input",
+          "block": "center"
+        }
+      ],
+      "scrollHookFired": true
+    },
+    "historyNav": {
+      "url": "http://localhost:3000/history",
+      "ok": true
+    },
+    "historyRemove": {
+      "box": {
+        "x": 305,
+        "y": 402,
+        "width": 44,
+        "height": 44
+      },
+      "ok": true
+    },
+    "questionnaireMid": {
+      "paddingInfo": {
+        "hasPb24": true,
+        "paddingBottom": "96px",
+        "stickyPresent": true,
+        "stickyRect": {
+          "x": 16,
+          "y": 523,
+          "width": 358,
+          "height": 69,
+          "top": 523,
+          "right": 374,
+          "bottom": 592,
+          "left": 16
+        }
+      },
+      "midMetrics": {
+        "scrollY": 200,
+        "stickyTop": 523,
+        "stickyBottom": 592,
+        "elementFromPoint": {
+          "tag": "BUTTON",
+          "text": "Next"
+        },
+        "overlappingChips": []
+      },
+      "nextBox": {
+        "x": 127,
+        "y": 536,
+        "width": 247,
+        "height": 44
+      },
+      "nextHeightOk": true
+    },
+    "questionnaireMax": {
+      "scrollY": 716,
+      "lastChipText": "Urban Fantasy",
+      "chipCount": 35,
+      "lastBottom": 394,
+      "stickyTop": 427,
+      "clearancePx": 33,
+      "stickyAboveTabBar": true,
+      "paddingBottom": "96px"
+    },
+    "stickyUsable": {
+      "next": {
+        "x": 127,
+        "y": 440,
+        "width": 247,
+        "height": 44
+      },
+      "back": {
+        "x": 16,
+        "y": 440,
+        "width": 99,
+        "height": 44
+      },
+      "sticky": {
+        "x": 16,
+        "y": 427,
+        "width": 358,
+        "height": 69
+      },
+      "nextOk": true,
+      "backOk": true,
+      "nextInViewport": true
+    },
+    "notes": {
+      "reached": true
+    },
+    "notesFocus": {
+      "textarea": {
+        "x": 33,
+        "y": 234,
+        "width": 324,
+        "height": 146
+      },
+      "primary": {
+        "x": 127,
+        "y": 450,
+        "width": 247,
+        "height": 44
+      },
+      "textareaVisible": true,
+      "primaryReachable": true
+    },
+    "keyboard": {
+      "status": "manual / blocked in VM",
+      "reason": "Headless Chromium cannot open a real iPhone-class virtual keyboard; Scenarios 3–4 focus-scroll hooks verified instead."
+    },
+    "design": {
+      "fabCount": 0,
+      "bodyBg": "rgb(18, 20, 17)",
+      "h1": "What do you want to watch?",
+      "genresTitle": "Genres",
+      "noFab": true,
+      "genresOk": true
+    }
+  }
+}

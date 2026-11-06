@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FilmPoster } from "@/components/film-poster";
+import { OffTabPageHeader } from "@/components/off-tab-page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -61,26 +62,26 @@ export default function ReviewPage() {
 
   if (matchFilms.length === 0 && watchFilms.length === 0) {
     return (
-      <div className="mx-auto max-w-lg space-y-6 text-center">
-        <h1 className="text-h1">All caught up</h1>
-        <p className="text-muted-foreground">
-          There are no metadata matches or watch diary entries waiting for review.
-        </p>
-        <Button asChild>
-          <Link href="/recommend">Get a recommendation</Link>
-        </Button>
+      <div className="mx-auto max-w-lg space-y-6">
+        <OffTabPageHeader
+          title="All caught up"
+          subtitle="There are no metadata matches or watch diary entries waiting for review."
+        />
+        <div className="text-center">
+          <Button asChild>
+            <Link href="/recommend">Get a recommendation</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-h1">Review</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
-          Confirm metadata matches and complete watch diary entries.
-        </p>
-      </div>
+      <OffTabPageHeader
+        title="Review"
+        subtitle="Confirm metadata matches and complete watch diary entries."
+      />
 
       {matchFilms.length > 0 && (
         <section className="space-y-4">
@@ -158,7 +159,8 @@ export default function ReviewPage() {
                           aria-label="Letterboxd film URL"
                         />
                         <Button
-                          size="sm"
+                          size="lg"
+                          className="min-h-11 w-full sm:w-auto"
                           disabled={isPending || !uriDrafts[film.review_id]?.trim()}
                           onClick={() =>
                             resolveLetterboxd.mutate({
@@ -171,23 +173,30 @@ export default function ReviewPage() {
                         </Button>
                       </>
                     ) : (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                         <Button
-                          size="sm"
+                          size="lg"
+                          className="min-h-11 w-full sm:w-auto"
                           disabled={isPending}
                           onClick={() => accept.mutate(film.review_id)}
                         >
                           Accept
                         </Button>
                         <Button
-                          size="sm"
+                          size="lg"
                           variant="outline"
+                          className="min-h-11 w-full sm:w-auto"
                           disabled={isPending}
                           onClick={() => reject.mutate(film.review_id)}
                         >
                           Reject
                         </Button>
-                        <Button size="sm" variant="outline" asChild>
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="min-h-11 w-full sm:w-auto"
+                          asChild
+                        >
                           <Link href={`/watchlist/${film.film_id}?editMatch=1`}>
                             Choose different match
                           </Link>

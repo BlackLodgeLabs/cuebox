@@ -3,44 +3,39 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { WatchlistTable } from "@/components/watchlist-table";
-import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DEFAULT_WATCHLIST_FILTERS,
+  WatchlistFilterSheet,
+  type WatchlistFilterValues,
+} from "@/components/watchlist-filter-sheet";
+import { WatchlistPosterGrid } from "@/components/watchlist-poster-grid";
+import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
+import { Icon } from "@/components/icon";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/error-state";
-import { CardGridSkeleton } from "@/components/loading-state";
+import { PosterGridSkeleton } from "@/components/loading-state";
 import { useFilmStatusTransition, useFilms } from "@/hooks/use-films";
-import { formatEnrichmentStatus } from "@/lib/enrichment-status";
+import { cn } from "@/lib/utils";
 import type { FilmSortField, FilmStatus, FilmSummary, SortDirection, WatchlistTab } from "@/types/api";
 
 const LIMIT = 20;
-const ENRICHMENT_OPTIONS = [
-  "pending",
-  "matching",
-  "review_required",
-  "enriching",
-  "ready",
-  "failed",
-] as const;
 
-function parseSort(value: string | null): FilmSortField {
+function viewDefaultSort(tab: WatchlistTab): FilmSortField {
+  return tab === "watched" ? "watched_at" : "created_at";
+}
+
+function parseSort(value: string | null, tab: WatchlistTab): FilmSortField {
   if (
     value === "title" ||
     value === "year" ||
     value === "created_at" ||
-    value === "enrichment_status"
+    value === "enrichment_status" ||
+    value === "watched_at"
   ) {
     return value;
   }
-  return "created_at";
+  return viewDefaultSort(tab);
 }
 
 function parseSortDir(value: string | null): SortDirection {
@@ -64,13 +59,27 @@ function tabLabel(tab: WatchlistTab, count: number | undefined): string {
   return `${names[tab]} (${total})`;
 }
 
+function filtersAreActive(values: WatchlistFilterValues, tab: WatchlistTab): boolean {
+  return (
+    values.search !== "" ||
+    values.enrichmentStatus !== "all" ||
+    values.year !== "" ||
+    values.createdFrom !== "" ||
+    values.createdTo !== "" ||
+    values.sort !== viewDefaultSort(tab) ||
+    values.sortDir !== "desc"
+  );
+}
+
 export function WatchlistPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const tab = parseTab(searchParams.get("tab"));
-  const sort = parseSort(searchParams.get("sort"));
-  const sortDir = parseSortDir(searchParams.get("sort_dir"));
+  const rawSort = searchParams.get("sort");
+  const dateWatchedOffView = rawSort === "watched_at" && tab !== "watched";
+  const sort = dateWatchedOffView ? viewDefaultSort(tab) : parseSort(rawSort, tab);
+  const sortDir = dateWatchedOffView ? "desc" : parseSortDir(searchParams.get("sort_dir"));
   const offset = Number(searchParams.get("offset") ?? "0") || 0;
   const yearFromUrl = searchParams.get("year") ?? "";
   const createdFrom = searchParams.get("created_from") ?? "";
@@ -78,16 +87,28 @@ export function WatchlistPageContent() {
   const enrichmentStatus = searchParams.get("enrichment_status") ?? "all";
   const searchFromUrl = searchParams.get("search") ?? "";
 
-  const [search, setSearch] = useState(searchFromUrl);
-  const [yearInput, setYearInput] = useState(yearFromUrl);
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  useEffect(() => {
-    setSearch(searchFromUrl);
-  }, [searchFromUrl]);
-
-  useEffect(() => {
-    setYearInput(yearFromUrl);
-  }, [yearFromUrl]);
+  const filterValues = useMemo<WatchlistFilterValues>(
+    () => ({
+      search: searchFromUrl,
+      enrichmentStatus,
+      year: yearFromUrl,
+      sort,
+      sortDir,
+      createdFrom,
+      createdTo,
+    }),
+    [
+      createdFrom,
+      createdTo,
+      enrichmentStatus,
+      searchFromUrl,
+      sort,
+      sortDir,
+      yearFromUrl,
+    ],
+  );
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -105,21 +126,37 @@ export function WatchlistPageContent() {
     [router, searchParams],
   );
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (search === searchFromUrl) return;
-      updateParams({ search: search || null, offset: null });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, searchFromUrl, updateParams]);
+  const applyFilters = useCallback(
+    (values: WatchlistFilterValues) => {
+      updateParams({
+        search: values.search || null,
+        enrichment_status:
+          values.enrichmentStatus === "all" ? null : values.enrichmentStatus,
+        year: values.year || null,
+        sort: values.sort,
+        sort_dir: values.sortDir,
+        created_from: values.createdFrom || null,
+        created_to: values.createdTo || null,
+        offset: null,
+      });
+      setFilterOpen(false);
+    },
+    [updateParams],
+  );
+
+  const clearFilters = useCallback(() => {
+    applyFilters({
+      ...DEFAULT_WATCHLIST_FILTERS,
+      sort: viewDefaultSort(tab),
+      sortDir: "desc",
+    });
+  }, [applyFilters, tab]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (yearInput === yearFromUrl) return;
-      updateParams({ year: yearInput || null, offset: null });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [yearInput, yearFromUrl, updateParams]);
+    if (searchParams.get("sort") === "watched_at" && tab !== "watched") {
+      updateParams({ sort: null, sort_dir: null, offset: null });
+    }
+  }, [searchParams, tab, updateParams]);
 
   const sharedFilters = useMemo(
     () => ({
@@ -194,20 +231,13 @@ export function WatchlistPageContent() {
     });
   };
 
-  const handleSort = (column: FilmSortField) => {
-    const nextDir =
-      sort === column ? (sortDir === "asc" ? "desc" : "asc") : "asc";
-    updateParams({
-      sort: column,
-      sort_dir: nextDir,
-      offset: null,
-    });
-  };
-
   const handleTabChange = (value: string) => {
     updateParams({
       tab: value === "active" ? null : value,
       offset: null,
+      ...(sort === "watched_at" && value !== "watched"
+        ? { sort: null, sort_dir: null }
+        : {}),
     });
   };
 
@@ -262,6 +292,8 @@ export function WatchlistPageContent() {
     );
   })();
 
+  const filtersActive = filtersAreActive(filterValues, tab);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -275,73 +307,36 @@ export function WatchlistPageContent() {
       </div>
 
       <Tabs value={tab} onValueChange={handleTabChange}>
-        <TabsList>
-          <TabsTrigger value="active">
-            {tabLabel("active", activeCountQuery.data?.pagination.total)}
-          </TabsTrigger>
-          <TabsTrigger value="watched">
-            {tabLabel("watched", watchedCountQuery.data?.pagination.total)}
-          </TabsTrigger>
-          <TabsTrigger value="archived">
-            {tabLabel("archived", archivedCountQuery.data?.pagination.total)}
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="active">
+              {tabLabel("active", activeCountQuery.data?.pagination.total)}
+            </TabsTrigger>
+            <TabsTrigger value="watched">
+              {tabLabel("watched", watchedCountQuery.data?.pagination.total)}
+            </TabsTrigger>
+            <TabsTrigger value="archived">
+              {tabLabel("archived", archivedCountQuery.data?.pagination.total)}
+            </TabsTrigger>
+          </TabsList>
+
+          <Button
+            type="button"
+            variant="outline"
+            aria-label="Filter and sort"
+            className={cn(
+              "min-h-[44px] min-w-[44px] gap-2",
+              filtersActive && "border-primary text-primary",
+            )}
+            onClick={() => setFilterOpen(true)}
+          >
+            <Icon name="filter_list" size={20} />
+            Filter
+          </Button>
+        </div>
 
         <TabsContent value={tab} className="mt-6 space-y-6">
-          <div className="flex flex-wrap gap-3">
-            <Input
-              placeholder="Filter by title…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="max-w-xs"
-            />
-            <Input
-              type="number"
-              placeholder="Year"
-              value={yearInput}
-              onChange={(e) => setYearInput(e.target.value)}
-              className="max-w-[120px]"
-            />
-            <Input
-              type="date"
-              value={createdFrom}
-              onChange={(e) =>
-                updateParams({ created_from: e.target.value || null, offset: null })
-              }
-              className="max-w-[160px]"
-            />
-            <Input
-              type="date"
-              value={createdTo}
-              onChange={(e) =>
-                updateParams({ created_to: e.target.value || null, offset: null })
-              }
-              className="max-w-[160px]"
-            />
-            <Select
-              value={enrichmentStatus}
-              onValueChange={(value) =>
-                updateParams({
-                  enrichment_status: value === "all" ? null : value,
-                  offset: null,
-                })
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Enrichment status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {ENRICHMENT_OPTIONS.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {formatEnrichmentStatus(status)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {isLoading && <CardGridSkeleton count={4} />}
+          {isLoading && <PosterGridSkeleton count={6} />}
 
           {isError && (
             <ErrorState
@@ -354,12 +349,9 @@ export function WatchlistPageContent() {
 
           {data && data.data.length > 0 && (
             <>
-              <WatchlistTable
+              <WatchlistPosterGrid
                 films={data.data}
                 tab={tab}
-                sort={sort}
-                sortDir={sortDir}
-                onSort={handleSort}
                 onStatusTransition={handleStatusTransition}
                 onMarkWatched={(film) => void openMarkWatchedDialog(film)}
                 onCompleteReview={openCompleteReviewDialog}
@@ -390,6 +382,15 @@ export function WatchlistPageContent() {
           )}
         </TabsContent>
       </Tabs>
+
+      <WatchlistFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        view={tab}
+        values={filterValues}
+        onApply={applyFilters}
+        onClear={clearFilters}
+      />
 
       {reviewDialog && (
         <WatchReviewDialog

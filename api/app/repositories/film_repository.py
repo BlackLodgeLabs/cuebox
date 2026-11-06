@@ -6,16 +6,19 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Literal
 
-from sqlalchemy import func, select
+from sqlalchemy import Date, and_, case, cast, func, lateral, literal, nulls_last, select, true
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session, selectinload
 
-from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus
-from app.database.models import Film, WatchlistEntry
+from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus, WatchSource
+from app.services.watched_csv_parser import DEFAULT_WATCHED_AT
+from app.database.models import Film, FilmWatch, WatchlistEntry
 
-FilmSortField = Literal["title", "year", "created_at", "enrichment_status"]
+FilmSortField = Literal["title", "year", "created_at", "enrichment_status", "watched_at"]
 SortDirection = Literal["asc", "desc"]
+_ColumnSortField = Literal["title", "year", "created_at", "enrichment_status"]
 
-_SORT_COLUMNS: dict[FilmSortField, object] = {
+_SORT_COLUMNS: dict[_ColumnSortField, object] = {
     "title": Film.title,
     "year": Film.year,
     "created_at": Film.created_at,
@@ -254,12 +257,90 @@ def list_films(
         stmt = stmt.where(Film.created_at <= end)
         count_stmt = count_stmt.where(Film.created_at <= end)
 
-    sort_column = _SORT_COLUMNS[sort]
-    order = sort_column.asc() if sort_dir == "asc" else sort_column.desc()
+    order = _order_by(sort, sort_dir)
 
     total = db.scalar(count_stmt) or 0
-    films = list(db.scalars(stmt.order_by(order).limit(limit).offset(offset)).all())
+    films = list(db.scalars(stmt.order_by(*order).limit(limit).offset(offset)).all())
     return films, total
+
+
+def _order_by(sort: FilmSortField, sort_dir: SortDirection) -> tuple[object, ...]:
+    if sort == "watched_at":
+        # Date watched, newest or oldest. Dateless films stay last either way.
+        direction = (
+            _newest_watched_day().asc() if sort_dir == "asc" else _newest_watched_day().desc()
+        )
+        return (nulls_last(direction), Film.title.asc(), Film.id.asc())
+    sort_column = _SORT_COLUMNS[sort]
+    direction = sort_column.asc() if sort_dir == "asc" else sort_column.desc()
+    return (direction,)
+
+
+def _is_unknown_watched_date():
+    """Unknown watched date: stored day, but not a day the film was watched."""
+    return and_(
+        FilmWatch.source == WatchSource.LETTERBOXD_IMPORT,
+        FilmWatch.watched_at == DEFAULT_WATCHED_AT,
+    )
+
+
+def _newest_watched_day():
+    """Newest real watch day, including pending drafts and staged extra days.
+
+    An unknown watched date on ``watched_at`` is skipped. Later staged days on
+    that same row still count. A staged value that is itself the unknown
+    watched date is skipped, and a film whose only days are unknown sorts as
+    a dateless film.
+    """
+    watched_max = (
+        select(func.max(FilmWatch.watched_at))
+        .where(FilmWatch.film_id == Film.id)
+        .where(~_is_unknown_watched_date())
+        .correlate(Film)
+        .scalar_subquery()
+    )
+    safe_staged = case(
+        (
+            func.jsonb_typeof(FilmWatch.staged_watched_dates) == "array",
+            FilmWatch.staged_watched_dates,
+        ),
+        else_=cast(literal("[]"), JSONB),
+    )
+    staged_days = lateral(
+        func.jsonb_array_elements_text(safe_staged).table_valued("value")
+    ).alias("staged_day")
+    staged_text = staged_days.c.value
+    # Letterboxd import stores the earliest day on watched_at, so the unknown
+    # watched date is that column and the real later days are staged values.
+    unknown_staged_value = and_(
+        FilmWatch.source == WatchSource.LETTERBOXD_IMPORT,
+        staged_text == DEFAULT_WATCHED_AT.isoformat(),
+    )
+    # CASE does not evaluate the cast unless the value is an ISO day, so a
+    # malformed staged string cannot fail the list query.
+    staged_day = case(
+        (
+            and_(
+                staged_text.op("~")(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"),
+                ~unknown_staged_value,
+            ),
+            cast(staged_text, Date),
+        ),
+        else_=None,
+    )
+    staged_max = (
+        select(func.max(staged_day))
+        .select_from(FilmWatch)
+        .join(staged_days, true())
+        .where(FilmWatch.film_id == Film.id)
+        .correlate(Film)
+        .scalar_subquery()
+    )
+    return case(
+        (watched_max.is_(None), staged_max),
+        (staged_max.is_(None), watched_max),
+        else_=func.greatest(watched_max, staged_max),
+    )
 
 
 def list_films_for_job(db: Session, job_id: uuid.UUID) -> list[Film]:

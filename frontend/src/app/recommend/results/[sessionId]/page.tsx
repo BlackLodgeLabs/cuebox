@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { DevModePanel } from "@/components/dev-mode/dev-mode-panel";
 import { DevModeProvider } from "@/components/dev-mode/dev-mode-provider";
-import { ResultsView } from "@/components/results-view";
+import { RecommendationCeremony } from "@/components/recommendation-ceremony";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useRecommendation } from "@/hooks/use-recommendations";
@@ -37,7 +37,11 @@ export default function ResultsPage() {
             {new Date(data.created_at).toLocaleString()}
           </p>
         </div>
-        <ResultsView data={data} />
+        <RecommendationCeremony
+          mode="fresh"
+          data={data}
+          sessionId={params.sessionId}
+        />
         <DevModePanel sessionId={params.sessionId} />
       </div>
     </DevModeProvider>

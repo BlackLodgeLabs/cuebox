@@ -1,0 +1,93 @@
+{
+  "date": "2026-07-29T19:24:54.553Z",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "sessionId": "c618464a-c80a-4bbf-8dee-db0ed68f3abb",
+  "stage1Metrics": {
+    "viewportHeight": 844,
+    "documentHeight": 1265,
+    "next": {
+      "top": 1149,
+      "bottom": 1193,
+      "height": 44,
+      "belowFold": true,
+      "partiallyBelowFold": true,
+      "parentPosition": "static"
+    },
+    "progress": {
+      "top": 179,
+      "bottom": 199
+    },
+    "whyText": "The Matrix is a well-rounded film that fits a broad range of preferences. It offers a decent plot that is engaging and thought-provoking, making it suitable for a viewing context with others.",
+    "whyLength": 191,
+    "scrollY": 0
+  },
+  "stage2Metrics": {
+    "viewportHeight": 844,
+    "documentHeight": 844,
+    "next": {
+      "top": 271,
+      "bottom": 315,
+      "belowFold": false,
+      "partiallyBelowFold": false
+    },
+    "whyText": null,
+    "whyLength": 0
+  },
+  "stage3Buttons": [
+    {
+      "text": "View answer summary",
+      "testid": null,
+      "classes": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 rounded border border-border bg-transparent hover:border-outline hover:bg-accent hover-glow h-10 px-4 py-2 min-h-11",
+      "tag": "button"
+    },
+    {
+      "text": "New recommendation",
+      "testid": null,
+      "classes": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 btn-chamfer bg-primary text-primary-foreground hover-glow active-flicker hover:bg-primary/90 h-10 px-4 py-2 min-h-11",
+      "tag": "a"
+    },
+    {
+      "text": "View history",
+      "testid": null,
+      "classes": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 rounded border border-border bg-transparent hover:border-outline hover:bg-accent hover-glow h-10 px-4 py-2 min-h-11",
+      "tag": "a"
+    },
+    {
+      "text": "Done",
+      "testid": "ceremony-done",
+      "classes": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 btn-chamfer bg-primary text-primary-foreground hover-glow active-flicker hover:bg-primary/90 h-11 rounded px-8 min-h-11 min-w-11",
+      "tag": "a"
+    },
+    {
+      "text": "Replay ceremony",
+      "testid": "ceremony-replay",
+      "classes": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 border border-border bg-transparent hover:border-outline hover:bg-accent hover-glow h-11 rounded px-8 min-h-11 min-w-11",
+      "tag": "button"
+    },
+    {
+      "text": "Remove from history",
+      "testid": "ceremony-delete",
+      "classes": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 border border-border bg-transparent hover:border-outline hover:bg-accent hover-glow h-11 rounded px-8 min-h-11 min-w-11",
+      "tag": "button"
+    }
+  ],
+  "reducedMotion": {
+    "classPresent": true,
+    "dataAttr": "true",
+    "cssRuleCount": 0,
+    "matchingRules": [],
+    "computedAnimation": "none",
+    "computedTransition": "all"
+  },
+  "apiExplanationKeys": [
+    "why_it_matches",
+    "most_influential_factors",
+    "why_it_beat_alternatives",
+    "caveats"
+  ],
+  "hasWhyShort": false,
+  "winnerWhy": "The Matrix is a well-rounded film that fits a broad range of preferences. It offers a decent plot that is engaging and thought-provoking, making it suitable for a viewing context with others."
+}

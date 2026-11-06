@@ -26,6 +26,7 @@ class RankingCandidateInput:
 class RankingExplanation:
     why_it_matches: str
     most_influential_factors: list[str]
+    why_it_matches_short: str | None = None
     why_it_beat_alternatives: str | None = None
     caveats: str | None = None
 

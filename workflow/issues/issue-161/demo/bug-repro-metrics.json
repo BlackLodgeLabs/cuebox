@@ -1,0 +1,238 @@
+{
+  "date": "2026-07-30T09:27:48.181Z",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "commit": "e7588f5",
+  "home": {
+    "history": {
+      "box": {
+        "x": 16,
+        "y": 457,
+        "width": 358,
+        "height": 24
+      },
+      "className": "block text-center text-body-md text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline motion-reduce:transition-none",
+      "height": 24,
+      "tag": "A"
+    },
+    "createRecommendation": {
+      "box": {
+        "x": 16,
+        "y": 401,
+        "width": 358,
+        "height": 44
+      },
+      "height": 44
+    }
+  },
+  "picker": {
+    "hitCount": 22,
+    "view": {
+      "box": {
+        "x": 29,
+        "y": 502,
+        "width": 56,
+        "height": 32
+      },
+      "height": 32,
+      "width": 56,
+      "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 border border-border bg-transparent hover:border-outline hover:bg-accent hover-glow h-8 rounded px-3 text-xs"
+    },
+    "markOrStatus": {
+      "box": {
+        "x": 93,
+        "y": 502,
+        "width": 109,
+        "height": 32
+      },
+      "height": 32,
+      "width": 109,
+      "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover-glow active-flicker hover:bg-secondary/90 h-8 rounded px-3 text-xs",
+      "text": "Mark watched"
+    },
+    "addToWatchlist": {
+      "box": {
+        "x": 29,
+        "y": 898,
+        "width": 122,
+        "height": 32
+      },
+      "height": 32,
+      "width": 122,
+      "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 btn-chamfer bg-primary text-primary-foreground hover-glow active-flicker hover:bg-primary/90 h-8 rounded px-3 text-xs"
+    }
+  },
+  "homeSearchFocus": {
+    "focusedBox": {
+      "x": 16,
+      "y": 301,
+      "width": 358,
+      "height": 40
+    },
+    "note": "Home only scrollIntoView on ?focus=search one-shot; no onFocus while typing"
+  },
+  "historyRemove": {
+    "present": true,
+    "box": {
+      "x": 309,
+      "y": 402,
+      "width": 40,
+      "height": 40
+    },
+    "height": 40,
+    "width": 40,
+    "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0 rounded hover:bg-accent hover-glow h-10 w-10 shrink-0 text-muted-foreground hover:text-destructive"
+  },
+  "questionnaire": {
+    "contentPaddingBottom": "16px",
+    "contentClass": "mx-auto flex max-w-xl flex-col space-y-4 pb-4",
+    "sticky": {
+      "top": 687,
+      "bottom": 756,
+      "height": 69
+    },
+    "tabBar": {
+      "top": 787,
+      "bottom": 844,
+      "height": 57
+    },
+    "lastChip": {
+      "text": "Urban Fantasy",
+      "top": 610,
+      "bottom": 654,
+      "height": 44
+    },
+    "overlapWithSticky": false,
+    "overlapPx": 0,
+    "trappedUnderSticky": false,
+    "maxScrollClearance": {
+      "scrollY": 456,
+      "scrollHeight": 1300,
+      "clientHeight": 844,
+      "lastBottom": 654,
+      "stickyTop": 687,
+      "clearancePx": 33,
+      "lastFullyAboveSticky": true,
+      "contentPb": "16px"
+    },
+    "forcedOverlapProbe": {
+      "contentPaddingBottom": "16px",
+      "contentClass": "mx-auto flex max-w-xl flex-col space-y-4 pb-4",
+      "sticky": {
+        "top": 703,
+        "bottom": 772,
+        "height": 69
+      },
+      "tabBar": {
+        "top": 787,
+        "height": 57
+      },
+      "lastChip": {
+        "top": 639,
+        "bottom": 683,
+        "height": 44
+      },
+      "overlappingChips": [],
+      "overlap": false,
+      "elementAtStickyEdge": "BUTTON Urban Fantasy",
+      "stickyHeight": 69,
+      "mainPb": "72px"
+    },
+    "midScrollOverlap": {
+      "scrollY": 200,
+      "stickyTop": 703,
+      "stickyBottom": 772,
+      "overlapping": [
+        {
+          "text": "Melodrama",
+          "top": 710,
+          "bottom": 754,
+          "overlapPx": 44
+        },
+        {
+          "text": "Documentary",
+          "top": 710,
+          "bottom": 754,
+          "overlapPx": 44
+        },
+        {
+          "text": "True Crime",
+          "top": 762,
+          "bottom": 806,
+          "overlapPx": 10
+        },
+        {
+          "text": "Animation",
+          "top": 762,
+          "bottom": 806,
+          "overlapPx": 10
+        },
+        {
+          "text": "Anime",
+          "top": 762,
+          "bottom": 806,
+          "overlapPx": 10
+        }
+      ],
+      "elementAtStickyCenter": "Next"
+    },
+    "layoutGap": {
+      "cardOffsetTop": 160,
+      "cardOffsetHeight": 910,
+      "stickyOffsetTop": 846,
+      "gapInFlow": -224,
+      "parentPb": "16px",
+      "stickyHeight": 69,
+      "ceremonyPattern": "pb-24 (96px) on content wrapper above sticky"
+    }
+  },
+  "notesStep": {
+    "heading": "Notes",
+    "hasTextarea": true,
+    "focus": {
+      "sticky": {
+        "x": 16,
+        "y": 437,
+        "width": 358,
+        "height": 69,
+        "top": 437,
+        "right": 374,
+        "bottom": 506,
+        "left": 16
+      },
+      "primary": {
+        "x": 127,
+        "y": 450,
+        "width": 247,
+        "height": 44,
+        "top": 450,
+        "right": 374,
+        "bottom": 494,
+        "left": 127
+      },
+      "textarea": {
+        "x": 33,
+        "y": 234,
+        "width": 324,
+        "height": 146,
+        "top": 234,
+        "right": 357,
+        "bottom": 380,
+        "left": 33
+      },
+      "scrollY": 0,
+      "hasOnFocusScrollHandler": false
+    }
+  },
+  "codeConfirmation": {
+    "recommendPb": "pb-4 only on content wrapper",
+    "ceremonyPb": "pb-24 on ceremony content (mirror target)",
+    "pickerSizeSm": "Button size=sm (h-8 ≈ 32px)",
+    "historyLink": "underlined text Link, not Button",
+    "historyRemove": "size=icon (h-10 w-10 = 40px)",
+    "homeSearchScroll": "one-shot ?focus=search only; no onFocus while typing",
+    "notesTextarea": "no onFocus scrollIntoView"
+  }
+}

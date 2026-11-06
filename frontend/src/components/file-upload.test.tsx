@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FileUpload } from "@/components/file-upload";
 
 const toastMock = vi.fn();
@@ -9,6 +9,11 @@ vi.mock("@/hooks/use-toast", () => ({
 }));
 
 describe("FileUpload", () => {
+  afterEach(() => {
+    cleanup();
+    toastMock.mockReset();
+  });
+
   it("shows a destructive toast when a non-CSV file is selected", () => {
     const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
@@ -38,5 +43,13 @@ describe("FileUpload", () => {
     rerender(<FileUpload onFileSelect={vi.fn()} selectedFile={null} />);
 
     expect(screen.queryByText(/selected:/i)).not.toBeInTheDocument();
+  });
+
+  it("compact variant emphasizes Choose file with min-h-11 and phone-first copy", () => {
+    render(<FileUpload onFileSelect={vi.fn()} variant="compact" />);
+
+    expect(screen.getByText(/tap to choose a csv/i)).toBeInTheDocument();
+    const choose = screen.getByRole("button", { name: /choose file/i });
+    expect(choose.className).toMatch(/min-h-11/);
   });
 });

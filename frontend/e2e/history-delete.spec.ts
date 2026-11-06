@@ -10,6 +10,21 @@ test.describe("History delete (mocked API)", () => {
     await mockHistoryDeleteFlow(page);
   });
 
+  test("remove hit area is ≥44×44", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/history");
+
+    const remove = page
+      .locator(".hover-glow")
+      .filter({ hasText: "Delete Me Film" })
+      .getByRole("button", { name: /remove from history/i });
+    await expect(remove).toBeVisible();
+    const box = await remove.boundingBox();
+    expect(box).toBeTruthy();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+  });
+
   test("confirm remove deletes card from history list", async ({ page }) => {
     await page.goto("/history");
 
