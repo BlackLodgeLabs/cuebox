@@ -159,6 +159,7 @@ class RecommendationHistoryItem(BaseModel):
     winner_year: int | None = None
     winner_poster_url: str | None = None
     winner_watch_status: str | None = None
+    history_status_tag: str | None = None
     preference_summary: str
     created_at: datetime
 

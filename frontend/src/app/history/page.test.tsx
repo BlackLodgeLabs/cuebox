@@ -45,6 +45,7 @@ function mockHistoryLoaded() {
           winner_year: 2000,
           winner_poster_url: null,
           winner_watch_status: "active",
+          history_status_tag: "active",
           preference_summary: "A pick.",
           created_at: "2024-01-01T00:00:00Z",
         },
@@ -65,6 +66,44 @@ function renderHistory() {
     </Wrapper>,
   );
 }
+
+describe("HistoryPage status badge", () => {
+  afterEach(() => {
+    cleanup();
+    useRecommendationHistoryMock.mockReset();
+    useDeleteRecommendationMock.mockReset();
+  });
+
+  it("shows Runner-up watched when a runner-up was watched after the recommendation", () => {
+    mockHistoryLoaded();
+    useRecommendationHistoryMock.mockReturnValue({
+      data: {
+        data: [
+          {
+            session_id: "session-1",
+            winner_film_id: "film-1",
+            winner_title: "Test Film",
+            winner_year: 2000,
+            winner_poster_url: null,
+            winner_watch_status: "active",
+            history_status_tag: "runner_up_watched",
+            preference_summary: "A pick.",
+            created_at: "2024-01-01T00:00:00Z",
+          },
+        ],
+        pagination: { total: 1, limit: 20, offset: 0, has_more: false },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    renderHistory();
+
+    expect(screen.getByText("Runner-up watched")).toBeInTheDocument();
+    expect(screen.queryByText("active")).not.toBeInTheDocument();
+    expect(screen.queryByText("runner_up_watched")).not.toBeInTheDocument();
+  });
+});
 
 describe("HistoryPage touch targets", () => {
   afterEach(() => {

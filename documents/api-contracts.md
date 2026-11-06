@@ -1334,6 +1334,7 @@ GET /recommendations
       "winner_year": 1973,
       "winner_poster_url": "https://image.tmdb.org/...",
       "winner_watch_status": "active",
+      "history_status_tag": "active",
       "preference_summary": "Slow-burn atmospheric folk horror with immersive visuals and emotional unease.",
       "created_at": "2024-11-01T17:00:00Z"
     }
@@ -1356,7 +1357,8 @@ GET /recommendations
 |`winner_title`       |string           |Winner title at time of recommendation        |
 |`winner_year`        |integer, nullable|                                              |
 |`winner_poster_url`  |string, nullable |                                              |
-|`winner_watch_status`|string, nullable |Current `film_status` of the winner           |
+|`winner_watch_status`|string, nullable |Current `film_status` of the winner. Filters still use this, not the badge. |
+|`history_status_tag` |string, nullable |History-card badge. `watched` when the winner has a view on or after the session's UTC calendar day; otherwise `runner_up_watched` when any runner-up does; otherwise the winner's status, except a pre-recommendation `watched` status is reported as `active`. |
 |`preference_summary` |string           |Narrative profile excerpt for display         |
 |`created_at`         |string           |ISO 8601                                      |
 
