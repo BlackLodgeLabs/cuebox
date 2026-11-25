@@ -810,6 +810,120 @@ POST /watchlist/films
 
 -----
 
+### 4.9 Close to this
+
+Unwatched watchlist films nearest to a film's semantic embedding. Compares the film's active `film_embeddings` row (cosine distance) to other films that are `status=active` and have an active watchlist entry. The film itself is excluded. A film with no embedding for the active version returns an empty list.
+
+```
+GET /films/{film_id}/similar
+```
+
+#### Query Parameters
+
+|Parameter|Type|Default|Description|
+|---------|----|-------|-----------|
+|`limit`  |int |6      |1–20 neighbours|
+
+#### Response `200 OK`
+
+A JSON array of `FilmSummary` objects, each with `semantic_line` (the film's semantic summary, or `null`).
+
+```json
+[
+  {
+    "id": "f1a2b3c4-...",
+    "title": "Near Film",
+    "year": 1999,
+    "letterboxd_uri": "https://letterboxd.com/film/near-film/",
+    "status": "active",
+    "enrichment_status": "ready",
+    "tmdb_id": 603,
+    "poster_url": "https://image.tmdb.org/t/p/w500/poster.jpg",
+    "director": "Director",
+    "runtime": 120,
+    "genres": ["Drama"],
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-01-01T00:00:00Z",
+    "semantic_line": "A rain-soaked noir about loyalty."
+  }
+]
+```
+
+#### Errors
+
+|Code              |HTTP|Trigger              |
+|------------------|----|---------------------|
+|`NOT_FOUND`       |404 |`film_id` not found  |
+|`VALIDATION_ERROR`|400 |`limit` outside 1–20 |
+
+-----
+
+### 4.10 Film Trailer
+
+Best YouTube video for a film from TMDB `/movie/{id}/videos`. Preference order: official Trailer, then Teaser (official before unofficial), then an unofficial Trailer. Newest `published_at` wins within a rank. No matching video, or no `tmdb_id`, returns `url: null`.
+
+```
+GET /films/{film_id}/trailer
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "url": "https://www.youtube.com/watch?v=official-trailer",
+  "name": "Official Trailer",
+  "site": "YouTube"
+}
+```
+
+#### Errors
+
+|Code            |HTTP|Trigger                                      |
+|----------------|----|---------------------------------------------|
+|`NOT_FOUND`     |404 |`film_id` not found                          |
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure                            |
+|`PROVIDER_ERROR`|503 |`TMDB_API_KEY` missing or TMDB not configured|
+
+-----
+
+### 4.11 TMDB Film Page
+
+Lighter page for a TMDB movie that may not be on the watchlist. Built from TMDB movie details, credits, and the trailer selection in §4.10. When the TMDB id is already stored on a Cuebox film, `film_id` and `status` are set so Search can open the full detail page.
+
+```
+GET /films/tmdb/{tmdb_id}
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "tmdb_id": 603,
+  "title": "The Matrix",
+  "year": 1999,
+  "overview": "A computer hacker learns about the true nature of reality.",
+  "backdrop_url": "https://image.tmdb.org/t/p/w780/backdrop.jpg",
+  "poster_url": "https://image.tmdb.org/t/p/w500/poster.jpg",
+  "genres": ["Action", "Science Fiction"],
+  "runtime": 136,
+  "director": "Lana Wachowski",
+  "tmdb_rating": 8.7,
+  "trailer_url": "https://www.youtube.com/watch?v=official-trailer",
+  "film_id": null,
+  "status": null
+}
+```
+
+#### Errors
+
+|Code            |HTTP|Trigger                                      |
+|----------------|----|---------------------------------------------|
+|`NOT_FOUND`     |404 |TMDB has no movie for `tmdb_id`              |
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure                            |
+|`PROVIDER_ERROR`|503 |`TMDB_API_KEY` missing or TMDB not configured|
+
+-----
+
 ## 5. Metadata Match Reviews
 
 ### 5.1 Accept a Match

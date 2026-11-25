@@ -13,6 +13,7 @@ from app.schemas.film_schemas import (
     FilmWatchSummary,
     ReviewRequiredItem,
     SemanticProfileBlock,
+    SimilarFilm,
 )
 from app.schemas.watch_review_schemas import FilmWatchBlock, WatchReviewRequiredItem
 
@@ -73,6 +74,15 @@ def film_to_summary(
         latest_watched_at=latest_watched_at,
         watch_review_incomplete=film.status == FilmStatus.PENDING_WATCH_REVIEW,
         pending_watch=watch_to_summary(pending_watch) if pending_watch is not None else None,
+    )
+
+
+def film_to_similar(film: Film) -> SimilarFilm:
+    profile = film.semantic_profile
+    summary = film_to_summary(film)
+    return SimilarFilm(
+        **summary.model_dump(),
+        semantic_line=profile.semantic_summary if profile is not None else None,
     )
 
 
