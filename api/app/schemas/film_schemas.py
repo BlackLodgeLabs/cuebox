@@ -44,6 +44,34 @@ class FilmListResponse(BaseModel):
     pagination: PaginationMeta
 
 
+class SimilarFilm(FilmSummary):
+    """Watchlist neighbour returned by close-to-this similarity."""
+
+    semantic_line: str | None = None
+
+
+class FilmTrailerResponse(BaseModel):
+    url: str | None
+    name: str | None = None
+    site: str | None = None
+
+
+class TmdbFilmResponse(BaseModel):
+    tmdb_id: int
+    title: str
+    year: int | None
+    overview: str | None
+    backdrop_url: str | None
+    poster_url: str | None
+    genres: list[str] = Field(default_factory=list)
+    runtime: int | None
+    director: str | None
+    tmdb_rating: float | None
+    trailer_url: str | None
+    film_id: UUID | None = None
+    status: str | None = None
+
+
 class FilmMetadataBlock(BaseModel):
     tmdb_id: int | None = None
     imdb_id: str | None = None

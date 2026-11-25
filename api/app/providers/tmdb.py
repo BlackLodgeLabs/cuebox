@@ -51,6 +51,43 @@ class TmdbWatchProvidersResult:
 
 
 @dataclass(frozen=True)
+class TmdbVideo:
+    key: str
+    name: str
+    site: str
+    video_type: str
+    official: bool
+    published_at: str | None
+
+
+def select_youtube_trailer(videos: list[TmdbVideo]) -> TmdbVideo | None:
+    """Best YouTube trailer: official Trailer, then official Teaser, then unofficial.
+
+    Within a rank, the newest ``published_at`` wins. Clips and non-YouTube
+    videos are ignored so a featurette is not presented as a trailer.
+    """
+    candidates = [
+        video
+        for video in videos
+        if video.site == "YouTube" and video.key and video.video_type in {"Trailer", "Teaser"}
+    ]
+    if not candidates:
+        return None
+    newest_first = sorted(candidates, key=lambda video: video.published_at or "", reverse=True)
+
+    def _rank(video: TmdbVideo) -> int:
+        if video.video_type == "Trailer" and video.official:
+            return 0
+        if video.video_type == "Teaser" and video.official:
+            return 1
+        if video.video_type == "Trailer":
+            return 2
+        return 3
+
+    return min(newest_first, key=_rank)
+
+
+@dataclass(frozen=True)
 class TmdbMovieDetails:
     tmdb_id: int
     imdb_id: str | None
@@ -152,6 +189,34 @@ class TmdbClient:
             director=credits,
         )
 
+    async def get_movie_videos(self, tmdb_id: int) -> list[TmdbVideo]:
+        response = await request_with_retry(
+            self._client,
+            "GET",
+            f"{TMDB_BASE_URL}/movie/{tmdb_id}/videos",
+            params={"api_key": self._api_key},
+        )
+        response.raise_for_status()
+        parsed: list[TmdbVideo] = []
+        for item in response.json().get("results", []):
+            if not isinstance(item, dict):
+                continue
+            key = item.get("key")
+            if not key:
+                continue
+            published_at = item.get("published_at")
+            parsed.append(
+                TmdbVideo(
+                    key=str(key),
+                    name=str(item.get("name") or ""),
+                    site=str(item.get("site") or ""),
+                    video_type=str(item.get("type") or ""),
+                    official=bool(item.get("official")),
+                    published_at=str(published_at) if published_at else None,
+                )
+            )
+        return parsed
+
     async def get_movie_keywords(self, tmdb_id: int) -> list[str]:
         response = await request_with_retry(
             self._client,
@@ -218,6 +283,10 @@ class TmdbClient:
             buy=_parse_entries("buy"),
             ads=_parse_entries("ads"),
         )
+
+    @staticmethod
+    def youtube_url(key: str) -> str:
+        return f"https://www.youtube.com/watch?v={key}"
 
     @staticmethod
     def poster_url(path: str | None) -> str | None:

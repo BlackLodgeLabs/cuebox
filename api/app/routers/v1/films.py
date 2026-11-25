@@ -8,18 +8,27 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
-from app.dependencies import get_db, get_metadata_service, get_provider_service, get_watch_provider_service
+from app.dependencies import (
+    get_db,
+    get_metadata_service,
+    get_provider_service,
+    get_tmdb_film_service,
+    get_watch_provider_service,
+)
 from app.repositories import film_repository, film_watch_repository, metadata_review_repository, watchlist_repository
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
     FilmListResponse,
     FilmStatusRequest,
+    FilmTrailerResponse,
     FilmWatchSummary,
     PaginationMeta,
     RematchRequest,
     RematchResponse,
     ReviewRequiredListResponse,
+    SimilarFilm,
+    TmdbFilmResponse,
     TmdbSearchResponse,
 )
 from app.schemas.watch_providers import FilmWatchProvidersResponse
@@ -41,6 +50,8 @@ from app.services.film_status_service import FilmStatusService
 from app.services.watch_review_service import WatchReviewService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
+from app.services.similar_films_service import list_similar_films
+from app.services.tmdb_film_service import TmdbFilmService
 from app.services.watch_provider_service import WatchProviderService
 
 router = APIRouter(prefix="/films", tags=["films"])
@@ -244,6 +255,15 @@ async def tmdb_search_global(
     return TmdbSearchResponse(data=results, pagination=pagination)
 
 
+@router.get("/tmdb/{tmdb_id}", response_model=TmdbFilmResponse)
+async def get_tmdb_film(
+    tmdb_id: int,
+    db: Session = Depends(get_db),
+    tmdb_film_service: TmdbFilmService = Depends(get_tmdb_film_service),
+) -> TmdbFilmResponse:
+    return await tmdb_film_service.get_tmdb_film(db, tmdb_id)
+
+
 @router.get("/{film_id}/tmdb-search", response_model=TmdbSearchResponse)
 async def tmdb_search(
     film_id: uuid.UUID,
@@ -273,6 +293,24 @@ async def rematch_film(
     db.commit()
     background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
     return RematchResponse(film_id=film.id, enrichment_status="enriching")
+
+
+@router.get("/{film_id}/trailer", response_model=FilmTrailerResponse)
+async def get_film_trailer(
+    film_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tmdb_film_service: TmdbFilmService = Depends(get_tmdb_film_service),
+) -> FilmTrailerResponse:
+    return await tmdb_film_service.get_trailer(db, film_id)
+
+
+@router.get("/{film_id}/similar", response_model=list[SimilarFilm])
+def get_similar_films(
+    film_id: uuid.UUID,
+    limit: int = Query(default=6, ge=1, le=20),
+    db: Session = Depends(get_db),
+) -> list[SimilarFilm]:
+    return list_similar_films(db, film_id, limit=limit)
 
 
 @router.get("/{film_id}/watch-providers", response_model=FilmWatchProvidersResponse)
