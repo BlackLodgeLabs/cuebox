@@ -13,6 +13,9 @@ AMBIGUOUS_TMDB_ID = 11622
 DUPLICATE_TMDB_ID = 77777
 EMPTY_GB_TMDB_ID = 99999
 WATCH_PROVIDER_FAIL_TMDB_ID = 88888
+TRAILER_FAIL_TMDB_ID = 88887
+NO_TRAILER_TMDB_ID = 88886
+TMDB_DETAILS_FAIL_TMDB_ID = 88885
 
 ADVERSARIAL_PROFILES = frozenset(
     {
@@ -385,6 +388,48 @@ def _voyage_embedding_response(profile: str) -> httpx.Response:
     )
 
 
+def _videos_json(tmdb_id: int) -> dict:
+    if tmdb_id == NO_TRAILER_TMDB_ID:
+        return {"id": tmdb_id, "results": []}
+    return {
+        "id": tmdb_id,
+        "results": [
+            {
+                "name": "Older Teaser",
+                "key": "official-teaser",
+                "site": "YouTube",
+                "type": "Teaser",
+                "official": True,
+                "published_at": "2023-01-01T00:00:00.000Z",
+            },
+            {
+                "name": "Official Trailer",
+                "key": "official-trailer",
+                "site": "YouTube",
+                "type": "Trailer",
+                "official": True,
+                "published_at": "2024-05-01T00:00:00.000Z",
+            },
+            {
+                "name": "Newer Fan Trailer",
+                "key": "newer-fan-trailer",
+                "site": "YouTube",
+                "type": "Trailer",
+                "official": False,
+                "published_at": "2025-01-01T00:00:00.000Z",
+            },
+            {
+                "name": "Vimeo Trailer",
+                "key": "vimeo-trailer",
+                "site": "Vimeo",
+                "type": "Trailer",
+                "official": True,
+                "published_at": "2025-06-01T00:00:00.000Z",
+            },
+        ],
+    }
+
+
 def mock_provider_handler(request: httpx.Request, profile: str = "default") -> httpx.Response:
     url = str(request.url)
 
@@ -405,6 +450,19 @@ def mock_provider_handler(request: httpx.Request, profile: str = "default") -> h
             page = int(request.url.params.get("page", "1"))
             return _paginated_search_response(page)
         return _default_search_response(query)
+
+    if f"/movie/{TMDB_DETAILS_FAIL_TMDB_ID}" in url:
+        return httpx.Response(500, json={"status_message": "Server error"})
+
+    if "/videos" in url:
+        parts = url.split("/movie/")
+        if len(parts) > 1:
+            tmdb_id_str = parts[1].split("/")[0]
+            if tmdb_id_str.isdigit():
+                tmdb_id = int(tmdb_id_str)
+                if tmdb_id == TRAILER_FAIL_TMDB_ID:
+                    return httpx.Response(500, json={"status_message": "Server error"})
+                return httpx.Response(200, json=_videos_json(tmdb_id))
 
     if "/watch/providers" in url:
         if profile == "partial_http_failure":
@@ -461,7 +519,12 @@ def mock_provider_handler(request: httpx.Request, profile: str = "default") -> h
         )
 
     for tmdb_id in (MATRIX_TMDB_ID, AMBIGUOUS_TMDB_ID, DUPLICATE_TMDB_ID):
-        if f"/movie/{tmdb_id}" in url and "/keywords" not in url and "/credits" not in url:
+        if (
+            f"/movie/{tmdb_id}" in url
+            and "/keywords" not in url
+            and "/credits" not in url
+            and "/videos" not in url
+        ):
             return httpx.Response(200, json=_movie_details_json(tmdb_id, profile))
 
     if "omdbapi.com" in url:

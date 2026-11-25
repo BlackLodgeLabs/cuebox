@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cuebox — History · Ticket stubs</title>
+  <link rel="stylesheet" href="history.css">
+  <style>
+    html, body {
+      background: #E6E7EB !important;
+      color: #12141A !important;
+      font-family: "Archivo", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px 48px;
+    }
+    .lede { width: 390px; margin: 0 0 20px; }
+    .lede h1 {
+      font-family: "Big Shoulders", sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 30px;
+      margin-bottom: 6px;
+      color: #12141A;
+    }
+    .lede p { font-size: 13px; line-height: 18px; color: #3A3D44; }
+    #phone {
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+    }
+    .controls { width: 390px; margin-top: 24px; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn-main {
+      flex: 1 1 0;
+      height: 44px;
+      border: 1px solid #C8CACF;
+      border-radius: 12px;
+      background: #fff;
+      color: #12141A;
+      font-family: "Archivo", sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-main:hover { border-color: #12141A; }
+    .btn-main:active { background: #F3F3F5; }
+    .btn-main.primary { background: #12141A; color: #F3EDE4; border-color: #12141A; }
+    .control { margin-bottom: 16px; }
+    .readout {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+    .readout .label { font-size: 13px; font-weight: 600; color: #12141A; }
+    .readout .lock {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #3A3D44;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    .readout .value {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      color: #12141A;
+    }
+    .readout .unit {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: #3A3D44;
+      margin-left: 6px;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-row button {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid #C8CACF;
+      border-radius: 12px;
+      background: #fff;
+      color: #12141A;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .slider-row button:hover { border-color: #12141A; }
+    input[type="range"] {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 44px;
+      margin: 0;
+      accent-color: #E07A28;
+      cursor: pointer;
+    }
+    .ends {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 54px 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: #3A3D44;
+    }
+    .controls .toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0 0;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      font-weight: 600;
+      color: #12141A;
+      cursor: pointer;
+      line-height: 1.3;
+    }
+    .controls .toggle input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      flex: 0 0 18px;
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      border: 1.5px solid #12141A;
+      border-radius: 4px;
+      background: #fff;
+      display: grid;
+      place-content: center;
+    }
+    .controls .toggle input[type="checkbox"]:checked {
+      background: #E07A28;
+      border-color: #E07A28;
+    }
+    .controls .toggle input[type="checkbox"]:checked::after {
+      content: "";
+      width: 9px;
+      height: 5px;
+      border: 2px solid #fff;
+      border-top: 0;
+      border-right: 0;
+      transform: rotate(-45deg) translate(0, -1px);
+    }
+    .controls .hint {
+      display: block;
+      margin-top: 16px;
+      width: 100%;
+      font-size: 12px;
+      line-height: 18px;
+      color: #3A3D44;
+    }
+    .controls .hint strong { color: #12141A; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="lede">
+    <h1>History · ticket stubs</h1>
+    <p>Each past night is a cinema ticket. Scroll to load more, or tap a ticket to open that night’s programme, dated in the title. To remove a night, swipe the ticket left to reveal Remove, or long-press it — both open a confirm box first. A tap only shrinks the ticket slightly; there is no amber on press. Press Replay to return to the top of the list.</p>
+  </div>
+
+  <div class="phone perf" id="phone">
+    <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+    <div class="chrome">
+      <header class="hdr">
+        <span class="wordmark" aria-label="Cuebox."><span class="cue">Cue</span><span class="box">box</span><span class="stop">.</span></span>
+      </header>
+    </div>
+
+    <div class="views" id="views">
+      <div id="history-view">
+        <div class="page-head">
+          <div>
+            <h1>History</h1>
+            <p class="count" id="count">24 nights</p>
+          </div>
+        </div>
+        <div class="tools">
+          <label class="hist-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16.2 16.2 20 20"/></svg>
+            <input type="search" id="search" placeholder="Search by title…" aria-label="Search by title" autocomplete="off">
+          </label>
+          <button type="button" class="filter-btn" id="filterBtn" aria-label="Filter history">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            Filter
+          </button>
+        </div>
+        <div id="scroller">
+          <div id="list"></div>
+          <div class="loader" id="loader"><i class="spinner" aria-hidden="true"></i><span>Loading more</span></div>
+          <div class="endcap" id="endcap">That’s all of your nights</div>
+        </div>
+      </div>
+
+      <div id="programme-view" aria-hidden="true"></div>
+    </div>
+
+    <nav class="tabbar" aria-label="Main">
+      <div class="tabs">
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 11 12 4.5 19.5 11v8.5a1 1 0 0 1-1 1h-4v-6h-5v6h-4a1 1 0 0 1-1-1V11Z"/></svg><span>Home</span></div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5h10v16l-5-3.2-5 3.2V4.5Z"/></svg><span>Watchlist</span></div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.6"/><path d="M8 5.5v13M16 5.5v13M3.5 9.5h4M16.5 9.5h4M3.5 14.5h4M16.5 14.5h4"/></svg><span>Recommend</span></div>
+        <div class="tab on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.35" fill="currentColor" stroke="none"/></svg><span>More</span></div>
+      </div>
+      <div class="home-ind"><i></i></div>
+    </nav>
+
+    <div class="dim" id="dim"></div>
+    <div class="vaul" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="handle"></div>
+      <h2 id="sheetTitle">Filter history</h2>
+      <p class="sheet-copy">Narrow by date and whether you’ve watched the pick.</p>
+      <div class="f-row"><span class="lbl">From</span><input type="date" id="dateFrom"></div>
+      <div class="f-row"><span class="lbl">To</span><input type="date" id="dateTo"></div>
+      <div class="f-row">
+        <span class="lbl">Watch status</span>
+        <select id="watchStatus" aria-label="Watch status">
+          <option value="all">All</option>
+          <option value="watched">Watched</option>
+          <option value="unwatched">Unwatched</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+      <div class="sheet-actions">
+        <button type="button" class="sheet-clear" id="sheetClear">Clear</button>
+        <button type="button" class="sheet-apply" id="sheetApply">Apply</button>
+      </div>
+      <div class="home-ind"><i></i></div>
+    </div>
+
+    <div class="alert-dim" id="alertDim"></div>
+    <div class="alertdialog" id="alert" role="alertdialog" aria-labelledby="alertTitle" aria-describedby="alertCopy">
+      <h2 id="alertTitle">Remove this night?</h2>
+      <p id="alertCopy">It will be deleted from History. This does not change the film on your watchlist.</p>
+      <div class="btns">
+        <button type="button" class="btn-cancel" id="alertCancel">Cancel</button>
+        <button type="button" class="btn-delete" id="alertRemove">Remove</button>
+      </div>
+    </div>
+    <div id="finger" hidden></div>
+  </div>
+
+  <div class="controls">
+    <div class="btn-row">
+      <button type="button" class="btn-main primary" id="replay">Replay</button>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Ticket press <span class="lock">locked</span></span><div><span class="value" id="pressAmtVal">4</span><span class="unit">%</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="pressAmt" data-dir="-1" aria-label="Smaller press">−</button>
+        <input type="range" id="pressAmt" min="0" max="8" step="1" value="4" aria-label="Ticket press scale in percent">
+        <button type="button" data-field="pressAmt" data-dir="1" aria-label="Bigger press">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>8%</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Press down / up <span class="lock">locked</span></span><div><span class="value" id="pressDownVal">120</span><span class="unit">/</span><span class="value" id="pressUpVal">200</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="pressDown" data-dir="-1" aria-label="Shorter press down">−</button>
+        <input type="range" id="pressDown" min="60" max="240" step="10" value="120" aria-label="Press down duration">
+        <button type="button" data-field="pressDown" data-dir="1" aria-label="Longer press down">+</button>
+      </div>
+      <div class="ends"><span>60</span><span>240ms down</span></div>
+      <div class="slider-row" style="margin-top:8px">
+        <button type="button" data-field="pressUp" data-dir="-1" aria-label="Shorter press up">−</button>
+        <input type="range" id="pressUp" min="80" max="400" step="10" value="200" aria-label="Press up duration">
+        <button type="button" data-field="pressUp" data-dir="1" aria-label="Longer press up">+</button>
+      </div>
+      <div class="ends"><span>80</span><span>400ms up</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Screen crossfade <span class="lock">locked</span></span><div><span class="value" id="fadeVal">400</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="fade" data-dir="-1" aria-label="Faster fade">−</button>
+        <input type="range" id="fade" min="150" max="800" step="10" value="400" aria-label="Screen crossfade duration">
+        <button type="button" data-field="fade" data-dir="1" aria-label="Slower fade">+</button>
+      </div>
+      <div class="ends"><span>150</span><span>800</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">New-batch fade <span class="lock">locked</span></span><div><span class="value" id="batchVal">300</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="batch" data-dir="-1" aria-label="Faster batch fade">−</button>
+        <input type="range" id="batch" min="80" max="600" step="10" value="300" aria-label="New batch fade duration">
+        <button type="button" data-field="batch" data-dir="1" aria-label="Slower batch fade">+</button>
+      </div>
+      <div class="ends"><span>80</span><span>600</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Per-ticket stagger <span class="lock">locked</span></span><div><span class="value" id="staggerVal">30</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="stagger" data-dir="-1" aria-label="Less stagger">−</button>
+        <input type="range" id="stagger" min="0" max="120" step="5" value="30" aria-label="Stagger between new tickets">
+        <button type="button" data-field="stagger" data-dir="1" aria-label="More stagger">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>120</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Load trigger <span class="lock">locked</span></span><div><span class="value" id="triggerVal">600</span><span class="unit">px</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="trigger" data-dir="-1" aria-label="Shorter trigger">−</button>
+        <input type="range" id="trigger" min="100" max="1200" step="50" value="600" aria-label="Distance from the bottom to start loading">
+        <button type="button" data-field="trigger" data-dir="1" aria-label="Longer trigger">+</button>
+      </div>
+      <div class="ends"><span>100</span><span>1200</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Fetch delay <span class="lock">not locked</span></span><div><span class="value" id="fetchVal">600</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="fetch" data-dir="-1" aria-label="Shorter wait">−</button>
+        <input type="range" id="fetch" min="0" max="2000" step="50" value="600" aria-label="Stand-in fetch delay">
+        <button type="button" data-field="fetch" data-dir="1" aria-label="Longer wait">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>2000</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Page size <span class="lock">locked</span></span><div><span class="value" id="pageVal">10</span><span class="unit">nights</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="page" data-dir="-1" aria-label="Fewer nights">−</button>
+        <input type="range" id="page" min="4" max="16" step="1" value="10" aria-label="Nights per page">
+        <button type="button" data-field="page" data-dir="1" aria-label="More nights">+</button>
+      </div>
+      <div class="ends"><span>4</span><span>16</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Stub width <span class="lock">locked</span></span><div><span class="value" id="stubVal">76</span><span class="unit">px</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="stub" data-dir="-1" aria-label="Narrower stub">−</button>
+        <input type="range" id="stub" min="56" max="110" step="2" value="76" aria-label="Ticket stub width">
+        <button type="button" data-field="stub" data-dir="1" aria-label="Wider stub">+</button>
+      </div>
+      <div class="ends"><span>56</span><span>110</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Speed</span><div><span class="value" id="speedVal">1.00</span><span class="unit">×</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="speed" data-dir="-1" aria-label="Slower">−</button>
+        <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1" aria-label="Speed multiplier">
+        <button type="button" data-field="speed" data-dir="1" aria-label="Faster">+</button>
+      </div>
+      <div class="ends"><span>0.25×</span><span>2×</span></div>
+    </div>
+
+    <label class="toggle"><input type="checkbox" id="months" checked> Month labels <span class="lock" style="font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#3A3D44;font-weight:500">locked</span></label>
+    <label class="toggle"><input type="checkbox" id="perf" checked> Perforation on the stub <span class="lock" style="font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#3A3D44;font-weight:500">locked</span></label>
+    <label class="toggle" style="margin-top:4px"><input type="checkbox" id="reduced"> Preview reduced motion</label>
+
+    <p class="hint">
+      Locked values come from the shared app-wide and Watchlist settings: a <strong>4%</strong> press over <strong>120 / 200ms</strong>, a <strong>400ms</strong> screen crossfade, and infinite scroll at a <strong>600px</strong> trigger with a <strong>300ms</strong> batch fade and <strong>30ms</strong> stagger, using the same ease-out. Also locked for History: a <strong>10-night</strong> page size, month labels on, perforation on, and a <strong>76px</strong> stub. The <strong>600ms</strong> fetch wait is only a stand-in for the network and is <strong>not locked</strong> — do not build a fake delay into the app. Teal stays flat. Changing a control does not replay on its own; press Replay to see the new values.
+    </p>
+  </div>
+
+  <script src="option-1.js"></script>
+</body>
+</html>

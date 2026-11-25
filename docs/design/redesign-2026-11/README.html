@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuebox developer handoff — review copy</title>
+<style>
+  :root {
+    --bg: #f4efe6;
+    --paper: #fffaf3;
+    --ink: #1a1814;
+    --muted: #6b6560;
+    --line: #d9d0c4;
+    --amber: #e07a28;
+    --teal: #2a9a94;
+    --dark: #0b0b0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 16px/1.55 "Georgia", "Times New Roman", serif;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 28px 80px;
+  }
+  header.hero {
+    background: var(--dark);
+    color: #f3ede4;
+    padding: 36px 32px 32px;
+    border-radius: 16px;
+    margin-bottom: 36px;
+  }
+  header.hero p.kicker {
+    font: 500 11px/1.3 "Archivo", "Helvetica Neue", sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a39e96;
+    margin: 0 0 12px;
+  }
+  header.hero h1 {
+    font: 700 42px/1.05 "Helvetica Neue", "Arial Narrow", sans-serif;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  header.hero h1 span.cue { color: var(--amber); }
+  header.hero h1 span.box { color: var(--teal); }
+  header.hero .lede {
+    margin: 16px 0 0;
+    font: 16px/1.5 "Georgia", serif;
+    color: #d8d0c6;
+    max-width: 38em;
+  }
+  .banner {
+    background: #f8e6d2;
+    border-left: 4px solid var(--amber);
+    padding: 12px 16px;
+    margin: 0 0 28px;
+    font: 15px/1.45 "Helvetica Neue", Arial, sans-serif;
+  }
+  h2 {
+    font: 700 22px/1.2 "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.02em;
+    margin: 40px 0 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+  }
+  h3 {
+    font: 700 16px/1.3 "Helvetica Neue", Arial, sans-serif;
+    margin: 24px 0 8px;
+  }
+  p, li { max-width: 42em; }
+  p { margin: 0 0 12px; }
+  a { color: #9a4e12; }
+  code { white-space: nowrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
+  ul, ol { margin: 0 0 16px; padding-left: 1.25em; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font: 13.5px/1.4 "Helvetica Neue", Arial, sans-serif;
+    margin: 0 0 20px;
+    background: var(--paper);
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  code, .mono {
+    font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+    font-size: 0.9em;
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 20px;
+  }
+  .swatch {
+    width: 92px;
+    font: 11px/1.3 "Helvetica Neue", Arial, sans-serif;
+  }
+  .swatch i {
+    display: block;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    margin-bottom: 4px;
+  }
+  .overview {
+    margin: 0 0 24px;
+  }
+  .overview img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #0b0b0b;
+  }
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px 10px;
+    margin: 0 0 28px;
+  }
+  .gallery figure { margin: 0; }
+  .gallery img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #0b0b0b;
+  }
+  .gallery figcaption {
+    font: 11px/1.3 "Helvetica Neue", Arial, sans-serif;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .note {
+    font: 14px/1.5 "Helvetica Neue", Arial, sans-serif;
+    color: var(--muted);
+    max-width: 44em;
+  }
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font: 13px/1.45 "Helvetica Neue", Arial, sans-serif;
+    color: var(--muted);
+  }
+  @page { size: A4; margin: 14mm; }
+  @media print {
+    body { background: white; }
+    .wrap { padding: 0; max-width: none; }
+    header.hero { border-radius: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .banner, .swatch i, table { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: inherit; text-decoration: none; }
+    h2 { break-after: avoid; }
+    .gallery figure, tr { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <p class="kicker">Developer handoff · review copy</p>
+      <h1><span class="cue">Cue</span><span class="box">box.</span> design pack</h1>
+      <p class="lede">A brief for implementing the locked Cuebox UI and motion in BlackLodgeLabs/cuebox. This copy is for Craig to review first. Nothing in this pack has been sent to Developer.</p>
+    </header>
+
+    <div class="banner">
+      Please work from this pack, not from Figma — the Figma file is behind. Trust the locked values in the tables below, and the slider defaults in the HTML testers. Reference videos in this pack were recorded at those locked values (the Recommendation shuffle is the constant 420px/s cruise, not the earlier 260px/s recording).
+    </div>
+
+    <h2>What’s in the pack</h2>
+    <ul>
+      <li><code>README.md</code> — the full brief for Developer (this page is a readable version of it).</li>
+      <li><code>tokens/</code> — <code>tokens.css</code> and <code>tokens.json</code> for colour, type, radii, spacing and motion.</li>
+      <li><code>screens/</code> — final phone PNGs and the overview sheet.</li>
+      <li><code>motion/</code> — reference MP4s and offline HTML testers, with art and fonts included. Slider defaults have been set to the locked values.</li>
+      <li><code>CHECKLIST.md</code> — acceptance criteria per screen.</li>
+      <li><code>draft-message-to-developer.txt</code> — a short unsent note you can use when you’re ready to share the pack.</li>
+    </ul>
+    <p>Suggested order of work: tokens and the app shell, then shared overlays (sheets, toasts, search, dialogs), then Home and Search, Watchlist (including infinite scroll), Film detail, Review, Recommendation, History, Settings, then Sync and Import (shared defaults only), and a reduced-motion pass.</p>
+
+    <h2>Foundations</h2>
+    <p>Locked 14 November 2026, direction T2 Balance. Only amber may glow. Teal stays flat — no glow, and no teal wash.</p>
+    <div class="swatches">
+      <div class="swatch"><i style="background:#0B0B0B"></i>bg #0B0B0B</div>
+      <div class="swatch"><i style="background:#171717"></i>surface #171717</div>
+      <div class="swatch"><i style="background:#F3EDE4;border-color:#d9d0c4"></i>text #F3EDE4</div>
+      <div class="swatch"><i style="background:#A39E96"></i>muted #A39E96</div>
+      <div class="swatch"><i style="background:#E07A28"></i>amber #E07A28</div>
+      <div class="swatch"><i style="background:#2A9A94"></i>teal #2A9A94</div>
+      <div class="swatch"><i style="background:#2A2A2A"></i>divider #2A2A2A</div>
+      <div class="swatch"><i style="background:#C75B4A"></i>danger #C75B4A</div>
+    </div>
+    <p>Type: <strong>Big Shoulders</strong> for titles and the wordmark, <strong>Archivo</strong> for UI, <strong>IBM Plex Mono</strong> for metadata. Do not use Inter. Radius 12px default, 8px tiles, 16px sheets. Spacing 4 / 8 / 16 / 24 / 32 / 48. Wordmark: Cue amber, box and the full stop teal. Review stars and watchlist rating badges are <strong>amber</strong>; teal is used for Saved, links and the active tab, not for stars.</p>
+    <p>Shared easing: <code>cubic-bezier(0.16, 1, 0.3, 1)</code>. Reduced motion: appear at once, or a 300ms fade, with no travel, scale or glow unless a screen’s lock says otherwise.</p>
+    <p>Recommended libraries to add and restyle (they are not installed on main yet): shadcn/Radix, Vaul for sheets, Sonner for toasts, cmdk for search, AlertDialog for confirms, NumberFlow for rolling figures, Framer Motion for movement.</p>
+
+    <h2>Locked screens</h2>
+    <p class="note">Phone crop, 390 × 844. The surprise, search-added, More sheet and My services images come from the earlier locked screen set, to show patterns that were not re-exported on the current-state contact sheet.</p>
+    <figure class="overview">
+      <img src="screens/overview.png" alt="Overview of the locked Cuebox screens">
+    </figure>
+    <div class="gallery">
+      <figure>
+        <a href="screens/home.png"><img src="screens/home.png" alt="Home"></a>
+        <figcaption>Home</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/home-search.png"><img src="screens/home-search.png" alt="Search"></a>
+        <figcaption>Search</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/home-search-added.png"><img src="screens/home-search-added.png" alt="Added toast"></a>
+        <figcaption>Added toast</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/home-surprise.png"><img src="screens/home-surprise.png" alt="Surprise me"></a>
+        <figcaption>Surprise me</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/reco-genres.png"><img src="screens/reco-genres.png" alt="Reco · genres"></a>
+        <figcaption>Reco · genres</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/reco-runtime.png"><img src="screens/reco-runtime.png" alt="Reco · runtime"></a>
+        <figcaption>Reco · runtime</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/reco-notes.png"><img src="screens/reco-notes.png" alt="Reco · notes"></a>
+        <figcaption>Reco · notes</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/reco-cueing.png"><img src="screens/reco-cueing.png" alt="Reco · shuffle"></a>
+        <figcaption>Reco · shuffle</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/reco-programme.png"><img src="screens/reco-programme.png" alt="Reco · programme"></a>
+        <figcaption>Reco · programme</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/detail-overview.png"><img src="screens/detail-overview.png" alt="Detail · Overview"></a>
+        <figcaption>Detail · Overview</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/detail-watch.png"><img src="screens/detail-watch.png" alt="Detail · Watch"></a>
+        <figcaption>Detail · Watch</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/detail-you.png"><img src="screens/detail-you.png" alt="Detail · You"></a>
+        <figcaption>Detail · You</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/detail-add.png"><img src="screens/detail-add.png" alt="Not on watchlist"></a>
+        <figcaption>Not on watchlist</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/detail-more-sheet.png"><img src="screens/detail-more-sheet.png" alt="More sheet"></a>
+        <figcaption>More sheet</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/review-ready.png"><img src="screens/review-ready.png" alt="Review · create"></a>
+        <figcaption>Review · create</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/review-saved.png"><img src="screens/review-saved.png" alt="Review · saved"></a>
+        <figcaption>Review · saved</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/review-edit.png"><img src="screens/review-edit.png" alt="Review · edit"></a>
+        <figcaption>Review · edit</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/review-delete.png"><img src="screens/review-delete.png" alt="Review · delete"></a>
+        <figcaption>Review · delete</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/watchlist-unwatched.png"><img src="screens/watchlist-unwatched.png" alt="Watchlist · Unwatched"></a>
+        <figcaption>Watchlist · Unwatched</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/watchlist-watched.png"><img src="screens/watchlist-watched.png" alt="Watchlist · Watched"></a>
+        <figcaption>Watchlist · Watched</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/watchlist-filter.png"><img src="screens/watchlist-filter.png" alt="Watchlist · Filter"></a>
+        <figcaption>Watchlist · Filter</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/watchlist-sort.png"><img src="screens/watchlist-sort.png" alt="Watchlist · Sort"></a>
+        <figcaption>Watchlist · Sort</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/settings-my-services.png"><img src="screens/settings-my-services.png" alt="My services"></a>
+        <figcaption>My services</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/history.png"><img src="screens/history.png" alt="History · ticket stubs"></a>
+        <figcaption>History · ticket stubs</figcaption>
+      </figure>
+      <figure>
+        <a href="screens/history-programme.png"><img src="screens/history-programme.png" alt="History · Sat 14 Nov"></a>
+        <figcaption>History · Sat 14 Nov</figcaption>
+      </figure>
+    </div>
+    <p>History is a ticket-stub list of past recommendation nights, under More. Tapping a ticket opens the locked programme layout titled with the date (for example “Sat 14 Nov”), not the old three-stage ceremony, and does not replay the shuffle. To remove a night, swipe the ticket left to reveal Remove, or long-press it — both go through the confirm box. A normal tap only shrinks the ticket slightly; there is no amber on press. Sync and Import, also under More, had no design pass: they use the shared foundations and app-wide motion defaults, and are a placeholder to revisit if the app is ever opened to other users.</p>
+
+
+    <h2>What the locked screens show</h2>
+    <p>Where an earlier line in a brief disagreed with these screens, the screens and the locked notes win. The full README.md has the same facts, written out in full.</p>
+    <ul>
+      <li><strong>Tab bar:</strong> four tabs — Home, Watchlist, Recommend, More. Recommend starts the questionnaire and shows the programme. History sits under More.</li>
+      <li><strong>Watchlist pills:</strong> Unwatched, Watched, Archived. There is no All pill. Pills have no counts; the total under the title is for the current view (for example “239 unwatched”).</li>
+      <li><strong>Stars</strong> are amber. The teal “Saved” label is not a star colour. Create-sheet star glow is on at 35%.</li>
+      <li><strong>Home:</strong> a Search films <em>field</em> in the header opens the cmdk card. Under today’s feature: Where to watch (amber), Get a pick for tonight (teal-outline, starts the 11-step questionnaire), and Surprise me (smaller teal text, a Vaul sheet).</li>
+      <li><strong>Questionnaire:</strong> 11 steps, one at a time. The pack shows 1 of 11 (genres), 2 of 11 (runtime) and 11 of 11 (notes), then the shuffle, then the programme.</li>
+      <li><strong>Create review:</strong> a star tap saves the watch at once. Date and note then appear, both optional, with no Save button (the note autosaves on blur). Edit review uses Save changes.</li>
+      <li><strong>Trailer</strong> (bottom bar) and <strong>Close to this on your watchlist</strong> (You tab, unwatched films only) are in scope.</li>
+      <li>The My services PNG still says “It never hides a film.” That copy is stale — see open questions below.</li>
+    </ul>
+    <h2>Motion spec — every locked value</h2>
+    <p>Interactive testers live in <code>motion/</code>. Slider defaults and the reference videos in this pack use the locked values, unless a Recording row below says otherwise.</p>
+
+    <h3>Home — option E iris, after the logo unfold</h3>
+    <table>
+      <tr><th>Step</th><th>Value</th></tr>
+      <tr><td>Logo unfold</td><td>0.85× (1730ms at 1× = 2035ms wall). Wordmark locks at 1610ms at 1× (1894ms wall).</td></tr>
+      <tr><td>Beat, then iris</td><td>80ms beat. Iris starts at 1974ms, lasts 760ms, ease-in-out / smoothstep. Soft edge 1.25px → 12px, not a glow.</td></tr>
+      <tr><td>Wordmark fade</td><td>Starts 80ms after the iris, lasts 600ms.</td></tr>
+      <tr><td>Page settle</td><td>Title, header and tab from 2674ms; the rest from 2734ms, 6px up, 70ms stagger, 300ms each.</td></tr>
+      <tr><td>Reduced motion</td><td>Skip the splash. Show the settled Home at once.</td></tr>
+      <tr><td>Recording</td><td>Matches the lock. <code>motion/01-home-iris/</code></td></tr>
+    </table>
+
+    <h3>Recommendation — 420px/s cruise</h3>
+    <table>
+      <tr><th>Step</th><th>Value</th></tr>
+      <tr><td>Cruise</td><td>Constant 420px/s, no breath. Loop until the API has returned and a short minimum cruise has played.</td></tr>
+      <tr><td>Slow-down</td><td>2.5s, ease 1−(1−u)^1.38. Distance about 761px.</td></tr>
+      <tr><td>Land</td><td>Amber highlight 80ms rise, 120ms hold, 400ms fade, opacity 0.95. Expand to the programme in 580ms, then settle 8px / 70ms / 300ms.</td></tr>
+      <tr><td>Reduced motion</td><td>300ms crossfade from notes to the settled programme. No travel, glow or expand.</td></tr>
+      <tr><td>Stills</td><td>TMDB backdrops, with no titles under the frames.</td></tr>
+      <tr><td>Recording</td><td>Matches the lock. The clip uses an 8s cruise as a compact example, landing on The Witch at 11.3s (clip 14s). In the app the cruise continues until the API returns and a short minimum has played. An exact minimum-cruise floor was not locked (a couple of seconds is enough). <code>motion/02-recommendation-shuffle/</code></td></tr>
+    </table>
+
+    <h3>Film detail — taste ticks, option 1</h3>
+    <table>
+      <tr><th>Setting</th><th>Locked value</th></tr>
+      <tr><td>Per-tick delay / fill</td><td>70ms / 330ms, ease-out</td></tr>
+      <tr><td>Glow / trigger / rows</td><td>Amber glow off. Starts at 40% in view. Rows +90ms. Teal fill stays flat.</td></tr>
+      <tr><td>Reduced motion</td><td>300ms fade of the finished ticks together. No stagger or travel.</td></tr>
+      <tr><td>Recording</td><td>Matches the lock. <code>motion/03-film-detail-ticks/</code></td></tr>
+    </table>
+
+    <h3>Review — star fill, option 1 (create sheet only)</h3>
+    <table>
+      <tr><th>Setting</th><th>Locked value</th></tr>
+      <tr><td>Delay / fill</td><td>70ms / 330ms, ease-out</td></tr>
+      <tr><td>Bounce</td><td>30% over 190ms on the last star</td></tr>
+      <tr><td>Saved</td><td>Appears after 40ms, fades in over 220ms</td></tr>
+      <tr><td>Glow</td><td>On, at 35% intensity</td></tr>
+      <tr><td>Edit</td><td>Does not save on tap — the user presses Save changes</td></tr>
+      <tr><td>Reduced motion</td><td>300ms crossfade, no bounce or glow</td></tr>
+      <tr><td>Recording</td><td>Matches the lock. <code>motion/04-review-star-fill/</code></td></tr>
+    </table>
+
+    <h3>Watchlist — option 2 crossfade and infinite scroll</h3>
+    <table>
+      <tr><th>Setting</th><th>Locked value</th></tr>
+      <tr><td>Filter switch</td><td>Fade out 400ms, fade in 600ms, overlap 200ms (about 0.8s in total), ease-out</td></tr>
+      <tr><td>Infinite scroll</td><td>Trigger 600px from the bottom, page size 18, batch fade 300ms with a 30ms stagger, flat teal “Loading more” spinner</td></tr>
+      <tr><td>Reduced motion</td><td>300ms overlapping crossfade; a new batch fades together over 300ms, no stagger</td></tr>
+      <tr><td>Recording</td><td>Matches the lock. The 600ms fetch wait in the tester is fake and must not be built into the app. <code>motion/05-watchlist-crossfade/</code></td></tr>
+    </table>
+
+    <h3>App-wide shared patterns</h3>
+    <table>
+      <tr><th>Pattern</th><th>Locked value</th></tr>
+      <tr><td>Bottom sheets</td><td>800ms up, 700ms down. Dim 55% over 450ms. Drag-to-dismiss 120px.</td></tr>
+      <tr><td>Toasts</td><td>700ms enter, 600ms exit. Travel 20px. Stay 2800ms.</td></tr>
+      <tr><td>Search card</td><td>700ms open, 600ms close, from 96% scale.</td></tr>
+      <tr><td>Confirm dialogs</td><td>400ms, from 92% scale, 62% dim.</td></tr>
+      <tr><td>Amber button press</td><td>4% scale-down, 120ms in / 200ms out.</td></tr>
+      <tr><td>Changing screens</td><td>400ms crossfade. NumberFlow 400ms. Synopsis “More” 300ms.</td></tr>
+      <tr><td>Reduced motion</td><td>300ms fade, no travel or scale. NumberFlow shows the settled figure.</td></tr>
+      <tr><td>Recording</td><td>Matches the lock. The clip shortens the toast’s stay to 1400ms so the pass fits; the lock remains 2800ms. <code>motion/06-app-wide/</code></td></tr>
+    </table>
+
+
+    <h3>History — ticket stubs, option 1</h3>
+    <table>
+      <tr><th>Setting</th><th>Locked value</th></tr>
+      <tr><td>List</td><td>Ticket stubs with the date, artwork, title, mood and a watched mark. Month labels on. Stub 76px, perforation on.</td></tr>
+      <tr><td>Infinite scroll</td><td>Trigger 600px from the bottom, page size 10, batch fade 300ms with a 30ms stagger, flat teal “Loading more” spinner. Replaces Previous / Next.</td></tr>
+      <tr><td>Open a past night</td><td>400ms crossfade to the locked programme, titled with the date (for example “Sat 14 Nov”). Not the old three-stage ceremony, and no shuffle replay.</td></tr>
+      <tr><td>Remove</td><td>Swipe the ticket left to reveal Remove, or long-press it. Both go through the confirm box (400ms, 92% scale, 62% dim). A tap is scale only — no amber on press. The Remove rail stays hidden until a swipe.</td></tr>
+      <tr><td>Reduced motion</td><td>No ticket press; 300ms fade to the programme; a new batch fades together over 300ms, no stagger.</td></tr>
+      <tr><td>Recording</td><td>Matches the lock, including the Remove-rail press fix. <code>motion/07-history/</code></td></tr>
+    </table>
+    <h2>Behaviour changes and API notes</h2>
+    <ul>
+      <li><strong>Infinite scroll</strong> replaces any next-page control. <code>GET /films</code> already paginates with <code>limit</code>, <code>offset</code> and <code>has_more</code>. Call it with <code>limit=18</code> (the API default is 20).</li>
+      <li>Pills have no counts. The total under the title is the current query’s <code>pagination.total</code>.</li>
+      <li>Pills are Unwatched (<code>active</code>), Watched, and Archived (<code>archived</code>). There is no All pill. Unwatched in the UI is API status <code>active</code>.</li>
+      <li>Needs to be agreed, because they were not on the list endpoint in the copy that was checked: filter “On my services”, filter by genre or runtime, and sort by runtime or rating. Date added, title and year already exist.</li>
+      <li>A manual watch must be allowed to have <strong>no date</strong>. Do not write the Letterboxd sentinel <code>1984-09-28</code> onto a new or edited manual watch.</li>
+      <li>Deleting a finalized watch may need a new endpoint (only a pending-draft delete was found). Deleting a film’s only watch must not change its status — it stays watched.</li>
+      <li>Create review: a star tap saves the watch; date and note then appear and have no Save button (note autosaves on blur). Edit review uses Save changes.</li>
+      <li><strong>History</strong> uses <code>GET /recommendations</code> with <code>limit=10</code> and infinite scroll. Opening <code>/history/{id}</code> must show the locked dated programme, not the old ceremony, and must not replay the shuffle. Remove is swipe-left or long-press, both through the confirm box, then <code>DELETE /recommendations/{session_id}</code>.</li>
+      <li>Sync and Import had no design pass — use shared foundations and app-wide motion defaults.</li>
+    </ul>
+
+    <h2>Open questions for Craig</h2>
+    <p>These were not locked. The recommendations are for Craig to confirm; do not treat them as decided.</p>
+    <ul>
+      <li><strong>My services wording.</strong> Keep both behaviours (sorts Where to watch; the Watchlist filter can hide films) and change the line to: “Used to sort Where to watch, so your subscriptions come first, and by the On my services filter on the Watchlist. You can change this whenever you like.” The PNG is stale until that copy is confirmed.</li>
+      <li><strong>Runtime filter buckets.</strong> Use Short ≤ 90 minutes, Medium 91–150, Long over 150, matching the chips already on the Filter sheet, unless Craig prefers different cuts.</li>
+      <li><strong>Sort by rating.</strong> On Watched, sort by the user’s own rating; on Unwatched and Archived, sort by TMDB.</li>
+      <li><strong>How Home rails are filled.</strong> Today’s feature is one watchlist film, once a day. For the named rails, pick from the watchlist using genre, mood and runtime, and allow them to refresh over time.</li>
+    </ul>
+    <h2>Other gaps</h2>
+    <ul>
+      <li>Sync and Import (under More) had no design pass. Use the shared foundations and app-wide motion defaults, and treat them as a placeholder to revisit if the app is ever opened to other users.</li>
+      <li>Archive / Remove on a film (the More sheet on Film detail) have no confirmation in the locked mocks. This is separate from History, where Remove does go through the confirm box.</li>
+      <li>No undo on toasts. The date picker can stay native.</li>
+      <li>An exact minimum-cruise time for Recommendation was not locked.</li>
+      <li>Some mock posters, scores and trailers are stand-ins. Use real data in the app.</li>
+      <li>Figma is not up to date and is not the source of truth.</li>
+    </ul>
+
+    <h2>How to try the mocks</h2>
+    <p>Unzip the pack and open each HTML file from inside its <code>motion/…</code> folder, in a desktop browser, so the images and fonts load. There is a short <code>README.txt</code> in each folder.</p>
+
+    <footer>
+      Cuebox developer handoff · updated 24 November 2026 (Europe/London) after a pass on README-vs-PNG disagreements.
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getReviewRequired, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, createFilmWatch, updateFilmWatch, deleteFilmWatch } from "@/lib/api-client";
+import { getFilm, getFilms, getFilmTrailer, getReviewRequired, getSimilarFilms, getTmdbFilm, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, createFilmWatch, updateFilmWatch, deleteFilmWatch } from "@/lib/api-client";
 import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, CreateWatchRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
@@ -241,5 +241,39 @@ export function useWatchlistCount() {
     queryKey: ["films", "watchlist-count"],
     queryFn: () => getFilms({ on_watchlist: true, limit: 1 }),
     select: (data) => data.pagination.total,
+  });
+}
+
+export function useSimilarFilms(
+  filmId: string,
+  options?: { limit?: number; enabled?: boolean },
+) {
+  const limit = options?.limit ?? 6;
+  return useQuery({
+    queryKey: ["films", filmId, "similar", limit],
+    queryFn: () => getSimilarFilms(filmId, { limit }),
+    enabled: Boolean(filmId) && (options?.enabled ?? true),
+  });
+}
+
+export function useFilmTrailer(
+  filmId: string,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["films", filmId, "trailer"],
+    queryFn: () => getFilmTrailer(filmId),
+    enabled: Boolean(filmId) && (options?.enabled ?? true),
+  });
+}
+
+export function useTmdbFilm(
+  tmdbId: number | null,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["films", "tmdb", tmdbId],
+    queryFn: () => getTmdbFilm(tmdbId as number),
+    enabled: tmdbId != null && (options?.enabled ?? true),
   });
 }

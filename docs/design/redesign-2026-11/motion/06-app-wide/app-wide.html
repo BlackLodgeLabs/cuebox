@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cuebox — App-wide motion</title>
+  <link rel="stylesheet" href="app-wide.css">
+</head>
+<body>
+  <div class="lede">
+    <h1>Shared motion</h1>
+    <p>These are the patterns used in more than one place: sheets that slide up, pop-up messages, search, confirm boxes, a press on a button, and changing screens. Tap a row in the phone, or press Replay under a heading. The values are recommended defaults, not a lock.</p>
+  </div>
+
+  <div class="phone" id="phone">
+    <div class="scene on" id="scene-menu">
+      <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+      <header class="hdr"><span class="wordmark" aria-label="Cuebox."><span class="cue">Cue</span><span class="box">box</span><span class="stop">.</span></span></header>
+      <div class="menu-body">
+        <p class="kicker">Last polish step</p>
+        <h1>Shared motion</h1>
+        <p class="intro">Each row plays the pattern in its real place in the app. You can also replay one from the controls below.</p>
+        <button class="menu-row" type="button" data-play="sheet"><span class="n">01</span><span class="txt"><strong>Bottom sheet</strong><span>Filter, sort, review, More, Surprise me</span></span><span class="chev">›</span></button>
+        <button class="menu-row" type="button" data-play="toast"><span class="n">02</span><span class="txt"><strong>Pop-up message</strong><span>Added to watchlist, and quiet confirms</span></span><span class="chev">›</span></button>
+        <button class="menu-row" type="button" data-play="search"><span class="n">03</span><span class="txt"><strong>Search</strong><span>The Find-a-film box on Home and Watchlist</span></span><span class="chev">›</span></button>
+        <button class="menu-row" type="button" data-play="dialog"><span class="n">04</span><span class="txt"><strong>Confirm box</strong><span>Delete this watch</span></span><span class="chev">›</span></button>
+        <button class="menu-row" type="button" data-play="press"><span class="n">05</span><span class="txt"><strong>Button press</strong><span>Amber actions, like Show N films</span></span><span class="chev">›</span></button>
+        <button class="menu-row" type="button" data-play="screen"><span class="n">06</span><span class="txt"><strong>Changing screens</strong><span>The tab bar, and opening a film</span></span><span class="chev">›</span></button>
+      </div>
+      <nav class="tabbar" aria-label="Main"><div class="tabs"><div class="tab" data-tab="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 11 12 4.5 19.5 11v8.5a1 1 0 0 1-1 1h-4v-6h-5v6h-4a1 1 0 0 1-1-1V11Z"/></svg><span>Home</span></div><div class="tab" data-tab="watchlist" data-goto-watchlist><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5h10v16l-5-3.2-5 3.2V4.5Z"/></svg><span>Watchlist</span></div><div class="tab" data-tab="recommend"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.6"/><path d="M8 5.5v13M16 5.5v13M3.5 9.5h4M16.5 9.5h4M3.5 14.5h4M16.5 14.5h4"/></svg><span>Recommend</span></div><div class="tab on" data-tab="more"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.35" fill="currentColor" stroke="none"/></svg><span>More</span></div></div><div class="home-ind"><i></i></div></nav>
+    </div>
+
+    <div class="scene" id="scene-home">
+      <section class="hero">
+        <img src="art/wicker-meadow.jpg" alt="">
+        <div class="scrim"></div>
+        <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+        <header class="hdr"><span class="wordmark" aria-label="Cuebox."><span class="cue">Cue</span><span class="box">box</span><span class="stop">.</span></span><div class="search-field" role="search" data-open-search><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16.2 16.2 20 20"/></svg><span class="ph">Search films</span></div></header>
+        <div class="hero-copy">
+          <p class="kicker">Today’s feature · from your watchlist</p>
+          <h1>The Wicker Man</h1>
+          <p class="meta">1973 · Folk horror · 88m · Prime Video</p>
+          <p class="hook">A devout policeman lands on a Hebridean island where May Day comes with a sacrifice.</p>
+          <button class="btn-watch" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 6.5v11l9-5.5-9-5.5Z" fill="currentColor" stroke="none"/></svg> Where to watch</button>
+        </div>
+      </section>
+      <section class="conduit">
+        <button class="btn-secondary" type="button">Get a pick for tonight</button>
+        <button class="btn-text" type="button" data-play="sheet-surprise">Surprise me</button>
+      </section>
+      <section class="rail">
+        <div class="rail-head"><div><h2>Folk dread</h2><i class="underline"></i></div><span class="see-all">See all</span></div>
+        <div class="rail-scroll">
+          <figure class="poster"><img src="art/witch-forest.jpg" alt=""><figcaption>The Witch</figcaption></figure>
+          <figure class="poster"><img src="art/wicker-meadow.jpg" alt=""><figcaption>The Wicker Man</figcaption></figure>
+          <figure class="poster"><img src="art/old-house.jpg" alt=""><figcaption>Lamb</figcaption></figure>
+          <figure class="poster"><img src="art/daisies.jpg" alt=""><figcaption>Midsommar</figcaption></figure>
+        </div>
+      </section>
+      <nav class="tabbar" aria-label="Main"><div class="tabs"><div class="tab on" data-tab="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 11 12 4.5 19.5 11v8.5a1 1 0 0 1-1 1h-4v-6h-5v6h-4a1 1 0 0 1-1-1V11Z"/></svg><span>Home</span></div><div class="tab" data-tab="watchlist" data-goto-watchlist><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5h10v16l-5-3.2-5 3.2V4.5Z"/></svg><span>Watchlist</span></div><div class="tab" data-tab="recommend"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.6"/><path d="M8 5.5v13M16 5.5v13M3.5 9.5h4M16.5 9.5h4M3.5 14.5h4M16.5 14.5h4"/></svg><span>Recommend</span></div><div class="tab" data-tab="more"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.35" fill="currentColor" stroke="none"/></svg><span>More</span></div></div><div class="home-ind"><i></i></div></nav>
+      <div class="dim" id="homeDim"></div>
+      <div class="search-sheet" id="searchSheet" role="dialog" aria-label="Search films">
+        <div class="sf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16.2 16.2 20 20"/></svg><span class="query">the</span><span class="caret"></span></div>
+        <p class="group-label">On your watchlist</p>
+        <ul>
+          <li><img src="art/wicker-meadow.jpg" alt=""><div class="info"><h3>The Wicker Man</h3><p class="meta">1973 · 88m</p></div><button class="icon-action" type="button" aria-label="Mark as watched"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/></svg></button></li>
+          <li><img src="art/witch-forest.jpg" alt=""><div class="info"><h3>The Witch</h3><p class="meta">2015 · 92m</p></div><button class="icon-action" type="button" aria-label="Mark as watched"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/></svg></button></li>
+          <li><img src="art/fog-woods.jpg" alt=""><div class="info"><h3>The Innocents</h3><p class="meta">1961 · 84m</p></div><button class="icon-action" type="button" aria-label="Mark as watched"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/></svg></button></li>
+        </ul>
+        <p class="group-label">Not on your watchlist</p>
+        <ul>
+          <li><img src="art/fog-moor.jpg" alt=""><div class="info"><h3>The Night of the Hunter</h3><p class="meta">1955 · 92m</p></div><button class="icon-action" type="button" data-add-toast aria-label="Add to watchlist"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12M6 12h12"/></svg></button></li>
+          <li><img src="art/neon-city.jpg" alt=""><div class="info"><h3>The Third Man</h3><p class="meta">1949 · 104m</p></div><button class="icon-action" type="button" data-add-toast aria-label="Add to watchlist"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12M6 12h12"/></svg></button></li>
+        </ul>
+        <button class="cancel" type="button" data-close-search>Cancel</button>
+      </div>
+      <div class="toast" id="toast" role="status">
+        <span class="t-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 9.5 17 19 7.5"/></svg></span>
+        <div><strong>Added to watchlist</strong><span>The Night of the Hunter</span></div>
+      </div>
+    </div>
+
+    <div class="scene" id="scene-watchlist">
+      <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+      <header class="hdr"><span class="wordmark" aria-label="Cuebox."><span class="cue">Cue</span><span class="box">box</span><span class="stop">.</span></span><div class="search-field" role="search" data-open-search><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16.2 16.2 20 20"/></svg><span class="ph">Search films</span></div></header>
+      <div class="page-head">
+        <div><h1>Watchlist</h1><p class="count">239 unwatched</p></div>
+        <div class="tools"><button class="sort-btn" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h8M8 17h4"/><path d="M4 7v10"/></svg>Date added</button><button class="filter-btn" type="button" data-open-sheet aria-label="Filters"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button></div>
+      </div>
+      <div class="status-chips" role="tablist">
+        <button class="chip on" type="button">Unwatched</button>
+        <button class="chip" type="button">Watched</button>
+        <button class="chip" type="button">Archived</button>
+      </div>
+      <div class="grid">
+        <article class="tile"><div class="art"><img src="art/witch-forest.jpg" alt=""></div><h3>The Witch</h3></article>
+        <article class="tile"><div class="art"><img src="art/candle-dark.jpg" alt=""></div><h3>The Lighthouse</h3></article>
+        <article class="tile"><div class="art"><img src="art/old-house.jpg" alt=""></div><h3>Lamb</h3></article>
+        <article class="tile"><div class="art"><img src="art/fog-woods.jpg" alt=""></div><h3>The Innocents</h3></article>
+        <article class="tile"><div class="art"><img src="art/fog-moor.jpg" alt=""></div><h3>Carnival of Souls</h3></article>
+        <article class="tile"><div class="art"><img src="art/rain-street.jpg" alt=""></div><h3>Eraserhead</h3></article>
+        <article class="tile"><div class="art"><img src="art/rain-neon.jpg" alt=""></div><h3>Under the Skin</h3></article>
+        <article class="tile"><div class="art"><img src="art/coastal-cliffs.jpg" alt=""></div><h3>Portrait of a Lady on Fire</h3></article>
+        <article class="tile"><div class="art"><img src="art/fire-warm.jpg" alt=""></div><h3>Burning</h3></article>
+      </div>
+      <nav class="tabbar" aria-label="Main"><div class="tabs"><div class="tab" data-tab="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 11 12 4.5 19.5 11v8.5a1 1 0 0 1-1 1h-4v-6h-5v6h-4a1 1 0 0 1-1-1V11Z"/></svg><span>Home</span></div><div class="tab on" data-tab="watchlist" data-goto-watchlist><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M7 4.5h10v16l-5-3.2-5 3.2V4.5Z"/></svg><span>Watchlist</span></div><div class="tab" data-tab="recommend"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.6"/><path d="M8 5.5v13M16 5.5v13M3.5 9.5h4M16.5 9.5h4M3.5 14.5h4M16.5 14.5h4"/></svg><span>Recommend</span></div><div class="tab" data-tab="more"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.35" fill="currentColor" stroke="none"/></svg><span>More</span></div></div><div class="home-ind"><i></i></div></nav>
+      <div class="dim" id="sheetDim"></div>
+      <div class="vaul" id="filterSheet" role="dialog" aria-label="Filter watchlist">
+        <div class="handle" id="sheetHandle"></div>
+        <h2>Filter</h2>
+        <div class="f-row"><p class="lbl">On my services</p><button class="sw on" type="button" aria-pressed="true" aria-label="On my services, on"><i></i></button></div>
+        <p class="f-kicker">Genre</p>
+        <div class="f-chips"><button class="chip on" type="button">Horror</button><button class="chip on" type="button">Folk horror</button><button class="chip" type="button">Drama</button><button class="chip" type="button">Thriller</button><button class="chip" type="button">Romance</button><button class="chip" type="button">Sci-fi</button></div>
+        <p class="f-kicker">Runtime</p>
+        <div class="f-chips"><button class="chip" type="button">Short</button><button class="chip" type="button">Medium</button><button class="chip" type="button">Long</button></div>
+        <button class="btn-clear" type="button">Clear all</button>
+        <button class="btn-primary" id="showFilmsBtn" type="button">Show 4 films</button>
+        <div class="home-ind"><i></i></div>
+      </div>
+    </div>
+
+    <div class="scene" id="scene-review">
+      <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+      <div class="review-still">
+        <img src="art/wicker-meadow.jpg" alt="The Wicker Man">
+        <div class="scrim"></div>
+        <div class="nav"><button class="iconbtn glass" type="button" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button></div>
+      </div>
+      <div class="dim on" id="reviewDim" style="opacity:0.55"></div>
+      <div class="vaul" id="reviewSheet" role="dialog" aria-label="Edit review of The Wicker Man" style="transform:none">
+        <div class="handle"></div>
+        <p class="kicker">Edit review</p>
+        <h2>The Wicker Man</h2>
+        <p class="film-meta">1973 · Folk horror</p>
+        <div class="stars" aria-label="4 and a half out of 5">
+          <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.4 9l5.8.6-4.4 3.8 1.3 5.6L12 16.2 6.9 19l1.3-5.6L3.8 9.6 9.6 9 12 3.5Z" fill="currentColor" stroke="none"/></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.4 9l5.8.6-4.4 3.8 1.3 5.6L12 16.2 6.9 19l1.3-5.6L3.8 9.6 9.6 9 12 3.5Z" fill="currentColor" stroke="none"/></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.4 9l5.8.6-4.4 3.8 1.3 5.6L12 16.2 6.9 19l1.3-5.6L3.8 9.6 9.6 9 12 3.5Z" fill="currentColor" stroke="none"/></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.4 9l5.8.6-4.4 3.8 1.3 5.6L12 16.2 6.9 19l1.3-5.6L3.8 9.6 9.6 9 12 3.5Z" fill="currentColor" stroke="none"/></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.4 9l5.8.6-4.4 3.8 1.3 5.6L12 16.2 6.9 19l1.3-5.6L3.8 9.6 9.6 9 12 3.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 3.5 14.4 9l5.8.6-4.4 3.8 1.3 5.6L12 16.2 6.9 19l1.3-5.6L3.8 9.6 9.6 9 12 3.5Z" fill="currentColor" stroke="none" style="clip-path:inset(0 50% 0 0)"/></svg>
+        </div>
+        <p class="score-read">4.5</p>
+        <button class="field" type="button">2 Nov 2026</button>
+        <div class="note-box">The sunny island makes the last act colder. I still think about the songs.</div>
+        <button class="btn-primary" type="button">Save changes</button>
+        <button class="btn-danger" type="button" data-open-dialog>Delete this watch</button>
+        <div class="home-ind"><i></i></div>
+      </div>
+      <div class="alert-dim" id="alertDim"></div>
+      <div class="alertdialog" id="alertDialog" role="alertdialog" aria-modal="true" aria-labelledby="del-title">
+        <h2 id="del-title">Delete this watch?</h2>
+        <p>This viewing and its rating will be removed from your history. The film will stay marked as watched.</p>
+        <div class="btns">
+          <button class="btn-cancel" type="button" data-close-dialog>Cancel</button>
+          <button class="btn-delete" type="button" data-close-dialog>Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="caption"></div>
+    <div id="finger" aria-hidden="true"></div>
+  </div>
+
+  <div class="controls">
+    <div class="group">
+      <h2>Shared settings</h2>
+      <p class="where">These apply to every pattern. Ease out is the same curve already locked on the other screens.</p>
+      <div class="control">
+        <div class="readout"><span class="label">Global easing</span>
+          <select id="ease" aria-label="Global easing">
+            <option value="cuebox" selected>Ease out (recommended)</option>
+            <option value="inOut">Ease in-out</option>
+            <option value="decel">Decelerate</option>
+            <option value="emphasized">Emphasized</option>
+            <option value="linear">Linear</option>
+          </select>
+        </div>
+      </div>
+          <div class="control">
+      <div class="readout"><span class="label">Speed</span><div><span class="value" id="speedVal">1</span><span class="unit">×</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="speed" data-dir="-1" aria-label="Decrease Speed">−</button>
+        <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1" aria-label="Speed">
+        <button type="button" data-field="speed" data-dir="1" aria-label="Increase Speed">+</button>
+      </div>
+      <div class="ends"><span>0.25×</span><span>2×</span></div>
+    </div>
+      <label class="toggle"><input type="checkbox" id="reduced"> Preview reduced motion</label>
+      <div class="btn-row"><button type="button" class="btn-main" id="toMenu">Back to the list</button></div>
+    </div>
+
+    <div class="group">
+      <h2>Bottom sheet</h2>
+      <p class="where">Used for the review sheet (a new watch or an edit), Watchlist Filter and Sort, the More actions on a film, Surprise me on Home, and Where to watch on Home. They all slide up the same way, over a dimmed page. You can also drag the Filter sheet down to dismiss it.</p>
+      <div class="btn-row"><button type="button" class="btn-main primary" data-play="sheet">Replay</button></div>
+          <div class="control">
+      <div class="readout"><span class="label">Slide up</span><div><span class="value" id="sheetDurVal">800</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="sheetDur" data-dir="-1" aria-label="Decrease Slide up">−</button>
+        <input type="range" id="sheetDur" min="200" max="800" step="10" value="800" aria-label="Slide up">
+        <button type="button" data-field="sheetDur" data-dir="1" aria-label="Increase Slide up">+</button>
+      </div>
+      <div class="ends"><span>200</span><span>800</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Slide down</span><div><span class="value" id="sheetCloseVal">700</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="sheetClose" data-dir="-1" aria-label="Decrease Slide down">−</button>
+        <input type="range" id="sheetClose" min="150" max="700" step="10" value="700" aria-label="Slide down">
+        <button type="button" data-field="sheetClose" data-dir="1" aria-label="Increase Slide down">+</button>
+      </div>
+      <div class="ends"><span>150</span><span>700</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Backdrop dim</span><div><span class="value" id="sheetDimVal">55</span><span class="unit">%</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="sheetDim" data-dir="-1" aria-label="Decrease Backdrop dim">−</button>
+        <input type="range" id="sheetDim" min="20" max="90" step="5" value="55" aria-label="Backdrop dim">
+        <button type="button" data-field="sheetDim" data-dir="1" aria-label="Increase Backdrop dim">+</button>
+      </div>
+      <div class="ends"><span>20</span><span>90</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Backdrop fade</span><div><span class="value" id="sheetDimFadeVal">450</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="sheetDimFade" data-dir="-1" aria-label="Decrease Backdrop fade">−</button>
+        <input type="range" id="sheetDimFade" min="100" max="800" step="10" value="450" aria-label="Backdrop fade">
+        <button type="button" data-field="sheetDimFade" data-dir="1" aria-label="Increase Backdrop fade">+</button>
+      </div>
+      <div class="ends"><span>100</span><span>800</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Drag-to-dismiss</span><div><span class="value" id="sheetDismissVal">120</span><span class="unit">px</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="sheetDismiss" data-dir="-1" aria-label="Decrease Drag-to-dismiss">−</button>
+        <input type="range" id="sheetDismiss" min="40" max="240" step="10" value="120" aria-label="Drag-to-dismiss">
+        <button type="button" data-field="sheetDismiss" data-dir="1" aria-label="Increase Drag-to-dismiss">+</button>
+      </div>
+      <div class="ends"><span>40</span><span>240</span></div>
+    </div>
+    </div>
+
+    <div class="group">
+      <h2>Pop-up message</h2>
+      <p class="where">A Sonner toast under the status bar. The locked example is “Added to watchlist” after you tap plus in Search, or Add to watchlist on a film that is not on your list yet. The same pattern can quietly confirm a saved review or saved services.</p>
+      <div class="btn-row"><button type="button" class="btn-main primary" data-play="toast">Replay</button></div>
+          <div class="control">
+      <div class="readout"><span class="label">Enter</span><div><span class="value" id="toastInVal">700</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="toastIn" data-dir="-1" aria-label="Decrease Enter">−</button>
+        <input type="range" id="toastIn" min="150" max="700" step="10" value="700" aria-label="Enter">
+        <button type="button" data-field="toastIn" data-dir="1" aria-label="Increase Enter">+</button>
+      </div>
+      <div class="ends"><span>150</span><span>700</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Exit</span><div><span class="value" id="toastOutVal">600</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="toastOut" data-dir="-1" aria-label="Decrease Exit">−</button>
+        <input type="range" id="toastOut" min="120" max="600" step="10" value="600" aria-label="Exit">
+        <button type="button" data-field="toastOut" data-dir="1" aria-label="Increase Exit">+</button>
+      </div>
+      <div class="ends"><span>120</span><span>600</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Travel</span><div><span class="value" id="toastTravelVal">20</span><span class="unit">px</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="toastTravel" data-dir="-1" aria-label="Decrease Travel">−</button>
+        <input type="range" id="toastTravel" min="0" max="48" step="2" value="20" aria-label="Travel">
+        <button type="button" data-field="toastTravel" data-dir="1" aria-label="Increase Travel">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>48</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Stays visible</span><div><span class="value" id="toastStayVal">2800</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="toastStay" data-dir="-1" aria-label="Decrease Stays visible">−</button>
+        <input type="range" id="toastStay" min="800" max="5000" step="100" value="2800" aria-label="Stays visible">
+        <button type="button" data-field="toastStay" data-dir="1" aria-label="Increase Stays visible">+</button>
+      </div>
+      <div class="ends"><span>800</span><span>5000</span></div>
+    </div>
+    </div>
+
+    <div class="group">
+      <h2>Search</h2>
+      <p class="where">The Find-a-film box on Home and Watchlist. It is a cmdk-style card under the header, not a bottom sheet, so it opens with a fade and a slight grow rather than a slide up from the bottom.</p>
+      <div class="btn-row"><button type="button" class="btn-main primary" data-play="search">Replay</button></div>
+          <div class="control">
+      <div class="readout"><span class="label">Open</span><div><span class="value" id="searchOpenVal">700</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="searchOpen" data-dir="-1" aria-label="Decrease Open">−</button>
+        <input type="range" id="searchOpen" min="150" max="700" step="10" value="700" aria-label="Open">
+        <button type="button" data-field="searchOpen" data-dir="1" aria-label="Increase Open">+</button>
+      </div>
+      <div class="ends"><span>150</span><span>700</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Close</span><div><span class="value" id="searchCloseVal">600</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="searchClose" data-dir="-1" aria-label="Decrease Close">−</button>
+        <input type="range" id="searchClose" min="120" max="600" step="10" value="600" aria-label="Close">
+        <button type="button" data-field="searchClose" data-dir="1" aria-label="Increase Close">+</button>
+      </div>
+      <div class="ends"><span>120</span><span>600</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Starts at</span><div><span class="value" id="searchScaleVal">96</span><span class="unit">%</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="searchScale" data-dir="-1" aria-label="Decrease Starts at">−</button>
+        <input type="range" id="searchScale" min="86" max="100" step="1" value="96" aria-label="Starts at">
+        <button type="button" data-field="searchScale" data-dir="1" aria-label="Increase Starts at">+</button>
+      </div>
+      <div class="ends"><span>86</span><span>100</span></div>
+    </div>
+    </div>
+
+    <div class="group">
+      <h2>Confirm box</h2>
+      <p class="where">A centred Radix AlertDialog. The locked use is “Delete this watch?” in edit review. The same box can confirm discarding unsaved edits if you swipe the review sheet away with changes.</p>
+      <div class="btn-row"><button type="button" class="btn-main primary" data-play="dialog">Replay</button></div>
+          <div class="control">
+      <div class="readout"><span class="label">Fade and scale</span><div><span class="value" id="dialogDurVal">400</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="dialogDur" data-dir="-1" aria-label="Decrease Fade and scale">−</button>
+        <input type="range" id="dialogDur" min="150" max="700" step="10" value="400" aria-label="Fade and scale">
+        <button type="button" data-field="dialogDur" data-dir="1" aria-label="Increase Fade and scale">+</button>
+      </div>
+      <div class="ends"><span>150</span><span>700</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Starts at</span><div><span class="value" id="dialogScaleVal">92</span><span class="unit">%</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="dialogScale" data-dir="-1" aria-label="Decrease Starts at">−</button>
+        <input type="range" id="dialogScale" min="80" max="100" step="1" value="92" aria-label="Starts at">
+        <button type="button" data-field="dialogScale" data-dir="1" aria-label="Increase Starts at">+</button>
+      </div>
+      <div class="ends"><span>80</span><span>100</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Backdrop dim</span><div><span class="value" id="dialogDimVal">62</span><span class="unit">%</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="dialogDim" data-dir="-1" aria-label="Decrease Backdrop dim">−</button>
+        <input type="range" id="dialogDim" min="20" max="90" step="5" value="62" aria-label="Backdrop dim">
+        <button type="button" data-field="dialogDim" data-dir="1" aria-label="Increase Backdrop dim">+</button>
+      </div>
+      <div class="ends"><span>20</span><span>90</span></div>
+    </div>
+    </div>
+
+    <div class="group">
+      <h2>Button press</h2>
+      <p class="where">A short scale-down on press, then back, for amber actions such as Show N films, Save changes, and Add to watchlist. Teal stays flat, and only amber may glow — the glow itself does not pulse.</p>
+      <div class="btn-row"><button type="button" class="btn-main primary" data-play="press">Replay</button></div>
+          <div class="control">
+      <div class="readout"><span class="label">Scale down</span><div><span class="value" id="pressAmtVal">4</span><span class="unit">%</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="pressAmt" data-dir="-1" aria-label="Decrease Scale down">−</button>
+        <input type="range" id="pressAmt" min="1" max="12" step="1" value="4" aria-label="Scale down">
+        <button type="button" data-field="pressAmt" data-dir="1" aria-label="Increase Scale down">+</button>
+      </div>
+      <div class="ends"><span>1</span><span>12</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Press in</span><div><span class="value" id="pressDownVal">120</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="pressDown" data-dir="-1" aria-label="Decrease Press in">−</button>
+        <input type="range" id="pressDown" min="40" max="240" step="10" value="120" aria-label="Press in">
+        <button type="button" data-field="pressDown" data-dir="1" aria-label="Increase Press in">+</button>
+      </div>
+      <div class="ends"><span>40</span><span>240</span></div>
+    </div>
+          <div class="control">
+      <div class="readout"><span class="label">Release</span><div><span class="value" id="pressUpVal">200</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="pressUp" data-dir="-1" aria-label="Decrease Release">−</button>
+        <input type="range" id="pressUp" min="60" max="360" step="10" value="200" aria-label="Release">
+        <button type="button" data-field="pressUp" data-dir="1" aria-label="Increase Release">+</button>
+      </div>
+      <div class="ends"><span>60</span><span>360</span></div>
+    </div>
+    </div>
+
+    <div class="group">
+      <h2>Changing screens</h2>
+      <p class="where">A calm crossfade when you switch the tab bar (Home, Watchlist, Recommend, More) or open a film from a poster or from search. The one-off moments already locked on each screen — the Home iris, the recommendation shuffle, the Watchlist filter fade — stay as they are.</p>
+      <div class="btn-row"><button type="button" class="btn-main primary" data-play="screen">Replay</button></div>
+          <div class="control">
+      <div class="readout"><span class="label">Crossfade</span><div><span class="value" id="screenDurVal">400</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="screenDur" data-dir="-1" aria-label="Decrease Crossfade">−</button>
+        <input type="range" id="screenDur" min="150" max="700" step="10" value="400" aria-label="Crossfade">
+        <button type="button" data-field="screenDur" data-dir="1" aria-label="Increase Crossfade">+</button>
+      </div>
+      <div class="ends"><span>150</span><span>700</span></div>
+    </div>
+    </div>
+
+    <p class="hint">Recommended defaults lean slow and deliberate, in the same range as the Watchlist crossfade (400ms out, 600ms in) and the Review star fill (330ms). Changing a control does not replay on its own. Reduced motion uses a 300ms fade with no travel or scale. These values are <strong>not locked</strong> until you say so.</p>
+  </div>
+  <script src="app-wide.js"></script>
+</body>
+</html>
