@@ -186,6 +186,31 @@ def test_post_watch_finalizes_pending_draft_without_a_second_row(
     assert stored.watched_at != SENTINEL
 
 
+def test_post_watch_does_not_expand_staged_dates_on_the_draft(
+    integration_client, db_session
+):
+    films = seed_ready_films(db_session, count=1)
+    film = films[0]
+    pending_response = integration_client.post(
+        f"/api/v1/films/{film.id}/status",
+        json={"status": "pending_watch_review"},
+    )
+    assert pending_response.status_code == 200
+    db_session.expire_all()
+    pending = film_watch_repository.get_pending_for_film(db_session, film.id)
+    assert pending is not None
+    pending.staged_watched_dates = ["2024-06-01", "2024-07-01"]
+    pending_id = str(pending.id)
+    db_session.commit()
+
+    response = _post_watch(integration_client, film.id, score=4.0)
+    assert response.status_code == 200
+    watches = response.json()["watches"]
+    assert len(watches) == 1
+    assert watches[0]["id"] == pending_id
+    assert watches[0]["is_pending"] is False
+
+
 def test_post_watch_on_watched_film_adds_another_watch(integration_client, db_session):
     films = seed_ready_films(db_session, count=1)
     film = films[0]

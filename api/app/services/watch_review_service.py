@@ -52,6 +52,7 @@ def _finalize_pending_draft(
     score: float,
     watched_at: date | None,
     notes: str | None,
+    expand_staged: bool = True,
 ) -> None:
     pending = film_watch_repository.get_pending_for_film(db, film.id)
     if pending is None:
@@ -68,6 +69,10 @@ def _finalize_pending_draft(
         watched_at=watched_at,
         notes=notes,
     )
+
+    if not expand_staged:
+        film_repository.mark_watched(db, film)
+        return
 
     for raw in staged_dates:
         try:
@@ -160,12 +165,14 @@ class WatchReviewService:
         validated_date = None if watched_at is None else _validate_watched_at(watched_at)
 
         if film.status == FilmStatus.PENDING_WATCH_REVIEW:
+            # Star tap finalizes the draft in place and does not add staged days.
             _finalize_pending_draft(
                 db,
                 film,
                 score=validated_score,
                 watched_at=validated_date,
                 notes=notes,
+                expand_staged=False,
             )
         elif film.status in (FilmStatus.ACTIVE, FilmStatus.WATCHED):
             if film.status == FilmStatus.ACTIVE:
