@@ -49,6 +49,7 @@ def film_to_summary(
     removed_at: datetime | None = None,
     latest_watched_at: date | None = None,
     pending_watch: FilmWatch | None = None,
+    latest_score: float | None = None,
 ) -> FilmSummary:
     metadata: FilmMetadata | None = film.metadata_
     summary_removed_at = None
@@ -67,6 +68,8 @@ def film_to_summary(
         director=metadata.director if metadata else None,
         runtime=metadata.runtime if metadata else None,
         genres=list(metadata.genres) if metadata else [],
+        backdrop_url=metadata.backdrop_url if metadata else None,
+        latest_score=latest_score,
         created_at=film.created_at,
         updated_at=film.updated_at,
         removed_at=summary_removed_at,

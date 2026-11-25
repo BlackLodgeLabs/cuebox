@@ -16,12 +16,14 @@ from app.schemas.film_schemas import (
     FilmListResponse,
     FilmStatusRequest,
     FilmWatchSummary,
+    GenreListResponse,
     PaginationMeta,
     RematchRequest,
     RematchResponse,
     ReviewRequiredListResponse,
     TmdbSearchResponse,
 )
+from app.schemas.recommendations import RuntimePreference
 from app.schemas.watch_providers import FilmWatchProvidersResponse
 from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.schemas.watch_review_schemas import (
@@ -41,11 +43,20 @@ from app.services.film_status_service import FilmStatusService
 from app.services.watch_review_service import WatchReviewService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
+from app.services.scoring_service import runtime_ceiling
 from app.services.watch_provider_service import WatchProviderService
 
 router = APIRouter(prefix="/films", tags=["films"])
 
-_VALID_SORT_FIELDS = {"title", "year", "created_at", "enrichment_status", "watched_at"}
+_VALID_SORT_FIELDS = {
+    "title",
+    "year",
+    "created_at",
+    "enrichment_status",
+    "watched_at",
+    "runtime",
+    "rating",
+}
 _VALID_SORT_DIRS = {"asc", "desc"}
 
 
@@ -84,6 +95,36 @@ def _parse_enrichment_status(value: str | None) -> EnrichmentStatus | None:
         raise validation_error(f"Invalid enrichment_status: {value}") from exc
 
 
+def _parse_genres(value: str | None) -> list[str] | None:
+    if value is None:
+        return None
+    tokens = [token.strip() for token in value.split(",")]
+    if not tokens or any(token == "" for token in tokens):
+        raise validation_error("genres must be a non-empty comma-separated list")
+    return tokens
+
+
+def _parse_runtime_limit(value: str | None) -> int | None:
+    """Minute ceiling from the questionnaire runtime values, or None for no limit.
+
+    ``any`` and an omitted parameter both mean no runtime filter. Unknown tokens
+    are rejected. Minutes come from ``runtime_ceiling`` so this list does not
+    keep a second copy of the cut-offs.
+    """
+    if value is None:
+        return None
+    token = value.strip()
+    allowed = ", ".join(item.value for item in RuntimePreference)
+    try:
+        preference = RuntimePreference(token)
+    except ValueError as exc:
+        raise validation_error(f"Invalid runtime: {value}. Must be one of: {allowed}") from exc
+    ceiling = runtime_ceiling(preference.value)
+    if ceiling is None and preference is not RuntimePreference.ANY:
+        raise validation_error(f"Invalid runtime: {value}. Must be one of: {allowed}")
+    return ceiling
+
+
 def _parse_sort(value: str | None) -> FilmSortField:
     if value is None:
         return "created_at"
@@ -109,6 +150,8 @@ def list_films(
     enrichment_status: str | None = None,
     on_watchlist: bool = False,
     search: str | None = None,
+    genres: str | None = None,
+    runtime: str | None = None,
     year: int | None = None,
     year_from: int | None = None,
     year_to: int | None = None,
@@ -131,6 +174,8 @@ def list_films(
         enrichment_status=_parse_enrichment_status(enrichment_status),
         on_watchlist=on_watchlist,
         search=search,
+        genres=_parse_genres(genres),
+        runtime_max=_parse_runtime_limit(runtime),
         year=year,
         year_from=year_from,
         year_to=year_to,
@@ -160,6 +205,9 @@ def list_films(
         removed_at_map = watchlist_repository.get_latest_removed_at_batch(db, film_ids)
         latest_watched_at_map = film_watch_repository.get_latest_watched_at_batch(db, film_ids)
         pending_watch_map = film_watch_repository.get_pending_watch_batch(db, film_ids)
+    latest_score_map = film_watch_repository.get_latest_rated_score_batch(
+        db, [film.id for film in films]
+    )
     return FilmListResponse(
         data=[
             film_to_summary(
@@ -167,6 +215,7 @@ def list_films(
                 removed_at=removed_at_map.get(film.id),
                 latest_watched_at=latest_watched_at_map.get(film.id),
                 pending_watch=pending_watch_map.get(film.id),
+                latest_score=latest_score_map.get(film.id),
             )
             for film in films
         ],
@@ -177,6 +226,11 @@ def list_films(
             has_more=offset + len(films) < total,
         ),
     )
+
+
+@router.get("/genres", response_model=GenreListResponse)
+def list_watchlist_genres(db: Session = Depends(get_db)) -> GenreListResponse:
+    return GenreListResponse(data=film_repository.list_watchlist_genres(db))
 
 
 @router.get("/reviews/pending-count", response_model=PendingReviewCountResponse)

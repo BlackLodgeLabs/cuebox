@@ -31,12 +31,18 @@ class FilmSummary(BaseModel):
     director: str | None = None
     runtime: int | None = None
     genres: list[str] = Field(default_factory=list)
+    backdrop_url: str | None = None
+    latest_score: float | None = None
     created_at: datetime
     updated_at: datetime
     removed_at: datetime | None = None
     latest_watched_at: date | None = None
     watch_review_incomplete: bool = False
     pending_watch: "FilmWatchSummary | None" = None
+
+
+class GenreListResponse(BaseModel):
+    data: list[str]
 
 
 class FilmListResponse(BaseModel):

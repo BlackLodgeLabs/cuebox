@@ -17,6 +17,8 @@ function filmWithExplanation(
     tmdb_rating: 7,
     rotten_tomatoes_score: 80,
     poster_url: null,
+    backdrop_url: null,
+    genres: [],
     explanation,
   };
 }

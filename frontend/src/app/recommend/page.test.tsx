@@ -40,6 +40,8 @@ const mockRecommendationResponse: RecommendationResponse = {
     tmdb_rating: 7,
     rotten_tomatoes_score: 90,
     poster_url: null,
+    backdrop_url: null,
+    genres: ["Horror"],
     explanation: {
       why_it_matches: "Matches",
       most_influential_factors: ["theme"],

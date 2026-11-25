@@ -230,6 +230,31 @@ def list_watched_dates_by_film(
     return grouped
 
 
+def get_latest_rated_score_batch(
+    db: Session,
+    film_ids: list[uuid.UUID],
+) -> dict[uuid.UUID, float]:
+    """Score of the latest finalized watch that has a rating, per film."""
+    if not film_ids:
+        return {}
+    stmt = (
+        select(FilmWatch.film_id, FilmWatch.score)
+        .where(
+            FilmWatch.film_id.in_(film_ids),
+            FilmWatch.is_pending.is_(False),
+            FilmWatch.score.is_not(None),
+        )
+        .distinct(FilmWatch.film_id)
+        .order_by(
+            FilmWatch.film_id,
+            FilmWatch.watched_at.desc(),
+            FilmWatch.created_at.desc(),
+            FilmWatch.id.desc(),
+        )
+    )
+    return {film_id: float(score) for film_id, score in db.execute(stmt).all()}
+
+
 def get_latest_watched_at_batch(
     db: Session,
     film_ids: list[uuid.UUID],

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getReviewRequired, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, updateFilmWatch } from "@/lib/api-client";
+import { getFilm, getFilmGenres, getFilms, getReviewRequired, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, updateFilmWatch } from "@/lib/api-client";
 import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
@@ -12,6 +12,14 @@ export function useFilms(
   return useQuery({
     queryKey: ["films", params],
     queryFn: () => getFilms(params),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useWatchlistGenres(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["films", "genres"],
+    queryFn: () => getFilmGenres(),
     enabled: options?.enabled ?? true,
   });
 }
