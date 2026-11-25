@@ -29,6 +29,7 @@ import type {
   FilmWatch,
   FilmWatchProvidersResponse,
   CompleteWatchReviewRequest,
+  CreateWatchRequest,
   PendingReviewCountResponse,
   UpdateWatchRequest,
   WatchReviewRequiredFilm,
@@ -220,6 +221,16 @@ export function cancelWatchReview(filmId: string): Promise<void> {
   });
 }
 
+export function createFilmWatch(
+  filmId: string,
+  body: CreateWatchRequest,
+): Promise<FilmDetail> {
+  return fetchApi<FilmDetail>(`/films/${filmId}/watches`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export function updateFilmWatch(
   filmId: string,
   watchId: string,
@@ -228,6 +239,12 @@ export function updateFilmWatch(
   return fetchApi<FilmWatch>(`/films/${filmId}/watches/${watchId}`, {
     method: "PATCH",
     body: JSON.stringify(body),
+  });
+}
+
+export function deleteFilmWatch(filmId: string, watchId: string): Promise<void> {
+  return fetchApi<void>(`/films/${filmId}/watches/${watchId}`, {
+    method: "DELETE",
   });
 }
 

@@ -83,7 +83,7 @@ export type FilmStatus = "active" | "pending_watch_review" | "watched" | "archiv
 export interface FilmWatch {
   id: string;
   score: number | null;
-  watched_at: string;
+  watched_at: string | null;
   notes: string | null;
   source: "manual" | "rss" | "letterboxd_import";
   is_pending: boolean;
@@ -452,10 +452,16 @@ export interface CompleteWatchReviewRequest {
   notes?: string;
 }
 
-export interface UpdateWatchRequest {
+export interface CreateWatchRequest {
   score: number;
-  watched_at: string;
-  notes?: string;
+  watched_at?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateWatchRequest {
+  score?: number;
+  watched_at?: string | null;
+  notes?: string | null;
 }
 
 export interface PendingReviewCountResponse {
