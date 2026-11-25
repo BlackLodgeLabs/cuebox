@@ -1,0 +1,154 @@
+/* Signed-off logo unfold, scoped to the Home splash so it cannot restyle the header wordmark. */
+.splash {
+  --bg: #0B0B0B;
+  --amber: #E07A28;
+  --teal: #2A9A94;
+  --glow: 0 0 0.169em rgba(224, 122, 40, 0.45);
+  --tracking: 0.02em;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  position: absolute;
+  inset: 0;
+  background: #0B0B0B;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.splash .logo {
+
+      --fs: clamp(84px, 16vw, 240px);
+      position: relative;
+      font-family: "Big Shoulders", sans-serif;
+      font-size: var(--fs);
+      font-weight: 700;
+      font-optical-sizing: auto;
+      font-style: normal;
+      letter-spacing: 0;
+      line-height: 1;
+      white-space: nowrap;
+      user-select: none;
+      will-change: transform;
+    }.splash .wordmark {
+
+      position: relative;
+      display: flex;
+      align-items: baseline;
+      line-height: 1;
+      
+    }.splash .slot-c {
+
+      color: transparent;
+      margin-right: var(--tracking);
+      font-variation-settings: "wght" 700, "opsz" 72;
+    }.splash .reel {
+
+      position: relative;
+      display: inline-block;
+      margin-right: var(--tracking);
+      font-variation-settings: "wght" 700, "opsz" 72;
+    }.splash .reel-sizer {
+
+      visibility: hidden;
+      font: inherit;
+      font-variation-settings: inherit;
+    }.splash .reel-window {
+
+      position: absolute;
+      left: 0;
+      
+      top: -0.06em;
+      width: 100%;
+      height: 1.12em;
+      overflow: hidden;
+    }.splash .reel-strip {
+
+      position: absolute;
+      left: 0;
+      top: 0.06em; 
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      will-change: transform;
+    }.splash .reel-letter {
+
+      display: block;
+      width: 100%;
+      height: 1em;
+      line-height: 1;
+      font: inherit;
+      font-variation-settings: inherit;
+    }.splash .reel.amber .reel-letter {
+ color: var(--amber); }.splash .reel.teal .reel-letter {
+ color: var(--teal); }.splash .reel-sq {
+
+      flex-shrink: 0;
+      width: calc(58 / 130 * 1em);
+      height: calc(58 / 130 * 1em);
+      margin-top: 0.14em;
+      background: var(--teal);
+      border-radius: 21%;
+    }.splash .reel-stop {
+
+      margin-right: 0;
+      margin-left: 0;
+      width: 0.46em;
+      height: 1em;
+      flex-shrink: 0;
+      will-change: width;
+    }.splash .reel-stop .reel-sizer {
+
+      display: inline-block;
+      width: 100%;
+    }.splash .stop-dot {
+
+      position: absolute;
+      left: 50%;
+      width: calc(58 / 130 * 1em);
+      height: calc(58 / 130 * 1em);
+      background: var(--teal);
+      border-radius: 21%;
+      
+      transform-origin: 50% 100%;
+      will-change: transform, width, height, top, left, margin;
+    }.splash .c-live {
+
+      position: absolute;
+      left: 0;
+      top: 0;
+      margin: 0;
+      padding: 0;
+      color: var(--amber);
+      font-family: inherit;
+      font-optical-sizing: auto;
+      font-style: normal;
+      letter-spacing: 0;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 3;
+      will-change: left, top, font-size, font-weight, filter;
+      filter: drop-shadow(var(--glow));
+    }.splash .square {
+
+      position: absolute;
+      background: var(--teal);
+      border-radius: 21%;
+      pointer-events: none;
+      z-index: 2;
+      will-change: left, top, width, height, opacity, border-radius;
+      transform-origin: 50% 50%;
+    }
+
+/* Phone-scale: 64px keeps the locked "Cuebox." comfortably inside 390px. */
+.splash .logo { --fs: 64px; }
+
+/* Beat Home's header .wordmark { font-size: 22px } so the splash letters stay at the logo size. */
+.splash .wordmark {
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: 0;
+  flex: none;
+  line-height: 1;
+  color: inherit;
+}

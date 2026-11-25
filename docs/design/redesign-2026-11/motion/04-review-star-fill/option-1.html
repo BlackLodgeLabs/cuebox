@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cuebox — Review · Stars fill up to your tap</title>
+  <link rel="stylesheet" href="review.css">
+  <style>
+    html, body {
+      background: #E6E7EB !important;
+      color: #12141A !important;
+      font-family: "Archivo", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px 48px;
+    }
+    .lede { width: 390px; margin: 0 0 20px; }
+    .lede h1 {
+      font-family: "Big Shoulders", sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 30px;
+      margin-bottom: 6px;
+      color: #12141A;
+    }
+    .lede p { font-size: 13px; line-height: 18px; color: #3A3D44; }
+
+    #phone {
+      width: 390px;
+      height: 844px;
+      min-height: 844px;
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+    }
+    #phone .stage { min-height: 0; height: 100%; }
+
+    .stars.lg { gap: 8px; }
+    .star {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      margin: 0 -4px;
+      background: none;
+      border: 0;
+      color: var(--accent);
+      cursor: pointer;
+      flex: 0 0 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .star svg {
+      position: absolute;
+      left: 4px; top: 4px;
+      width: 36px;
+      height: 36px;
+      display: block;
+      overflow: visible;
+    }
+    .star .outline {
+      color: var(--accent);
+      opacity: 0.95;
+    }
+    .star .fill {
+      color: var(--accent);
+      clip-path: inset(0 100% 0 0);
+      filter: none;
+    }
+    .star.glow .fill {
+      filter: drop-shadow(0 0 var(--star-glow-blur, 4px) rgba(224, 122, 40, var(--star-glow-a, 0.35)));
+    }
+    .star .hit {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 50%;
+      z-index: 2;
+    }
+    .star .hit.left { left: 0; }
+    .star .hit.right { right: 0; }
+
+    #kicker, #prompt, #score, #saved, #extras {
+      will-change: opacity;
+    }
+    #kicker, #prompt { overflow: hidden; }
+    #score, #saved, #extras { opacity: 0; pointer-events: none; }
+    #extras { overflow: hidden; }
+    .vaul.is-saved #score,
+    .vaul.is-saved #saved,
+    .vaul.is-saved #extras { pointer-events: auto; }
+
+    #finger {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      margin: -14px 0 0 -14px;
+      border-radius: 50%;
+      border: 2px solid rgba(243, 237, 228, 0.95);
+      background: rgba(243, 237, 228, 0.32);
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0;
+      transform: scale(0.7);
+    }
+
+    html.render #finger { /* visible in the demo clip when opacity is set */ }
+
+    .controls { width: 390px; margin-top: 24px; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn-main {
+      flex: 1 1 0;
+      height: 44px;
+      border: 1px solid #C8CACF;
+      border-radius: 12px;
+      background: #fff;
+      color: #12141A;
+      font-family: "Archivo", sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-main:hover { border-color: #12141A; }
+    .btn-main:active { background: #F3F3F5; }
+    .btn-main.primary { background: #12141A; color: #F3EDE4; border-color: #12141A; }
+    .btn-main.primary:hover { background: #1C1E24; }
+    .control { margin-bottom: 16px; }
+    .readout {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+    .readout .label { font-size: 13px; font-weight: 600; color: #12141A; }
+    .readout .value {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      color: #12141A;
+    }
+    .readout .unit {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: #3A3D44;
+      margin-left: 6px;
+    }
+    .row { display: flex; align-items: center; gap: 10px; }
+    .row button {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid #C8CACF;
+      border-radius: 12px;
+      background: #fff;
+      color: #12141A;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .row button:hover { border-color: #12141A; }
+    .row button:active { background: #F3F3F5; }
+    input[type="range"] {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 44px;
+      margin: 0;
+      accent-color: #E07A28;
+      cursor: pointer;
+    }
+    select {
+      font-family: "Archivo", sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      height: 36px;
+      border: 1px solid #C8CACF;
+      border-radius: 10px;
+      background: #fff;
+      color: #12141A;
+      padding: 0 8px;
+      cursor: pointer;
+    }
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #12141A;
+      cursor: pointer;
+    }
+    .toggle input { accent-color: #E07A28; width: 16px; height: 16px; }
+    .ends {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 54px 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: #3A3D44;
+    }
+    .hint { margin-top: 8px; font-size: 12px; line-height: 18px; color: #3A3D44; }
+    .hint strong { color: #12141A; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="lede">
+    <h1>Stars fill up to your tap</h1>
+    <p>Tap any star in the phone — the left half of a star is a half rating, the right half is a whole one. Press Replay to watch a save at 4 stars from the start.</p>
+  </div>
+
+  <div class="phone c1" id="phone">
+    <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+    <div class="stage">
+      <div class="still">
+        <img src="art/wicker-meadow.jpg" alt="The Wicker Man">
+        <div class="scrim"></div>
+        <div class="nav">
+          <button class="iconbtn glass" type="button" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+        </div>
+      </div>
+      <div class="dim"></div>
+      <div class="vaul" id="vaul" role="dialog" aria-label="Review The Wicker Man">
+        <div class="handle"></div>
+        <p class="kicker" id="kicker">How was it?</p>
+        <h2>The Wicker Man</h2>
+        <p class="meta">1973 · Folk horror</p>
+
+        <div class="stars lg" id="stars" role="radiogroup" aria-label="Your rating, half stars allowed"></div>
+        <p class="prompt" id="prompt">Tap a star to save</p>
+        <p class="score-read" id="score" aria-live="polite"></p>
+        <p class="saved" id="saved"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7"/></svg><span>Saved</span></p>
+        <div class="extras" id="extras">
+          <button class="field empty" type="button" aria-label="Add a date">
+            <span class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>
+            <span>Add a date</span>
+          </button>
+          <div class="chips">
+            <button class="chip" type="button">Today</button>
+            <button class="chip" type="button">Pick a date</button>
+          </div>
+          <div class="note">Write a note</div>
+        </div>
+
+        <div class="homeind"><i></i></div>
+      </div>
+      <div id="finger" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="btn-row">
+      <button type="button" class="btn-main primary" id="replay">Replay</button>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Per-star delay</span>
+        <div><span class="value" id="staggerVal">70</span><span class="unit">ms</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="stagger" data-dir="-1" aria-label="Shorter delay">−</button>
+        <input type="range" id="stagger" min="0" max="200" step="5" value="70" aria-label="Per-star delay in milliseconds">
+        <button type="button" data-field="stagger" data-dir="1" aria-label="Longer delay">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>200</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Fill duration</span>
+        <div><span class="value" id="fillVal">330</span><span class="unit">ms</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="fill" data-dir="-1" aria-label="Shorter fill">−</button>
+        <input type="range" id="fill" min="80" max="600" step="10" value="330" aria-label="Each star’s fill duration in milliseconds">
+        <button type="button" data-field="fill" data-dir="1" aria-label="Longer fill">+</button>
+      </div>
+      <div class="ends"><span>80</span><span>600</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Easing</span>
+        <select id="ease" aria-label="Star fill easing">
+          <option value="cuebox" selected>Ease out (recommended)</option>
+          <option value="inOut">Ease in-out</option>
+          <option value="decel">Decelerate</option>
+          <option value="emphasized">Emphasized</option>
+          <option value="linear">Linear</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Bounce amount</span>
+        <div><span class="value" id="bounceVal">30</span><span class="unit">%</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="bounce" data-dir="-1" aria-label="Smaller bounce">−</button>
+        <input type="range" id="bounce" min="0" max="30" step="1" value="30" aria-label="Scale overshoot of the last star, in percent. Zero turns the bounce off.">
+        <button type="button" data-field="bounce" data-dir="1" aria-label="Bigger bounce">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>30</span></div>
+    </div>
+
+    <div class="control" id="bounceDurControl">
+      <div class="readout">
+        <span class="label">Bounce duration</span>
+        <div><span class="value" id="bounceDurVal">190</span><span class="unit">ms</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="bounceDur" data-dir="-1" aria-label="Shorter bounce">−</button>
+        <input type="range" id="bounceDur" min="80" max="600" step="10" value="190" aria-label="Bounce duration in milliseconds">
+        <button type="button" data-field="bounceDur" data-dir="1" aria-label="Longer bounce">+</button>
+      </div>
+      <div class="ends"><span>80</span><span>600</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Delay before Saved</span>
+        <div><span class="value" id="savedDelayVal">40</span><span class="unit">ms</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="savedDelay" data-dir="-1" aria-label="Shorter delay">−</button>
+        <input type="range" id="savedDelay" min="0" max="400" step="10" value="40" aria-label="Delay after the bounce before Saved appears, in milliseconds">
+        <button type="button" data-field="savedDelay" data-dir="1" aria-label="Longer delay">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>400</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Saved fade</span>
+        <div><span class="value" id="savedFadeVal">220</span><span class="unit">ms</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="savedFade" data-dir="-1" aria-label="Faster fade">−</button>
+        <input type="range" id="savedFade" min="80" max="600" step="10" value="220" aria-label="Saved confirmation fade duration in milliseconds">
+        <button type="button" data-field="savedFade" data-dir="1" aria-label="Slower fade">+</button>
+      </div>
+      <div class="ends"><span>80</span><span>600</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Amber glow</span>
+        <label class="toggle"><input type="checkbox" id="glow" checked> On</label>
+      </div>
+    </div>
+
+    <div class="control" id="intensityControl">
+      <div class="readout">
+        <span class="label">Glow intensity</span>
+        <div><span class="value" id="intensityVal">35</span><span class="unit">%</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="intensity" data-dir="-1" aria-label="Softer glow">−</button>
+        <input type="range" id="intensity" min="10" max="100" step="5" value="35" aria-label="Amber glow intensity">
+        <button type="button" data-field="intensity" data-dir="1" aria-label="Stronger glow">+</button>
+      </div>
+      <div class="ends"><span>10</span><span>100</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout">
+        <span class="label">Speed</span>
+        <div><span class="value" id="speedVal">1.00</span><span class="unit">×</span></div>
+      </div>
+      <div class="row">
+        <button type="button" data-field="speed" data-dir="-1" aria-label="Slower">−</button>
+        <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1" aria-label="Speed multiplier">
+        <button type="button" data-field="speed" data-dir="1" aria-label="Faster">+</button>
+      </div>
+      <div class="ends"><span>0.25×</span><span>2×</span></div>
+    </div>
+
+    <label class="toggle" style="margin-top:4px">
+      <input type="checkbox" id="reduced"> Preview reduced motion
+    </label>
+    <p class="hint">Locked values are already set: a <strong>70ms</strong> ripple, a <strong>330ms</strong> ease-out fill, a <strong>30%</strong> bounce on the last star over <strong>190ms</strong>, then a quiet teal Saved after <strong>40ms</strong>, fading in over <strong>220ms</strong>. Amber glow is on at <strong>35%</strong>. Changing a control does not replay on its own; press Replay or tap a star to see the new values.</p>
+  </div>
+
+  <script>
+  (function () {
+    const STAR_PATH = "M12 3.5 14.4 9l5.8.6-4.4 3.8 1.3 5.6L12 16.2 6.9 19l1.3-5.6L3.8 9.6 9.6 9 12 3.5Z";
+    const REST = 480;
+    const HOLD = 900;
+    const END_HOLD = 900;
+    const FINGER = 220;
+
+    const EASES = {
+      cuebox: { css: "cubic-bezier(0.16, 1, 0.3, 1)", fm: [0.16, 1, 0.3, 1], fn: bezier(0.16, 1, 0.3, 1) },
+      inOut: { css: "cubic-bezier(0.45, 0, 0.55, 1)", fm: [0.45, 0, 0.55, 1], fn: bezier(0.45, 0, 0.55, 1) },
+      decel: { css: "cubic-bezier(0.22, 1, 0.36, 1)", fm: [0.22, 1, 0.36, 1], fn: bezier(0.22, 1, 0.36, 1) },
+      emphasized: { css: "cubic-bezier(0.2, 0, 0, 1)", fm: [0.2, 0, 0, 1], fn: bezier(0.2, 0, 0, 1) },
+      linear: { css: "linear", fm: "linear", fn: function (t) { return t; } }
+    };
+
+    function bezier(x1, y1, x2, y2) {
+      const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+      const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+      function sampleX(t) { return ((ax * t + bx) * t + cx) * t; }
+      function sampleY(t) { return ((ay * t + by) * t + cy) * t; }
+      function sampleDX(t) { return (3 * ax * t + 2 * bx) * t + cx; }
+      return function (x) {
+        let t = x;
+        for (let i = 0; i < 8; i++) {
+          const z = sampleX(t) - x;
+          const d = sampleDX(t);
+          if (Math.abs(z) < 1e-6) break;
+          if (Math.abs(d) < 1e-6) break;
+          t = Math.min(1, Math.max(0, t - z / d));
+        }
+        return sampleY(t);
+      };
+    }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function lerp(a, b, u) { return a + (b - a) * u; }
+    function formatScore(v) {
+      if (!v) return "";
+      return (Math.round(v * 2) / 2) % 1 === 0 ? String(v) : v.toFixed(1);
+    }
+    function amountsFor(value) {
+      const out = [];
+      for (let i = 1; i <= 5; i++) {
+        if (value >= i) out.push(1);
+        else if (value >= i - 0.45) out.push(0.5);
+        else out.push(0);
+      }
+      return out;
+    }
+    function lastStarIndex(value) {
+      if (!value) return -1;
+      return Math.ceil(value) - 1;
+    }
+
+    const phone = document.getElementById("phone");
+    const vaul = document.getElementById("vaul");
+    const starsEl = document.getElementById("stars");
+    const kicker = document.getElementById("kicker");
+    const prompt = document.getElementById("prompt");
+    const scoreEl = document.getElementById("score");
+    const savedEl = document.getElementById("saved");
+    const extras = document.getElementById("extras");
+    const finger = document.getElementById("finger");
+    const easeSel = document.getElementById("ease");
+    const glowBox = document.getElementById("glow");
+    const reducedBox = document.getElementById("reduced");
+    const bounceDurControl = document.getElementById("bounceDurControl");
+    const intensityControl = document.getElementById("intensityControl");
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const fields = {
+      stagger: { el: document.getElementById("stagger"), val: document.getElementById("staggerVal"), step: 5, digits: 0 },
+      fill: { el: document.getElementById("fill"), val: document.getElementById("fillVal"), step: 10, digits: 0 },
+      bounce: { el: document.getElementById("bounce"), val: document.getElementById("bounceVal"), step: 1, digits: 0 },
+      bounceDur: { el: document.getElementById("bounceDur"), val: document.getElementById("bounceDurVal"), step: 10, digits: 0 },
+      savedDelay: { el: document.getElementById("savedDelay"), val: document.getElementById("savedDelayVal"), step: 10, digits: 0 },
+      savedFade: { el: document.getElementById("savedFade"), val: document.getElementById("savedFadeVal"), step: 10, digits: 0 },
+      intensity: { el: document.getElementById("intensity"), val: document.getElementById("intensityVal"), step: 5, digits: 0 },
+      speed: { el: document.getElementById("speed"), val: document.getElementById("speedVal"), step: 0.25, digits: 2 }
+    };
+
+    const settings = {
+      stagger: 70, fill: 330, ease: "cuebox",
+      bounce: 30, bounceDur: 190,
+      savedDelay: 40, savedFade: 220,
+      glow: true, intensity: 35, speed: 1
+    };
+
+    let playToken = 0;
+    let raf = 0;
+    let rating = 0;
+    let fills = [0, 0, 0, 0, 0];
+    let savedShown = false;
+    let starNodes = [];
+
+    function reducedOn() {
+      if (window.cueboxPolishForceMotion) return false;
+      return reducedBox.checked || motionQuery.matches;
+    }
+
+    function easeFn() { return EASES[settings.ease].fn; }
+
+    function bounceDur() { return settings.bounce > 0 ? settings.bounceDur : 0; }
+
+    function changeDuration(from, to) {
+      if (reducedOn()) return 0;
+      const a = amountsFor(from);
+      const b = amountsFor(to);
+      const changing = [];
+      for (let i = 0; i < 5; i++) if (a[i] !== b[i]) changing.push(i);
+      if (!changing.length) return bounceDur();
+      const steps = changing.length - 1;
+      return steps * settings.stagger + settings.fill + bounceDur();
+    }
+
+    function savedStart(from, to, firstSave) {
+      const dur = changeDuration(from, to);
+      if (!firstSave) return dur;
+      return dur + settings.savedDelay;
+    }
+
+    function buildStars() {
+      starsEl.innerHTML = "";
+      starNodes = [];
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "star";
+        btn.setAttribute("aria-label", i + " star" + (i > 1 ? "s" : ""));
+        btn.innerHTML =
+          '<span class="hit left" data-value="' + (i - 0.5) + '" aria-label="' + (i - 0.5) + ' stars"></span>' +
+          '<span class="hit right" data-value="' + i + '" aria-label="' + i + ' star' + (i > 1 ? "s" : "") + '"></span>' +
+          '<svg class="outline" width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="' + STAR_PATH + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' +
+          '<svg class="fill" width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="' + STAR_PATH + '" fill="currentColor" stroke="none"/></svg>';
+        starsEl.appendChild(btn);
+        starNodes.push({
+          btn,
+          fillSvg: btn.querySelector("svg.fill")
+        });
+        btn.querySelectorAll(".hit").forEach((hit) => {
+          hit.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            rateTo(Number(hit.dataset.value), { interactive: true });
+          });
+        });
+      }
+    }
+
+    function setFillVisual(i, amount, scale) {
+      const node = starNodes[i];
+      const pct = (1 - amount) * 100;
+      node.fillSvg.style.clipPath = "inset(0 " + pct + "% 0 0)";
+      node.btn.style.transform = "scale(" + (scale == null ? 1 : scale) + ")";
+      if (settings.glow && amount > 0.02) node.btn.classList.add("glow");
+      else node.btn.classList.remove("glow");
+    }
+
+    function applyFills(amounts, scales) {
+      fills = amounts.slice();
+      for (let i = 0; i < 5; i++) setFillVisual(i, amounts[i], scales ? scales[i] : 1);
+    }
+
+    function bounceScale(u) {
+      const amt = settings.bounce / 100;
+      if (amt <= 0) return 1;
+      if (u <= 0) return 1;
+      if (u >= 1) return 1;
+      if (u < 0.45) return lerp(1, 1 + amt, easeFn()(u / 0.45));
+      return lerp(1 + amt, 1, easeFn()((u - 0.45) / 0.55));
+    }
+
+    function setSavedVisual(p, value) {
+      const show = p > 0.001;
+      vaul.classList.toggle("is-saved", show || savedShown);
+      scoreEl.textContent = value ? formatScore(value) : "";
+      const kickerH = 20;
+      const promptH = 40;
+      kicker.style.opacity = String(1 - p);
+      kicker.style.marginBottom = lerp(0, -8, p) + "px";
+      kicker.style.maxHeight = lerp(kickerH, 0, p) + "px";
+      kicker.style.transform = "translateY(" + lerp(0, -4, p) + "px)";
+      prompt.style.opacity = String(1 - p);
+      prompt.style.maxHeight = lerp(promptH, 0, p) + "px";
+      prompt.style.margin = lerp(4, 0, p) + "px 0 " + lerp(16, 0, p) + "px";
+      scoreEl.style.opacity = String(p);
+      savedEl.style.opacity = String(p);
+      extras.style.opacity = String(p);
+      extras.style.maxHeight = (p * 220) + "px";
+      extras.style.transform = "translateY(" + lerp(10, 0, p) + "px)";
+      extras.style.pointerEvents = p > 0.8 ? "auto" : "none";
+    }
+
+    function resetReady() {
+      rating = 0;
+      savedShown = false;
+      applyFills([0, 0, 0, 0, 0]);
+      vaul.classList.remove("is-saved");
+      setSavedVisual(0, 0);
+      hideFinger();
+    }
+
+    function applyGlowVars() {
+      const a = settings.intensity / 100;
+      const blur = 2 + a * 6;
+      phone.style.setProperty("--star-glow-a", a.toFixed(3));
+      phone.style.setProperty("--star-glow-blur", blur.toFixed(1) + "px");
+      intensityControl.style.opacity = settings.glow ? "1" : "0.4";
+      intensityControl.style.pointerEvents = settings.glow ? "" : "none";
+      bounceDurControl.style.opacity = settings.bounce > 0 ? "1" : "0.4";
+      bounceDurControl.style.pointerEvents = settings.bounce > 0 ? "" : "none";
+      starNodes.forEach((n, i) => {
+        if (settings.glow && fills[i] > 0.02) n.btn.classList.add("glow");
+        else n.btn.classList.remove("glow");
+      });
+    }
+
+    function starCenter(index, half) {
+      const r = starNodes[index].btn.getBoundingClientRect();
+      const pr = phone.getBoundingClientRect();
+      const x = r.left - pr.left + (half ? r.width * 0.25 : r.width * 0.75);
+      const y = r.top - pr.top + r.height / 2;
+      return { x, y };
+    }
+
+    function placeFinger(x, y, u) {
+      finger.style.left = x + "px";
+      finger.style.top = y + "px";
+      const appear = u < 0.35 ? u / 0.35 : 1;
+      const fade = u > 0.55 ? 1 - (u - 0.55) / 0.45 : 1;
+      const op = Math.max(0, appear * fade);
+      finger.style.opacity = String(op);
+      finger.style.transform = "scale(" + lerp(0.7, 1, appear) + ")";
+    }
+    function hideFinger() {
+      finger.style.opacity = "0";
+    }
+
+    // Animate fills from `from` to `to` at local time `local` (ms from tap).
+    function fillsAt(local, from, to) {
+      const start = amountsFor(from);
+      const end = amountsFor(to);
+      const rising = to > from;
+      const changing = [];
+      for (let i = 0; i < 5; i++) if (start[i] !== end[i]) changing.push(i);
+      if (rising) changing.sort((a, b) => a - b);
+      else changing.sort((a, b) => b - a);
+
+      const amounts = start.slice();
+      const scales = [1, 1, 1, 1, 1];
+      const reduced = reducedOn();
+      const last = lastStarIndex(to);
+
+      if (reduced || local < 0) {
+        return { amounts: local < 0 ? start : end, scales, doneFill: local >= 0, doneAll: local >= 0 };
+      }
+
+      changing.forEach((i, k) => {
+        const startT = k * settings.stagger;
+        const u = clamp((local - startT) / settings.fill, 0, 1);
+        const p = easeFn()(u);
+        amounts[i] = lerp(start[i], end[i], p);
+      });
+
+      const fillEnd = changing.length ? (changing.length - 1) * settings.stagger + settings.fill : 0;
+      const bDur = bounceDur();
+      if (bDur && last >= 0 && local > fillEnd) {
+        scales[last] = bounceScale(clamp((local - fillEnd) / bDur, 0, 1));
+      }
+      return {
+        amounts,
+        scales,
+        doneFill: local >= fillEnd,
+        doneAll: local >= fillEnd + bDur
+      };
+    }
+
+    function rateTo(value, opts) {
+      opts = opts || {};
+      const from = rating;
+      const firstSave = !savedShown;
+      if (opts.interactive) {
+        playToken += 1;
+        const token = playToken;
+        const to = value;
+        if (reducedOn()) {
+          rating = to;
+          savedShown = true;
+          applyFills(amountsFor(to));
+          setSavedVisual(1, to);
+          vaul.classList.add("is-saved");
+          return;
+        }
+        const t0 = performance.now();
+        const speed = settings.speed || 1;
+        const total = savedStart(from, to, firstSave) + (firstSave ? settings.savedFade : 0);
+        function frame(now) {
+          if (token !== playToken) return;
+          const local = (now - t0) * speed;
+          const state = fillsAt(local, from, to);
+          applyFills(state.amounts, state.scales);
+          if (firstSave) {
+            const s0 = savedStart(from, to, true);
+            const sp = clamp((local - s0) / settings.savedFade, 0, 1);
+            setSavedVisual(easeFn()(sp), to);
+            if (sp > 0) savedShown = true;
+          } else {
+            scoreEl.textContent = formatScore(to);
+            scoreEl.style.opacity = "1";
+          }
+          rating = to;
+          if (local < total) raf = requestAnimationFrame(frame);
+          else {
+            applyFills(amountsFor(to));
+            if (firstSave) {
+              savedShown = true;
+              setSavedVisual(1, to);
+            } else {
+              scoreEl.textContent = formatScore(to);
+            }
+          }
+        }
+        raf = requestAnimationFrame(frame);
+      }
+    }
+
+    function apply(t) {
+      window.cueboxPolishForceMotion = true;
+      const from0 = 0, to4 = 4, to5 = 5;
+      const t1 = REST;
+      const firstSave = true;
+      const dur4 = changeDuration(0, 4);
+      const savedAt = t1 + savedStart(0, 4, true);
+      const savedDone = savedAt + settings.savedFade;
+      const t2 = savedDone + HOLD;
+      const dur5 = changeDuration(4, 5);
+
+      hideFinger();
+
+      if (t < t1) {
+        resetReady();
+        return;
+      }
+
+      // Finger on the 4th star around t1
+      if (t >= t1 - 40 && t < t1 + FINGER) {
+        const c = starCenter(3, false);
+        placeFinger(c.x, c.y, clamp((t - (t1 - 40)) / FINGER, 0, 1));
+      }
+
+      if (t < t2) {
+        const local = t - t1;
+        const state = fillsAt(local, 0, 4);
+        applyFills(state.amounts, state.scales);
+        const sp = clamp((t - savedAt) / settings.savedFade, 0, 1);
+        setSavedVisual(easeFn()(Math.max(0, sp)), 4);
+        rating = 4;
+        savedShown = sp > 0;
+        if (t >= savedDone) {
+          applyFills(amountsFor(4));
+          setSavedVisual(1, 4);
+          savedShown = true;
+        }
+        return;
+      }
+
+      // Finger on the 5th star around t2
+      if (t >= t2 - 40 && t < t2 + FINGER) {
+        const c = starCenter(4, false);
+        placeFinger(c.x, c.y, clamp((t - (t2 - 40)) / FINGER, 0, 1));
+      }
+
+      const local = t - t2;
+      const state = fillsAt(local, 4, 5);
+      applyFills(state.amounts, state.scales);
+      const scoreVal = state.amounts[4] >= 0.5 ? 5 : 4;
+      setSavedVisual(1, scoreVal);
+      rating = 5;
+      savedShown = true;
+      if (state.doneAll) applyFills(amountsFor(5));
+    }
+
+    function clipDuration() {
+      const t1 = REST;
+      const savedDone = t1 + savedStart(0, 4, true) + settings.savedFade;
+      const t2 = savedDone + HOLD;
+      return t2 + changeDuration(4, 5) + END_HOLD;
+    }
+
+    function midTime() {
+      // Mid-fill of the last star in the first (4-star) ripple, in eased space
+      // so the still shows a star actually filling, not already settled.
+      const ease = EASES[settings.ease].fn;
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 24; i++) {
+        const mid = (lo + hi) / 2;
+        if (ease(mid) < 0.55) lo = mid;
+        else hi = mid;
+      }
+      return REST + settings.stagger * 3 + settings.fill * ((lo + hi) / 2);
+    }
+
+    function replay() {
+      const token = ++playToken;
+      resetReady();
+      const delay = reducedOn() ? 60 : 220;
+      window.setTimeout(() => {
+        if (token !== playToken) return;
+        rateTo(4, { interactive: true });
+      }, delay);
+    }
+
+    function readSettings() {
+      settings.stagger = Number(fields.stagger.el.value);
+      settings.fill = Number(fields.fill.el.value);
+      settings.bounce = Number(fields.bounce.el.value);
+      settings.bounceDur = Number(fields.bounceDur.el.value);
+      settings.savedDelay = Number(fields.savedDelay.el.value);
+      settings.savedFade = Number(fields.savedFade.el.value);
+      settings.intensity = Number(fields.intensity.el.value);
+      settings.speed = Number(fields.speed.el.value);
+      settings.ease = easeSel.value;
+      settings.glow = glowBox.checked;
+      fields.stagger.val.textContent = String(settings.stagger);
+      fields.fill.val.textContent = String(settings.fill);
+      fields.bounce.val.textContent = String(settings.bounce);
+      fields.bounceDur.val.textContent = String(settings.bounceDur);
+      fields.savedDelay.val.textContent = String(settings.savedDelay);
+      fields.savedFade.val.textContent = String(settings.savedFade);
+      fields.intensity.val.textContent = String(settings.intensity);
+      fields.speed.val.textContent = settings.speed.toFixed(2);
+      applyGlowVars();
+    }
+
+    Object.keys(fields).forEach((key) => {
+      fields[key].el.addEventListener("input", readSettings);
+    });
+    document.querySelectorAll("button[data-field]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const f = fields[btn.dataset.field];
+        const dir = Number(btn.dataset.dir);
+        const next = Number(f.el.value) + dir * f.step;
+        const lo = Number(f.el.min), hi = Number(f.el.max);
+        f.el.value = String(Math.min(hi, Math.max(lo, Math.round(next * 100) / 100)));
+        readSettings();
+      });
+    });
+    easeSel.addEventListener("change", readSettings);
+    glowBox.addEventListener("change", readSettings);
+
+    document.getElementById("replay").addEventListener("click", replay);
+
+    const params = new URLSearchParams(location.search);
+    if (params.has("render")) document.documentElement.classList.add("render");
+
+    buildStars();
+    readSettings();
+    resetReady();
+
+    window.cueboxDetail = {
+      duration: clipDuration,
+      midTime: midTime,
+      apply: apply,
+      replay: replay,
+      rateTo: function (v) { rateTo(v, { interactive: true }); },
+      settings: settings,
+      stop: function () { playToken += 1; }
+    };
+
+    const img = phone.querySelector(".still img");
+    Promise.all([
+      document.fonts.ready,
+      (img.complete && img.naturalWidth) ? Promise.resolve() : new Promise((resolve) => {
+        img.addEventListener("load", resolve, { once: true });
+        img.addEventListener("error", resolve, { once: true });
+      })
+    ]).then(() => {
+      document.documentElement.dataset.polishReady = "1";
+    });
+  })();
+  </script>
+</body>
+</html>
