@@ -38,7 +38,7 @@ function WinnerRecordCard({
   const directorRuntime = formatDirectorRuntime(film);
 
   return (
-    <Card className="relative overflow-hidden border-primary bg-surface-high shadow-glow hover-glow">
+    <Card className="relative overflow-hidden border-cb-divider bg-cb-surface">
       <div className="flex min-h-[320px]">
         <div className="relative w-[120px] shrink-0 sm:w-[160px] md:w-[200px]">
           <FilmPoster
@@ -105,7 +105,7 @@ function RunnerRecordCard({
   const filmTitle = formatFilmTitle(film);
 
   return (
-    <Card className="relative hover-glow">
+    <Card className="relative">
       <CardHeader className="flex flex-row gap-4">
         <FilmPoster src={film.poster_url} alt={film.title} size="md" />
         <div className="flex-1 space-y-1">

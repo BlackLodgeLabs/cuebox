@@ -97,7 +97,7 @@ export default function ReviewPage() {
                   resolveLetterboxd.variables?.reviewId === film.review_id);
 
               return (
-                <Card key={film.review_id} className="bg-surface-high hover-glow">
+                <Card key={film.review_id} className="bg-cb-surface">
                   <CardHeader className="flex flex-row gap-4">
                     <FilmPoster
                       src={film.candidate_payload.poster_url}
@@ -116,7 +116,7 @@ export default function ReviewPage() {
                         ) : (
                           <Link
                             href={`/watchlist/${film.film_id}?editMatch=1`}
-                            className="hover:text-primary hover:underline"
+                            className="hover:text-cb-teal hover:underline"
                           >
                             {film.title}
                             {film.year ? ` (${film.year})` : ""}
@@ -218,7 +218,7 @@ export default function ReviewPage() {
             {watchFilms.map((film) => (
               <Card
                 key={film.film_id}
-                className="cursor-pointer bg-surface-high hover-glow"
+                className="cursor-pointer bg-cb-surface"
                 onClick={() =>
                   setWatchDialog({
                     filmId: film.film_id,

@@ -157,8 +157,8 @@ export function EditFilmMatchDialog({
                 className={cn(
                   "flex w-full gap-3 rounded border p-3 text-left transition-colors",
                   isSelected
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50",
+                    ? "border-cb-teal bg-cb-surface text-cb-text"
+                    : "border-cb-divider hover:border-cb-muted",
                 )}
               >
                 <FilmPoster

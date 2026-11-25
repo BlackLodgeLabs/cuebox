@@ -274,13 +274,13 @@ describe("RecommendationCeremony", () => {
 
     const done = screen.getByTestId("ceremony-done");
     expect(done.className).toMatch(/min-h-11/);
-    expect(done.className).toMatch(/bg-primary/);
+    expect(done.className).toMatch(/bg-cb-accent/);
     expect(screen.getByTestId("ceremony-replay").className).toMatch(/min-h-11/);
     expect(screen.getByTestId("ceremony-replay").className).not.toMatch(
-      /bg-primary/,
+      /bg-cb-accent/,
     );
     expect(screen.getByTestId("ceremony-more-actions").className).not.toMatch(
-      /bg-primary/,
+      /bg-cb-accent/,
     );
     expect(
       screen.queryByRole("link", { name: /new recommendation/i }),
@@ -293,7 +293,7 @@ describe("RecommendationCeremony", () => {
     expect(screen.getByTestId("ceremony-view-history")).toBeInTheDocument();
     expect(screen.getByTestId("ceremony-answer-summary")).toBeInTheDocument();
     expect(screen.getByTestId("ceremony-new-recommendation").className).not.toMatch(
-      /bg-primary/,
+      /bg-cb-accent/,
     );
   });
 

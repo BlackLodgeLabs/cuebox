@@ -20,6 +20,28 @@ describe("MultiSelectChips", () => {
     expect(horror.className).toMatch(/min-h-11/);
   });
 
+  it("styles a selected chip as flat teal text on a surface fill", () => {
+    render(
+      <MultiSelectChips
+        options={["Horror", "Comedy"]}
+        value={["Horror"]}
+        onChange={() => {}}
+      />,
+    );
+
+    const selected = screen.getByRole("button", { name: "Horror" });
+    expect(selected.className).toContain("rounded-cb");
+    expect(selected.className).toContain("bg-cb-surface");
+    expect(selected.className).toContain("border-cb-teal");
+    expect(selected.className).toContain("text-cb-teal");
+    expect(selected.className).not.toContain("shadow-glow");
+    expect(selected.className).not.toMatch(/bg-cb-teal|bg-primary/);
+
+    const idle = screen.getByRole("button", { name: "Comedy" });
+    expect(idle.className).toContain("bg-cb-surface");
+    expect(idle.className).not.toContain("border-cb-teal");
+  });
+
   it("toggles selection on click", () => {
     const values: string[][] = [];
     const { rerender } = render(

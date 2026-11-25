@@ -20,7 +20,7 @@ export function CeremonyStageWinner({ film }: { film: FilmResult }) {
       data-testid="ceremony-stage-winner"
       aria-label="Ceremony stage 1 — winner"
     >
-      <div className="relative mx-auto aspect-[2/3] w-full max-w-xs overflow-hidden rounded bg-surface-high shadow-glow sm:max-w-sm">
+      <div className="relative mx-auto aspect-[2/3] w-full max-w-xs overflow-hidden rounded-cb-sm bg-cb-surface sm:max-w-sm">
         <FilmPoster
           src={film.poster_url}
           alt={film.title}

@@ -31,7 +31,7 @@ function PosterPlaceholder({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded bg-surface-high text-label-md text-muted-foreground",
+        "flex items-center justify-center rounded-cb-sm bg-cb-surface text-label-md text-cb-muted",
         size === "fill" && "absolute inset-0",
         dims.className,
         className,
@@ -69,7 +69,7 @@ export function FilmPoster({
         fill
         priority={priority}
         sizes={sizes}
-        className={cn("rounded object-cover", className)}
+        className={cn("rounded-cb-sm object-cover", className)}
         onError={() => setFailed(true)}
       />
     );
@@ -83,7 +83,7 @@ export function FilmPoster({
       height={dims.height}
       priority={priority}
       sizes={sizes}
-      className={cn("rounded object-cover", dims.className, className)}
+      className={cn("rounded-cb-sm object-cover", dims.className, className)}
       onError={() => setFailed(true)}
     />
   );

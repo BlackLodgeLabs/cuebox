@@ -147,12 +147,12 @@ export function FilmDetailView({
       </Link>
 
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
-        <div className="relative mx-auto aspect-[2/3] w-full max-w-xs shrink-0 overflow-hidden rounded md:mx-0 md:w-64 lg:w-72">
+        <div className="relative mx-auto aspect-[2/3] w-full max-w-xs shrink-0 overflow-hidden rounded-cb-sm md:mx-0 md:w-64 lg:w-72">
           <FilmPoster
             src={metadata?.poster_url ?? null}
             alt={film.title}
             size="fill"
-            className="shadow-glow"
+            className="rounded-cb-sm"
           />
         </div>
 
@@ -356,7 +356,7 @@ export function FilmDetailView({
               href={film.letterboxd_uri}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-11 items-center text-body-md text-primary hover:underline"
+              className="inline-flex min-h-11 items-center text-body-md text-cb-teal hover:underline"
             >
               View on Letterboxd
             </a>
@@ -367,7 +367,7 @@ export function FilmDetailView({
                 href={`https://www.themoviedb.org/movie/${metadata.tmdb_id}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-11 items-center text-body-md text-primary hover:underline"
+                className="inline-flex min-h-11 items-center text-body-md text-cb-teal hover:underline"
               >
                 View on TMDB
               </a>
@@ -379,7 +379,7 @@ export function FilmDetailView({
                 href={`https://www.imdb.com/title/${metadata.imdb_id}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-11 items-center text-body-md text-primary hover:underline"
+                className="inline-flex min-h-11 items-center text-body-md text-cb-teal hover:underline"
               >
                 View on IMDB
               </a>

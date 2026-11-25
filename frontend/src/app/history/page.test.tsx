@@ -174,8 +174,8 @@ describe("HistoryPage filter disclosure", () => {
     });
 
     const filterButton = screen.getByRole("button", { name: /filter history/i });
-    expect(filterButton.className).toMatch(/border-primary/);
-    expect(filterButton.className).toMatch(/text-primary/);
+    expect(filterButton.className).toMatch(/border-cb-teal/);
+    expect(filterButton.className).toMatch(/text-cb-teal/);
 
     await user.click(filterButton);
     await user.click(screen.getByRole("button", { name: /^clear$/i }));

@@ -37,7 +37,7 @@ export function WatchlistPosterGrid({
         const href = `/watchlist/${film.id}?tab=${tab}`;
         return (
           <li key={film.id} className="min-w-0">
-            <div className="relative aspect-[2/3] w-full overflow-hidden rounded bg-surface-high">
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-cb-sm bg-cb-surface">
               <Link
                 href={href}
                 className="absolute inset-0 block"
@@ -47,7 +47,7 @@ export function WatchlistPosterGrid({
                   src={film.poster_url}
                   alt={film.title}
                   size="fill"
-                  className="rounded"
+                  className="rounded-cb-sm"
                 />
               </Link>
               <DropdownMenu>
@@ -78,7 +78,7 @@ export function WatchlistPosterGrid({
             </div>
             <Link
               href={href}
-              className="mt-2 block truncate text-body-md font-medium text-foreground hover:text-primary hover:underline"
+              className="mt-2 block truncate text-body-md font-medium text-foreground hover:text-cb-teal hover:underline"
             >
               {film.title}
             </Link>

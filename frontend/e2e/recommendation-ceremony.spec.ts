@@ -60,12 +60,12 @@ test.describe("Recommendation ceremony (mocked API)", () => {
 
     const done = page.getByTestId("ceremony-done");
     await expect(done).toBeVisible();
-    await expect(done).toHaveClass(/bg-primary/);
+    await expect(done).toHaveClass(/bg-cb-accent/);
     await expect(page.getByTestId("ceremony-replay")).not.toHaveClass(
-      /bg-primary/,
+      /bg-cb-accent/,
     );
     await expect(page.getByTestId("ceremony-more-actions")).not.toHaveClass(
-      /bg-primary/,
+      /bg-cb-accent/,
     );
     await expect(
       page.getByTestId("ceremony-new-recommendation"),
@@ -74,7 +74,7 @@ test.describe("Recommendation ceremony (mocked API)", () => {
     await page.getByTestId("ceremony-more-actions").click();
     await expect(page.getByTestId("ceremony-new-recommendation")).toBeVisible();
     await expect(page.getByTestId("ceremony-new-recommendation")).not.toHaveClass(
-      /bg-primary/,
+      /bg-cb-accent/,
     );
   });
 

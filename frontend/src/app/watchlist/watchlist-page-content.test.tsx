@@ -319,25 +319,25 @@ describe("WatchlistPageContent", () => {
     searchParams = new URLSearchParams("tab=watched");
     mockEmptyFilms();
     render(<WatchlistPageContent />);
-    expect(filter().className).not.toMatch(/border-primary/);
+    expect(filter().className).not.toMatch(/border-cb-teal/);
 
     cleanup();
     searchParams = new URLSearchParams("tab=watched&sort=title&sort_dir=desc");
     mockEmptyFilms();
     render(<WatchlistPageContent />);
-    expect(filter().className).toMatch(/border-primary/);
+    expect(filter().className).toMatch(/border-cb-teal/);
 
     cleanup();
     searchParams = new URLSearchParams("tab=watched&sort=watched_at&sort_dir=asc");
     mockEmptyFilms();
     render(<WatchlistPageContent />);
-    expect(filter().className).toMatch(/border-primary/);
+    expect(filter().className).toMatch(/border-cb-teal/);
 
     cleanup();
     searchParams = new URLSearchParams("");
     mockEmptyFilms();
     render(<WatchlistPageContent />);
-    expect(filter().className).not.toMatch(/border-primary/);
+    expect(filter().className).not.toMatch(/border-cb-teal/);
   });
 
   it("renders poster grid when films are present", () => {

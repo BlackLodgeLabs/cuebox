@@ -6,16 +6,8 @@ const navigationState = vi.hoisted(() => ({
   pathname: "/",
 }));
 
-const pendingReviewState = vi.hoisted(() => ({
-  count: 0,
-}));
-
 vi.mock("next/navigation", () => ({
   usePathname: () => navigationState.pathname,
-}));
-
-vi.mock("@/hooks/use-films", () => ({
-  usePendingReviewCount: () => ({ data: pendingReviewState.count }),
 }));
 
 function renderShell() {
@@ -37,7 +29,6 @@ function bottomTabLinks() {
 describe("AppShell", () => {
   beforeEach(() => {
     navigationState.pathname = "/";
-    pendingReviewState.count = 0;
   });
 
   afterEach(() => {
@@ -93,17 +84,17 @@ describe("AppShell", () => {
 
       const activeLink = screen.getByRole("link", { name: active });
       expect(activeLink).toHaveAttribute("aria-current", "page");
-      expect(activeLink.className).toContain("text-primary");
-      expect(
-        activeLink.querySelector("[data-active-indicator]"),
-      ).not.toBeNull();
-      expect(activeLink.querySelector("span.font-bold")).not.toBeNull();
+      expect(activeLink.className).toContain("text-cb-teal");
+      expect(activeLink.className).toContain("text-cb-tab");
+      expect(activeLink.className).not.toMatch(/shadow/);
+      expect(activeLink.querySelector("[data-active-indicator]")).toBeNull();
 
       for (const label of ["Home", "Watchlist", "Recommend", "More"] as const) {
         if (label === active) continue;
         const inactive = screen.getByRole("link", { name: label });
         expect(inactive).not.toHaveAttribute("aria-current");
-        expect(inactive.className).toContain("text-muted-foreground");
+        expect(inactive.className).toContain("text-cb-muted");
+        expect(inactive.className).not.toMatch(/shadow/);
         expect(inactive.querySelector("[data-active-indicator]")).toBeNull();
       }
     },
@@ -131,35 +122,38 @@ describe("AppShell", () => {
     expect(header!.className).toMatch(/safe-area-inset-top/);
   });
 
-  it("exposes Search films header link to /search", () => {
+  it("shows a visual Search films field and the wordmark in a 52px header", () => {
     renderShell();
 
-    const searchLink = screen.getByRole("link", { name: "Search films" });
-    expect(searchLink).toHaveAttribute("href", "/search");
+    const header = document.querySelector("header");
+    expect(header).not.toBeNull();
+    expect(header!.className).toMatch(/safe-area-inset-top/);
+
+    const row = document.querySelector("[data-shell-header]");
+    expect(row).not.toBeNull();
+    expect(row!.className).toContain("h-[52px]");
+
+    expect(screen.getByRole("link", { name: "Cuebox" })).toBeInTheDocument();
+    expect(screen.getByText("Cue")).toHaveClass("text-cb-accent");
+    expect(screen.getByText("box.")).toHaveClass("text-cb-teal");
+
+    const search = screen.getByRole("textbox", { name: "Search films" });
+    expect(search).toHaveAttribute("placeholder", "Search films");
+    expect(search).toHaveProperty("readOnly", true);
+    expect(screen.queryByRole("link", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /review/i })).not.toBeInTheDocument();
   });
 
-  it("shows Review badge when pending count > 0", () => {
-    pendingReviewState.count = 3;
-    navigationState.pathname = "/review";
+  it("uses a 90px flat tab bar", () => {
     renderShell();
 
-    const reviewLink = screen.getByRole("link", { name: "Review 3" });
-    expect(reviewLink).toHaveAttribute("href", "/review");
-    expect(reviewLink.className).toContain("text-foreground");
-    expect(reviewLink.className).toContain("bg-accent");
+    const tabBar = document.querySelector("[data-shell-tabbar]");
+    expect(tabBar).not.toBeNull();
+    expect(tabBar!.className).toContain("h-[90px]");
+    expect(tabBar!.className).not.toMatch(/shadow/);
   });
 
-  it("hides Review when pending count is 0", () => {
-    pendingReviewState.count = 0;
-    renderShell();
-
-    expect(
-      screen.queryByRole("link", { name: /review/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("keeps Home tab href on / even when reviews are pending", () => {
-    pendingReviewState.count = 2;
+  it("keeps the Home tab href on /", () => {
     navigationState.pathname = "/review";
     renderShell();
 
@@ -169,8 +163,7 @@ describe("AppShell", () => {
     );
   });
 
-  it("applies min 44px hit-target classes on tabs and header controls", () => {
-    pendingReviewState.count = 1;
+  it("applies min 44px hit-target classes on tabs", () => {
     renderShell();
 
     for (const label of ["Home", "Watchlist", "Recommend", "More"]) {
@@ -178,13 +171,6 @@ describe("AppShell", () => {
       expect(tab.className).toContain("min-h-[44px]");
       expect(tab.className).toContain("min-w-[44px]");
     }
-
-    expect(screen.getByRole("link", { name: "Search films" }).className).toContain(
-      "min-h-[44px]",
-    );
-    expect(screen.getByRole("link", { name: "Review 1" }).className).toContain(
-      "min-h-[44px]",
-    );
   });
 
   it("does not render a FAB control", () => {

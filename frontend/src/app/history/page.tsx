@@ -131,7 +131,7 @@ export default function HistoryPage() {
           aria-label="Filter history"
           className={cn(
             "min-h-[44px] min-w-[44px] gap-2",
-            filtersActive && "border-primary text-primary",
+            filtersActive && "border-cb-teal text-cb-teal",
           )}
           onClick={() => setFilterOpen(true)}
         >
@@ -152,7 +152,7 @@ export default function HistoryPage() {
       {data && data.data.length === 0 && (
         <div className="py-12 text-center text-muted-foreground">
           No recommendations found.{" "}
-          <Link href="/recommend" className="text-primary hover:underline">
+          <Link href="/recommend" className="text-cb-teal hover:underline">
             Start your first one
           </Link>
         </div>
@@ -162,7 +162,7 @@ export default function HistoryPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.data.map((item) => (
-              <Card key={item.session_id} className="h-full hover-glow">
+              <Card key={item.session_id} className="h-full">
                 <CardHeader className="flex flex-row gap-3">
                   <button
                     type="button"

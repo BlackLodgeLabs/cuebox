@@ -106,8 +106,8 @@ export function CeremonyStageRunnersUp({ films }: { films: FilmResult[] }) {
               aria-pressed={isFocused}
               aria-label={`${formatFilmTitle(film)}${isFocused ? " (focused)" : ""}`}
               className={cn(
-                "relative aspect-[2/3] w-40 shrink-0 snap-center overflow-hidden rounded bg-surface-high transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-48 md:w-56",
-                isFocused ? "border border-primary shadow-glow" : "opacity-80",
+                "relative aspect-[2/3] w-40 shrink-0 snap-center overflow-hidden rounded-cb-sm bg-cb-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-48 md:w-56",
+                isFocused ? "border border-cb-teal" : "opacity-80",
               )}
             >
               <FilmPoster
