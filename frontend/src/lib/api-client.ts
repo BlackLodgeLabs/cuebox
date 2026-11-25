@@ -27,7 +27,10 @@ import type {
   FilmDetail,
   FilmStatus,
   FilmWatch,
+  FilmTrailer,
   FilmWatchProvidersResponse,
+  SimilarFilm,
+  TmdbFilm,
   CompleteWatchReviewRequest,
   PendingReviewCountResponse,
   UpdateWatchRequest,
@@ -163,6 +166,23 @@ export function getFilms(
 
 export function getFilm(filmId: string): Promise<FilmDetail> {
   return fetchApi<FilmDetail>(`/films/${filmId}`);
+}
+
+export function getSimilarFilms(
+  filmId: string,
+  params?: { limit?: number },
+): Promise<SimilarFilm[]> {
+  return fetchApi<SimilarFilm[]>(
+    `/films/${filmId}/similar${buildQuery(params)}`,
+  );
+}
+
+export function getFilmTrailer(filmId: string): Promise<FilmTrailer> {
+  return fetchApi<FilmTrailer>(`/films/${filmId}/trailer`);
+}
+
+export function getTmdbFilm(tmdbId: number): Promise<TmdbFilm> {
+  return fetchApi<TmdbFilm>(`/films/tmdb/${tmdbId}`);
 }
 
 export function setFilmStatus(

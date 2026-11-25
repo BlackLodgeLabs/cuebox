@@ -111,6 +111,10 @@ export interface FilmSummary {
   pending_watch?: FilmWatch | null;
 }
 
+export interface SimilarFilm extends FilmSummary {
+  semantic_line: string | null;
+}
+
 export interface SetFilmStatusRequest {
   status: FilmStatus;
 }
@@ -189,6 +193,28 @@ export interface FilmWatchProvidersResponse {
   country_code: string;
   link: string | null;
   categories: WatchProviderCategory[];
+}
+
+export interface FilmTrailer {
+  url: string | null;
+  name: string | null;
+  site: string | null;
+}
+
+export interface TmdbFilm {
+  tmdb_id: number;
+  title: string;
+  year: number | null;
+  overview: string | null;
+  backdrop_url: string | null;
+  poster_url: string | null;
+  genres: string[];
+  runtime: number | null;
+  director: string | null;
+  tmdb_rating: number | null;
+  trailer_url: string | null;
+  film_id: string | null;
+  status: FilmStatus | null;
 }
 
 export interface CandidatePayload {
