@@ -77,12 +77,29 @@ def test_select_youtube_trailer_falls_back_to_teaser_then_unofficial_trailer():
 
     unofficial = select_youtube_trailer(
         [
-            _video(key="unofficial", name="Fan Trailer", official=False),
-            _video(key="clip", name="Clip", video_type="Clip", official=True),
+            _video(
+                key="unofficial",
+                name="Fan Trailer",
+                official=False,
+                published_at="2025-06-01T00:00:00.000Z",
+            ),
+            _video(
+                key="teaser",
+                name="Older Teaser",
+                video_type="Teaser",
+                official=False,
+                published_at="2020-01-01T00:00:00.000Z",
+            ),
         ]
     )
     assert unofficial is not None
-    assert unofficial.key == "unofficial"
+    assert unofficial.key == "teaser"
+
+    only_fan = select_youtube_trailer(
+        [_video(key="fan-only", name="Fan Trailer", official=False)]
+    )
+    assert only_fan is not None
+    assert only_fan.key == "fan-only"
 
 
 def test_select_youtube_trailer_returns_none_without_trailer_or_teaser():

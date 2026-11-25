@@ -61,10 +61,11 @@ class TmdbVideo:
 
 
 def select_youtube_trailer(videos: list[TmdbVideo]) -> TmdbVideo | None:
-    """Best YouTube trailer: official Trailer, then official Teaser, then unofficial.
+    """Best YouTube video: official Trailer, then Teaser, newest first within a rank.
 
-    Within a rank, the newest ``published_at`` wins. Clips and non-YouTube
-    videos are ignored so a featurette is not presented as a trailer.
+    Official teasers beat unofficial teasers. An unofficial trailer is only
+    used when no Trailer or Teaser of higher rank exists. Clips and non-YouTube
+    videos are ignored.
     """
     candidates = [
         video
@@ -80,7 +81,7 @@ def select_youtube_trailer(videos: list[TmdbVideo]) -> TmdbVideo | None:
             return 0
         if video.video_type == "Teaser" and video.official:
             return 1
-        if video.video_type == "Trailer":
+        if video.video_type == "Teaser":
             return 2
         return 3
 

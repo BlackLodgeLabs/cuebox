@@ -8,7 +8,7 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppError, not_found
-from app.providers.tmdb import TmdbClient, select_youtube_trailer
+from app.providers.tmdb import TmdbClient, TmdbVideo, select_youtube_trailer
 from app.repositories import film_metadata_repository, film_repository
 from app.schemas.errors import ErrorCode
 from app.schemas.film_schemas import FilmTrailerResponse, TmdbFilmResponse
@@ -39,6 +39,13 @@ class TmdbFilmService:
                 ) from exc
             raise
 
+    async def _best_youtube_video(self, client: TmdbClient, tmdb_id: int) -> TmdbVideo | None:
+        try:
+            videos = await client.get_movie_videos(tmdb_id)
+        except httpx.HTTPError as exc:
+            raise _tmdb_http_error(exc, "videos") from exc
+        return select_youtube_trailer(videos)
+
     async def get_trailer(self, db: Session, film_id: uuid.UUID) -> FilmTrailerResponse:
         film = film_repository.get_by_id(db, film_id)
         if film is None:
@@ -48,12 +55,7 @@ class TmdbFilmService:
         if metadata is None or metadata.tmdb_id is None:
             return FilmTrailerResponse(url=None, name=None, site=None)
 
-        try:
-            videos = await self._tmdb_client().get_movie_videos(metadata.tmdb_id)
-        except httpx.HTTPError as exc:
-            raise _tmdb_http_error(exc, "videos") from exc
-
-        chosen = select_youtube_trailer(videos)
+        chosen = await self._best_youtube_video(self._tmdb_client(), metadata.tmdb_id)
         if chosen is None:
             return FilmTrailerResponse(url=None, name=None, site=None)
         return FilmTrailerResponse(
@@ -73,12 +75,7 @@ class TmdbFilmService:
         except httpx.HTTPError as exc:
             raise _tmdb_http_error(exc, "film lookup") from exc
 
-        try:
-            videos = await client.get_movie_videos(tmdb_id)
-        except httpx.HTTPError as exc:
-            raise _tmdb_http_error(exc, "videos") from exc
-
-        chosen = select_youtube_trailer(videos)
+        chosen = await self._best_youtube_video(client, tmdb_id)
         film_id = None
         status = None
         metadata = film_metadata_repository.get_by_tmdb_id(db, tmdb_id)

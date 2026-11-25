@@ -851,15 +851,16 @@ A JSON array of `FilmSummary` objects, each with `semantic_line` (the film's sem
 
 #### Errors
 
-|Code       |HTTP|Trigger            |
-|-----------|----|-------------------|
-|`NOT_FOUND`|404 |`film_id` not found|
+|Code              |HTTP|Trigger              |
+|------------------|----|---------------------|
+|`NOT_FOUND`       |404 |`film_id` not found  |
+|`VALIDATION_ERROR`|400 |`limit` outside 1–20 |
 
 -----
 
 ### 4.10 Film Trailer
 
-Best YouTube video for a film from TMDB `/movie/{id}/videos`. Preference order: official Trailer, official Teaser, unofficial Trailer, unofficial Teaser; newest `published_at` wins within a rank. No matching video, or no `tmdb_id`, returns `url: null`.
+Best YouTube video for a film from TMDB `/movie/{id}/videos`. Preference order: official Trailer, then Teaser (official before unofficial), then an unofficial Trailer. Newest `published_at` wins within a rank. No matching video, or no `tmdb_id`, returns `url: null`.
 
 ```
 GET /films/{film_id}/trailer
