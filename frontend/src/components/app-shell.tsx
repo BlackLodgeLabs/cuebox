@@ -59,16 +59,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))]">
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12">
         {children}
       </main>
 
       <nav
         aria-label="Primary"
-        data-shell-tabbar
-        className="fixed inset-x-0 bottom-0 z-40 box-border h-[90px] border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
       >
-        <div className="mx-auto flex h-full max-w-7xl items-stretch justify-around px-2">
+        <div
+          data-shell-tabbar
+          className="mx-auto flex h-[90px] max-w-7xl items-stretch justify-around px-2"
+        >
           {BOTTOM_TABS.map((tab) => {
             const active = tab.isActive(pathname);
 

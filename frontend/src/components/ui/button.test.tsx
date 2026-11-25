@@ -18,6 +18,7 @@ describe("Button", () => {
 
     const button = screen.getByRole("button", { name: "Where to watch" });
     expect(button.className).toContain("bg-cb-accent");
+    expect(button.className).toContain("font-semibold");
     expect(button.className).toContain("text-cb-ink");
     expect(button.className).toContain("shadow-glow");
     expect(button.className).toContain("rounded-cb");
