@@ -248,7 +248,7 @@ def test_genres_and_runtime_limit_combine_with_status_search_and_sort(integratio
         )
 
     query = (
-        "/api/v1/films?status=active&search=pick&genres=Horror,Folk%20horror"
+        "/api/v1/films?status=active&search=pick&genres=horror,folk%20horror"
         "&runtime=le_120&sort=runtime&sort_dir=asc&limit=1"
     )
     response = integration_client.get(query)

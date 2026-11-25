@@ -419,10 +419,6 @@ export type FilmSortField =
   | "rating";
 export type SortDirection = "asc" | "desc";
 
-export interface FilmGenresResponse {
-  data: string[];
-}
-
 export interface FilmsQueryParams {
   status?: FilmStatus;
   /** Comma-separated exact status set; serialized as CSV in the query string. */

@@ -1,22 +1,15 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createQueryWrapper } from "@/test/query-wrapper";
-import {
-  useHasWatchlist,
-  useReviewRequired,
-  useWatchlistCount,
-  useWatchlistGenres,
-} from "@/hooks/use-films";
+import { useHasWatchlist, useReviewRequired, useWatchlistCount } from "@/hooks/use-films";
 
-const { getFilmsMock, getFilmGenresMock, getReviewRequiredMock } = vi.hoisted(() => ({
+const { getFilmsMock, getReviewRequiredMock } = vi.hoisted(() => ({
   getFilmsMock: vi.fn(),
-  getFilmGenresMock: vi.fn(),
   getReviewRequiredMock: vi.fn(),
 }));
 
 vi.mock("@/lib/api-client", () => ({
   getFilms: getFilmsMock,
-  getFilmGenres: getFilmGenresMock,
   getReviewRequired: getReviewRequiredMock,
 }));
 
@@ -52,21 +45,6 @@ describe("useReviewRequired", () => {
     });
 
     expect(getReviewRequiredMock).not.toHaveBeenCalled();
-  });
-});
-
-describe("useWatchlistGenres", () => {
-  it("loads distinct watchlist genres for the filter chips", async () => {
-    getFilmGenresMock.mockResolvedValue({ data: ["Drama", "Horror"] });
-
-    const { Wrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useWatchlistGenres(), { wrapper: Wrapper });
-
-    await waitFor(() => {
-      expect(result.current.data?.data).toEqual(["Drama", "Horror"]);
-    });
-
-    expect(getFilmGenresMock).toHaveBeenCalledOnce();
   });
 });
 

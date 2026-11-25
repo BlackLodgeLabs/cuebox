@@ -10,7 +10,6 @@ import type {
   DevScoringDetail,
   DevSystemVersions,
   ErrorResponse,
-  FilmGenresResponse,
   FilmsQueryParams,
   HealthResponse,
   HistoryQueryParams,
@@ -160,10 +159,6 @@ export function getFilms(
   return fetchApi<PaginatedResponse<FilmSummary>>(
     `/films${buildQuery(params)}`,
   );
-}
-
-export function getFilmGenres(): Promise<FilmGenresResponse> {
-  return fetchApi<FilmGenresResponse>("/films/genres");
 }
 
 export function getFilm(filmId: string): Promise<FilmDetail> {
