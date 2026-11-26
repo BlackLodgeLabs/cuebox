@@ -77,7 +77,7 @@ def _add_watch(
     film_id: str,
     *,
     score: float | None,
-    watched_at: date,
+    watched_at: date | None,
     pending: bool = False,
     created_at: datetime | None = None,
 ) -> None:
@@ -322,6 +322,7 @@ def test_film_summary_includes_backdrop_and_latest_rated_score(integration_clien
         )
         _add_watch(db, rated, score=2.0, watched_at=date(2020, 1, 1))
         _add_watch(db, rated, score=4.5, watched_at=date(2024, 6, 1))
+        _add_watch(db, rated, score=1.0, watched_at=None)
         _add_watch(db, rated, score=5.0, watched_at=date(2024, 12, 1), pending=True)
         bare = _seed_film(
             db,

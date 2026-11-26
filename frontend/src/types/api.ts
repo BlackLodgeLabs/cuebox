@@ -83,7 +83,7 @@ export type FilmStatus = "active" | "pending_watch_review" | "watched" | "archiv
 export interface FilmWatch {
   id: string;
   score: number | null;
-  watched_at: string;
+  watched_at: string | null;
   notes: string | null;
   source: "manual" | "rss" | "letterboxd_import";
   is_pending: boolean;
@@ -111,6 +111,10 @@ export interface FilmSummary {
   latest_watched_at?: string | null;
   watch_review_incomplete?: boolean;
   pending_watch?: FilmWatch | null;
+}
+
+export interface SimilarFilm extends FilmSummary {
+  semantic_line: string | null;
 }
 
 export interface SetFilmStatusRequest {
@@ -191,6 +195,28 @@ export interface FilmWatchProvidersResponse {
   country_code: string;
   link: string | null;
   categories: WatchProviderCategory[];
+}
+
+export interface FilmTrailer {
+  url: string | null;
+  name: string | null;
+  site: string | null;
+}
+
+export interface TmdbFilm {
+  tmdb_id: number;
+  title: string;
+  year: number | null;
+  overview: string | null;
+  backdrop_url: string | null;
+  poster_url: string | null;
+  genres: string[];
+  runtime: number | null;
+  director: string | null;
+  tmdb_rating: number | null;
+  trailer_url: string | null;
+  film_id: string | null;
+  status: FilmStatus | null;
 }
 
 export interface CandidatePayload {
@@ -462,10 +488,16 @@ export interface CompleteWatchReviewRequest {
   notes?: string;
 }
 
-export interface UpdateWatchRequest {
+export interface CreateWatchRequest {
   score: number;
-  watched_at: string;
-  notes?: string;
+  watched_at?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateWatchRequest {
+  score?: number;
+  watched_at?: string | null;
+  notes?: string | null;
 }
 
 export interface PendingReviewCountResponse {

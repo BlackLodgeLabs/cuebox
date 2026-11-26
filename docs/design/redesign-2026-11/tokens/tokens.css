@@ -1,0 +1,145 @@
+/* Cuebox design tokens
+   Locked 14 Nov 2026 (foundations) and 24 Nov 2026 (motion).
+   Import this, or copy the values, into the Next.js frontend.
+   Do not ship default shadcn grey or Inter. */
+
+:root {
+  /* Colour — T2 Balance */
+  --cb-bg: #0b0b0b;
+  --cb-surface: #171717;
+  --cb-text: #f3ede4;
+  --cb-muted: #a39e96;
+  --cb-accent: #e07a28; /* amber — the only colour that may glow */
+  --cb-teal: #2a9a94;   /* flat. Never a glow, never a wash. */
+  --cb-divider: #2a2a2a;
+  --cb-ink: #0b0b0b;    /* text on amber */
+  --cb-danger: #c75b4a; /* delete / destructive */
+  --cb-dim: rgba(11, 11, 11, 0.55); /* sheet backdrop; confirm uses 0.62 */
+
+  /* Effects */
+  --cb-glow: 0 0 18px rgba(224, 122, 40, 0.5);
+  --cb-glow-reco: 0 0 18px rgba(224, 122, 40, 0.45);
+
+  /* Radius */
+  --cb-radius: 12px;      /* default: buttons, fields, chips, search, toasts */
+  --cb-radius-sm: 8px;    /* poster tiles, small images */
+  --cb-radius-lg: 16px;   /* sheets, confirm dialogs */
+  --cb-radius-pill: 999px;
+
+  /* Spacing scale */
+  --cb-space-1: 4px;
+  --cb-space-2: 8px;
+  --cb-space-3: 16px;
+  --cb-space-4: 24px;
+  --cb-space-5: 32px;
+  --cb-space-6: 48px;
+
+  /* Type */
+  --cb-font-display: "Big Shoulders", sans-serif;
+  --cb-font-ui: "Archivo", sans-serif;
+  --cb-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --cb-size-display: 40px;   /* film title on a detail / review hero */
+  --cb-size-title: 36px;     /* programme title, large sheet titles */
+  --cb-size-page: 28px;      /* page titles such as Watchlist (used 28–32) */
+  --cb-size-section: 22px;   /* wordmark, sheet titles, mid headings */
+  --cb-size-card: 18px;      /* section headers, card titles */
+  --cb-size-tile: 16px;      /* smaller headings, list titles */
+  --cb-size-body: 15px;      /* primary UI / synopsis */
+  --cb-size-ui: 14px;        /* buttons, secondary body */
+  --cb-size-caption: 13px;   /* captions, chips, “More” */
+  --cb-size-tab: 11px;       /* tab bar labels */
+  --cb-size-meta: 11px;      /* IBM Plex Mono kickers and metadata */
+  --cb-size-meta-sm: 10px;   /* mono badges and small labels */
+
+  /* Motion — shared easing */
+  --cb-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --cb-ease-in-out: cubic-bezier(0.42, 0, 0.58, 1); /* Home iris only */
+  --cb-dur-reduced: 300ms; /* reduced-motion fade, unless a lock says “at once” */
+
+  /* Home — option E iris (after the 0.85× logo unfold) */
+  --cb-home-logo-scale: 0.85;
+  --cb-home-iris-delay-after-lock: 80ms;
+  --cb-home-iris-dur: 760ms;
+  --cb-home-wordmark-fade-delay: 80ms; /* after iris start */
+  --cb-home-wordmark-fade-dur: 600ms;
+  --cb-home-section-rise: 6px;
+  --cb-home-section-stagger: 70ms;
+  --cb-home-section-dur: 300ms;
+
+  /* Recommendation — constant 420px/s cruise, 2.5s wind-down */
+  --cb-reco-cruise-px-s: 420;
+  --cb-reco-slow-dur: 2500ms;
+  --cb-reco-slow-power: 1.38; /* 1 - (1 - u)^1.38 */
+  --cb-reco-highlight-rise: 80ms;
+  --cb-reco-highlight-hold: 120ms;
+  --cb-reco-highlight-fade: 400ms;
+  --cb-reco-highlight-opacity: 0.95;
+  --cb-reco-expand-dur: 580ms;
+  --cb-reco-settle-rise: 8px;
+  --cb-reco-settle-stagger: 70ms;
+  --cb-reco-settle-dur: 300ms;
+
+  /* Film detail — taste ticks */
+  --cb-tick-stagger: 70ms;
+  --cb-tick-fill: 330ms;
+  --cb-tick-row-delay: 90ms;
+  --cb-tick-trigger: 0.4; /* 40% of the chart in view */
+
+  /* Review — star fill (create sheet only) */
+  --cb-star-stagger: 70ms;
+  --cb-star-fill: 330ms;
+  --cb-star-bounce: 0.3;       /* 30% overshoot */
+  --cb-star-bounce-dur: 190ms;
+  --cb-star-saved-delay: 40ms;
+  --cb-star-saved-fade: 220ms;
+  --cb-star-glow-intensity: 0.35;
+
+  /* Watchlist — filter crossfade + infinite scroll */
+  --cb-watchlist-out: 400ms;
+  --cb-watchlist-in: 600ms;
+  --cb-watchlist-overlap: 200ms;
+  --cb-watchlist-trigger-px: 600;
+  --cb-watchlist-page-size: 18;
+  --cb-watchlist-batch-fade: 300ms;
+  --cb-watchlist-batch-stagger: 30ms;
+
+  /* App-wide shared patterns */
+  --cb-sheet-up: 800ms;
+  --cb-sheet-down: 700ms;
+  --cb-sheet-dim: 0.55;
+  --cb-sheet-dim-fade: 450ms;
+  --cb-sheet-dismiss-px: 120;
+  --cb-toast-in: 700ms;
+  --cb-toast-out: 600ms;
+  --cb-toast-travel: 20px;
+  --cb-toast-stay: 2800ms;
+  --cb-search-open: 700ms;
+  --cb-search-close: 600ms;
+  --cb-search-from-scale: 0.96;
+  --cb-dialog-dur: 400ms;
+  --cb-dialog-from-scale: 0.92;
+  --cb-dialog-dim: 0.62;
+  --cb-press-scale: 0.96; /* 4% down */
+  --cb-press-down: 120ms;
+  --cb-press-up: 200ms;
+  --cb-screen-fade: 400ms;
+  --cb-numberflow: 400ms;
+  --cb-synopsis-more: 300ms;
+
+  /* History — ticket stubs */
+  --cb-history-page-size: 10;
+  --cb-history-stub-width: 76px;
+  --cb-history-months: 1;
+  --cb-history-perforation: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    /* Default reduced-motion contract: appear at once, or a 300ms crossfade.
+       No travel, scale or glow, unless a screen’s lock says otherwise.
+       Home skips the splash entirely. Recommendation crossfades notes to
+       the settled programme. NumberFlow shows the settled figure. */
+    --cb-ease-out: linear;
+  }
+}

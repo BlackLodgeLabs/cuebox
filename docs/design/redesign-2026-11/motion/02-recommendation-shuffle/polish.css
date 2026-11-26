@@ -1,0 +1,291 @@
+/* Recommendation polish — film-strip shuffle. Phone is locked to the 844 viewport. */
+
+.phone {
+  height: 844px;
+  min-height: 844px;
+  overflow: hidden;
+  position: relative;
+  padding-bottom: 0;
+}
+
+.phone > .status {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Notes uses reco.css column layout; offset for the overlaid status bar. */
+#notes {
+  display: flex;
+  flex-direction: column;
+  padding-top: 54px;
+  z-index: 2;
+  background: var(--bg);
+}
+
+#stage {
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 54px 0 24px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.stage-copy {
+  text-align: center;
+  margin-bottom: 28px;
+  padding: 0 24px;
+}
+.stage-copy h1 {
+  font-family: "Big Shoulders", sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 30px;
+  letter-spacing: 0.01em;
+  margin: 0 0 8px;
+}
+.stage-copy .sub {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.strip-viewport {
+  position: relative;
+  width: 390px;
+  height: var(--strip-h, 196px);
+  overflow: hidden;
+}
+.strip-viewport::before,
+.strip-viewport::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 36px;
+  z-index: 3;
+  pointer-events: none;
+}
+.strip-viewport::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), rgba(11, 11, 11, 0));
+}
+.strip-viewport::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), rgba(11, 11, 11, 0));
+}
+
+.strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  will-change: transform;
+  background: #141414;
+  box-shadow:
+    inset 0 1px 0 rgba(243, 237, 228, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.cell {
+  position: relative;
+  flex: 0 0 var(--cell-w, 214px);
+  width: var(--cell-w, 214px);
+  height: 100%;
+  padding: 0;
+}
+
+/* Sprocket bands run the length of the strip so the holes stay even at frame edges. */
+.strip::before,
+.strip::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 16px;
+  pointer-events: none;
+  background-image: radial-gradient(ellipse 4px 3px at 50% 50%, #0B0B0B 70%, transparent 74%);
+  background-size: 14px 16px;
+  background-repeat: repeat-x;
+  background-position: 0 center;
+  z-index: 2;
+}
+.strip::before { top: 0; }
+.strip::after { bottom: 0; }
+
+.cell .window {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  top: 18px;
+  bottom: 34px;
+  overflow: hidden;
+  background: #0B0B0B;
+  border-radius: 1px;
+}
+.cell .window img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cell .label {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 16px;
+  height: 18px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  line-height: 18px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #A39E96;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* Thin frame divider — the film between windows. */
+.cell + .cell .window { /* gap already from padding */ }
+
+/* Amber land highlight — only on the chosen frame, no teal glow. */
+.cell .glow {
+  position: absolute;
+  inset: 16px 6px 16px 6px;
+  border-radius: 2px;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    0 0 0 1px rgba(224, 122, 40, 0.85),
+    0 0 18px rgba(224, 122, 40, 0.45);
+  z-index: 4;
+}
+
+/* Flyer: the winning still, morphing into the programme hero. */
+#flyer {
+  position: absolute;
+  z-index: 8;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  background: #0B0B0B;
+  border-radius: 1px;
+}
+#flyer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  display: block;
+}
+
+/* Programme sits under the flyer; hidden until the expand. */
+#progLayer {
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  padding-top: 54px;
+  padding-bottom: 90px;
+  opacity: 0;
+  background: var(--bg);
+  pointer-events: none;
+}
+#progLayer .programme {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+#progLayer .tabbar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+}
+
+/* From home.css — programme typography and the Recommend tab bar. */
+.kicker {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #C8C3BA;
+  letter-spacing: 0.01em;
+}
+.meta {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.hook {
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: 4px;
+}
+.underline {
+  display: block;
+  width: 32px;
+  height: 2px;
+  margin-top: 4px;
+  background: var(--teal);
+  border-radius: 1px;
+}
+.tabbar {
+  height: 90px;
+  border-top: 1px solid var(--divider);
+  background: #0B0B0B;
+  z-index: 5;
+}
+.tabs { height: 56px; display: flex; }
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+}
+.tab.on { color: var(--teal); }
+.home-ind {
+  height: 34px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.home-ind i {
+  width: 134px; height: 5px;
+  border-radius: 3px;
+  background: var(--text);
+  opacity: 0.35;
+  margin-top: 8px;
+  display: block;
+}
+
+/* Programme settle targets start hidden when the layer is shown mid-animation. */
+[data-settle] { }
+
+@media (prefers-reduced-motion: reduce) {
+  #stage, #flyer { display: none !important; }
+}
+
+/* Option B: images only, no titles under the frames. The window
+   grows into the space the caption used, so the stills are a little taller. */
+body[data-option="b"] .cell .label { display: none; }
+body[data-option="b"] .cell .window { bottom: 18px; }
+body[data-option="b"] .cell .glow { inset: 18px 7px; }

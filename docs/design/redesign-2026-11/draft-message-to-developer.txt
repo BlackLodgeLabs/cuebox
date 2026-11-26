@@ -1,0 +1,17 @@
+Subject: Cuebox design handoff
+
+Hi — the Cuebox design is now locked, and I've put together a handoff pack for you.
+
+Please treat the pack as the source of truth, not Figma (that file is behind). The README is the brief: foundations, a screen-by-screen spec, a full motion spec with every locked timing, tokens, reference videos and interactive mocks, and an acceptance checklist.
+
+A few behaviour changes need building:
+
+- Infinite scroll on the Watchlist (the films list API already paginates — use limit=18).
+- History, under More: a ticket-stub list with infinite scroll (limit=10). Opening a past night must show the locked Tonight's Programme layout, titled with the date, not the old three-stage ceremony, and must not replay the film-strip shuffle. To remove a night, the user swipes the ticket left or long-presses it; both go through a confirm box.
+- Sync and Import (also under More) had no design pass — please use the shared foundations and app-wide motion defaults. They're a placeholder to revisit if the app is ever opened to other users.
+
+The README flags anything that may need API support, such as the “On my services” filter, sorting by runtime or rating, allowing a watch to have no date, and deleting a finalized watch. Please check those against current main before adding endpoints.
+
+Have a read through the pack and let me know if anything is unclear before you start.
+
+Thanks

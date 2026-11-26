@@ -8,19 +8,28 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
-from app.dependencies import get_db, get_metadata_service, get_provider_service, get_watch_provider_service
+from app.dependencies import (
+    get_db,
+    get_metadata_service,
+    get_provider_service,
+    get_tmdb_film_service,
+    get_watch_provider_service,
+)
 from app.repositories import film_repository, film_watch_repository, metadata_review_repository, watchlist_repository
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
     FilmListResponse,
     FilmStatusRequest,
+    FilmTrailerResponse,
     FilmWatchSummary,
     GenreListResponse,
     PaginationMeta,
     RematchRequest,
     RematchResponse,
     ReviewRequiredListResponse,
+    SimilarFilm,
+    TmdbFilmResponse,
     TmdbSearchResponse,
 )
 from app.schemas.recommendations import RuntimePreference
@@ -28,6 +37,7 @@ from app.schemas.watch_providers import FilmWatchProvidersResponse
 from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.schemas.watch_review_schemas import (
     CompleteWatchReviewRequest,
+    CreateWatchRequest,
     PendingReviewCountResponse,
     UpdateWatchRequest,
     WatchReviewRequiredListResponse,
@@ -44,6 +54,8 @@ from app.services.watch_review_service import WatchReviewService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
 from app.services.scoring_service import runtime_ceiling
+from app.services.similar_films_service import list_similar_films
+from app.services.tmdb_film_service import TmdbFilmService
 from app.services.watch_provider_service import WatchProviderService
 
 router = APIRouter(prefix="/films", tags=["films"])
@@ -298,6 +310,15 @@ async def tmdb_search_global(
     return TmdbSearchResponse(data=results, pagination=pagination)
 
 
+@router.get("/tmdb/{tmdb_id}", response_model=TmdbFilmResponse)
+async def get_tmdb_film(
+    tmdb_id: int,
+    db: Session = Depends(get_db),
+    tmdb_film_service: TmdbFilmService = Depends(get_tmdb_film_service),
+) -> TmdbFilmResponse:
+    return await tmdb_film_service.get_tmdb_film(db, tmdb_id)
+
+
 @router.get("/{film_id}/tmdb-search", response_model=TmdbSearchResponse)
 async def tmdb_search(
     film_id: uuid.UUID,
@@ -327,6 +348,24 @@ async def rematch_film(
     db.commit()
     background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
     return RematchResponse(film_id=film.id, enrichment_status="enriching")
+
+
+@router.get("/{film_id}/trailer", response_model=FilmTrailerResponse)
+async def get_film_trailer(
+    film_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tmdb_film_service: TmdbFilmService = Depends(get_tmdb_film_service),
+) -> FilmTrailerResponse:
+    return await tmdb_film_service.get_trailer(db, film_id)
+
+
+@router.get("/{film_id}/similar", response_model=list[SimilarFilm])
+def get_similar_films(
+    film_id: uuid.UUID,
+    limit: int = Query(default=6, ge=1, le=20),
+    db: Session = Depends(get_db),
+) -> list[SimilarFilm]:
+    return list_similar_films(db, film_id, limit=limit)
 
 
 @router.get("/{film_id}/watch-providers", response_model=FilmWatchProvidersResponse)
@@ -368,6 +407,26 @@ def cancel_watch_review(
     db.commit()
 
 
+@router.post("/{film_id}/watches", response_model=FilmDetail)
+def create_film_watch(
+    film_id: uuid.UUID,
+    body: CreateWatchRequest,
+    db: Session = Depends(get_db),
+) -> FilmDetail:
+    film = WatchReviewService.create_watch(
+        db,
+        film_id,
+        score=body.score,
+        watched_at=body.watched_at,
+        notes=body.notes,
+    )
+    db.commit()
+    film = film_repository.get_by_id_with_relations(db, film.id)
+    assert film is not None
+    watches = film_watch_repository.list_all_for_film(db, film.id)
+    return film_to_detail(film, watches=watches)
+
+
 @router.patch("/{film_id}/watches/{watch_id}", response_model=FilmWatchSummary)
 def update_film_watch(
     film_id: uuid.UUID,
@@ -375,16 +434,19 @@ def update_film_watch(
     body: UpdateWatchRequest,
     db: Session = Depends(get_db),
 ) -> FilmWatchSummary:
-    watch = WatchReviewService.edit_watch(
-        db,
-        film_id,
-        watch_id,
-        score=body.score,
-        watched_at=body.watched_at,
-        notes=body.notes,
-    )
+    watch = WatchReviewService.edit_watch(db, film_id, watch_id, body)
     db.commit()
     return watch_to_summary(watch)
+
+
+@router.delete("/{film_id}/watches/{watch_id}", status_code=204)
+def delete_film_watch(
+    film_id: uuid.UUID,
+    watch_id: uuid.UUID,
+    db: Session = Depends(get_db),
+) -> None:
+    WatchReviewService.delete_watch(db, film_id, watch_id)
+    db.commit()
 
 
 @router.post("/{film_id}/status", response_model=FilmDetail)

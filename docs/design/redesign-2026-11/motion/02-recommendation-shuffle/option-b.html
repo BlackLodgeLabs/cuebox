@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cuebox — Recommendation polish B, Film-strip shuffle</title>
+  <link rel="stylesheet" href="reco.css">
+  <link rel="stylesheet" href="programme.css">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body data-option="b">
+  <div class="phone" id="phone">
+    <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+
+    <div class="layer" id="notes">
+      <header class="qh">
+        <button class="iconbtn" type="button" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+        <span class="step">11 of 11</span>
+        <span class="skip" style="visibility:hidden">Skip</span>
+      </header>
+      <div class="progress" role="progressbar" aria-valuenow="11" aria-valuemin="1" aria-valuemax="11" aria-label="Question 11 of 11"><i style="width:100.000%"></i></div>
+      <div class="main fill">
+        <h1>Anything else we should know?</h1>
+        <p class="optional">Optional</p>
+        <textarea class="notes" rows="6" maxlength="1000" readonly>Slow, unsettling, under two hours.</textarea>
+        <p class="count">34/1000</p>
+      </div>
+      <div class="foot">
+        <button class="btn-primary" type="button" id="findBtn">Find my pick</button>
+      </div>
+      <div class="homeind"><i></i></div>
+    </div>
+
+    <div class="layer" id="stage" aria-hidden="true">
+      <div class="stage-copy">
+        <h1>Cueing your pick</h1>
+        <p class="sub">From your watchlist</p>
+      </div>
+      <div class="strip-viewport" id="stripViewport">
+        <div class="strip" id="strip"></div>
+      </div>
+    </div>
+
+    <div class="layer" id="progLayer" aria-hidden="true">
+      <section class="programme" id="programme">
+        <div class="prog-head" data-settle="head">
+          <div><h2>Tonight’s programme</h2><i class="underline"></i></div>
+          <span class="prog-date">Sat 14 Nov</span>
+        </div>
+        <p class="prog-sub" data-settle="sub">From your pick at 20:41 · slow, unsettling, under two hours</p>
+        <article class="winner" id="winner">
+          <img src="art/witch-forest.jpg" alt="Stand-in still for The Witch">
+          <div class="wc" data-settle="copy">
+            <p class="kicker">Your pick</p>
+            <h3>The Witch</h3>
+            <p class="meta">2015 · Folk horror · 92m · Netflix</p>
+          </div>
+        </article>
+        <p class="why" data-settle="why">The same folk dread you rated highly in The Wicker Man, in a tighter 92 minutes.</p>
+        <button class="btn-secondary" type="button" data-settle="btn">View your pick</button>
+        <div data-settle="runners">
+          <p class="runners-label">Runners-up</p>
+          <ol class="runners">
+            <li>
+              <img src="art/old-house.jpg" alt="">
+              <div>
+                <h4>Lamb</h4>
+                <p class="meta">2021 · Folk horror · 106m</p>
+                <p class="hook">A childless couple adopt something that isn’t quite a lamb.</p>
+                <p class="svc">MUBI</p>
+              </div>
+            </li>
+            <li>
+              <img src="art/fire-warm.jpg" alt="">
+              <div>
+                <h4>Burning</h4>
+                <p class="meta">2018 · Mystery · 148m</p>
+                <p class="hook">A delivery boy, an old friend, and a stranger with a strange hobby.</p>
+                <p class="svc">MUBI</p>
+              </div>
+            </li>
+            <li>
+              <img src="art/rain-neon.jpg" alt="">
+              <div>
+                <h4>Under the Skin</h4>
+                <p class="meta">2013 · Sci-fi · 108m</p>
+                <p class="hook">An alien drifts through Glasgow in the back of a white van.</p>
+                <p class="svc">Prime Video</p>
+              </div>
+            </li>
+            <li>
+              <img src="art/coastal-cliffs.jpg" alt="">
+              <div>
+                <h4>Portrait of a Lady on Fire</h4>
+                <p class="meta">2019 · Romance · 122m</p>
+                <p class="hook">A painter, a reluctant bride, and a portrait made in secret.</p>
+                <p class="svc">BBC iPlayer</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+      <nav class="tabbar" aria-label="Main" data-settle="tabbar">
+        <div class="tabs">
+          <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 11 12 4.5 19.5 11v8.5a1 1 0 0 1-1 1h-4v-6h-5v6h-4a1 1 0 0 1-1-1V11Z"/></svg><span>Home</span></div>
+          <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5h10v16l-5-3.2-5 3.2V4.5Z"/></svg><span>Watchlist</span></div>
+          <div class="tab on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.6"/><path d="M8 5.5v13M16 5.5v13M3.5 9.5h4M16.5 9.5h4M3.5 14.5h4M16.5 14.5h4"/></svg><span>Recommend</span></div>
+          <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.35" fill="currentColor" stroke="none"/></svg><span>More</span></div>
+        </div>
+        <div class="home-ind"><i></i></div>
+      </nav>
+    </div>
+
+    <div id="flyer" aria-hidden="true"><img src="art/witch-forest.jpg" alt=""></div>
+  </div>
+  <script src="shuffle.js"></script>
+</body>
+</html>

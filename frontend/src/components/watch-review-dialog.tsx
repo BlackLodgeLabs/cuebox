@@ -89,7 +89,7 @@ export function WatchReviewDialog({
         await update.mutateAsync({
           filmId,
           watchId,
-          body: { score, watched_at: watchedAt, notes: notes || undefined },
+          body: { score, watched_at: watchedAt, notes: notes || null },
         });
         toast({ title: "Watch record updated" });
       } else {
@@ -213,7 +213,7 @@ export function watchToDialogProps(watch: FilmWatch) {
     watchId: watch.id,
     initialScore:
       score == null || (watch.is_pending && score <= 0.5) ? null : score,
-    initialWatchedAt: watch.watched_at,
+    initialWatchedAt: watch.watched_at ?? undefined,
     initialNotes: watch.notes,
   };
 }

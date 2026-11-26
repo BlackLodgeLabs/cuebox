@@ -141,7 +141,7 @@ class FilmWatch(Base):
         UUID(as_uuid=True), ForeignKey("films.id", ondelete="CASCADE"), nullable=False
     )
     score: Mapped[Decimal | None] = mapped_column(Numeric(2, 1), nullable=True)
-    watched_at: Mapped[date] = mapped_column(Date, nullable=False)
+    watched_at: Mapped[date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text)
     source: Mapped[WatchSource] = mapped_column(
         SAEnum(WatchSource, native_enum=False, values_callable=_enum_values),

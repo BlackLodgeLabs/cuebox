@@ -6,7 +6,7 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, nulls_last, select
 from sqlalchemy.orm import Session
 
 from app.database.enums import FilmStatus, WatchSource
@@ -40,7 +40,7 @@ def create_completed(
     *,
     film_id: uuid.UUID,
     source: WatchSource,
-    watched_at: date,
+    watched_at: date | None,
     score: float | Decimal | None = None,
     notes: str | None = None,
 ) -> FilmWatch:
@@ -84,7 +84,7 @@ def finalize_pending(
     watch: FilmWatch,
     *,
     score: float | Decimal,
-    watched_at: date,
+    watched_at: date | None,
     notes: str | None = None,
 ) -> FilmWatch:
     watch.score = Decimal(str(score))
@@ -107,7 +107,7 @@ def list_for_film(db: Session, film_id: uuid.UUID) -> list[FilmWatch]:
     stmt = (
         select(FilmWatch)
         .where(FilmWatch.film_id == film_id, FilmWatch.is_pending.is_(False))
-        .order_by(FilmWatch.watched_at.desc(), FilmWatch.created_at.desc())
+        .order_by(nulls_last(FilmWatch.watched_at.desc()), FilmWatch.created_at.desc())
     )
     return list(db.scalars(stmt).all())
 
@@ -116,7 +116,7 @@ def list_all_for_film(db: Session, film_id: uuid.UUID) -> list[FilmWatch]:
     stmt = (
         select(FilmWatch)
         .where(FilmWatch.film_id == film_id)
-        .order_by(FilmWatch.watched_at.desc(), FilmWatch.created_at.desc())
+        .order_by(nulls_last(FilmWatch.watched_at.desc()), FilmWatch.created_at.desc())
     )
     return list(db.scalars(stmt).all())
 
@@ -125,19 +125,34 @@ def get_by_id(db: Session, watch_id: uuid.UUID) -> FilmWatch | None:
     return db.get(FilmWatch, watch_id)
 
 
+class _UnsetType:
+    pass
+
+
+UNSET = _UnsetType()
+
+
 def update_watch(
     db: Session,
     watch: FilmWatch,
     *,
-    score: float | Decimal,
-    watched_at: date,
-    notes: str | None = None,
+    score: float | Decimal | None | _UnsetType = UNSET,
+    watched_at: date | None | _UnsetType = UNSET,
+    notes: str | None | _UnsetType = UNSET,
 ) -> FilmWatch:
-    watch.score = Decimal(str(score))
-    watch.watched_at = watched_at
-    watch.notes = notes
+    if not isinstance(score, _UnsetType):
+        watch.score = None if score is None else Decimal(str(score))
+    if not isinstance(watched_at, _UnsetType):
+        watch.watched_at = watched_at
+    if not isinstance(notes, _UnsetType):
+        watch.notes = notes
     db.flush()
     return watch
+
+
+def delete_watch(db: Session, watch: FilmWatch) -> None:
+    db.delete(watch)
+    db.flush()
 
 
 def list_pending_watch_reviews(
@@ -226,6 +241,8 @@ def list_watched_dates_by_film(
     )
     grouped: dict[uuid.UUID, list[date]] = {}
     for film_id, watched_at in db.execute(stmt).all():
+        if watched_at is None:
+            continue
         grouped.setdefault(film_id, []).append(watched_at)
     return grouped
 
@@ -234,7 +251,11 @@ def get_latest_rated_score_batch(
     db: Session,
     film_ids: list[uuid.UUID],
 ) -> dict[uuid.UUID, float]:
-    """Score of the latest finalized watch that has a rating, per film."""
+    """Score of the latest finalized watch that has a rating, per film.
+
+    A null ``watched_at`` sorts after real dates, the same order as the watch
+    list, so a dateless score does not outrank a dated one.
+    """
     if not film_ids:
         return {}
     stmt = (
@@ -247,7 +268,7 @@ def get_latest_rated_score_batch(
         .distinct(FilmWatch.film_id)
         .order_by(
             FilmWatch.film_id,
-            FilmWatch.watched_at.desc(),
+            nulls_last(FilmWatch.watched_at.desc()),
             FilmWatch.created_at.desc(),
             FilmWatch.id.desc(),
         )
@@ -258,7 +279,7 @@ def get_latest_rated_score_batch(
 def get_latest_watched_at_batch(
     db: Session,
     film_ids: list[uuid.UUID],
-) -> dict[uuid.UUID, date]:
+) -> dict[uuid.UUID, date | None]:
     if not film_ids:
         return {}
     stmt = (

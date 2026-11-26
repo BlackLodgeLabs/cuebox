@@ -27,8 +27,12 @@ import type {
   FilmDetail,
   FilmStatus,
   FilmWatch,
+  FilmTrailer,
   FilmWatchProvidersResponse,
+  SimilarFilm,
+  TmdbFilm,
   CompleteWatchReviewRequest,
+  CreateWatchRequest,
   PendingReviewCountResponse,
   UpdateWatchRequest,
   WatchReviewRequiredFilm,
@@ -165,6 +169,23 @@ export function getFilm(filmId: string): Promise<FilmDetail> {
   return fetchApi<FilmDetail>(`/films/${filmId}`);
 }
 
+export function getSimilarFilms(
+  filmId: string,
+  params?: { limit?: number },
+): Promise<SimilarFilm[]> {
+  return fetchApi<SimilarFilm[]>(
+    `/films/${filmId}/similar${buildQuery(params)}`,
+  );
+}
+
+export function getFilmTrailer(filmId: string): Promise<FilmTrailer> {
+  return fetchApi<FilmTrailer>(`/films/${filmId}/trailer`);
+}
+
+export function getTmdbFilm(tmdbId: number): Promise<TmdbFilm> {
+  return fetchApi<TmdbFilm>(`/films/tmdb/${tmdbId}`);
+}
+
 export function setFilmStatus(
   filmId: string,
   status: FilmStatus,
@@ -220,6 +241,16 @@ export function cancelWatchReview(filmId: string): Promise<void> {
   });
 }
 
+export function createFilmWatch(
+  filmId: string,
+  body: CreateWatchRequest,
+): Promise<FilmDetail> {
+  return fetchApi<FilmDetail>(`/films/${filmId}/watches`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export function updateFilmWatch(
   filmId: string,
   watchId: string,
@@ -228,6 +259,12 @@ export function updateFilmWatch(
   return fetchApi<FilmWatch>(`/films/${filmId}/watches/${watchId}`, {
     method: "PATCH",
     body: JSON.stringify(body),
+  });
+}
+
+export function deleteFilmWatch(filmId: string, watchId: string): Promise<void> {
+  return fetchApi<void>(`/films/${filmId}/watches/${watchId}`, {
+    method: "DELETE",
   });
 }
 

@@ -1,0 +1,62 @@
+/* Home polish stage: lock the phone to the 844 viewport used in the videos. */
+.phone {
+  height: 844px;
+  min-height: 844px;
+  overflow: hidden;
+  position: relative;
+}
+
+.status {
+  z-index: 21;
+}
+
+/* Projector veil — amber only, used by option C. Stays at 0 for A and B. */
+.hero .warm {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 42%, rgba(224, 122, 40, 0.38), rgba(224, 122, 40, 0) 68%);
+}
+
+.hero > img {
+  transform-origin: center 42%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash { display: none !important; }
+}
+
+.phone > .status {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 21;
+}
+.status-spacer { height: 54px; flex: 0 0 54px; }
+
+/* Black lives on .splash-bg for D and E, so the still can show through
+   a fade or an iris hole without lifting the whole splash as a slab. */
+.splash-bg {
+  position: absolute;
+  inset: 0;
+  background: #0B0B0B;
+  z-index: 0;
+  pointer-events: none;
+}
+
+body[data-option="d"] .splash,
+body[data-option="e"] .splash {
+  background: transparent;
+  /* Over the lit part of the still, above the film title. */
+  place-items: start center;
+  padding-top: 132px;
+}
+
+.splash .logo {
+  z-index: 1;
+}
+
+.hero > img {
+  will-change: filter;
+}
