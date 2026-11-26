@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getFilmTrailer, getReviewRequired, getSimilarFilms, getTmdbFilm, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, updateFilmWatch } from "@/lib/api-client";
-import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, UpdateWatchRequest } from "@/types/api";
+import { getFilm, getFilms, getFilmTrailer, getReviewRequired, getSimilarFilms, getTmdbFilm, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, createFilmWatch, updateFilmWatch, deleteFilmWatch } from "@/lib/api-client";
+import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, CreateWatchRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useFilms(
@@ -166,6 +166,25 @@ export function useCancelWatchReview() {
   });
 }
 
+export function useCreateFilmWatch() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({
+      filmId,
+      body,
+    }: {
+      filmId: string;
+      body: CreateWatchRequest;
+    }) => createFilmWatch(filmId, body),
+    onSuccess: (_data, variables) => {
+      invalidateWatchReviewQueries(queryClient, variables.filmId);
+    },
+    onError,
+  });
+}
+
 export function useUpdateFilmWatch() {
   const queryClient = useQueryClient();
   const onError = useToastOnError();
@@ -180,6 +199,20 @@ export function useUpdateFilmWatch() {
       watchId: string;
       body: UpdateWatchRequest;
     }) => updateFilmWatch(filmId, watchId, body),
+    onSuccess: (_data, variables) => {
+      invalidateWatchReviewQueries(queryClient, variables.filmId);
+    },
+    onError,
+  });
+}
+
+export function useDeleteFilmWatch() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({ filmId, watchId }: { filmId: string; watchId: string }) =>
+      deleteFilmWatch(filmId, watchId),
     onSuccess: (_data, variables) => {
       invalidateWatchReviewQueries(queryClient, variables.filmId);
     },

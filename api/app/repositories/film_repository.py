@@ -6,7 +6,19 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Literal
 
-from sqlalchemy import Date, and_, case, cast, func, lateral, literal, nulls_last, select, true
+from sqlalchemy import (
+    Date,
+    and_,
+    case,
+    cast,
+    func,
+    lateral,
+    literal,
+    nulls_last,
+    or_,
+    select,
+    true,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session, selectinload
 
@@ -277,17 +289,25 @@ def _order_by(sort: FilmSortField, sort_dir: SortDirection) -> tuple[object, ...
 
 
 def _is_unknown_watched_date():
-    """Unknown watched date: stored day, but not a day the film was watched."""
-    return and_(
-        FilmWatch.source == WatchSource.LETTERBOXD_IMPORT,
-        FilmWatch.watched_at == DEFAULT_WATCHED_AT,
+    """Days that do not count as a date watched.
+
+    Letterboxd import stores an unknown day as 1984-09-28. A null watched_at
+    is the same dateless case (a manual watch saved without a date).
+    """
+    return or_(
+        FilmWatch.watched_at.is_(None),
+        and_(
+            FilmWatch.source == WatchSource.LETTERBOXD_IMPORT,
+            FilmWatch.watched_at == DEFAULT_WATCHED_AT,
+        ),
     )
 
 
 def _newest_watched_day():
     """Newest real watch day, including pending drafts and staged extra days.
 
-    An unknown watched date on ``watched_at`` is skipped. Later staged days on
+    An unknown watched date on ``watched_at`` is skipped, as is a null date.
+    Later staged days on
     that same row still count. A staged value that is itself the unknown
     watched date is skipped, and a film whose only days are unknown sorts as
     a dateless film.

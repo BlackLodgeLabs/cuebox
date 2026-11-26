@@ -11,7 +11,7 @@ from app.schemas.film_schemas import PaginationMeta
 class FilmWatchBlock(BaseModel):
     id: UUID
     score: float | None
-    watched_at: date
+    watched_at: date | None
     notes: str | None = None
     source: str
     is_pending: bool
@@ -25,9 +25,19 @@ class CompleteWatchReviewRequest(BaseModel):
     notes: str | None = None
 
 
-class UpdateWatchRequest(BaseModel):
+class CreateWatchRequest(BaseModel):
+    """Star tap: a finalized manual watch. Date and notes may be omitted."""
+
     score: float = Field(ge=0.5, le=5.0)
-    watched_at: date
+    watched_at: date | None = None
+    notes: str | None = None
+
+
+class UpdateWatchRequest(BaseModel):
+    """Partial edit. Omitted fields stay as stored; null watched_at clears the date."""
+
+    score: float | None = None
+    watched_at: date | None = None
     notes: str | None = None
 
 

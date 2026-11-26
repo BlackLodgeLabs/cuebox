@@ -310,14 +310,14 @@ CREATE INDEX idx_film_embeddings_type_version ON film_embeddings (embedding_type
 
 ### 4.5.1 `film_watches`
 
-Personal watch diary entries (score, date, notes). Many-to-one with `films`. While `films.status = pending_watch_review`, at most one row has `is_pending = true` per film. Completed watches may have a null `score` (watched-only Letterboxd import). `staged_watched_dates` holds extra diary dates for unscored multi-diary imports until review is finalized.
+Personal watch diary entries (score, date, notes). Many-to-one with `films`. While `films.status = pending_watch_review`, at most one row has `is_pending = true` per film. Completed watches may have a null `score` (watched-only Letterboxd import). `watched_at` may be null when a manual watch is logged without a date. Letterboxd import still stores the unknown-date sentinel `1984-09-28` rather than null. `staged_watched_dates` holds extra diary dates for unscored multi-diary imports until review is finalized. PostgreSQL treats nulls as distinct in the completed-watch unique index, so one film can have several dateless watches.
 
 ```sql
 CREATE TABLE film_watches (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     film_id     UUID NOT NULL REFERENCES films (id) ON DELETE CASCADE,
     score       NUMERIC(2, 1) CHECK (score IS NULL OR (score >= 0.5 AND score <= 5.0)),
-    watched_at  DATE NOT NULL,
+    watched_at  DATE,
     notes       TEXT,
     source      TEXT NOT NULL CHECK (source IN ('manual', 'rss', 'letterboxd_import')),
     is_pending  BOOLEAN NOT NULL DEFAULT false,

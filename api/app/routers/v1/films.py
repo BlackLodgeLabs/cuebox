@@ -35,6 +35,7 @@ from app.schemas.watch_providers import FilmWatchProvidersResponse
 from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.schemas.watch_review_schemas import (
     CompleteWatchReviewRequest,
+    CreateWatchRequest,
     PendingReviewCountResponse,
     UpdateWatchRequest,
     WatchReviewRequiredListResponse,
@@ -352,6 +353,26 @@ def cancel_watch_review(
     db.commit()
 
 
+@router.post("/{film_id}/watches", response_model=FilmDetail)
+def create_film_watch(
+    film_id: uuid.UUID,
+    body: CreateWatchRequest,
+    db: Session = Depends(get_db),
+) -> FilmDetail:
+    film = WatchReviewService.create_watch(
+        db,
+        film_id,
+        score=body.score,
+        watched_at=body.watched_at,
+        notes=body.notes,
+    )
+    db.commit()
+    film = film_repository.get_by_id_with_relations(db, film.id)
+    assert film is not None
+    watches = film_watch_repository.list_all_for_film(db, film.id)
+    return film_to_detail(film, watches=watches)
+
+
 @router.patch("/{film_id}/watches/{watch_id}", response_model=FilmWatchSummary)
 def update_film_watch(
     film_id: uuid.UUID,
@@ -359,16 +380,19 @@ def update_film_watch(
     body: UpdateWatchRequest,
     db: Session = Depends(get_db),
 ) -> FilmWatchSummary:
-    watch = WatchReviewService.edit_watch(
-        db,
-        film_id,
-        watch_id,
-        score=body.score,
-        watched_at=body.watched_at,
-        notes=body.notes,
-    )
+    watch = WatchReviewService.edit_watch(db, film_id, watch_id, body)
     db.commit()
     return watch_to_summary(watch)
+
+
+@router.delete("/{film_id}/watches/{watch_id}", status_code=204)
+def delete_film_watch(
+    film_id: uuid.UUID,
+    watch_id: uuid.UUID,
+    db: Session = Depends(get_db),
+) -> None:
+    WatchReviewService.delete_watch(db, film_id, watch_id)
+    db.commit()
 
 
 @router.post("/{film_id}/status", response_model=FilmDetail)
