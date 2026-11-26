@@ -89,6 +89,8 @@ const recommendation: RecommendationResponse & {
     tmdb_rating: 7.8,
     rotten_tomatoes_score: 92,
     poster_url: null,
+    backdrop_url: null,
+    genres: ["Horror"],
     explanation: {
       why_it_matches: "Matches your slow-burn horror preferences.",
       why_it_matches_short: "Slow-burn horror fit.",
@@ -109,6 +111,8 @@ const recommendation: RecommendationResponse & {
       tmdb_rating: 6.5,
       rotten_tomatoes_score: 80,
       poster_url: null,
+      backdrop_url: null,
+      genres: ["Drama"],
       explanation: {
         why_it_matches: "Solid alternative with overlapping themes.",
         why_it_matches_short: "Overlapping themes.",

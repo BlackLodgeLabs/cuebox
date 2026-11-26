@@ -103,6 +103,8 @@ export interface FilmSummary {
   director: string | null;
   runtime: number | null;
   genres: string[];
+  backdrop_url: string | null;
+  latest_score: number | null;
   created_at: string;
   updated_at: string;
   removed_at?: string | null;
@@ -389,6 +391,8 @@ export interface FilmResult {
   tmdb_rating: number | null;
   rotten_tomatoes_score: number | null;
   poster_url: string | null;
+  backdrop_url: string | null;
+  genres: string[];
   explanation: FilmExplanation;
 }
 
@@ -436,7 +440,9 @@ export type FilmSortField =
   | "year"
   | "created_at"
   | "enrichment_status"
-  | "watched_at";
+  | "watched_at"
+  | "runtime"
+  | "rating";
 export type SortDirection = "asc" | "desc";
 
 export interface FilmsQueryParams {
@@ -446,6 +452,10 @@ export interface FilmsQueryParams {
   enrichment_status?: string;
   on_watchlist?: boolean;
   search?: string;
+  /** Comma-separated genre names. Any-of, case-insensitive. */
+  genres?: string | string[];
+  /** Questionnaire runtime ceiling. Omitted or `any` does not filter. */
+  runtime?: RuntimePreference;
   year?: number;
   year_from?: number;
   year_to?: number;

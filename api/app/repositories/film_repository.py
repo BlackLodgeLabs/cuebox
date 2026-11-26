@@ -24,9 +24,17 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus, WatchSource
 from app.services.watched_csv_parser import DEFAULT_WATCHED_AT
-from app.database.models import Film, FilmWatch, WatchlistEntry
+from app.database.models import Film, FilmMetadata, FilmWatch, WatchlistEntry
 
-FilmSortField = Literal["title", "year", "created_at", "enrichment_status", "watched_at"]
+FilmSortField = Literal[
+    "title",
+    "year",
+    "created_at",
+    "enrichment_status",
+    "watched_at",
+    "runtime",
+    "rating",
+]
 SortDirection = Literal["asc", "desc"]
 _ColumnSortField = Literal["title", "year", "created_at", "enrichment_status"]
 
@@ -216,6 +224,8 @@ def list_films(
     year_to: int | None = None,
     created_from: date | None = None,
     created_to: date | None = None,
+    genres: list[str] | None = None,
+    runtime_max: int | None = None,
     sort: FilmSortField = "created_at",
     sort_dir: SortDirection = "desc",
     limit: int = 20,
@@ -269,6 +279,25 @@ def list_films(
         stmt = stmt.where(Film.created_at <= end)
         count_stmt = count_stmt.where(Film.created_at <= end)
 
+    # Runtime and rating read film_metadata. Genre and runtime filters do too.
+    # A missing metadata row stays in an unfiltered sort (nulls last) and drops
+    # out of an active genre or runtime filter.
+    if sort in ("runtime", "rating") or genres or runtime_max is not None:
+        metadata_join = (FilmMetadata, FilmMetadata.film_id == Film.id)
+        stmt = stmt.outerjoin(*metadata_join)
+        count_stmt = count_stmt.outerjoin(*metadata_join)
+    if genres:
+        genre_clause = _metadata_has_any_genre(genres)
+        stmt = stmt.where(genre_clause)
+        count_stmt = count_stmt.where(genre_clause)
+    if runtime_max is not None:
+        runtime_clause = and_(
+            FilmMetadata.runtime.is_not(None),
+            FilmMetadata.runtime <= runtime_max,
+        )
+        stmt = stmt.where(runtime_clause)
+        count_stmt = count_stmt.where(runtime_clause)
+
     order = _order_by(sort, sort_dir)
 
     total = db.scalar(count_stmt) or 0
@@ -276,11 +305,64 @@ def list_films(
     return films, total
 
 
+def _metadata_has_any_genre(names: list[str]):
+    """Case-insensitive any-of match against the JSON genre array."""
+    lowered = [name.lower() for name in names]
+    genre_rows = lateral(
+        func.jsonb_array_elements_text(FilmMetadata.genres).table_valued("value")
+    ).alias("watchlist_genre")
+    return (
+        select(literal(1))
+        .select_from(genre_rows)
+        .where(func.lower(genre_rows.c.value).in_(lowered))
+        .correlate(FilmMetadata)
+        .exists()
+    )
+
+
+def list_watchlist_genres(db: Session) -> list[str]:
+    """Distinct genre labels on films with an active watchlist entry."""
+    stmt = (
+        select(FilmMetadata.genres)
+        .join(Film, Film.id == FilmMetadata.film_id)
+        .join(
+            WatchlistEntry,
+            (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
+        )
+    )
+    chosen: dict[str, str] = {}
+    for raw_genres in db.scalars(stmt):
+        for genre in raw_genres or []:
+            if not isinstance(genre, str):
+                continue
+            label = genre.strip()
+            if not label:
+                continue
+            key = label.casefold()
+            current = chosen.get(key)
+            if current is None or label < current:
+                chosen[key] = label
+    return [chosen[key] for key in sorted(chosen)]
+
+
 def _order_by(sort: FilmSortField, sort_dir: SortDirection) -> tuple[object, ...]:
     if sort == "watched_at":
         # Date watched, newest or oldest. Dateless films stay last either way.
         direction = (
             _newest_watched_day().asc() if sort_dir == "asc" else _newest_watched_day().desc()
+        )
+        return (nulls_last(direction), Film.title.asc(), Film.id.asc())
+    if sort == "runtime":
+        direction = (
+            FilmMetadata.runtime.asc() if sort_dir == "asc" else FilmMetadata.runtime.desc()
+        )
+        return (nulls_last(direction), Film.title.asc(), Film.id.asc())
+    if sort == "rating":
+        # TMDB on every view, including Watched. Own stars are not a sort key.
+        direction = (
+            FilmMetadata.tmdb_rating.asc()
+            if sort_dir == "asc"
+            else FilmMetadata.tmdb_rating.desc()
         )
         return (nulls_last(direction), Film.title.asc(), Film.id.asc())
     sort_column = _SORT_COLUMNS[sort]
@@ -424,8 +506,6 @@ def list_recommendation_candidates(
     exclude_non_english: bool = False,
 ) -> list[Film]:
     """Active, ready films eligible for recommendation Stage 1 filtering."""
-    from app.database.models import FilmMetadata
-
     stmt = (
         select(Film)
         .join(FilmMetadata, FilmMetadata.film_id == Film.id)

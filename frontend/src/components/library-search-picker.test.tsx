@@ -59,6 +59,8 @@ function makeFilm(overrides: Partial<FilmSummary> & Pick<FilmSummary, "id" | "ti
     director: null,
     runtime: null,
     genres: [],
+    backdrop_url: null,
+    latest_score: null,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
