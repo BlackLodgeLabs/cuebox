@@ -23,7 +23,7 @@ import {
   useFilms,
   useGlobalTmdbSearch,
 } from "@/hooks/use-films";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { ApiClientError, getFilm } from "@/lib/api-client";
 import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 import {
@@ -62,7 +62,6 @@ export function LibrarySearchPicker({
   helperText = DEFAULT_HELPER_TEXT,
 }: LibrarySearchPickerProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [reviewDialog, setReviewDialog] = useState<ReviewDialogState | null>(

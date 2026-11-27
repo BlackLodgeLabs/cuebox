@@ -38,7 +38,7 @@ test.describe("History delete (mocked API)", () => {
       .click();
 
     await expect(
-      page.getByRole("dialog", { name: /remove from history/i }),
+      page.getByRole("alertdialog", { name: /remove from history/i }),
     ).toBeVisible();
     await expect(
       page.getByText(
@@ -50,7 +50,7 @@ test.describe("History delete (mocked API)", () => {
 
     await expect(page.getByText("Delete Me Film")).not.toBeVisible();
     await expect(page.getByText("Keep Me Film")).toBeVisible();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByRole("alertdialog")).not.toBeVisible();
 
     await page.reload();
     await expect(page.getByText("Delete Me Film")).not.toBeVisible();

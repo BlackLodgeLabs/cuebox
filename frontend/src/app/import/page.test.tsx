@@ -18,10 +18,6 @@ vi.mock("@/hooks/use-import", () => ({
   }),
 }));
 
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
-
 function renderImportPage() {
   const { Wrapper } = createQueryWrapper();
   return render(

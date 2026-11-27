@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
@@ -28,7 +28,6 @@ export function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [selectedName, setSelectedName] = useState<string | null>(null);
-  const { toast } = useToast();
   const compact = variant === "compact";
 
   useEffect(() => {

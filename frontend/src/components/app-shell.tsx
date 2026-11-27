@@ -1,9 +1,14 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Icon } from "@/components/icon";
+import { SearchCard } from "@/components/ui/search-card";
 import { Wordmark } from "@/components/wordmark";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { screenMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const BOTTOM_TABS = [
@@ -38,6 +43,9 @@ const BOTTOM_TABS = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const reduced = useReducedMotion();
+  const screen = screenMotion(reduced);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-cb-bg text-cb-text">
@@ -53,15 +61,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               readOnly
               placeholder="Search films"
               aria-label="Search films"
-              className="w-full bg-transparent font-ui text-cb-caption text-cb-text outline-none placeholder:text-cb-muted"
+              className="w-full cursor-pointer bg-transparent font-ui text-cb-caption text-cb-text outline-none placeholder:text-cb-muted"
+              onClick={() => setSearchOpen(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSearchOpen(true);
+                }
+              }}
             />
           </label>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 py-8 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12">
-        {children}
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.div
+            key={pathname}
+            data-cb-screen=""
+            data-fade-ms={screen.fadeMs}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={screen.transition}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
+
+      <SearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
       <nav
         aria-label="Primary"

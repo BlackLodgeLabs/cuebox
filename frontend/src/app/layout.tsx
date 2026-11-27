@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { AppShell } from "@/components/app-shell";
 import { Providers } from "@/components/providers";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const bigShoulders = localFont({
