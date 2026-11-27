@@ -20,10 +20,6 @@ vi.mock("@/hooks/use-films", () => ({
   }),
 }));
 
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
-
 describe("WatchReviewDialog", () => {
   afterEach(() => {
     cleanup();

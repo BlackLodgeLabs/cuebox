@@ -1,7 +1,11 @@
+"use client"
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
+import { pressMotion } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -42,11 +46,26 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, style, ...props }, ref) => {
+    const amber = variant == null || variant === "default"
+    const press = pressMotion(useReducedMotion())
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={cn(buttonVariants({ variant, size }), amber && "cb-press", className)}
+        data-cb-press={amber ? "true" : undefined}
+        data-press-down-ms={amber ? press.downMs : undefined}
+        data-press-up-ms={amber ? press.upMs : undefined}
+        style={
+          amber
+            ? ({
+                ...style,
+                ["--cb-press-scale" as string]: String(press.scale),
+                ["--cb-press-down" as string]: `${press.downMs}ms`,
+                ["--cb-press-up" as string]: `${press.upMs}ms`,
+              } as React.CSSProperties)
+            : style
+        }
         ref={ref}
         {...props}
       />

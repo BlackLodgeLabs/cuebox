@@ -25,10 +25,6 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
 }));
 
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
-
 vi.mock("@/lib/api-client", () => ({
   getFilms: getFilmsMock,
   searchTmdbGlobal: searchTmdbGlobalMock,

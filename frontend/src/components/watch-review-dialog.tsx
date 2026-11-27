@@ -18,7 +18,7 @@ import {
   useCompleteWatchReview,
   useUpdateFilmWatch,
 } from "@/hooks/use-films";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import type { FilmWatch } from "@/types/api";
 
 interface WatchReviewDialogProps {
@@ -54,7 +54,6 @@ export function WatchReviewDialog({
   initialWatchedAt,
   initialNotes = "",
 }: WatchReviewDialogProps) {
-  const { toast } = useToast();
   const complete = useCompleteWatchReview();
   const cancel = useCancelWatchReview();
   const update = useUpdateFilmWatch();

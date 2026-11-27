@@ -7,7 +7,7 @@ import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { FilmDetailSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilm, useFilmStatusTransition } from "@/hooks/use-films";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import type { WatchlistTab } from "@/types/api";
 
 function parseWatchlistTab(value: string | null): WatchlistTab | undefined {
@@ -21,7 +21,6 @@ export default function WatchlistFilmPage() {
   const params = useParams<{ filmId: string }>();
   const searchParams = useSearchParams();
   const filmId = params.filmId;
-  const { toast } = useToast();
   const prevStatusRef = useRef<string | null>(null);
   const [markWatchedOpen, setMarkWatchedOpen] = useState(false);
 

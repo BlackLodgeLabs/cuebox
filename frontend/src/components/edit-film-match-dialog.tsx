@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useRematchFilm, useTmdbSearch } from "@/hooks/use-films";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import type { FilmDetail, TmdbSearchResultItem } from "@/types/api";
 
@@ -28,7 +28,6 @@ export function EditFilmMatchDialog({
   open,
   onOpenChange,
 }: EditFilmMatchDialogProps) {
-  const { toast } = useToast();
   const rematch = useRematchFilm();
   const [searchQuery, setSearchQuery] = useState(film.title);
   const [yearFilter, setYearFilter] = useState(

@@ -22,6 +22,9 @@ describe("Button", () => {
     expect(button.className).toContain("text-cb-ink");
     expect(button.className).toContain("shadow-glow");
     expect(button.className).toContain("rounded-cb");
+    expect(button.className).toContain("cb-press");
+    expect(button).toHaveAttribute("data-press-down-ms", "120");
+    expect(button).toHaveAttribute("data-press-up-ms", "200");
     expect(button.className).not.toContain("btn-chamfer");
   });
 
@@ -33,6 +36,7 @@ describe("Button", () => {
     expect(button.className).toContain("text-cb-teal");
     expect(button.className).not.toContain("shadow-glow");
     expect(button.className).not.toContain("bg-cb-teal");
+    expect(button.className).not.toContain("cb-press");
   });
 
   it("paints the link action as flat teal text", () => {

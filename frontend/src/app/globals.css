@@ -99,3 +99,182 @@
     transform: none !important;
   }
 }
+
+/* Shared motion kit. Unlayered so these timings beat Vaul, Sonner, and the
+   reduced-motion hammer above (that rule lives in a layer). */
+@keyframes cb-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cb-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes cb-confirm-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--cb-dialog-from-scale, 0.92));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes cb-confirm-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--cb-dialog-from-scale, 0.92));
+  }
+}
+
+.cb-press {
+  transition-property: transform, color, background-color, border-color, box-shadow;
+  transition-duration: var(--cb-press-up, 200ms);
+  transition-timing-function: var(--cb-ease-out);
+}
+
+.cb-press:active {
+  transform: scale(var(--cb-press-scale, 0.96));
+  transition-duration: var(--cb-press-down, 120ms);
+}
+
+[data-vaul-drawer].cb-sheet[data-state="open"] {
+  animation-duration: var(--cb-sheet-up, 800ms);
+  animation-timing-function: var(--cb-ease-out);
+}
+
+[data-vaul-drawer].cb-sheet[data-state="closed"] {
+  animation-duration: var(--cb-sheet-down, 700ms);
+  animation-timing-function: var(--cb-ease-out);
+}
+
+[data-vaul-drawer].cb-sheet.vaul-dragging {
+  animation: none !important;
+}
+
+.cb-sheet-overlay {
+  background: rgb(0 0 0 / var(--cb-sheet-dim, 0.55));
+}
+
+[data-vaul-overlay].cb-sheet-overlay[data-state="open"],
+[data-vaul-overlay].cb-sheet-overlay[data-state="closed"] {
+  animation-duration: var(--cb-sheet-dim-fade, 450ms);
+  animation-timing-function: var(--cb-ease-out);
+}
+
+.cb-sheet-handle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.cb-confirm[data-state="open"] {
+  animation: cb-confirm-in var(--cb-dialog-dur, 400ms) var(--cb-ease-out);
+}
+
+.cb-confirm[data-state="closed"] {
+  animation: cb-confirm-out var(--cb-dialog-dur, 400ms) var(--cb-ease-out);
+}
+
+.cb-confirm-overlay {
+  background: rgb(0 0 0 / var(--cb-dialog-dim, 0.62));
+}
+
+.cb-confirm-overlay[data-state="open"],
+.cb-confirm-overlay[data-state="closed"] {
+  animation: cb-fade var(--cb-dialog-dur, 400ms) linear;
+}
+
+[data-sonner-toaster].cb-toaster {
+  --border-radius: 12px;
+  font-family: var(--font-archivo), sans-serif;
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast] {
+  --y: translateY(calc(var(--cb-toast-travel, 20px) * -1));
+  transition:
+    transform var(--cb-toast-in, 700ms) var(--cb-ease-out),
+    opacity var(--cb-toast-in, 700ms) var(--cb-ease-out),
+    height var(--cb-toast-in, 700ms) var(--cb-ease-out);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-mounted="true"] {
+  --y: translateY(0);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-removed="true"][data-front="true"] {
+  --y: translateY(calc(var(--cb-toast-travel, 20px) * -1));
+  opacity: 0;
+  transition:
+    transform var(--cb-toast-out, 600ms) var(--cb-ease-out),
+    opacity var(--cb-toast-out, 600ms) var(--cb-ease-out);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-styled="true"] {
+  border-radius: 12px;
+  background: var(--cb-surface);
+  color: var(--cb-text);
+  border: 1px solid var(--cb-divider);
+  box-shadow: none;
+  font-family: var(--font-archivo), sans-serif;
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast] [data-description] {
+  color: var(--cb-muted);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-type="error"] {
+  border-color: var(--cb-danger);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-press:active {
+    transform: none !important;
+  }
+
+  [data-vaul-drawer].cb-sheet {
+    animation-name: cb-fade !important;
+    animation-duration: 300ms !important;
+    transform: none !important;
+  }
+
+  [data-vaul-drawer].cb-sheet[data-state="closed"] {
+    animation-name: cb-fade-out !important;
+  }
+
+  [data-vaul-overlay].cb-sheet-overlay {
+    animation-duration: 300ms !important;
+  }
+
+  .cb-confirm,
+  .cb-confirm-overlay {
+    animation-name: cb-fade !important;
+    animation-duration: 300ms !important;
+  }
+
+  [data-sonner-toaster].cb-toaster-reduced [data-sonner-toast],
+  [data-sonner-toaster].cb-toaster [data-sonner-toast] {
+    --y: translateY(0) !important;
+    transition: opacity 300ms linear !important;
+  }
+
+  [data-cb-batch] {
+    animation-duration: 300ms !important;
+    animation-delay: 0ms !important;
+  }
+}
+
+[data-cb-reduced="true"][data-vaul-drawer],
+[data-vaul-drawer][data-cb-reduced="true"] {
+  animation-name: cb-fade !important;
+  animation-duration: 300ms !important;
+  transform: none !important;
+}
