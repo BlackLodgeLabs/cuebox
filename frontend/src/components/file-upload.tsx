@@ -61,7 +61,7 @@ export function FileUpload({
       className={cn(
         "flex flex-col items-center justify-center rounded border-2 border-dashed border-border bg-card transition-all",
         compact ? "gap-2 p-4" : "gap-4 p-8",
-        dragOver && "border-secondary shadow-glow",
+        dragOver && "border-cb-teal",
         disabled && "pointer-events-none opacity-50 grayscale",
       )}
       onDragOver={(e) => {
@@ -97,7 +97,7 @@ export function FileUpload({
           </p>
         )}
         {selectedName && (
-          <p className="mt-2 min-w-0 break-all text-label-md normal-case tracking-normal text-primary">
+          <p className="mt-2 min-w-0 break-all text-label-md normal-case tracking-normal text-cb-text">
             Selected: {selectedName}
           </p>
         )}

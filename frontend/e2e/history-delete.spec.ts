@@ -15,7 +15,7 @@ test.describe("History delete (mocked API)", () => {
     await page.goto("/history");
 
     const remove = page
-      .locator(".hover-glow")
+      .locator("div.grid > div")
       .filter({ hasText: "Delete Me Film" })
       .getByRole("button", { name: /remove from history/i });
     await expect(remove).toBeVisible();
@@ -32,7 +32,7 @@ test.describe("History delete (mocked API)", () => {
     await expect(page.getByText("Keep Me Film")).toBeVisible();
 
     await page
-      .locator(".hover-glow")
+      .locator("div.grid > div")
       .filter({ hasText: "Delete Me Film" })
       .getByRole("button", { name: /remove from history/i })
       .click();

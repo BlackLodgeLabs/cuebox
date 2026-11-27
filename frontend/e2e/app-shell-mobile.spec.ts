@@ -182,15 +182,22 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     );
   });
 
-  test("active tab uses primary tint and indicator", async ({ page }) => {
+  test("active tab is flat teal", async ({ page }) => {
     await stubShellApis(page);
     await page.goto("/");
 
     const home = page
       .getByRole("navigation", { name: "Primary" })
       .getByRole("link", { name: "Home" });
-    await expect(home).toHaveClass(/text-primary/);
-    await expect(home.locator("[data-active-indicator]")).toHaveCount(1);
+    await expect(home).toHaveClass(/text-cb-teal/);
+    await expect(home.locator("[data-active-indicator]")).toHaveCount(0);
+    const shadow = await home.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(shadow).toBe("none");
+
+    const header = await page.locator("[data-shell-header]").boundingBox();
+    const tabBar = await page.locator("[data-shell-tabbar]").boundingBox();
+    expect(header?.height).toBeCloseTo(52, 0);
+    expect(tabBar?.height).toBeCloseTo(90, 0);
   });
 
   test("sticky header includes top safe-area padding class", async ({ page }) => {
@@ -224,25 +231,24 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     );
   });
 
-  test("Review badge appears when pending and opens /review", async ({ page }) => {
+  test("header has no review-count badge", async ({ page }) => {
     await stubShellApis(page, 2);
     await page.goto("/");
 
-    const review = page.getByRole("link", { name: "Review 2" });
-    await expect(review).toBeVisible();
-    await review.click();
-    await expect(page).toHaveURL(/\/review/);
-    await expect(
-      page.getByRole("heading", { name: "Review", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /Review \d/ })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Search films" })).toBeVisible();
   });
 
-  test("Search films lands on Home picker via /search", async ({ page }) => {
+  test("Search films field is a visual placeholder and does not navigate", async ({
+    page,
+  }) => {
     await stubShellApis(page);
     await page.goto("/watchlist");
-    await page.getByRole("link", { name: "Search films" }).click();
-    await expect(page).toHaveURL(/\/(\?focus=search)?$/);
-    await expect(page.getByTestId("library-search-input")).toBeVisible();
+    const search = page.getByRole("textbox", { name: "Search films" });
+    await expect(search).toBeVisible();
+    await expect(search).toHaveAttribute("placeholder", "Search films");
+    await search.click();
+    await expect(page).toHaveURL(/\/watchlist/);
   });
 
   test("tab hit targets meet 44px minimum", async ({ page }) => {

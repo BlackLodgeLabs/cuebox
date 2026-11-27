@@ -285,7 +285,7 @@ export function WatchlistPageContent() {
     return (
       <div className="py-12 text-center text-muted-foreground">
         No films match your filters.{" "}
-        <Link href="/import" className="text-primary hover:underline">
+        <Link href="/import" className="text-cb-teal hover:underline">
           Import your watchlist
         </Link>
       </div>
@@ -326,7 +326,7 @@ export function WatchlistPageContent() {
             aria-label="Filter and sort"
             className={cn(
               "min-h-[44px] min-w-[44px] gap-2",
-              filtersActive && "border-primary text-primary",
+              filtersActive && "border-cb-teal text-cb-teal",
             )}
             onClick={() => setFilterOpen(true)}
           >

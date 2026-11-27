@@ -171,7 +171,7 @@ export function WhereToWatchSection({
             href={data.link}
             target="_blank"
             rel="noreferrer"
-            className="text-body-md text-primary hover:underline"
+            className="text-body-md text-cb-teal hover:underline"
           >
             View on TMDB
           </a>

@@ -113,7 +113,7 @@ export default function ImportStatusPage() {
             <div>
               <button
                 type="button"
-                className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-medium text-cb-teal hover:underline"
                 onClick={() => setFailuresOpen(!failuresOpen)}
               >
                 {failuresOpen ? "Hide" : "Show"} failure details ({data.failed_films})

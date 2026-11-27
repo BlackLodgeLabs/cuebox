@@ -24,11 +24,12 @@ test.describe("PR review regression checks", () => {
     await expect(homeLink).toHaveAttribute("href", "/");
   });
 
-  test("scanlines overlay is scoped to main content", async ({ page }) => {
+  test("home shell has no scanline overlay", async ({ page }) => {
     await page.goto("/");
-    const position = await page.locator("main.main-scanlines").evaluate((main) =>
-      getComputedStyle(main, "::after").position,
+    await expect(page.locator("main.main-scanlines")).toHaveCount(0);
+    const bg = await page.evaluate(
+      () => getComputedStyle(document.body).backgroundColor,
     );
-    expect(position).toBe("absolute");
+    expect(bg).toBe("rgb(11, 11, 11)");
   });
 });

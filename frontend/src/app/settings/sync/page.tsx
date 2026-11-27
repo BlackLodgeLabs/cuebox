@@ -257,14 +257,14 @@ export default function SyncSettingsPage() {
               <div className="mt-3 flex flex-wrap gap-3">
                 <Link
                   href="/watchlist?tab=watched"
-                  className="text-sm text-primary underline-offset-4 hover:underline"
+                  className="text-sm text-cb-teal underline-offset-4 hover:underline"
                 >
                   View Watched list
                 </Link>
                 {watchedResult.pending_review > 0 && (
                   <Link
                     href="/watchlist?tab=active"
-                    className="text-sm text-primary underline-offset-4 hover:underline"
+                    className="text-sm text-cb-teal underline-offset-4 hover:underline"
                   >
                     Open watch review queue
                   </Link>
