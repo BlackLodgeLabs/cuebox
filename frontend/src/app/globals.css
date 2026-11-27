@@ -100,8 +100,10 @@
   }
 }
 
-/* Shared motion kit. Unlayered so these timings beat Vaul, Sonner, and the
-   reduced-motion hammer above (that rule lives in a layer). */
+/* Shared motion kit. Full-motion timings stay unlayered so they beat Vaul
+   and Sonner. Reduced-motion overrides live in @layer components, after the
+   universal 0.01ms hammer: important rules in a layer beat unlayered
+   important rules, and a more specific rule in the same layer wins. */
 @keyframes cb-fade {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -187,13 +189,16 @@
   background: rgb(0 0 0 / var(--cb-dialog-dim, 0.62));
 }
 
-.cb-confirm-overlay[data-state="open"],
+.cb-confirm-overlay[data-state="open"] {
+  animation: cb-fade var(--cb-dialog-dur, 400ms) var(--cb-ease-out);
+}
+
 .cb-confirm-overlay[data-state="closed"] {
-  animation: cb-fade var(--cb-dialog-dur, 400ms) linear;
+  animation: cb-fade-out var(--cb-dialog-dur, 400ms) var(--cb-ease-out) forwards;
 }
 
 [data-sonner-toaster].cb-toaster {
-  --border-radius: 12px;
+  --border-radius: var(--cb-radius, 12px);
   font-family: var(--font-archivo), sans-serif;
 }
 
@@ -218,7 +223,7 @@
 }
 
 [data-sonner-toaster].cb-toaster [data-sonner-toast][data-styled="true"] {
-  border-radius: 12px;
+  border-radius: var(--cb-radius, 12px);
   background: var(--cb-surface);
   color: var(--cb-text);
   border: 1px solid var(--cb-divider);
@@ -235,46 +240,53 @@
   box-shadow: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cb-press:active {
+@layer components {
+  @media (prefers-reduced-motion: reduce) {
+    .cb-press:active {
+      transform: none !important;
+    }
+
+    [data-vaul-drawer].cb-sheet {
+      animation-name: cb-fade !important;
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+      transform: none !important;
+    }
+
+    [data-vaul-drawer].cb-sheet[data-state="closed"] {
+      animation-name: cb-fade-out !important;
+    }
+
+    [data-vaul-overlay].cb-sheet-overlay {
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+    }
+
+    .cb-confirm,
+    .cb-confirm-overlay {
+      animation-name: cb-fade !important;
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+    }
+
+    .cb-confirm[data-state="closed"],
+    .cb-confirm-overlay[data-state="closed"] {
+      animation-name: cb-fade-out !important;
+    }
+
+    [data-sonner-toaster].cb-toaster [data-sonner-toast] {
+      --y: translateY(0) !important;
+      transition-property: opacity !important;
+      transition-duration: var(--cb-dur-reduced, 300ms) !important;
+      transition-timing-function: linear !important;
+    }
+
+    [data-cb-batch] {
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+      animation-delay: 0ms !important;
+    }
+  }
+
+  [data-cb-reduced="true"][data-vaul-drawer] {
+    animation-name: cb-fade !important;
+    animation-duration: var(--cb-dur-reduced, 300ms) !important;
     transform: none !important;
   }
-
-  [data-vaul-drawer].cb-sheet {
-    animation-name: cb-fade !important;
-    animation-duration: 300ms !important;
-    transform: none !important;
-  }
-
-  [data-vaul-drawer].cb-sheet[data-state="closed"] {
-    animation-name: cb-fade-out !important;
-  }
-
-  [data-vaul-overlay].cb-sheet-overlay {
-    animation-duration: 300ms !important;
-  }
-
-  .cb-confirm,
-  .cb-confirm-overlay {
-    animation-name: cb-fade !important;
-    animation-duration: 300ms !important;
-  }
-
-  [data-sonner-toaster].cb-toaster-reduced [data-sonner-toast],
-  [data-sonner-toaster].cb-toaster [data-sonner-toast] {
-    --y: translateY(0) !important;
-    transition: opacity 300ms linear !important;
-  }
-
-  [data-cb-batch] {
-    animation-duration: 300ms !important;
-    animation-delay: 0ms !important;
-  }
-}
-
-[data-cb-reduced="true"][data-vaul-drawer],
-[data-vaul-drawer][data-cb-reduced="true"] {
-  animation-name: cb-fade !important;
-  animation-duration: 300ms !important;
-  transform: none !important;
 }

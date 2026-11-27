@@ -131,7 +131,7 @@ function CeremonyChrome({
                   More
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle>More actions</SheetTitle>
                   <SheetDescription>

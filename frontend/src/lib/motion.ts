@@ -102,7 +102,7 @@ export function sheetMotion(reduced: boolean) {
 
 export function toastMotion(reduced: boolean) {
   const stayMs = readCssNumber("--cb-toast-stay", 2800);
-  const radiusPx = 12;
+  const radiusPx = readCssNumber("--cb-radius", 12);
   if (reduced) {
     return {
       enter: fade(),
@@ -157,7 +157,7 @@ export function searchMotion(reduced: boolean) {
 
 export function confirmMotion(reduced: boolean) {
   const dim = readCssNumber("--cb-dialog-dim", 0.62);
-  const radiusPx = 16;
+  const radiusPx = readCssNumber("--cb-radius-lg", 16);
   if (reduced) {
     return {
       transition: fade(),

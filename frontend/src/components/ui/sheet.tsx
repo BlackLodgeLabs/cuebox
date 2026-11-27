@@ -4,30 +4,63 @@ import * as React from "react";
 import { Drawer } from "vaul";
 import { Icon } from "@/components/icon";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { sheetCloseThreshold, sheetMotion } from "@/lib/motion";
+import { SHEET_DISMISS_PX, sheetCloseThreshold, sheetMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type SheetSide = "top" | "bottom" | "left" | "right";
 
+type SheetGesture = {
+  dragPx: number;
+  dismissPx: number;
+};
+
 type SheetMotionApi = {
   setCloseThreshold: (value: number) => void;
   setDirection: (side: SheetSide) => void;
+  gesture: React.MutableRefObject<SheetGesture>;
 };
 
 const SheetMotionContext = React.createContext<SheetMotionApi | null>(null);
 
-function Sheet(props: React.ComponentProps<typeof Drawer.Root>) {
+function Sheet({
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof Drawer.Root>) {
   const [closeThreshold, setCloseThreshold] = React.useState(1);
   const [direction, setDirection] = React.useState<SheetSide>("bottom");
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const isOpen = open ?? uncontrolledOpen;
+  const gesture = React.useRef<SheetGesture>({
+    dragPx: 0,
+    dismissPx: SHEET_DISMISS_PX,
+  });
   const api = React.useMemo(
-    () => ({ setCloseThreshold, setDirection }),
+    () => ({ setCloseThreshold, setDirection, gesture }),
     [],
+  );
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      const moved = gesture.current.dragPx;
+      gesture.current.dragPx = 0;
+      // Vaul also closes on a fast flick shorter than 120px. Ignore that
+      // and keep the distance threshold. Clicks stay under 8px, so the
+      // close button, Escape, and the scrim still dismiss.
+      if (!next && moved >= 8 && moved < gesture.current.dismissPx) {
+        return;
+      }
+      setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
   );
 
   return (
     <SheetMotionContext.Provider value={api}>
       <Drawer.Root
         {...props}
+        open={isOpen}
+        onOpenChange={handleOpenChange}
         direction={direction}
         closeThreshold={closeThreshold}
         shouldScaleBackground={false}
@@ -78,14 +111,16 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof Drawer.Content>,
   SheetContentProps
->(({ side = "bottom", className, children, ...props }, ref) => {
+>(({ side = "bottom", className, children, onPointerDown, onPointerUp, ...props }, ref) => {
   const reduced = useReducedMotion();
   const motion = sheetMotion(reduced);
   const api = React.useContext(SheetMotionContext);
   const localRef = React.useRef<HTMLDivElement>(null);
+  const dragStart = React.useRef<{ x: number; y: number } | null>(null);
 
   React.useLayoutEffect(() => {
     api?.setDirection(side);
+    if (api) api.gesture.current.dismissPx = motion.dismissPx;
     const height = localRef.current?.getBoundingClientRect().height ?? 0;
     if (height > 0) {
       api?.setCloseThreshold(sheetCloseThreshold(height, motion.dismissPx));
@@ -117,6 +152,20 @@ const SheetContent = React.forwardRef<
           ["--cb-sheet-down" as string]: `${motion.closeMs}ms`,
         }}
         {...props}
+        onPointerDown={(event) => {
+          onPointerDown?.(event);
+          dragStart.current = { x: event.clientX, y: event.clientY };
+          if (api) api.gesture.current.dragPx = 0;
+        }}
+        onPointerUp={(event) => {
+          onPointerUp?.(event);
+          const origin = dragStart.current;
+          dragStart.current = null;
+          if (!origin || !api) return;
+          const dx = Math.abs(event.clientX - origin.x);
+          const dy = Math.abs(event.clientY - origin.y);
+          api.gesture.current.dragPx = side === "left" || side === "right" ? dx : dy;
+        }}
       >
         <Drawer.Handle className="cb-sheet-handle" aria-hidden>
           <span className="block h-1.5 w-10 rounded-full bg-cb-muted" />
