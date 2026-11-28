@@ -1,7 +1,7 @@
 "use client";
 
 import { Command } from "cmdk";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { SearchCard } from "@/components/ui/search-card";
@@ -17,10 +17,23 @@ import {
   type LibrarySearchHit,
 } from "@/lib/library-search-merge";
 import { cn } from "@/lib/utils";
-import type { TmdbSearchResultItem } from "@/types/api";
+import type { FilmSummary, TmdbSearchResultItem } from "@/types/api";
 
 const GROUP_CLASS =
-  "[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-cb-muted";
+  "[&_[cmdk-group-heading]]:px-cb-3 [&_[cmdk-group-heading]]:pb-cb-1 [&_[cmdk-group-heading]]:pt-cb-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-cb-meta [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:text-cb-muted";
+
+/** Keep a film just added in this card under "Not on your watchlist" (home-search-added). */
+function presentSearchHits(
+  libraryFilms: FilmSummary[],
+  tmdbResults: TmdbSearchResultItem[],
+  addedIds: number[],
+): LibrarySearchHit[] {
+  const pinned = new Set(addedIds);
+  const libraryForMerge = libraryFilms.filter(
+    (film) => film.tmdb_id == null || !pinned.has(film.tmdb_id),
+  );
+  return mergeLibraryAndTmdbResults(libraryForMerge, tmdbResults);
+}
 
 type FilmSearchCardProps = {
   open: boolean;
@@ -48,6 +61,7 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
   const [debounced, setDebounced] = useState("");
   const [addedIds, setAddedIds] = useState<number[]>([]);
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const claimedIds = useRef(new Set<number>());
   const addToWatchlist = useAddToWatchlist();
 
   useEffect(() => {
@@ -72,9 +86,10 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
   );
 
   const hits: LibrarySearchHit[] = hasQuery
-    ? mergeLibraryAndTmdbResults(
+    ? presentSearchHits(
         libraryQuery.data?.data ?? [],
         tmdbQuery.data?.data ?? [],
+        addedIds,
       )
     : [];
   const libraryHits = hits.filter((hit) => hit.kind === "library");
@@ -103,7 +118,8 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
   }
 
   async function addCatalogueFilm(result: TmdbSearchResultItem) {
-    if (pendingId != null || addedIds.includes(result.tmdb_id)) return;
+    if (claimedIds.current.has(result.tmdb_id) || pendingId != null) return;
+    claimedIds.current.add(result.tmdb_id);
     setPendingId(result.tmdb_id);
     try {
       const response = await addToWatchlist.mutateAsync({ tmdb_id: result.tmdb_id });
@@ -117,6 +133,7 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
         description: result.title,
       });
     } catch {
+      claimedIds.current.delete(result.tmdb_id);
       // useAddToWatchlist reports the failure.
     } finally {
       setPendingId(null);
@@ -125,7 +142,7 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="flex items-center gap-2 border-b border-cb-divider px-3">
+      <div className="flex items-center gap-cb-2 border-b border-cb-divider px-cb-3">
         <Icon name="search" size={18} className="shrink-0 text-cb-muted" />
         <Command.Input
           autoFocus
@@ -138,7 +155,7 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
       </div>
       <Command.List className="min-h-0 flex-1 overflow-y-auto px-1 py-1">
         {message ? (
-          <p className="px-3 py-8 text-center font-ui text-cb-caption text-cb-muted">
+          <p className="px-cb-3 py-cb-5 text-center font-ui text-cb-caption text-cb-muted">
             {message}
           </p>
         ) : null}
@@ -198,7 +215,7 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
       <button
         type="button"
         onClick={onClose}
-        className="w-full border-t border-cb-divider py-3 font-ui text-cb-caption text-cb-muted"
+        className="w-full border-t border-cb-divider py-cb-3 font-ui text-cb-caption text-cb-muted"
       >
         Cancel
       </button>
@@ -229,8 +246,10 @@ function ResultRow({
       onSelect={onSelect}
       data-added={added ? "true" : "false"}
       className={cn(
-        "flex cursor-pointer items-center gap-3 rounded-cb px-2 py-2 aria-selected:bg-cb-surface data-[selected=true]:bg-cb-surface",
-        added && "bg-[color-mix(in_srgb,var(--cb-teal)_15%,transparent)]",
+        "flex cursor-pointer items-center gap-cb-2 rounded-cb px-cb-2 py-cb-2",
+        added
+          ? "bg-[color-mix(in_srgb,var(--cb-teal)_32%,transparent)]"
+          : "aria-selected:bg-cb-surface data-[selected=true]:bg-cb-surface",
       )}
     >
       <Thumb src={posterUrl} />
@@ -239,7 +258,7 @@ function ResultRow({
           {title}
         </span>
         {meta ? (
-          <span className="block truncate font-ui text-cb-caption text-cb-muted">
+          <span className="block truncate font-mono text-cb-caption text-cb-muted">
             {meta}
           </span>
         ) : null}

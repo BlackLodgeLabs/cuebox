@@ -193,6 +193,51 @@ describe("FilmSearchCard", () => {
     );
   });
 
+  it("keeps a just-added film under Not on your watchlist after the library refreshes", async () => {
+    const addedMatrix: FilmSummary = {
+      ...wicker,
+      id: "film-matrix",
+      title: "The Matrix",
+      year: 1999,
+      tmdb_id: 603,
+      runtime: 136,
+      director: "Lana Wachowski",
+      genres: ["Science Fiction"],
+    };
+    let added = false;
+    getFilmsMock.mockImplementation(async () => ({
+      data: added ? [addedMatrix] : [],
+      pagination: { total: added ? 1 : 0, limit: 20, offset: 0, has_more: false },
+    }));
+    searchTmdbGlobalMock.mockResolvedValue({
+      data: [matrix],
+      pagination: { total: 1, limit: 20, offset: 0, has_more: false },
+    });
+    addToWatchlistMock.mockImplementation(async () => {
+      added = true;
+      return { film_id: "film-matrix", enrichment_status: "enriching" };
+    });
+
+    renderCard();
+    await userEvent.type(screen.getByRole("combobox", { name: "Search films" }), "matrix");
+    await screen.findByRole("option", { name: /The Matrix/ });
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add The Matrix to watchlist" }),
+    );
+
+    await waitFor(() => {
+      expect(addToWatchlistMock).toHaveBeenCalledTimes(1);
+      expect(getFilmsMock.mock.calls.length).toBeGreaterThan(1);
+    });
+    expect(screen.getAllByText("Added to watchlist").length).toBeGreaterThan(0);
+    expect(screen.getByText("Not on your watchlist")).toBeInTheDocument();
+    expect(screen.queryByText("On your watchlist")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add The Matrix to watchlist" })).toHaveClass(
+      "bg-cb-teal",
+    );
+    expect(screen.queryByRole("button", { name: "Open The Matrix" })).not.toBeInTheDocument();
+  });
+
   it("says when nothing matches", async () => {
     getFilmsMock.mockResolvedValue({
       data: [],

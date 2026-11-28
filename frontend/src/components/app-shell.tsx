@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const reduced = useReducedMotion();
   const screen = screenMotion(reduced);
   const [searchOpen, setSearchOpen] = useState(false);
-  const immersive = isCatalogueFilmPath(pathname);
+  const catalogueFilm = isCatalogueFilmPath(pathname);
   const openSearch = useCallback(() => setSearchOpen(true), []);
 
   return (
@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Suspense fallback={null}>
         <SearchFocusOpener onOpen={openSearch} />
       </Suspense>
-      {immersive ? null : (
+      {catalogueFilm ? null : (
       <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
         <div
           data-shell-header
@@ -111,7 +111,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main
         className={cn(
           "mx-auto w-full max-w-7xl",
-          immersive
+          catalogueFilm
             ? "pb-[env(safe-area-inset-bottom,0px)]"
             : "px-4 py-8 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
         )}
@@ -125,7 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <FilmSearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
-      {immersive ? null : (
+      {catalogueFilm ? null : (
       <nav
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"

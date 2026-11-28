@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorState } from "@/components/error-state";
 import { Icon } from "@/components/icon";
@@ -54,6 +54,7 @@ function TmdbFilmPageContent({ tmdbId }: { tmdbId: number }) {
   const addToWatchlist = useAddToWatchlist();
   const [moreOpen, setMoreOpen] = useState(false);
   const [added, setAdded] = useState(false);
+  const claimed = useRef(false);
   const film = filmQuery.data;
 
   useEffect(() => {
@@ -91,7 +92,8 @@ function TmdbFilmPageContent({ tmdbId }: { tmdbId: number }) {
   const meta = catalogueMeta(film);
 
   async function add() {
-    if (added || addToWatchlist.isPending) return;
+    if (claimed.current || added || addToWatchlist.isPending) return;
+    claimed.current = true;
     try {
       const response = await addToWatchlist.mutateAsync({ tmdb_id: tmdbId });
       setAdded(true);
@@ -102,6 +104,7 @@ function TmdbFilmPageContent({ tmdbId }: { tmdbId: number }) {
         description: film?.title,
       });
     } catch {
+      claimed.current = false;
       // useAddToWatchlist reports the failure.
     }
   }
@@ -127,28 +130,28 @@ function TmdbFilmPageContent({ tmdbId }: { tmdbId: number }) {
         </button>
       </div>
 
-      <div className="relative -mt-16 px-4">
+      <div className="relative -mt-cb-6 px-cb-3">
         <h1 className="text-h1 text-cb-text">{film.title}</h1>
         {meta ? (
-          <p className="mt-2 font-ui text-cb-caption text-cb-muted">{meta}</p>
+          <p className="mt-cb-2 font-mono text-cb-caption text-cb-muted">{meta}</p>
         ) : null}
         {percent != null ? (
-          <p className="mt-4 inline-flex items-center gap-2 rounded-cb bg-cb-surface px-2 py-1 font-mono text-[12px]">
+          <p className="mt-cb-3 inline-flex items-center gap-cb-2 rounded-cb bg-cb-surface px-cb-2 py-cb-1 font-mono text-cb-meta-sm">
             <span className="text-cb-teal">TMDB</span>
             <span className="text-cb-text">{percent}%</span>
           </p>
         ) : null}
 
-        <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.14em] text-cb-muted">
+        <p className="mt-cb-5 font-mono text-cb-meta uppercase text-cb-muted">
           Story
         </p>
         <h2 className="text-h2 text-cb-text">Synopsis</h2>
-        <p className="mt-2 max-w-prose font-ui text-cb-body text-cb-text">
+        <p className="mt-cb-2 max-w-prose font-ui text-cb-body text-cb-text">
           {film.overview?.trim() ? film.overview : "No synopsis yet."}
         </p>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg px-6 pb-[calc(12px+env(safe-area-inset-bottom,0px))] pt-3">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg px-cb-4 pb-[calc(var(--cb-space-3)+env(safe-area-inset-bottom,0px))] pt-cb-3">
         <div className="mx-auto grid max-w-md grid-cols-3 items-end">
           <div className="flex justify-center">
             {film.trailer_url ? (
