@@ -30,7 +30,6 @@ interface FilmDetailViewProps {
   autoOpenEditMatch?: boolean;
   watchlistTab?: WatchlistTab;
   onStatusTransition?: (status: FilmStatus) => void;
-  onMarkWatched?: () => void;
   onRemove?: () => void;
   isStatusPending?: boolean;
   /** False on the lighter not-on-watchlist page, which has no Close to this. */
@@ -148,7 +147,6 @@ export function FilmDetailView({
   autoOpenEditMatch = false,
   watchlistTab,
   onStatusTransition,
-  onMarkWatched,
   onRemove,
   isStatusPending = false,
   onWatchlist = true,
@@ -159,10 +157,9 @@ export function FilmDetailView({
   const [tab, setTab] = useState("overview");
   const [compact, setCompact] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
-  const [watchDialog, setWatchDialog] = useState<{
-    mode: "complete" | "edit";
-    watch?: FilmWatch;
-  } | null>(null);
+  const [review, setReview] = useState<
+    { mode: "create" } | { mode: "edit"; watch: FilmWatch } | null
+  >(null);
 
   const watches = film.watches ?? [];
   const loggedWatches = watches.filter((watch) => !watch.is_pending);
@@ -208,27 +205,15 @@ export function FilmDetailView({
   const enrichmentPending = !metadata && !semantic;
 
   function openLoggedWatch() {
-    if (film.status === "pending_watch_review") {
-      setWatchDialog({ mode: "complete", watch: pendingWatch });
-      return;
-    }
-    if (loggedWatches.length === 0 && film.status !== "watched") {
-      onMarkWatched?.();
+    if (watchedLabel === "Watched?") {
+      setReview({ mode: "create" });
       return;
     }
     setTab("you");
   }
 
   function logAnotherWatch() {
-    if (film.status === "pending_watch_review") {
-      setWatchDialog({ mode: "complete", watch: pendingWatch });
-      return;
-    }
-    if (loggedWatches.length === 0) {
-      onMarkWatched?.();
-      return;
-    }
-    setTab("you");
+    setReview({ mode: "create" });
   }
 
   const metaLine = heroMeta(film);
@@ -421,7 +406,7 @@ export function FilmDetailView({
                     type="button"
                     variant="secondary"
                     className="mt-3 min-h-11"
-                    onClick={() => setWatchDialog({ mode: "complete", watch: pendingWatch })}
+                    onClick={() => setReview({ mode: "create" })}
                   >
                     Complete review
                   </Button>
@@ -440,7 +425,7 @@ export function FilmDetailView({
                         type="button"
                         aria-label={`Edit watch, ${when}`}
                         className="flex h-11 w-11 items-center justify-center text-cb-muted"
-                        onClick={() => setWatchDialog({ mode: "edit", watch })}
+                        onClick={() => setReview({ mode: "edit", watch })}
                       >
                         <Icon name="edit" size={18} />
                       </button>
@@ -626,16 +611,18 @@ export function FilmDetailView({
 
       <EditFilmMatchDialog film={film} open={editOpen} onOpenChange={setEditOpen} />
 
-      {watchDialog && (
+      {review && (
         <WatchReviewDialog
           filmId={film.id}
           filmTitle={film.title}
+          year={film.year}
+          genre={film.metadata?.genres.find((genre) => genre.trim())?.trim() ?? null}
           open
-          mode={watchDialog.mode}
+          mode={review.mode}
           onOpenChange={(open) => {
-            if (!open) setWatchDialog(null);
+            if (!open) setReview(null);
           }}
-          {...(watchDialog.watch ? watchToDialogProps(watchDialog.watch) : {})}
+          {...(review.mode === "edit" ? watchToDialogProps(review.watch) : {})}
         />
       )}
     </div>

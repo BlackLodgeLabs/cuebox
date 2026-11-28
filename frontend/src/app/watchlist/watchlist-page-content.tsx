@@ -9,7 +9,7 @@ import {
   type WatchlistFilterValues,
 } from "@/components/watchlist-filter-sheet";
 import { WatchlistPosterGrid } from "@/components/watchlist-poster-grid";
-import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
+import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -201,34 +201,21 @@ export function WatchlistPageContent() {
   const [reviewDialog, setReviewDialog] = useState<{
     filmId: string;
     filmTitle: string;
-    cancelOnDismiss?: boolean;
-    initialScore?: number | null;
-    initialWatchedAt?: string;
-    initialNotes?: string | null;
+    year: number | null;
+    genre: string | null;
   } | null>(null);
 
-  const openMarkWatchedDialog = async (film: FilmSummary) => {
-    await statusTransition.mutateAsync({
-      filmId: film.id,
-      status: "pending_watch_review",
-    });
+  const openMarkWatchedDialog = (film: FilmSummary) => {
     setReviewDialog({
       filmId: film.id,
       filmTitle: film.title,
-      cancelOnDismiss: true,
+      year: film.year,
+      genre: film.genres.find((genre) => genre.trim()) ?? null,
     });
   };
 
   const openCompleteReviewDialog = (film: FilmSummary) => {
-    const pendingProps = film.pending_watch
-      ? watchToDialogProps(film.pending_watch)
-      : { initialWatchedAt: film.latest_watched_at ?? undefined };
-    setReviewDialog({
-      filmId: film.id,
-      filmTitle: film.title,
-      cancelOnDismiss: false,
-      ...pendingProps,
-    });
+    openMarkWatchedDialog(film);
   };
 
   const handleTabChange = (value: string) => {
@@ -396,14 +383,13 @@ export function WatchlistPageContent() {
         <WatchReviewDialog
           filmId={reviewDialog.filmId}
           filmTitle={reviewDialog.filmTitle}
+          year={reviewDialog.year}
+          genre={reviewDialog.genre}
           open
-          cancelOnDismiss={reviewDialog.cancelOnDismiss}
+          mode="create"
           onOpenChange={(open) => {
             if (!open) setReviewDialog(null);
           }}
-          initialScore={reviewDialog.initialScore}
-          initialWatchedAt={reviewDialog.initialWatchedAt}
-          initialNotes={reviewDialog.initialNotes}
         />
       )}
     </div>

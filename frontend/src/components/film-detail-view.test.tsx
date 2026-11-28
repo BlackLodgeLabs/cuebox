@@ -29,8 +29,24 @@ vi.mock("@/components/where-to-watch-section", () => ({
 }));
 
 vi.mock("@/components/watch-review-dialog", () => ({
-  WatchReviewDialog: () => null,
-  watchToDialogProps: () => ({}),
+  WatchReviewDialog: ({
+    open,
+    mode,
+    watchId,
+  }: {
+    open: boolean;
+    mode: string;
+    watchId?: string;
+  }) =>
+    open ? (
+      <div
+        role="dialog"
+        aria-label="Review sheet"
+        data-mode={mode}
+        data-watch-id={watchId ?? ""}
+      />
+    ) : null,
+  watchToDialogProps: (watch: { id: string }) => ({ watchId: watch.id }),
 }));
 
 vi.mock("@/hooks/use-films", () => ({
@@ -220,7 +236,7 @@ describe("FilmDetailView", () => {
 
   it("puts Trailer, an amber Watch, Watched?, and More on the bottom bar", () => {
     render(
-      <FilmDetailView film={readyFilm} onStatusTransition={vi.fn()} onMarkWatched={vi.fn()} />,
+      <FilmDetailView film={readyFilm} onStatusTransition={vi.fn()} />,
     );
 
     expect(screen.getByRole("button", { name: "Trailer" })).toBeInTheDocument();
@@ -262,6 +278,54 @@ describe("FilmDetailView", () => {
 
     expect(screen.getByRole("button", { name: "Watched" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Watched?" })).not.toBeInTheDocument();
+  });
+
+  it("opens create from Watched? and Log another watch, and edit from the pencil", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<FilmDetailView film={readyFilm} />);
+    await user.click(screen.getByRole("button", { name: "Watched?" }));
+    expect(screen.getByRole("dialog", { name: "Review sheet" })).toHaveAttribute(
+      "data-mode",
+      "create",
+    );
+    unmount();
+
+    render(
+      <FilmDetailView
+        film={{
+          ...readyFilm,
+          status: "watched",
+          watches: [
+            {
+              id: "watch-9",
+              score: 4,
+              watched_at: "2026-11-02",
+              notes: null,
+              source: "manual",
+              is_pending: false,
+              created_at: "2024-01-01T00:00:00Z",
+              updated_at: "2024-01-01T00:00:00Z",
+            },
+          ],
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("tab", { name: "You" }));
+    await user.click(screen.getByRole("button", { name: "Log another watch" }));
+    expect(screen.getByRole("dialog", { name: "Review sheet" })).toHaveAttribute(
+      "data-mode",
+      "create",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Edit watch, 2 Nov 2026" }));
+    expect(screen.getByRole("dialog", { name: "Review sheet" })).toHaveAttribute(
+      "data-mode",
+      "edit",
+    );
+    expect(screen.getByRole("dialog", { name: "Review sheet" })).toHaveAttribute(
+      "data-watch-id",
+      "watch-9",
+    );
   });
 
   it("archives and removes from the More sheet with no confirmation", async () => {

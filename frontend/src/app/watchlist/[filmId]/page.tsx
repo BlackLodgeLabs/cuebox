@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FilmDetailView } from "@/components/film-detail-view";
-import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { FilmDetailSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilm, useFilmStatusTransition } from "@/hooks/use-films";
@@ -23,7 +22,6 @@ export default function WatchlistFilmPage() {
   const searchParams = useSearchParams();
   const filmId = params.filmId;
   const prevStatusRef = useRef<string | null>(null);
-  const [markWatchedOpen, setMarkWatchedOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useFilm(filmId, {
     pollWhileEnriching: true,
@@ -74,37 +72,20 @@ export default function WatchlistFilmPage() {
   }
 
   return (
-    <>
-      <FilmDetailView
-        film={data}
-        autoOpenEditMatch={autoOpenEdit}
-        watchlistTab={watchlistTab}
-        isStatusPending={statusTransition.isPending}
-        onStatusTransition={(status) =>
-          statusTransition.mutate({ filmId, status })
-        }
-        onRemove={() => {
-          statusTransition.mutate(
-            { filmId, status: "archived" },
-            { onSuccess: () => router.push("/watchlist") },
-          );
-        }}
-        onMarkWatched={async () => {
-          await statusTransition.mutateAsync({
-            filmId,
-            status: "pending_watch_review",
-          });
-          setMarkWatchedOpen(true);
-        }}
-      />
-
-      <WatchReviewDialog
-        filmId={filmId}
-        filmTitle={data.title}
-        open={markWatchedOpen}
-        cancelOnDismiss
-        onOpenChange={setMarkWatchedOpen}
-      />
-    </>
+    <FilmDetailView
+      film={data}
+      autoOpenEditMatch={autoOpenEdit}
+      watchlistTab={watchlistTab}
+      isStatusPending={statusTransition.isPending}
+      onStatusTransition={(status) =>
+        statusTransition.mutate({ filmId, status })
+      }
+      onRemove={() => {
+        statusTransition.mutate(
+          { filmId, status: "archived" },
+          { onSuccess: () => router.push("/watchlist") },
+        );
+      }}
+    />
   );
 }

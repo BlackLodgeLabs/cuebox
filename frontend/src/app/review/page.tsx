@@ -15,7 +15,7 @@ import {
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { Input } from "@/components/ui/input";
-import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
+import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { useReviewRequired, useWatchReviewRequired } from "@/hooks/use-films";
 import {
   useAcceptReview,
@@ -33,9 +33,7 @@ export default function ReviewPage() {
   const [watchDialog, setWatchDialog] = useState<{
     filmId: string;
     filmTitle: string;
-    initialScore?: number | null;
-    initialWatchedAt?: string;
-    initialNotes?: string | null;
+    year: number | null;
   } | null>(null);
 
   const isLoading = matchQuery.isLoading || watchQuery.isLoading;
@@ -223,7 +221,7 @@ export default function ReviewPage() {
                   setWatchDialog({
                     filmId: film.film_id,
                     filmTitle: film.title,
-                    ...watchToDialogProps(film.pending_watch),
+                    year: film.year,
                   })
                 }
               >
@@ -253,13 +251,12 @@ export default function ReviewPage() {
         <WatchReviewDialog
           filmId={watchDialog.filmId}
           filmTitle={watchDialog.filmTitle}
+          year={watchDialog.year}
           open
+          mode="create"
           onOpenChange={(open) => {
             if (!open) setWatchDialog(null);
           }}
-          initialScore={watchDialog.initialScore}
-          initialWatchedAt={watchDialog.initialWatchedAt}
-          initialNotes={watchDialog.initialNotes}
         />
       )}
     </div>

@@ -360,17 +360,10 @@ describe("LibrarySearchPicker", () => {
     );
 
     await waitFor(() => {
-      expect(setFilmStatusMock).toHaveBeenCalledWith(
-        addedFilmId,
-        "pending_watch_review",
-      );
+      expect(screen.getByText("Tap a star to save")).toBeInTheDocument();
     });
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: "Review watched film" }),
-      ).toBeInTheDocument();
-    });
+    expect(setFilmStatusMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "The Matrix" })).toBeInTheDocument();
 
     expect(pushMock).not.toHaveBeenCalled();
   });

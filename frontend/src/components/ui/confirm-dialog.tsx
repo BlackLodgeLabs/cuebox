@@ -60,15 +60,15 @@ export function ConfirmDialog({
               {description}
             </AlertDialog.Description>
           </div>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div className="grid grid-cols-2 gap-2">
             <AlertDialog.Cancel
-              className={cn(buttonVariants({ variant: "outline" }))}
+              className={cn(buttonVariants({ variant: "outline" }), "h-11")}
               disabled={pending}
             >
               {cancelLabel}
             </AlertDialog.Cancel>
             <AlertDialog.Action
-              className={cn(buttonVariants({ variant: "destructive" }))}
+              className={cn(buttonVariants({ variant: "destructive" }), "h-11")}
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault();
