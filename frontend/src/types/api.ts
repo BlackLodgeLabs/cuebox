@@ -182,6 +182,8 @@ export interface WatchProviderItem {
   provider_name: string;
   logo_url: string | null;
   display_priority: number;
+  /** True when this provider is one of the user's saved services. */
+  subscribed?: boolean;
 }
 
 export type WatchProviderCategoryType = "flatrate" | "rent" | "buy" | "ads";
@@ -466,8 +468,27 @@ export interface FilmsQueryParams {
   created_to?: string;
   sort?: FilmSortField;
   sort_dir?: SortDirection;
+  /** When true, only films whose cached flatrate ids overlap saved services. */
+  on_my_services?: boolean;
   limit?: number;
   offset?: number;
+}
+
+export interface StreamingServicesResponse {
+  country_code: string;
+  provider_ids: number[];
+}
+
+export interface StreamingCatalogItem {
+  provider_id: number;
+  provider_name: string;
+  logo_url: string | null;
+  display_priority: number;
+}
+
+export interface StreamingCatalogResponse {
+  country_code: string;
+  providers: StreamingCatalogItem[];
 }
 
 export interface ReviewRequiredQueryParams {

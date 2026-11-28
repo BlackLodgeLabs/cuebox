@@ -11,6 +11,7 @@ from sqlalchemy import (
     and_,
     case,
     cast,
+    false,
     func,
     lateral,
     literal,
@@ -24,7 +25,13 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus, WatchSource
 from app.services.watched_csv_parser import DEFAULT_WATCHED_AT
-from app.database.models import Film, FilmMetadata, FilmWatch, WatchlistEntry
+from app.database.models import (
+    Film,
+    FilmMetadata,
+    FilmStreamingAvailability,
+    FilmWatch,
+    WatchlistEntry,
+)
 
 FilmSortField = Literal[
     "title",
@@ -226,6 +233,9 @@ def list_films(
     created_to: date | None = None,
     genres: list[str] | None = None,
     runtime_max: int | None = None,
+    on_my_services: bool = False,
+    service_provider_ids: list[int] | None = None,
+    service_country: str | None = None,
     sort: FilmSortField = "created_at",
     sort_dir: SortDirection = "desc",
     limit: int = 20,
@@ -300,6 +310,24 @@ def list_films(
         )
         stmt = stmt.where(runtime_clause)
         count_stmt = count_stmt.where(runtime_clause)
+    if on_my_services:
+        # Cache only. An empty selection matches nothing. A film with no row,
+        # or no overlap with the chosen flatrate ids, is excluded.
+        selected = service_provider_ids or []
+        if not selected:
+            stmt = stmt.where(false())
+            count_stmt = count_stmt.where(false())
+        else:
+            availability_join = (
+                FilmStreamingAvailability,
+                FilmStreamingAvailability.film_id == Film.id,
+            )
+            stmt = stmt.join(*availability_join)
+            count_stmt = count_stmt.join(*availability_join)
+            overlap = FilmStreamingAvailability.flatrate_provider_ids.overlap(selected)
+            country_clause = FilmStreamingAvailability.country_code == (service_country or "")
+            stmt = stmt.where(overlap, country_clause)
+            count_stmt = count_stmt.where(overlap, country_clause)
 
     order = _order_by(sort, sort_dir)
 

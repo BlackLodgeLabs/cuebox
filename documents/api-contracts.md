@@ -271,6 +271,7 @@ GET /films
 |`statuses`         |string |—           |Comma-separated exact `film_status` set (e.g. `active,pending_watch_review,watched`). Unlike singular `status=watched`, does **not** expand `watched` to include `pending_watch_review` — list both explicitly when needed. Cannot be combined with `status`. Empty / blank tokens → `VALIDATION_ERROR`.|
 |`enrichment_status`|string |—           |Filter by `enrichment_status` (see enum in §3.2)          |
 |`on_watchlist`     |boolean|`false`     |When `true`, only films with an active watchlist entry    |
+|`on_my_services`   |boolean|`false`     |When `true`, only films whose cached flatrate provider ids overlap the user's saved services for the configured country. Reads `film_streaming_availability`. Does not call TMDB. An empty saved list matches nothing. Combines with the other filters, sorts, and pagination.|
 |`search`           |string |—           |Case-insensitive substring match on title                 |
 |`year`             |integer|—           |Exact release year                                        |
 |`year_from`        |integer|—           |Minimum release year (inclusive)                          |
@@ -781,7 +782,8 @@ GET /films/{film_id}/watch-providers
           "provider_id": 8,
           "provider_name": "Netflix",
           "logo_url": "https://image.tmdb.org/t/p/w92/...",
-          "display_priority": 1
+          "display_priority": 1,
+          "subscribed": false
         }
       ]
     }
@@ -790,6 +792,8 @@ GET /films/{film_id}/watch-providers
 ```
 
 Empty category groups are omitted. When the country object exists but all monetization arrays are empty, returns `200` with `categories: []`.
+
+Within each category, providers the user has saved (`subscribed: true`) are listed before the others. Display priority still orders providers inside each of those two groups. A successful response for the configured country also writes the film's flatrate ids into `film_streaming_availability` when that row is missing or older than `watch_providers.availability_max_age_hours`. That write is not a list query. `GET /films` never calls TMDB for this.
 
 #### Errors
 
@@ -1237,6 +1241,54 @@ GET /sync/rss/status
 |`last_polled_at`            |string, nullable |ISO 8601; null if never polled           |
 |`last_poll_status`          |string, nullable |`success` | `error`; null if never polled|
 |`events_processed_last_poll`|integer, nullable|Count of events applied in the last poll |
+
+-----
+
+### 6.4 My services
+
+The user's chosen TMDB provider ids for the configured country (`watch_providers.country_code`, GB). Countries other than that one are out of scope.
+
+```
+GET /settings/services
+PUT /settings/services
+GET /settings/services/catalog
+```
+
+#### `GET /settings/services` and `PUT /settings/services`
+
+`PUT` replaces the selection. Ids must be positive integers, duplicates are dropped, and the stored list is returned in ascending id order. An empty list clears the selection. At most 100 ids.
+
+```json
+{ "country_code": "GB", "provider_ids": [8, 337] }
+```
+
+`PUT` body is `{ "provider_ids": [8, 337] }`. A non-positive id is `VALIDATION_ERROR` (400).
+
+#### `GET /settings/services/catalog`
+
+Selectable movie providers for the configured country, from TMDB's provider list, including logo URLs. Sorted by `display_priority`, then name.
+
+```json
+{
+  "country_code": "GB",
+  "providers": [
+    {
+      "provider_id": 8,
+      "provider_name": "Netflix",
+      "logo_url": "https://image.tmdb.org/t/p/w92/netflix.jpg",
+      "display_priority": 1
+    }
+  ]
+}
+```
+
+|Code            |HTTP|Trigger                                      |
+|----------------|----|---------------------------------------------|
+|`VALIDATION_ERROR`|400|A provider id is not a positive integer, or more than 100 ids|
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure on the catalog             |
+|`PROVIDER_ERROR`|503 |`TMDB_API_KEY` missing or TMDB not configured|
+
+The flatrate cache for watchlist films is filled when enrichment finishes and refreshed by the scheduler (same process as RSS, every 900 seconds, only rows older than `availability_max_age_hours`). There is no separate refresh route.
 
 -----
 

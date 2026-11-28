@@ -29,6 +29,8 @@ import type {
   FilmWatch,
   FilmTrailer,
   FilmWatchProvidersResponse,
+  StreamingCatalogResponse,
+  StreamingServicesResponse,
   SimilarFilm,
   TmdbFilm,
   CompleteWatchReviewRequest,
@@ -198,6 +200,23 @@ export function setFilmStatus(
     method: "POST",
     body: JSON.stringify({ status }),
   });
+}
+
+export function getStreamingServices(): Promise<StreamingServicesResponse> {
+  return fetchApi<StreamingServicesResponse>("/settings/services");
+}
+
+export function putStreamingServices(
+  providerIds: number[],
+): Promise<StreamingServicesResponse> {
+  return fetchApi<StreamingServicesResponse>("/settings/services", {
+    method: "PUT",
+    body: JSON.stringify({ provider_ids: providerIds }),
+  });
+}
+
+export function getStreamingCatalog(): Promise<StreamingCatalogResponse> {
+  return fetchApi<StreamingCatalogResponse>("/settings/services/catalog");
 }
 
 export function getFilmWatchProviders(

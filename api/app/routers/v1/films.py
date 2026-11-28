@@ -6,6 +6,7 @@ from datetime import date
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.core.config import get_app_config
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
 from app.dependencies import (
@@ -15,7 +16,13 @@ from app.dependencies import (
     get_tmdb_film_service,
     get_watch_provider_service,
 )
-from app.repositories import film_repository, film_watch_repository, metadata_review_repository, watchlist_repository
+from app.repositories import (
+    film_repository,
+    film_watch_repository,
+    metadata_review_repository,
+    streaming_repository,
+    watchlist_repository,
+)
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
@@ -171,6 +178,7 @@ def list_films(
     created_to: date | None = None,
     sort: str | None = None,
     sort_dir: str | None = None,
+    on_my_services: bool = False,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -179,6 +187,11 @@ def list_films(
         raise validation_error("Cannot combine status and statuses query parameters")
     parsed_status = _parse_film_status(status)
     parsed_statuses = _parse_film_statuses(statuses)
+    service_provider_ids = None
+    service_country = None
+    if on_my_services:
+        service_country = get_app_config().watch_providers.country_code or "GB"
+        service_provider_ids = streaming_repository.list_provider_ids(db, service_country)
     films, total = film_repository.list_films(
         db,
         status=parsed_status,
@@ -195,6 +208,9 @@ def list_films(
         created_to=created_to,
         sort=_parse_sort(sort),
         sort_dir=_parse_sort_dir(sort_dir),
+        on_my_services=on_my_services,
+        service_provider_ids=service_provider_ids,
+        service_country=service_country,
         limit=limit,
         offset=offset,
     )

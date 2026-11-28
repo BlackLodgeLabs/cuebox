@@ -27,6 +27,7 @@ enrichment:
 
 watch_providers:
   country_code: GB
+  availability_max_age_hours: 24
 
 scoring:
   theme_fit: 0.25

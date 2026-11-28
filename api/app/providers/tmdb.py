@@ -285,6 +285,37 @@ class TmdbClient:
             ads=_parse_entries("ads"),
         )
 
+    async def list_movie_watch_providers(
+        self,
+        *,
+        country_code: str = "GB",
+    ) -> list[TmdbWatchProviderEntry]:
+        """Selectable providers for a country. This is the catalog, not per-film availability."""
+        response = await request_with_retry(
+            self._client,
+            "GET",
+            f"{TMDB_BASE_URL}/watch/providers/movie",
+            params={"api_key": self._api_key, "watch_region": country_code},
+        )
+        response.raise_for_status()
+        parsed: list[TmdbWatchProviderEntry] = []
+        for item in response.json().get("results", []):
+            if not isinstance(item, dict):
+                continue
+            provider_id = item.get("provider_id")
+            provider_name = item.get("provider_name")
+            if provider_id is None or not provider_name:
+                continue
+            parsed.append(
+                TmdbWatchProviderEntry(
+                    provider_id=int(provider_id),
+                    provider_name=str(provider_name),
+                    logo_path=item.get("logo_path"),
+                    display_priority=int(item.get("display_priority") or 0),
+                )
+            )
+        return parsed
+
     @staticmethod
     def youtube_url(key: str) -> str:
         return f"https://www.youtube.com/watch?v={key}"

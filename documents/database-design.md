@@ -623,6 +623,37 @@ CREATE INDEX idx_system_versions_artifact_name ON system_versions (artifact_name
 
 -----
 
+### 4.15 `user_streaming_services`
+
+The single user's chosen TMDB watch-provider ids for one country (the configured country, GB). Used to sort Where to watch and to drive `GET /films?on_my_services=true`.
+
+```sql
+CREATE TABLE user_streaming_services (
+    country_code    TEXT NOT NULL,
+    provider_id     INTEGER NOT NULL,
+    PRIMARY KEY (country_code, provider_id),
+    CONSTRAINT chk_user_streaming_services_provider_id CHECK (provider_id > 0)
+);
+```
+
+### 4.16 `film_streaming_availability`
+
+Cached TMDB flatrate (stream) provider ids for one film. List queries read this row and do not call TMDB. A row with an empty array means the film was checked and has no stream providers. `refreshed_at` is when that check happened.
+
+```sql
+CREATE TABLE film_streaming_availability (
+    film_id                 UUID PRIMARY KEY REFERENCES films (id) ON DELETE CASCADE,
+    country_code            TEXT NOT NULL,
+    flatrate_provider_ids   INTEGER[] NOT NULL DEFAULT '{}',
+    refreshed_at            TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX idx_film_streaming_availability_providers
+    ON film_streaming_availability USING GIN (flatrate_provider_ids);
+```
+
+-----
+
 ## 5. Relationships
 
 ```
@@ -631,6 +662,7 @@ import_jobs
 
 films
     ├── film_metadata           (1:1, film_id → films.id, CASCADE DELETE)
+    ├── film_streaming_availability (1:1, film_id → films.id, CASCADE DELETE)
     ├── film_semantic_profiles  (1:1, film_id → films.id, CASCADE DELETE)
     ├── film_embeddings         (1:N, film_id → films.id, CASCADE DELETE)
     ├── watchlist_entries       (1:N, film_id → films.id, CASCADE DELETE)

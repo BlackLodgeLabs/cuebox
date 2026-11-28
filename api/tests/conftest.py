@@ -93,7 +93,8 @@ def _isolate_db(request):
             text(
                 "TRUNCATE recommendation_results, recommendation_candidates, "
                 "recommendation_sessions, recommendation_profiles, recommendation_exposure, "
-                "rss_sync_events, sync_config, metadata_match_reviews, watchlist_entries, "
+                "rss_sync_events, sync_config, user_streaming_services, "
+                "film_streaming_availability, metadata_match_reviews, watchlist_entries, "
                 "film_embeddings, film_semantic_profiles, film_metadata, films, import_jobs "
                 "RESTART IDENTITY CASCADE"
             )

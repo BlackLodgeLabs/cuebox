@@ -214,6 +214,16 @@ describe("AppShell", () => {
     expect(tabBar!.className).not.toMatch(/shadow/);
   });
 
+  it("pads page content above the tab bar without a shorter py override", () => {
+    navigationState.pathname = "/settings/services";
+    renderShell();
+
+    const main = document.querySelector("main");
+    expect(main).not.toBeNull();
+    expect(main!.className).toContain("pb-[calc(90px+env(safe-area-inset-bottom,0px))]");
+    expect(main!.className).not.toMatch(/\bpy-8\b/);
+  });
+
   it("keeps the Home tab href on /", () => {
     navigationState.pathname = "/review";
     renderShell();

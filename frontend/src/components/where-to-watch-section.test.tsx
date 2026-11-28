@@ -94,6 +94,42 @@ describe("WhereToWatchSection", () => {
     );
   });
 
+  it("lists the user's services first under Ready to play", () => {
+    useFilmWatchProvidersMock.mockReturnValue({
+      data: {
+        ...populatedData,
+        categories: [
+          {
+            ...populatedData.categories[0],
+            providers: [
+              { ...populatedData.categories[0].providers[0], subscribed: false },
+              {
+                provider_id: 9,
+                provider_name: "Prime Video",
+                logo_url: null,
+                display_priority: 2,
+                subscribed: true,
+              },
+            ],
+          },
+          populatedData.categories[1],
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<WhereToWatchSection filmId="film-1" hasTmdbId />);
+
+    const names = screen.getAllByText(/Netflix|Prime Video|Apple TV/).map((node) => node.textContent);
+    expect(names[0]).toBe("Prime Video");
+    expect(screen.getByRole("heading", { name: "Ready to play" })).toBeInTheDocument();
+    expect(screen.getByText("Others")).toBeInTheDocument();
+    expect(screen.getByText("My services")).toBeInTheDocument();
+  });
+
   it("shows UK empty-state when categories are empty", () => {
     useFilmWatchProvidersMock.mockReturnValue({
       data: { ...populatedData, categories: [] },
