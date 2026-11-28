@@ -146,7 +146,7 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
             className="mx-auto flex h-[52px] w-full max-w-7xl items-center gap-2 px-4"
           >
             <Wordmark />
-            {programmeHistory || historyNight ? null : (
+            {programmeHistory || historyRoute ? null : (
               <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-cb bg-cb-surface px-3">
                 <Icon name="search" size={18} className="shrink-0 text-cb-muted" />
                 <input
