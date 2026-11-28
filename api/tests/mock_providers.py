@@ -430,6 +430,31 @@ def _videos_json(tmdb_id: int) -> dict:
     }
 
 
+def _watch_provider_catalog_json() -> dict:
+    return {
+        "results": [
+            {
+                "provider_id": 337,
+                "provider_name": "Disney Plus",
+                "logo_path": "/disney.jpg",
+                "display_priority": 3,
+            },
+            {
+                "provider_id": 8,
+                "provider_name": "Netflix",
+                "logo_path": "/netflix.jpg",
+                "display_priority": 1,
+            },
+            {
+                "provider_id": 9,
+                "provider_name": "Prime Video",
+                "logo_path": "/prime.jpg",
+                "display_priority": 2,
+            },
+        ]
+    }
+
+
 def mock_provider_handler(request: httpx.Request, profile: str = "default") -> httpx.Response:
     url = str(request.url)
 
@@ -463,6 +488,9 @@ def mock_provider_handler(request: httpx.Request, profile: str = "default") -> h
                 if tmdb_id == TRAILER_FAIL_TMDB_ID:
                     return httpx.Response(500, json={"status_message": "Server error"})
                 return httpx.Response(200, json=_videos_json(tmdb_id))
+
+    if "/watch/providers/movie" in url:
+        return httpx.Response(200, json=_watch_provider_catalog_json())
 
     if "/watch/providers" in url:
         if profile == "partial_http_failure":

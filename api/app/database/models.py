@@ -22,7 +22,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import CHAR, JSONB, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, CHAR, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -469,6 +469,43 @@ class RssSyncEvent(Base):
     processed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class UserStreamingService(Base):
+    """TMDB provider ids the user subscribes to, for the configured country."""
+
+    __tablename__ = "user_streaming_services"
+    __table_args__ = (
+        CheckConstraint(
+            "provider_id > 0",
+            name="chk_user_streaming_services_provider_id",
+        ),
+    )
+
+    country_code: Mapped[str] = mapped_column(Text, primary_key=True)
+    provider_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+
+class FilmStreamingAvailability(Base):
+    """Cached TMDB flatrate (stream) provider ids for one film.
+
+    List queries read this row. They do not call TMDB.
+    """
+
+    __tablename__ = "film_streaming_availability"
+
+    film_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("films.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    country_code: Mapped[str] = mapped_column(Text, nullable=False)
+    flatrate_provider_ids: Mapped[list[int]] = mapped_column(
+        ARRAY(Integer), nullable=False, server_default="{}"
+    )
+    refreshed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    film: Mapped[Film] = relationship()
 
 
 class SystemVersion(Base):

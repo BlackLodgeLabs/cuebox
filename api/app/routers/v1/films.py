@@ -15,7 +15,13 @@ from app.dependencies import (
     get_tmdb_film_service,
     get_watch_provider_service,
 )
-from app.repositories import film_repository, film_watch_repository, metadata_review_repository, watchlist_repository
+from app.repositories import (
+    film_repository,
+    film_watch_repository,
+    metadata_review_repository,
+    streaming_repository,
+    watchlist_repository,
+)
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
@@ -54,6 +60,7 @@ from app.services.watch_review_service import WatchReviewService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
 from app.services.scoring_service import runtime_ceiling
+from app.services.streaming_availability_service import configured_country
 from app.services.similar_films_service import list_similar_films
 from app.services.tmdb_film_service import TmdbFilmService
 from app.services.watch_provider_service import WatchProviderService
@@ -171,6 +178,7 @@ def list_films(
     created_to: date | None = None,
     sort: str | None = None,
     sort_dir: str | None = None,
+    on_my_services: bool = False,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -179,6 +187,11 @@ def list_films(
         raise validation_error("Cannot combine status and statuses query parameters")
     parsed_status = _parse_film_status(status)
     parsed_statuses = _parse_film_statuses(statuses)
+    service_provider_ids = None
+    service_country = None
+    if on_my_services:
+        service_country = configured_country()
+        service_provider_ids = streaming_repository.list_provider_ids(db, service_country)
     films, total = film_repository.list_films(
         db,
         status=parsed_status,
@@ -195,6 +208,9 @@ def list_films(
         created_to=created_to,
         sort=_parse_sort(sort),
         sort_dir=_parse_sort_dir(sort_dir),
+        on_my_services=on_my_services,
+        service_provider_ids=service_provider_ids,
+        service_country=service_country,
         limit=limit,
         offset=offset,
     )

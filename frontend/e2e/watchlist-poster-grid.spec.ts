@@ -238,7 +238,11 @@ test.describe("watchlist poster grid (mocked API)", () => {
     await page.getByRole("button", { name: "Filter" }).click();
     await expect(page.getByRole("heading", { name: "Filter" })).toBeVisible();
     await expect(page.getByRole("radio", { name: "No limit" })).toBeChecked();
-    await expect(page.getByRole("switch", { name: /On my services/i })).toHaveCount(0);
+    const onMyServices = page.getByRole("switch", { name: /On my services/i });
+    await expect(onMyServices).toBeVisible();
+    await expect(onMyServices).toHaveAttribute("aria-checked", "false");
+    await onMyServices.click();
+    await expect(onMyServices).toHaveAttribute("data-state", "checked");
 
     await page.getByRole("button", { name: "Horror" }).click();
     await page.getByRole("radio", { name: "≤ 90 minutes" }).click();
@@ -248,6 +252,7 @@ test.describe("watchlist poster grid (mocked API)", () => {
     await page.screenshot({ path: test.info().outputPath("watchlist-filter.png") });
     await page.getByRole("button", { name: "Show 4 films" }).click();
     await expect(page).toHaveURL(/runtime=le_90/);
+    await expect(page).toHaveURL(/on_my_services=true/);
     await expect(page.getByText("4 unwatched")).toBeVisible();
     await expect(page.getByText("Lamb")).toBeVisible();
 
@@ -255,6 +260,7 @@ test.describe("watchlist poster grid (mocked API)", () => {
     await page.getByRole("button", { name: "Clear all" }).click();
     await page.getByRole("button", { name: "Show 239 films" }).click();
     await expect(page).not.toHaveURL(/runtime=/);
+    await expect(page).not.toHaveURL(/on_my_services/);
     await expect(page.getByText("The Wicker Man")).toBeVisible();
   });
 

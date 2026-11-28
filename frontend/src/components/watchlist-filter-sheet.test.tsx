@@ -82,8 +82,10 @@ describe("WatchlistFilterSheet", () => {
       "aria-checked",
       "false",
     );
-    expect(screen.queryByRole("switch", { name: /On my services/i })).not.toBeInTheDocument();
-    expect(document.querySelector("[data-slot='on-my-services']")).toBeTruthy();
+    expect(screen.getByRole("switch", { name: /On my services/i })).toHaveAttribute(
+      "data-state",
+      "unchecked",
+    );
     expect(await screen.findByRole("button", { name: "Horror" })).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Search$/i)).not.toBeInTheDocument();
   });
@@ -108,7 +110,7 @@ describe("WatchlistFilterSheet", () => {
           open
           onOpenChange={vi.fn()}
           status="watched"
-          values={{ genres: ["Drama"], runtime: "any" }}
+          values={{ genres: ["Drama"], runtime: "any", onMyServices: false }}
           onApply={onApply}
         />
       </Wrapper>,
@@ -133,7 +135,11 @@ describe("WatchlistFilterSheet", () => {
     });
 
     await user.click(screen.getByRole("button", { name: "Show 4 films" }));
-    expect(onApply).toHaveBeenCalledWith({ genres: ["Drama"], runtime: "le_90" });
+    expect(onApply).toHaveBeenCalledWith({
+      genres: ["Drama"],
+      runtime: "le_90",
+      onMyServices: false,
+    });
   });
 
   it("Clear all returns the draft to No limit and no genres without applying", async () => {
@@ -158,7 +164,7 @@ describe("WatchlistFilterSheet", () => {
           open
           onOpenChange={vi.fn()}
           status="active"
-          values={{ genres: ["Horror"], runtime: "le_120" }}
+          values={{ genres: ["Horror"], runtime: "le_120", onMyServices: true }}
           onApply={onApply}
         />
       </Wrapper>,
@@ -176,7 +182,53 @@ describe("WatchlistFilterSheet", () => {
       );
     });
     expect(onApply).not.toHaveBeenCalled();
+    expect(screen.getByRole("switch", { name: /On my services/i })).toHaveAttribute(
+      "data-state",
+      "unchecked",
+    );
     await screen.findByRole("button", { name: "Show 9 films" });
+  });
+
+  it("counts films on my services when the switch is on", async () => {
+    const user = userEvent.setup();
+    mockReduced(true);
+    mockGetWatchlistGenres.mockResolvedValue({ data: ["Horror"] });
+    mockGetFilms.mockImplementation(async (params?: FilmsQueryParams) => ({
+      data: [],
+      pagination: {
+        total: params?.on_my_services ? 4 : 11,
+        limit: 1,
+        offset: 0,
+        has_more: false,
+      },
+    }));
+    const onApply = vi.fn();
+    const { Wrapper } = createQueryWrapper();
+
+    render(
+      <Wrapper>
+        <WatchlistFilterSheet
+          open
+          onOpenChange={vi.fn()}
+          status="active"
+          values={DEFAULT_WATCHLIST_FILTERS}
+          onApply={onApply}
+        />
+      </Wrapper>,
+    );
+
+    await screen.findByRole("button", { name: "Show 11 films" });
+    await user.click(screen.getByRole("switch", { name: /On my services/i }));
+    await screen.findByRole("button", { name: "Show 4 films" });
+    expect(mockGetFilms).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "active", on_my_services: true, limit: 1 }),
+    );
+    await user.click(screen.getByRole("button", { name: "Show 4 films" }));
+    expect(onApply).toHaveBeenCalledWith({
+      genres: [],
+      runtime: "any",
+      onMyServices: true,
+    });
   });
 
   it("still applies when the preview count fails", async () => {

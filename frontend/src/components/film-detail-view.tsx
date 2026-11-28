@@ -379,14 +379,14 @@ export function FilmDetailView({
         </TabsContent>
 
         <TabsContent value="watch" className="mt-0 focus-visible:ring-0">
-          <DetailSection kicker="Services" title="Where to Watch">
+          <div className="px-4 pt-5">
             <WhereToWatchSection
               filmId={film.id}
               hasTmdbId={metadata?.tmdb_id != null}
               onEditMatch={() => setEditOpen(true)}
               showTitle={false}
             />
-          </DetailSection>
+          </div>
         </TabsContent>
 
         <TabsContent value="you" className="mt-0 focus-visible:ring-0">

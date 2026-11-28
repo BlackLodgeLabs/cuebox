@@ -94,6 +94,58 @@ describe("WhereToWatchSection", () => {
     );
   });
 
+  it("lists the user's services first under Ready to play", () => {
+    useFilmWatchProvidersMock.mockReturnValue({
+      data: {
+        ...populatedData,
+        categories: [
+          {
+            ...populatedData.categories[0],
+            providers: [
+              { ...populatedData.categories[0].providers[0], subscribed: false },
+              {
+                provider_id: 9,
+                provider_name: "Prime Video",
+                logo_url: null,
+                display_priority: 2,
+                subscribed: true,
+              },
+            ],
+          },
+          {
+            ...populatedData.categories[1],
+            providers: [
+              {
+                provider_id: 130,
+                provider_name: "Sky Store",
+                logo_url: null,
+                display_priority: 3,
+                subscribed: true,
+              },
+              ...populatedData.categories[1].providers,
+            ],
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<WhereToWatchSection filmId="film-1" hasTmdbId />);
+
+    const names = screen
+      .getAllByText(/Netflix|Prime Video|Apple TV|Sky Store/)
+      .map((node) => node.textContent);
+    expect(names[0]).toBe("Prime Video");
+    expect(names.indexOf("Sky Store")).toBeGreaterThan(names.indexOf("Netflix"));
+    const ready = screen.getByRole("heading", { name: "Ready to play" });
+    expect(ready.nextElementSibling?.className).toContain("bg-cb-teal");
+    expect(screen.getByText("Others")).toBeInTheDocument();
+    expect(screen.getByText("My services")).toBeInTheDocument();
+  });
+
   it("shows UK empty-state when categories are empty", () => {
     useFilmWatchProvidersMock.mockReturnValue({
       data: { ...populatedData, categories: [] },

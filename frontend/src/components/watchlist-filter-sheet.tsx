@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MultiSelectChips } from "@/components/multi-select-chips";
 import { Button } from "@/components/ui/button";
 import { CueNumber } from "@/components/ui/cue-number";
+import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -19,11 +20,13 @@ import type { RuntimePreference, WatchlistTab } from "@/types/api";
 export interface WatchlistFilterValues {
   genres: string[];
   runtime: RuntimePreference;
+  onMyServices: boolean;
 }
 
 export const DEFAULT_WATCHLIST_FILTERS: WatchlistFilterValues = {
   genres: [],
   runtime: "any",
+  onMyServices: false,
 };
 
 interface WatchlistFilterSheetProps {
@@ -72,6 +75,7 @@ export function WatchlistFilterSheet({
       limit: 1,
       ...(draft.genres.length > 0 ? { genres: draft.genres } : {}),
       ...(draft.runtime === "any" ? {} : { runtime: draft.runtime }),
+      ...(draft.onMyServices ? { on_my_services: true } : {}),
     },
     { enabled: open, keepPrevious: true },
   );
@@ -85,13 +89,22 @@ export function WatchlistFilterSheet({
         <SheetHeader className="text-left">
           <SheetTitle>Filter</SheetTitle>
           <SheetDescription className="sr-only">
-            Narrow this view by genre and runtime. On my services arrives later.
+            Narrow this view by your services, genre, and runtime.
           </SheetDescription>
         </SheetHeader>
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto">
-          {/* S8 inserts the On my services switch here. */}
-          <div data-slot="on-my-services" />
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="on-my-services" className="font-ui text-cb-ui text-cb-text">
+              On my services
+            </label>
+            <Switch
+              id="on-my-services"
+              checked={draft.onMyServices}
+              onCheckedChange={(on) => setDraft((prev) => ({ ...prev, onMyServices: on }))}
+              aria-label="On my services"
+            />
+          </div>
 
           <div className="space-y-2">
             <p className="text-label-md text-cb-muted">Genre</p>

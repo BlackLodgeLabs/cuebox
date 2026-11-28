@@ -50,6 +50,10 @@ function parseRuntime(value: string | null): RuntimePreference {
   return "any";
 }
 
+function parseOnMyServices(value: string | null): boolean {
+  return value === "true" || value === "1";
+}
+
 export function WatchlistPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,7 +77,8 @@ export function WatchlistPageContent() {
   const sort = resolveWatchlistSort(searchParams.get("sort"), searchParams.get("sort_dir"));
   const genres = parseGenres(searchParams.get("genres"));
   const runtime = parseRuntime(searchParams.get("runtime"));
-  const filtersActive = genres.length > 0 || runtime !== "any";
+  const onMyServices = parseOnMyServices(searchParams.get("on_my_services"));
+  const filtersActive = genres.length > 0 || runtime !== "any" || onMyServices;
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -128,6 +133,7 @@ export function WatchlistPageContent() {
       sort.sortDir,
       genres.join("\u0000"),
       runtime,
+      onMyServices ? "1" : "0",
     ],
     pageSize: WATCHLIST_PAGE_SIZE,
     fetchPage: ({ offset, limit }) =>
@@ -137,6 +143,7 @@ export function WatchlistPageContent() {
         sort_dir: sort.sortDir,
         ...(genres.length > 0 ? { genres } : {}),
         ...(runtime === "any" ? {} : { runtime }),
+        ...(onMyServices ? { on_my_services: true } : {}),
         offset,
         limit,
       }),
@@ -182,6 +189,7 @@ export function WatchlistPageContent() {
     updateParams({
       genres: values.genres.length > 0 ? values.genres.join(",") : null,
       runtime: values.runtime === "any" ? null : values.runtime,
+      on_my_services: values.onMyServices ? "true" : null,
       offset: null,
     });
     setFilterOpen(false);
@@ -292,7 +300,7 @@ export function WatchlistPageContent() {
         open={filterOpen}
         onOpenChange={setFilterOpen}
         status={tab}
-        values={{ genres, runtime }}
+        values={{ genres, runtime, onMyServices }}
         onApply={applyFilters}
       />
     </div>

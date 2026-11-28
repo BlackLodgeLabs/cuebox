@@ -13,6 +13,7 @@ class WatchProviderItem(BaseModel):
     provider_name: str
     logo_url: str | None
     display_priority: int
+    subscribed: bool = False
 
 
 class WatchProviderCategory(BaseModel):

@@ -186,7 +186,7 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
                     )
                   : cn(
                       "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
-                      historyRoute ? "pt-1" : programmePreview ? "pt-2" : "py-8",
+                      historyRoute ? "pt-1" : programmePreview ? "pt-2" : "pt-8",
                     )
         }
       >

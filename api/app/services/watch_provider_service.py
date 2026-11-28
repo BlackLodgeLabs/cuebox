@@ -10,7 +10,11 @@ from sqlalchemy.orm import Session
 from app.core.config import get_app_config
 from app.core.exceptions import AppError, not_found, unprocessable
 from app.providers.tmdb import TmdbClient, TmdbWatchProviderEntry
-from app.repositories import film_metadata_repository, film_repository
+from app.repositories import film_metadata_repository, film_repository, streaming_repository
+from app.services.streaming_availability_service import (
+    configured_country,
+    store_flatrate_if_stale,
+)
 from app.schemas.errors import ErrorCode
 from app.schemas.watch_providers import (
     FilmWatchProvidersResponse,
@@ -72,7 +76,16 @@ class WatchProviderService:
                 status_code=502,
             ) from exc
 
-        categories = self._build_categories(result)
+        selected = set(streaming_repository.list_provider_ids(db, resolved_country))
+        categories = self._build_categories(result, selected)
+        if resolved_country == configured_country():
+            store_flatrate_if_stale(
+                db,
+                film_id,
+                country_code=resolved_country,
+                provider_ids=[entry.provider_id for entry in result.flatrate],
+            )
+            db.commit()
         return FilmWatchProvidersResponse(
             film_id=film_id,
             tmdb_id=metadata.tmdb_id,
@@ -81,19 +94,27 @@ class WatchProviderService:
             categories=categories,
         )
 
-    def _build_categories(self, result) -> list[WatchProviderCategory]:
+    def _build_categories(
+        self,
+        result,
+        selected: set[int],
+    ) -> list[WatchProviderCategory]:
         categories: list[WatchProviderCategory] = []
         for type_key, label, attr in _CATEGORY_SPECS:
             entries: list[TmdbWatchProviderEntry] = getattr(result, attr)
             if not entries:
                 continue
-            sorted_entries = sorted(entries, key=lambda item: item.display_priority)
+            sorted_entries = sorted(
+                entries,
+                key=lambda item: (item.provider_id not in selected, item.display_priority),
+            )
             providers = [
                 WatchProviderItem(
                     provider_id=entry.provider_id,
                     provider_name=entry.provider_name,
                     logo_url=TmdbClient.provider_logo_url(entry.logo_path),
                     display_priority=entry.display_priority,
+                    subscribed=entry.provider_id in selected,
                 )
                 for entry in sorted_entries
             ]

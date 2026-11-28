@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFilmWatchProviders } from "@/hooks/use-watch-providers";
 import { ApiClientError } from "@/lib/api-client";
-import type { WatchProviderCategory } from "@/types/api";
+import { splitWatchProviders } from "@/lib/watch-services";
+import type { WatchProviderCategory, WatchProviderItem } from "@/types/api";
 
 interface WhereToWatchSectionProps {
   filmId: string;
@@ -17,6 +18,41 @@ interface WhereToWatchSectionProps {
   showTitle?: boolean;
 }
 
+function ProviderRow({
+  provider,
+  categoryLabel,
+  countryCode,
+}: {
+  provider: WatchProviderItem;
+  categoryLabel: string;
+  countryCode: string;
+}) {
+  return (
+    <li className="flex min-h-14 items-center gap-3 border-b border-cb-divider py-2 last:border-0">
+      {provider.logo_url ? (
+        <Image
+          src={provider.logo_url}
+          alt=""
+          width={40}
+          height={40}
+          className="h-10 w-10 rounded-cb-sm object-cover"
+        />
+      ) : (
+        <div className="flex h-10 w-10 items-center justify-center rounded-cb-sm border border-cb-divider bg-cb-surface font-ui text-[10px] font-semibold">
+          {provider.provider_name.slice(0, 2)}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-ui text-cb-ui font-medium">{provider.provider_name}</p>
+        <p className="font-mono text-[11px] text-cb-muted">
+          {categoryLabel} · {countryCode}
+        </p>
+      </div>
+      <span className="font-mono text-cb-meta uppercase text-cb-teal">{categoryLabel}</span>
+    </li>
+  );
+}
+
 function ProviderGroups({
   categories,
   countryCode,
@@ -24,40 +60,42 @@ function ProviderGroups({
   categories: WatchProviderCategory[];
   countryCode: string;
 }) {
+  const { mine, others } = splitWatchProviders(categories);
   return (
     <div className="space-y-5">
-      {categories.map((category) => (
+      {mine.length > 0 ? (
+        <div className="space-y-1">
+          <p className="font-mono text-cb-meta uppercase text-cb-muted">My services</p>
+          <h3 className="font-display text-cb-section leading-none">Ready to play</h3>
+          <span aria-hidden className="mt-1.5 block h-0.5 w-7 bg-cb-teal" />
+          <ul>
+            {mine.map((provider) => (
+              <ProviderRow
+                key={`mine-${provider.provider_id}`}
+                provider={provider}
+                categoryLabel={provider.categoryLabel}
+                countryCode={countryCode}
+              />
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {mine.length > 0 && others.length > 0 ? (
+        <p className="font-mono text-cb-meta uppercase text-cb-muted">Others</p>
+      ) : null}
+      {others.map((category) => (
         <div key={category.type} className="space-y-1">
-          <p className="font-mono text-cb-meta uppercase text-cb-muted">{category.label}</p>
+          {mine.length === 0 ? (
+            <p className="font-mono text-cb-meta uppercase text-cb-muted">{category.label}</p>
+          ) : null}
           <ul>
             {category.providers.map((provider) => (
-              <li
+              <ProviderRow
                 key={`${category.type}-${provider.provider_id}`}
-                className="flex min-h-14 items-center gap-3 border-b border-cb-divider py-2 last:border-0"
-              >
-                {provider.logo_url ? (
-                  <Image
-                    src={provider.logo_url}
-                    alt=""
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 rounded-cb-sm object-cover"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-cb-sm border border-cb-divider bg-cb-surface font-ui text-[10px] font-semibold">
-                    {provider.provider_name.slice(0, 2)}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-ui text-cb-ui font-medium">{provider.provider_name}</p>
-                  <p className="font-mono text-[11px] text-cb-muted">
-                    {category.label} · {countryCode}
-                  </p>
-                </div>
-                <span className="font-mono text-cb-meta uppercase text-cb-teal">
-                  {category.label}
-                </span>
-              </li>
+                provider={provider}
+                categoryLabel={category.label}
+                countryCode={countryCode}
+              />
             ))}
           </ul>
         </div>

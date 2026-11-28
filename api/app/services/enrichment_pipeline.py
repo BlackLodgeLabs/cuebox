@@ -16,6 +16,7 @@ from app.repositories import film_repository, import_job_repository
 from app.services.embedding_service import EmbeddingService
 from app.services.provider_service import ProviderService
 from app.services.semantic_service import SemanticService
+from app.services.streaming_availability_service import refresh_watchlist_film
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,10 @@ async def run_semantic_pipeline(
         film = film_repository.get_by_id(db, film_id)
         if film is not None:
             film_repository.update_enrichment_status(db, film, EnrichmentStatus.READY)
+            try:
+                await refresh_watchlist_film(db, provider_service, film.id)
+            except Exception:
+                logger.exception("Availability cache failed for film %s", film_id)
     except AppError as exc:
         film = film_repository.get_by_id(db, film_id)
         if film is not None:

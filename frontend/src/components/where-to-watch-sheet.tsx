@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFilmWatchProviders } from "@/hooks/use-watch-providers";
-import type { WatchProviderCategory } from "@/types/api";
+import { splitWatchProviders } from "@/lib/watch-services";
+import type { WatchProviderCategory, WatchProviderItem } from "@/types/api";
 
 export function WhereToWatchSheet({
   filmId,
@@ -52,41 +53,90 @@ export function WhereToWatchSheet({
           </p>
         ) : null}
         {!isLoading && !isError ? (
-          <div className="space-y-6">
-            {categories.map((category) => (
-              <ProviderGroup key={category.type} category={category} />
-            ))}
-          </div>
+          <OrderedProviders categories={categories} />
         ) : null}
       </SheetContent>
     </Sheet>
   );
 }
 
-function ProviderGroup({ category }: { category: WatchProviderCategory }) {
+function OrderedProviders({ categories }: { categories: WatchProviderCategory[] }) {
+  const { mine, others } = splitWatchProviders(categories);
+  return (
+    <div className="space-y-6">
+      {mine.length > 0 ? (
+        <section className="space-y-3">
+          <p className="font-mono text-cb-meta uppercase text-cb-muted">My services</p>
+          <h3 className="font-display text-cb-section leading-none">Ready to play</h3>
+          <span aria-hidden className="mt-1.5 block h-0.5 w-7 bg-cb-teal" />
+          <ProviderRows providers={mine} />
+        </section>
+      ) : null}
+      {mine.length > 0 && others.length > 0 ? (
+        <p className="font-mono text-cb-meta uppercase text-cb-muted">Others</p>
+      ) : null}
+      {others.map((category) => (
+        <ProviderGroup
+          key={category.type}
+          category={category}
+          showLabel={mine.length === 0}
+          categoryLabel={category.label}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ProviderRows({
+  providers,
+}: {
+  providers: Array<WatchProviderItem & { categoryLabel?: string }>;
+}) {
+  return (
+    <ul className="space-y-3">
+      {providers.map((provider) => (
+        <li key={provider.provider_id} className="flex items-center gap-3">
+          {provider.logo_url ? (
+            <img
+              src={provider.logo_url}
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-cb-sm object-cover"
+            />
+          ) : (
+            <span className="flex h-9 w-9 items-center justify-center rounded-cb-sm bg-cb-bg font-ui text-cb-caption text-cb-muted">
+              <Icon name="play_arrow" size={18} />
+            </span>
+          )}
+          <span className="min-w-0">
+            <span className="block font-ui text-cb-body text-cb-text">{provider.provider_name}</span>
+            {provider.categoryLabel ? (
+              <span className="block font-mono text-[11px] text-cb-muted">{provider.categoryLabel}</span>
+            ) : null}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ProviderGroup({
+  category,
+  showLabel = true,
+  categoryLabel,
+}: {
+  category: WatchProviderCategory;
+  showLabel?: boolean;
+  categoryLabel?: string;
+}) {
+  const providers = category.providers.map((provider) => ({ ...provider, categoryLabel }));
   return (
     <section className="space-y-3">
-      <h3 className="font-mono text-cb-meta uppercase text-cb-muted">{category.label}</h3>
-      <ul className="space-y-3">
-        {category.providers.map((provider) => (
-          <li key={`${category.type}-${provider.provider_id}`} className="flex items-center gap-3">
-            {provider.logo_url ? (
-              <img
-                src={provider.logo_url}
-                alt=""
-                width={36}
-                height={36}
-                className="h-9 w-9 rounded-cb-sm object-cover"
-              />
-            ) : (
-              <span className="flex h-9 w-9 items-center justify-center rounded-cb-sm bg-cb-bg font-ui text-cb-caption text-cb-muted">
-                <Icon name="play_arrow" size={18} />
-              </span>
-            )}
-            <span className="font-ui text-cb-body text-cb-text">{provider.provider_name}</span>
-          </li>
-        ))}
-      </ul>
+      {showLabel ? (
+        <h3 className="font-mono text-cb-meta uppercase text-cb-muted">{category.label}</h3>
+      ) : null}
+      <ProviderRows providers={providers} />
     </section>
   );
 }
