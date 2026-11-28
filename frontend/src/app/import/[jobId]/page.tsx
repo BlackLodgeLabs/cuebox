@@ -79,14 +79,14 @@ export default function ImportStatusPage() {
               {progressPercent !== null ? (
                 <>
                   <Progress value={progressPercent} />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-ui text-cb-ui text-cb-muted">
                     {data.processed_films} of {data.total_films} films processed
                   </p>
                 </>
               ) : (
                 <>
-                  <Progress value={undefined} className="animate-pulse" />
-                  <p className="text-sm text-muted-foreground">
+                  <Progress value={undefined} />
+                  <p className="font-ui text-cb-ui text-cb-muted">
                     Parsing CSV… ({data.processed_films} processed so far)
                   </p>
                 </>
@@ -94,16 +94,16 @@ export default function ImportStatusPage() {
             </div>
           )}
 
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="text-label-md normal-case tracking-normal text-muted-foreground">Processed</dt>
+          <dl className="grid grid-cols-2 gap-2 font-ui text-cb-ui">
+            <dt className="text-cb-muted">Processed</dt>
             <dd>{data.processed_films}</dd>
-            <dt className="text-muted-foreground">Failed</dt>
+            <dt className="text-cb-muted">Failed</dt>
             <dd>{data.failed_films}</dd>
-            <dt className="text-muted-foreground">Duplicates skipped</dt>
+            <dt className="text-cb-muted">Duplicates skipped</dt>
             <dd>{data.duplicate_films}</dd>
             {data.total_films !== null && (
               <>
-                <dt className="text-muted-foreground">Total</dt>
+                <dt className="text-cb-muted">Total</dt>
                 <dd>{data.total_films}</dd>
               </>
             )}
@@ -113,7 +113,7 @@ export default function ImportStatusPage() {
             <div>
               <button
                 type="button"
-                className="inline-flex min-h-11 items-center text-sm font-medium text-cb-teal hover:underline"
+                className="inline-flex min-h-11 items-center font-ui text-cb-ui font-medium text-cb-teal hover:underline"
                 onClick={() => setFailuresOpen(!failuresOpen)}
               >
                 {failuresOpen ? "Hide" : "Show"} failure details ({data.failed_films})
@@ -121,11 +121,11 @@ export default function ImportStatusPage() {
               {failuresOpen && (
                 <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto text-sm">
                   {data.failure_summary.map((item) => (
-                    <li key={item.letterboxd_uri} className="min-w-0 rounded border p-2">
-                      <p className="break-all font-mono text-xs text-secondary">
+                    <li key={item.letterboxd_uri} className="min-w-0 rounded-cb border border-cb-divider p-2">
+                      <p className="break-all font-mono text-cb-meta normal-case tracking-normal text-cb-muted">
                         {item.letterboxd_uri}
                       </p>
-                      <p className="text-muted-foreground">{item.reason}</p>
+                      <p className="font-ui text-cb-ui text-cb-muted">{item.reason}</p>
                     </li>
                   ))}
                 </ul>
@@ -134,7 +134,7 @@ export default function ImportStatusPage() {
           )}
 
           {isComplete && reviewLoading && (
-            <p className="text-sm text-muted-foreground">
+            <p className="font-ui text-cb-ui text-cb-muted">
               Checking for matches to review…
             </p>
           )}
