@@ -79,12 +79,17 @@ export function useInfiniteScroll<T>({
   }, [enabled, isSuccess, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const pages = query.data?.pages ?? [];
-  const total = pages[0]?.pagination.total;
+  const items = pages.flatMap((page) => page.data);
+  const reportedTotal = pages[0]?.pagination.total;
 
   return {
-    items: pages.flatMap((page) => page.data),
-    /** `pagination.total` from the first page. Null until that page arrives. */
-    total: total ?? null,
+    items,
+    /**
+     * Server total from the first page. Null until that page arrives, so the
+     * watchlist count line stays blank while loading. A page that omits
+     * `pagination.total` falls back to the loaded length (history night count).
+     */
+    total: reportedTotal ?? (pages.length === 0 ? null : items.length),
     hasMore: hasNextPage,
     isLoading: query.isLoading,
     isFetchingNextPage,

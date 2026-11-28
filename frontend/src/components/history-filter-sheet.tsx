@@ -107,9 +107,10 @@ export function HistoryFilterSheet({
                 <SelectValue placeholder="Watch status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="watched">Watched</SelectItem>
                 <SelectItem value="unwatched">Unwatched</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
           </div>

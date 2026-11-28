@@ -82,7 +82,7 @@ test.describe("First-time user journey", () => {
 
     await page.goto("/history");
     await expect(
-      page.getByRole("link", { name: new RegExp(winnerTitle, "i") }),
+      page.getByRole("button", { name: new RegExp(winnerTitle, "i") }),
     ).toBeVisible({ timeout: 15_000 });
   });
 });
