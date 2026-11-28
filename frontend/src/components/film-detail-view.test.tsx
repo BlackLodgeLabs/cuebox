@@ -1,11 +1,17 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FilmDetailView } from "@/components/film-detail-view";
-import type { FilmDetail, FilmMetadataBlock } from "@/types/api";
+import type { FilmDetail, FilmMetadataBlock, SimilarFilm } from "@/types/api";
 
 afterEach(() => {
   cleanup();
 });
+
+const browse = vi.hoisted(() => ({
+  trailerUrl: "https://www.youtube.com/watch?v=official" as string | null,
+  similar: [] as SimilarFilm[],
+}));
 
 vi.mock("next/image", () => ({
   default: (props: { alt: string }) => {
@@ -19,14 +25,25 @@ vi.mock("@/components/edit-film-match-dialog", () => ({
 }));
 
 vi.mock("@/components/where-to-watch-section", () => ({
-  WhereToWatchSection: () => (
-    <div data-testid="where-to-watch">Where to Watch</div>
-  ),
+  WhereToWatchSection: () => <div data-testid="where-to-watch">Where to Watch</div>,
 }));
 
 vi.mock("@/components/watch-review-dialog", () => ({
   WatchReviewDialog: () => null,
   watchToDialogProps: () => ({}),
+}));
+
+vi.mock("@/hooks/use-films", () => ({
+  useFilmTrailer: () => ({
+    data: browse.trailerUrl ? { url: browse.trailerUrl, name: "Trailer", site: "YouTube" } : { url: null },
+    isLoading: false,
+    isError: false,
+  }),
+  useSimilarFilms: () => ({
+    data: browse.similar,
+    isLoading: false,
+    isError: false,
+  }),
 }));
 
 const metadata: FilmMetadataBlock = {
@@ -85,35 +102,84 @@ const emptyFilm: FilmDetail = {
   semantic_profile: null,
 };
 
-describe("FilmDetailView poster-led layout", () => {
-  it("renders a dominant poster with title adjacent, not a backdrop hero", () => {
-    const { container } = render(
-      <FilmDetailView
-        film={readyFilm}
-        onStatusTransition={vi.fn()}
-        onMarkWatched={vi.fn()}
-      />,
-    );
+function neighbour(status: SimilarFilm["status"], title: string): SimilarFilm {
+  return {
+    id: title,
+    title,
+    year: 2015,
+    letterboxd_uri: "https://boxd.it/x",
+    status,
+    enrichment_status: "ready",
+    poster_url: null,
+    director: null,
+    runtime: 92,
+    genres: ["Horror"],
+    backdrop_url: null,
+    latest_score: null,
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    semantic_line: "The same folk dread.",
+  };
+}
 
-    expect(screen.getByAltText("12 Years a Slave")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 1, name: /12 Years a Slave \(2013\)/i }),
-    ).toBeInTheDocument();
-    // No full-bleed backdrop Image as competing hero chrome
-    expect(container.querySelector(".relative.-mx-4")).toBeNull();
-    expect(container.querySelector("img[alt='']")).toBeNull();
+describe("FilmDetailView", () => {
+  afterEach(() => {
+    browse.trailerUrl = "https://www.youtube.com/watch?v=official";
+    browse.similar = [];
   });
 
-  it("shows NO POSTER when poster is missing", () => {
+  it("uses a backdrop hero, a 40px title, and a mono meta line", () => {
+    render(<FilmDetailView film={readyFilm} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "12 Years a Slave" })).toHaveClass(
+      "text-cb-display",
+    );
+    expect(screen.queryByRole("heading", { name: /12 Years a Slave \(2013\)/ })).not.toBeInTheDocument();
+    expect(screen.getByText("2013 · Drama · 134m · Steve McQueen")).toBeInTheDocument();
+    expect(screen.getByText("On your watchlist")).toHaveClass("uppercase", "text-cb-teal");
+  });
+
+  it("does not use the poster as the hero when the backdrop is missing", () => {
     render(
       <FilmDetailView
         film={{
           ...readyFilm,
-          metadata: { ...metadata, poster_url: null },
+          metadata: { ...metadata, backdrop_url: null },
         }}
       />,
     );
-    expect(screen.getByText("NO POSTER")).toBeInTheDocument();
+
+    expect(screen.queryByText("NO POSTER")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("shows TMDB and Rotten Tomatoes percentages and no Letterboxd score", () => {
+    render(<FilmDetailView film={readyFilm} />);
+
+    const scores = screen.getByTestId("community-scores");
+    expect(within(scores).getByText("79%")).toBeInTheDocument();
+    expect(within(scores).getByText("95%")).toBeInTheDocument();
+    expect(within(scores).queryByText(/letterboxd/i)).not.toBeInTheDocument();
+    expect(within(scores).queryByText("4.2")).not.toBeInTheDocument();
+    expect(within(scores).queryByText("84%")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("TMDB 79 percent")).toBeInTheDocument();
+    expect(screen.getByLabelText("RT 95 percent")).toBeInTheDocument();
+  });
+
+  it("hides Rotten Tomatoes when OMDb has no score", () => {
+    render(
+      <FilmDetailView
+        film={{
+          ...readyFilm,
+          metadata: { ...metadata, rotten_tomatoes_score: null, letterboxd_rating: 3.8 },
+        }}
+      />,
+    );
+
+    const scores = screen.getByTestId("community-scores");
+    expect(within(scores).getByText("79%")).toBeInTheDocument();
+    expect(within(scores).queryByText("RT")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/letterboxd/i)).not.toBeInTheDocument();
   });
 
   it.each([
@@ -149,104 +215,155 @@ describe("FilmDetailView poster-led layout", () => {
     },
   ])("back link: $name", ({ film, watchlistTab, href }) => {
     render(<FilmDetailView film={film} watchlistTab={watchlistTab} />);
-    expect(screen.getByRole("link", { name: /watchlist/i })).toHaveAttribute(
-      "href",
-      href,
-    );
+    expect(screen.getByRole("link", { name: /watchlist/i })).toHaveAttribute("href", href);
   });
 
-  it("renders detail status actions with ≥44px hit targets for active films", () => {
+  it("puts Trailer, an amber Watch, Watched?, and More on the bottom bar", () => {
+    render(
+      <FilmDetailView film={readyFilm} onStatusTransition={vi.fn()} onMarkWatched={vi.fn()} />,
+    );
+
+    expect(screen.getByRole("button", { name: "Trailer" })).toBeInTheDocument();
+    const watch = screen.getByRole("button", { name: "Watch" });
+    expect(watch.querySelector(".shadow-glow")).not.toBeNull();
+    expect(watch.querySelector(".bg-cb-accent")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Watched?" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More" })).toBeInTheDocument();
+  });
+
+  it("hides Trailer when the film has none", () => {
+    browse.trailerUrl = null;
+    render(<FilmDetailView film={readyFilm} />);
+    expect(screen.queryByRole("button", { name: "Trailer" })).not.toBeInTheDocument();
+  });
+
+  it("says Watched once a watch is logged", () => {
     render(
       <FilmDetailView
-        film={readyFilm}
-        onStatusTransition={vi.fn()}
-        onMarkWatched={vi.fn()}
+        film={{
+          ...readyFilm,
+          status: "watched",
+          watches: [
+            {
+              id: "watch-1",
+              score: 4,
+              watched_at: "2026-11-02",
+              notes: "Still thinking about it.",
+              source: "manual",
+              is_pending: false,
+              created_at: "2024-01-01T00:00:00Z",
+              updated_at: "2024-01-01T00:00:00Z",
+            },
+          ],
+        }}
       />,
     );
 
-    const markWatched = screen.getByRole("button", { name: /mark watched/i });
-    const archive = screen.getByRole("button", { name: /^archive$/i });
-    const editMatch = screen.getByRole("button", { name: /edit film match/i });
-
-    expect(markWatched.className).toMatch(/min-h-11|h-11/);
-    expect(archive.className).toMatch(/min-h-11|h-11/);
-    expect(editMatch.className).toMatch(/min-h-11|h-11/);
+    expect(screen.getByRole("button", { name: "Watched" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Watched?" })).not.toBeInTheDocument();
   });
 
-  it("exposes Letterboxd, TMDB, and IMDb links when IDs exist", () => {
-    render(<FilmDetailView film={readyFilm} />);
+  it("archives and removes from the More sheet with no confirmation", async () => {
+    const user = userEvent.setup();
+    const onStatusTransition = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <FilmDetailView
+        film={readyFilm}
+        onStatusTransition={onStatusTransition}
+        onRemove={onRemove}
+      />,
+    );
 
-    expect(
-      screen.getByRole("link", { name: /view on letterboxd/i }),
-    ).toHaveAttribute("href", "https://boxd.it/2D2e");
-    expect(screen.getByRole("link", { name: /view on tmdb/i })).toHaveAttribute(
+    await user.click(screen.getByRole("button", { name: "More" }));
+    const sheet = await screen.findByRole("dialog", { name: "More" });
+    expect(sheet).toHaveAttribute("data-open-ms", "800");
+    expect(sheet).toHaveAttribute("data-dismiss-px", "120");
+
+    await user.click(within(sheet).getByRole("button", { name: "Archive" }));
+    expect(onStatusTransition).toHaveBeenCalledWith("archived");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "More" }));
+    const reopened = await screen.findByRole("dialog", { name: "More" });
+    await user.click(within(reopened).getByRole("button", { name: "Remove from watchlist" }));
+    expect(onRemove).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps Letterboxd, TMDB, and IMDb in the More sheet", async () => {
+    const user = userEvent.setup();
+    render(<FilmDetailView film={readyFilm} />);
+    await user.click(screen.getByRole("button", { name: "More" }));
+
+    expect(screen.getByRole("link", { name: /open in letterboxd/i })).toHaveAttribute(
+      "href",
+      "https://boxd.it/2D2e",
+    );
+    expect(screen.getByRole("link", { name: /open in tmdb/i })).toHaveAttribute(
       "href",
       "https://www.themoviedb.org/movie/76203",
     );
-    expect(screen.getByRole("link", { name: /view on imdb/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /open in imdb/i })).toHaveAttribute(
       "href",
       "https://www.imdb.com/title/tt2024544",
     );
   });
 
-  it("mounts where-to-watch section", () => {
+  it("shows Close to this for unwatched watchlist films only", async () => {
+    const user = userEvent.setup();
+    browse.similar = [
+      neighbour("active", "The Witch"),
+      neighbour("watched", "Lamb"),
+      neighbour("archived", "Midsommar"),
+    ];
     render(<FilmDetailView film={readyFilm} />);
-    expect(screen.getByTestId("where-to-watch")).toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: "You" }));
+
+    expect(screen.getByRole("heading", { name: "Close to this on your watchlist" })).toBeInTheDocument();
+    expect(screen.getByText("The Witch")).toBeInTheDocument();
+    expect(screen.getByText("2015 · 92m")).toBeInTheDocument();
+    expect(screen.queryByText("Lamb")).not.toBeInTheDocument();
+    expect(screen.queryByText("Midsommar")).not.toBeInTheDocument();
   });
 
-  it("degrades enrichment-empty without a broken empty card shell", () => {
-    const { container } = render(<FilmDetailView film={emptyFilm} />);
+  it("omits Close to this when the film is not on the watchlist", async () => {
+    const user = userEvent.setup();
+    browse.similar = [neighbour("active", "The Witch")];
+    render(<FilmDetailView film={readyFilm} onWatchlist={false} />);
+    await user.click(screen.getByRole("tab", { name: "You" }));
+
+    expect(screen.queryByText("Close to this on your watchlist")).not.toBeInTheDocument();
+    expect(screen.queryByText("The Witch")).not.toBeInTheDocument();
+  });
+
+  it("degrades enrichment-empty without a broken empty card shell", async () => {
+    const user = userEvent.setup();
+    render(<FilmDetailView film={emptyFilm} />);
 
     expect(screen.getByText(/enrichment data is not available yet/i)).toBeInTheDocument();
-    expect(screen.getByText("On watchlist")).toBeInTheDocument();
-    expect(screen.queryByText("Pending")).not.toBeInTheDocument();
-    // Plain status line — no Card chrome wrapping the empty message
+    expect(screen.getByText("On your watchlist")).toBeInTheDocument();
     const emptyCopy = screen.getByText(/enrichment data is not available yet/i);
     expect(emptyCopy.closest("[class*='rounded']")).toBeNull();
-    expect(container.querySelector(".py-8.text-center")).toBeNull();
-    expect(screen.queryByRole("heading", { name: /overview/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /semantic profile/i })).not.toBeInTheDocument();
-    // Letterboxd still available
-    expect(
-      screen.getByRole("link", { name: /view on letterboxd/i }),
-    ).toBeInTheDocument();
-  });
+    expect(screen.queryByRole("heading", { name: /^overview$/i })).not.toBeInTheDocument();
 
-  it("shows user-facing lifecycle labels and hides enrichment badges", () => {
-    render(<FilmDetailView film={readyFilm} />);
-
-    expect(screen.getByText("On watchlist")).toBeInTheDocument();
-    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
-    expect(screen.queryByText("Failed")).not.toBeInTheDocument();
-    expect(screen.queryByText("active")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "More" }));
+    expect(screen.getByRole("link", { name: /open in letterboxd/i })).toBeInTheDocument();
   });
 
   it.each([
-    ["pending_watch_review", "Needs watch review"],
+    ["pending_watch_review", "Watched"],
     ["watched", "Watched"],
     ["archived", "Archived"],
-  ] as const)("maps status %s to %s", (status, label) => {
-    render(
-      <FilmDetailView
-        film={{
-          ...readyFilm,
-          status,
-        }}
-      />,
-    );
-    expect(screen.getByText(label)).toBeInTheDocument();
+  ] as const)("maps status %s to kicker %s", (status, label) => {
+    render(<FilmDetailView film={{ ...readyFilm, status }} />);
+    expect(screen.getAllByText(label).length).toBeGreaterThan(0);
   });
 
-  it("keeps updating metadata hint while enriching", () => {
+  it("keeps the updating metadata hint while enriching", () => {
     render(
-      <FilmDetailView
-        film={{
-          ...readyFilm,
-          enrichment_status: "enriching",
-        }}
-      />,
+      <FilmDetailView film={{ ...readyFilm, enrichment_status: "enriching" }} />,
     );
     expect(screen.getByText("Updating metadata…")).toBeInTheDocument();
-    expect(screen.queryByText("Enriching")).not.toBeInTheDocument();
   });
 });

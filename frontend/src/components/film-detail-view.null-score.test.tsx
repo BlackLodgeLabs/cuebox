@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FilmDetailView } from "@/components/film-detail-view";
 import type { FilmDetail } from "@/types/api";
@@ -24,8 +25,9 @@ vi.mock("@/components/watch-review-dialog", () => ({
   watchToDialogProps: () => ({}),
 }));
 
-vi.mock("@/components/film-status-actions", () => ({
-  FilmStatusActions: () => null,
+vi.mock("@/hooks/use-films", () => ({
+  useFilmTrailer: () => ({ data: { url: null }, isLoading: false, isError: false }),
+  useSimilarFilms: () => ({ data: [], isLoading: false, isError: false }),
 }));
 
 const baseFilm: FilmDetail = {
@@ -54,10 +56,15 @@ const baseFilm: FilmDetail = {
 };
 
 describe("FilmDetailView null score", () => {
-  it("renders unrated watches without inventing stars", () => {
+  it("renders unrated watches without inventing stars", async () => {
+    const user = userEvent.setup();
     render(<FilmDetailView film={baseFilm} />);
-    expect(screen.getByText(/unrated · 1984-09-28/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: "You" }));
+    expect(screen.getByText("Unrated")).toBeInTheDocument();
+    expect(screen.getByText("Date unknown")).toBeInTheDocument();
+    expect(screen.queryByText("1984-09-28")).not.toBeInTheDocument();
     expect(screen.queryByText(/null★/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/0★/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/out of 5/i)).not.toBeInTheDocument();
   });
 });
