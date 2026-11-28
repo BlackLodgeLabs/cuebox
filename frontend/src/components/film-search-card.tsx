@@ -18,6 +18,7 @@ import {
 } from "@/lib/library-search-merge";
 import { filmMetaLine, runtimeLabel } from "@/lib/programme-format";
 import { cn } from "@/lib/utils";
+import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import type { FilmSummary, TmdbSearchResultItem } from "@/types/api";
 
 const GROUP_CLASS =
@@ -42,10 +43,33 @@ type FilmSearchCardProps = {
 };
 
 export function FilmSearchCard({ open, onOpenChange }: FilmSearchCardProps) {
+  const [reviewFilm, setReviewFilm] = useState<FilmSummary | null>(null);
+
   return (
-    <SearchCard open={open} onOpenChange={onOpenChange}>
-      <FilmSearchPanel onClose={() => onOpenChange(false)} />
-    </SearchCard>
+    <>
+      <SearchCard open={open} onOpenChange={onOpenChange}>
+        <FilmSearchPanel
+          onClose={() => onOpenChange(false)}
+          onLogWatch={(film) => {
+            onOpenChange(false);
+            setReviewFilm(film);
+          }}
+        />
+      </SearchCard>
+      {reviewFilm ? (
+        <WatchReviewDialog
+          open
+          mode="create"
+          filmId={reviewFilm.id}
+          filmTitle={reviewFilm.title}
+          year={reviewFilm.year}
+          genre={reviewFilm.genres.find((genre) => genre.trim()) ?? null}
+          onOpenChange={(next) => {
+            if (!next) setReviewFilm(null);
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -56,7 +80,13 @@ function searchResultMeta(year: number | null, runtime: number | null): string {
   ]);
 }
 
-function FilmSearchPanel({ onClose }: { onClose: () => void }) {
+function FilmSearchPanel({
+  onClose,
+  onLogWatch,
+}: {
+  onClose: () => void;
+  onLogWatch: (film: FilmSummary) => void;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -175,11 +205,10 @@ function FilmSearchPanel({ onClose }: { onClose: () => void }) {
                   }
                   onSelect={() => openFilm(`/watchlist/${hit.film.id}`)}
                   action={
-                    // S6 wires this eye to the create-review sheet. Until then it opens the film.
                     <IconAction
-                      label={`Open ${hit.film.title}`}
+                      label={`Log a watch for ${hit.film.title}`}
                       icon="visibility"
-                      onClick={() => openFilm(`/watchlist/${hit.film.id}`)}
+                      onClick={() => onLogWatch(hit.film)}
                     />
                   }
                 />

@@ -114,7 +114,7 @@ describe("FilmSearchCard", () => {
     expect(options).toHaveLength(2);
     expect(options[0]).toHaveTextContent("The Wicker Man");
     expect(options[1]).toHaveTextContent("The Matrix");
-    expect(screen.getByRole("button", { name: "Open The Wicker Man" })).toHaveClass(
+    expect(screen.getByRole("button", { name: "Log a watch for The Wicker Man" })).toHaveClass(
       "min-h-12",
     );
     expect(
@@ -138,8 +138,14 @@ describe("FilmSearchCard", () => {
     await userEvent.type(screen.getByRole("combobox", { name: "Search films" }), "wicker");
     await screen.findByRole("option", { name: /The Wicker Man/ });
 
-    await userEvent.click(screen.getByRole("button", { name: "Open The Wicker Man" }));
+    await userEvent.click(screen.getByRole("option", { name: /The Wicker Man/ }));
     expect(pushMock).toHaveBeenCalledWith("/watchlist/film-wicker");
+
+    pushMock.mockClear();
+    await userEvent.click(screen.getByRole("button", { name: "Log a watch for The Wicker Man" }));
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Tap a star to save")).toBeInTheDocument();
+    expect(screen.getByText("1973 · Horror")).toBeInTheDocument();
   });
 
   it("opens a catalogue hit on the lighter film page", async () => {

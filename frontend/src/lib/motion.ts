@@ -251,6 +251,46 @@ export function programmeSettleMotion(reduced: boolean) {
   };
 }
 
+/**
+ * Review star fill (README §6.4), create sheet only.
+ * 70ms per star, 330ms ease-out fill, 30% bounce over 190ms,
+ * Saved 40ms after the bounce fading over 220ms, amber glow at 35%.
+ * Reduced motion is a 300ms crossfade: no bounce and no glow.
+ */
+export function starFillMotion(reduced: boolean) {
+  const staggerMs = readCssNumber("--cb-star-stagger", 70);
+  const fillMs = readCssNumber("--cb-star-fill", 330);
+  const bounceMs = readCssNumber("--cb-star-bounce-dur", 190);
+  const bounce = readCssNumber("--cb-star-bounce", 0.3);
+  const savedDelayMs = readCssNumber("--cb-star-saved-delay", 40);
+  const savedFadeMs = readCssNumber("--cb-star-saved-fade", 220);
+  const glow = readCssNumber("--cb-star-glow-intensity", 0.35);
+  if (reduced) {
+    return {
+      staggerMs: 0,
+      fillMs: 0,
+      bounceMs: 0,
+      bounce: 0,
+      savedDelayMs: 0,
+      savedFadeMs: REDUCED_FADE_MS,
+      glow: 0,
+      crossfadeMs: REDUCED_FADE_MS,
+      travel: "none" as const,
+    };
+  }
+  return {
+    staggerMs,
+    fillMs,
+    bounceMs,
+    bounce,
+    savedDelayMs,
+    savedFadeMs,
+    glow,
+    crossfadeMs: 0,
+    travel: "fill" as const,
+  };
+}
+
 export function batchMotion(reduced: boolean) {
   const fadeMs = readCssNumber("--cb-watchlist-batch-fade", REDUCED_FADE_MS);
   if (reduced) {
