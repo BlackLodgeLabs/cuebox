@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RecommendPage from "@/app/recommend/page";
 import { ApiClientError, postRecommendation } from "@/lib/api-client";
 import { createQueryWrapper } from "@/test/query-wrapper";
@@ -11,6 +11,7 @@ const replaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, replace: replaceMock }),
+  usePathname: () => "/recommend",
 }));
 
 vi.mock("@/lib/api-client", async (importOriginal) => {
@@ -18,6 +19,16 @@ vi.mock("@/lib/api-client", async (importOriginal) => {
   return {
     ...actual,
     postRecommendation: vi.fn(),
+    getFilms: vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: "watch-1",
+          title: "Lamb",
+          backdrop_url: "https://image.tmdb.org/t/p/w1280/lamb.jpg",
+        },
+      ],
+      pagination: { total: 1, limit: 40, offset: 0, has_more: false },
+    }),
   };
 });
 
@@ -40,7 +51,7 @@ const mockRecommendationResponse: RecommendationResponse = {
     tmdb_rating: 7,
     rotten_tomatoes_score: 90,
     poster_url: null,
-    backdrop_url: null,
+    backdrop_url: "https://image.tmdb.org/t/p/w1280/winner.jpg",
     genres: ["Horror"],
     explanation: {
       why_it_matches: "Matches",
@@ -51,6 +62,15 @@ const mockRecommendationResponse: RecommendationResponse = {
   },
   runners_up: [],
 };
+
+function mockReducedMotion() {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: query.includes("prefers-reduced-motion"),
+    media: query,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }));
+}
 
 async function advanceToNotesStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "No Preference" }));
@@ -70,9 +90,7 @@ async function advanceToNotesStep(user: ReturnType<typeof userEvent.setup>) {
     await user.click(screen.getByRole("button", { name: "Next" }));
   }
 
-  expect(
-    screen.getByRole("button", { name: "Get recommendation" }),
-  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Find my pick" })).toBeInTheDocument();
 }
 
 function renderRecommendPage() {
@@ -85,6 +103,10 @@ function renderRecommendPage() {
 }
 
 describe("RecommendPage", () => {
+  beforeEach(() => {
+    mockReducedMotion();
+  });
+
   afterEach(() => {
     cleanup();
     postRecommendationMock.mockReset();
@@ -92,27 +114,35 @@ describe("RecommendPage", () => {
     replaceMock.mockReset();
   });
 
-  it("shows a single title stack, progress cue, and ≥44px nav controls", () => {
+  it("shows one question at a time, with a mono counter and no tab bar", async () => {
+    const user = userEvent.setup();
     renderRecommendPage();
 
-    expect(screen.getByRole("heading", { name: "Genres", level: 1 })).toBeInTheDocument();
-    expect(screen.getAllByRole("heading", { name: "Genres" })).toHaveLength(1);
-    expect(screen.getByText(/step 1 of 11/i)).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/questionnaire progress, step 1 of 11/i),
+      screen.getByRole("heading", { name: "What genres are you in the mood for?" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("1 of 11")).toBeInTheDocument();
+    expect(screen.getByLabelText("Question 1 of 11")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Skip" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
 
     const next = screen.getByRole("button", { name: "Next" });
-    const back = screen.getByRole("button", { name: "Back" });
-    expect(next.className).toMatch(/min-h-11/);
-    expect(back.className).toMatch(/min-h-11/);
-
-    const chip = screen.getByRole("button", { name: "No Preference" });
-    expect(chip.className).toMatch(/min-h-11/);
-
-    const content = screen.getByTestId("questionnaire-content");
-    expect(content.className).toMatch(/pb-24/);
+    expect(next.className).toMatch(/h-11/);
+    expect(screen.getByRole("button", { name: "Close" }).className).toMatch(/h-11/);
+    expect(screen.getByRole("button", { name: "No Preference" }).className).toMatch(/min-h-11/);
     expect(screen.getByTestId("questionnaire-sticky-chrome")).toBeInTheDocument();
+
+    for (let step = 0; step < 10; step += 1) {
+      await user.click(screen.getByRole("button", { name: "Skip" }));
+    }
+
+    expect(
+      screen.getByRole("heading", { name: "Anything else we should know?" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("11 of 11")).toBeInTheDocument();
+    expect(screen.getByText("Optional")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Skip" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Find my pick" })).toBeInTheDocument();
   });
 
   it("scrolls notes into view on focus", async () => {
@@ -129,18 +159,21 @@ describe("RecommendPage", () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ block: "center" });
   });
 
-  it("uses ≥44px radio option rows on runtime step", async () => {
+  it("uses large single-choice cards on the runtime step", async () => {
     const user = userEvent.setup();
     renderRecommendPage();
 
     await user.click(screen.getByRole("button", { name: "No Preference" }));
     await user.click(screen.getByRole("button", { name: "Next" }));
 
-    const runtimeLabel = screen.getByText("No limit").closest("label");
-    expect(runtimeLabel?.className).toMatch(/min-h-11/);
+    expect(screen.getByRole("heading", { name: "How long do you want the film to be?" })).toBeInTheDocument();
+    expect(screen.getByText("2 of 11")).toBeInTheDocument();
+    const runtime = screen.getByRole("button", { name: /No limit/ });
+    expect(runtime.className).toMatch(/min-h-\[72px\]/);
+    expect(screen.getByText("Pick one to continue")).toBeInTheDocument();
   });
 
-  it("keeps loading UI visible after mutation settles but before navigation completes", async () => {
+  it("crossfades to the results programme after the pick is ready", async () => {
     const user = userEvent.setup();
     let resolveMutation!: (value: RecommendationResponse) => void;
     postRecommendationMock.mockImplementation(
@@ -153,25 +186,24 @@ describe("RecommendPage", () => {
     renderRecommendPage();
     await advanceToNotesStep(user);
 
-    await user.click(screen.getByRole("button", { name: "Get recommendation" }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /finding your film/i })).toBeInTheDocument();
-    });
+    await user.click(screen.getByRole("button", { name: "Find my pick" }));
+    expect(screen.queryByTestId("film-strip")).not.toBeInTheDocument();
 
     resolveMutation(mockRecommendationResponse);
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith(
-        "/recommend/results/session-abc?stage=1",
+      expect(screen.getByTestId("recommend-reduced-crossfade")).toHaveAttribute(
+        "data-reduced-crossfade-ms",
+        "300",
       );
     });
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith("/recommend/results/session-abc");
+    }, { timeout: 2000 });
 
-    expect(screen.getByRole("heading", { name: /finding your film/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Get recommendation" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Notes" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Find my pick" })).not.toBeInTheDocument();
   });
 
-  it("clears loading and shows submit error with retry on API failure", async () => {
+  it("clears the cue and shows submit error with retry on API failure", async () => {
     const user = userEvent.setup();
     postRecommendationMock.mockRejectedValue(
       new ApiClientError({
@@ -183,13 +215,12 @@ describe("RecommendPage", () => {
     renderRecommendPage();
     await advanceToNotesStep(user);
 
-    await user.click(screen.getByRole("button", { name: "Get recommendation" }));
+    await user.click(screen.getByRole("button", { name: "Find my pick" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Notes" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Anything else we should know?" })).toBeInTheDocument();
     });
-    expect(screen.queryByRole("heading", { name: /finding your film/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Get recommendation" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Find my pick" })).toBeEnabled();
     expect(screen.getByText(/something went wrong on our end/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
   });
@@ -201,7 +232,7 @@ describe("RecommendPage", () => {
     renderRecommendPage();
     await advanceToNotesStep(user);
 
-    await user.click(screen.getByRole("button", { name: "Get recommendation" }));
+    await user.click(screen.getByRole("button", { name: "Find my pick" }));
 
     await waitFor(() => {
       expect(
@@ -216,14 +247,17 @@ describe("RecommendPage", () => {
     postRecommendationMock.mockImplementation(
       () =>
         new Promise((resolve) => {
-          setTimeout(() => resolve({ ...mockRecommendationResponse, session_id: "session-once" }), 50);
+          setTimeout(
+            () => resolve({ ...mockRecommendationResponse, session_id: "session-once" }),
+            50,
+          );
         }),
     );
 
     renderRecommendPage();
     await advanceToNotesStep(user);
 
-    const submitButton = screen.getByRole("button", { name: "Get recommendation" });
+    const submitButton = screen.getByRole("button", { name: "Find my pick" });
     await user.click(submitButton);
     fireEvent.click(submitButton);
 

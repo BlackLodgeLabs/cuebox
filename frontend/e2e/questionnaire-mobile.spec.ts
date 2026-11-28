@@ -49,9 +49,12 @@ test.describe("Questionnaire mobile density (mocked API)", () => {
     await stubRecommendApis(page);
     await page.goto("/recommend");
 
-    await expect(page.getByText(/step 1 of 11/i)).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Genres", level: 1 })).toBeVisible();
-    await expect(page.getByLabel(/questionnaire progress/i)).toBeVisible();
+    await expect(page.getByText("1 of 11")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "What genres are you in the mood for?" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Question 1 of 11")).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
 
     const next = page.getByRole("button", { name: "Next", exact: true });
     await expect(next).toBeVisible();
@@ -83,9 +86,10 @@ test.describe("Questionnaire mobile density (mocked API)", () => {
     const content = page.getByTestId("questionnaire-content");
     await expect(content).toBeVisible();
 
-    // Scroll document to bottom so last chips can clear sticky chrome
+    // Scroll the question body so the last chips clear the pinned Next button.
     await page.evaluate(() => {
-      window.scrollTo(0, document.documentElement.scrollHeight);
+      const scroller = document.querySelector('[data-testid="questionnaire-scroll"]');
+      if (scroller) scroller.scrollTop = scroller.scrollHeight;
     });
     await page.waitForTimeout(100);
 
@@ -113,16 +117,16 @@ test.describe("Questionnaire mobile density (mocked API)", () => {
     expect(clearance).toBeTruthy();
     expect(clearance!.clears).toBe(true);
 
-    // Sticky remains above the bottom tab bar
-    const stickyAboveTab = await page.evaluate(() => {
+    const footerInsideViewport = await page.evaluate(() => {
       const stickyEl = document.querySelector(
         '[data-testid="questionnaire-sticky-chrome"]',
       ) as HTMLElement;
-      const tabBar = document.querySelector("nav") as HTMLElement | null;
-      const stickyBottom = stickyEl.getBoundingClientRect().bottom;
-      if (!tabBar) return stickyBottom < window.innerHeight;
-      return stickyBottom <= tabBar.getBoundingClientRect().top + 1;
+      const tabBar = document.querySelector("nav");
+      return (
+        tabBar == null &&
+        stickyEl.getBoundingClientRect().bottom <= window.innerHeight + 1
+      );
     });
-    expect(stickyAboveTab).toBe(true);
+    expect(footerInsideViewport).toBe(true);
   });
 });
