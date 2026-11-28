@@ -16,7 +16,7 @@ export function splitWatchProviders(categories: WatchProviderCategory[]): {
   for (const category of categories) {
     const rest: WatchProviderItem[] = [];
     for (const provider of category.providers) {
-      if (provider.subscribed) {
+      if (provider.subscribed && category.type === "flatrate") {
         if (!seen.has(provider.provider_id)) {
           seen.add(provider.provider_id);
           mine.push({ ...provider, categoryLabel: category.label });

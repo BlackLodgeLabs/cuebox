@@ -112,7 +112,19 @@ describe("WhereToWatchSection", () => {
               },
             ],
           },
-          populatedData.categories[1],
+          {
+            ...populatedData.categories[1],
+            providers: [
+              {
+                provider_id: 130,
+                provider_name: "Sky Store",
+                logo_url: null,
+                display_priority: 3,
+                subscribed: true,
+              },
+              ...populatedData.categories[1].providers,
+            ],
+          },
         ],
       },
       isLoading: false,
@@ -123,9 +135,13 @@ describe("WhereToWatchSection", () => {
 
     render(<WhereToWatchSection filmId="film-1" hasTmdbId />);
 
-    const names = screen.getAllByText(/Netflix|Prime Video|Apple TV/).map((node) => node.textContent);
+    const names = screen
+      .getAllByText(/Netflix|Prime Video|Apple TV|Sky Store/)
+      .map((node) => node.textContent);
     expect(names[0]).toBe("Prime Video");
-    expect(screen.getByRole("heading", { name: "Ready to play" })).toBeInTheDocument();
+    expect(names.indexOf("Sky Store")).toBeGreaterThan(names.indexOf("Netflix"));
+    const ready = screen.getByRole("heading", { name: "Ready to play" });
+    expect(ready.nextElementSibling?.className).toContain("bg-cb-teal");
     expect(screen.getByText("Others")).toBeInTheDocument();
     expect(screen.getByText("My services")).toBeInTheDocument();
   });

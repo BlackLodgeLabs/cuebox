@@ -67,6 +67,7 @@ function ProviderGroups({
         <div className="space-y-1">
           <p className="font-mono text-cb-meta uppercase text-cb-muted">My services</p>
           <h3 className="font-display text-cb-section leading-none">Ready to play</h3>
+          <span aria-hidden className="mt-1.5 block h-0.5 w-7 bg-cb-teal" />
           <ul>
             {mine.map((provider) => (
               <ProviderRow

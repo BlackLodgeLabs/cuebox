@@ -9,8 +9,10 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.core.config import get_app_config
+from app.database.enums import FilmStatus
 from app.database.session import SessionLocal
-from app.repositories import film_metadata_repository, streaming_repository, watchlist_repository
+from app.repositories import film_metadata_repository, film_repository, streaming_repository, watchlist_repository
+from app.repositories.streaming_repository import CACHED_FILM_STATUSES
 from app.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
@@ -22,6 +24,13 @@ AVAILABILITY_REFRESH_SECONDS = 900
 
 def configured_country() -> str:
     return get_app_config().watch_providers.country_code or "GB"
+
+
+def _on_a_watchlist_view(db: Session, film) -> bool:
+    """Films the Watchlist pills can show, including after the active entry is closed."""
+    if film.status == FilmStatus.ACTIVE:
+        return watchlist_repository.get_active_by_film_id(db, film.id) is not None
+    return film.status in CACHED_FILM_STATUSES
 
 
 def max_age() -> timedelta:
@@ -36,10 +45,11 @@ async def refresh_watchlist_film(
 ) -> bool:
     """Fetch flatrate ids for one watchlist film and store them.
 
-    Films that are not on the active watchlist are left untouched.
+    Films that are not on a Watchlist pill are left untouched.
     TMDB failures propagate so the caller can decide whether to swallow them.
     """
-    if watchlist_repository.get_active_by_film_id(db, film_id) is None:
+    film = film_repository.get_by_id(db, film_id)
+    if film is None or not _on_a_watchlist_view(db, film):
         return False
     metadata = film_metadata_repository.get_by_film_id(db, film_id)
     if metadata is None or metadata.tmdb_id is None:

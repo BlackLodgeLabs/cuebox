@@ -5,15 +5,24 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.orm import Session
 
+from app.database.enums import FilmStatus
 from app.database.models import (
     Film,
     FilmMetadata,
     FilmStreamingAvailability,
     UserStreamingService,
     WatchlistEntry,
+)
+
+# Watched, archived, and pending-review films leave the active watchlist entry
+# but stay on a Watchlist pill. Active films must still have that entry.
+CACHED_FILM_STATUSES = (
+    FilmStatus.WATCHED,
+    FilmStatus.ARCHIVED,
+    FilmStatus.PENDING_WATCH_REVIEW,
 )
 
 
@@ -66,19 +75,25 @@ def list_watchlist_films_to_refresh(
     country_code: str,
     older_than: datetime,
 ) -> list[tuple[uuid.UUID, int]]:
-    """Active watchlist films whose flatrate cache is missing, foreign, or old."""
+    """Watchlist-pill films whose flatrate cache is missing, foreign, or old."""
     stmt = (
         select(Film.id, FilmMetadata.tmdb_id)
-        .join(
+        .join(FilmMetadata, FilmMetadata.film_id == Film.id)
+        .outerjoin(
             WatchlistEntry,
             (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
         )
-        .join(FilmMetadata, FilmMetadata.film_id == Film.id)
         .outerjoin(
             FilmStreamingAvailability,
             FilmStreamingAvailability.film_id == Film.id,
         )
         .where(FilmMetadata.tmdb_id.is_not(None))
+        .where(
+            or_(
+                and_(Film.status == FilmStatus.ACTIVE, WatchlistEntry.id.is_not(None)),
+                Film.status.in_(CACHED_FILM_STATUSES),
+            )
+        )
         .where(
             or_(
                 FilmStreamingAvailability.film_id.is_(None),

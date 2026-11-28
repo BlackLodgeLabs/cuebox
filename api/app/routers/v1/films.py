@@ -6,7 +6,6 @@ from datetime import date
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.core.config import get_app_config
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
 from app.dependencies import (
@@ -61,6 +60,7 @@ from app.services.watch_review_service import WatchReviewService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
 from app.services.scoring_service import runtime_ceiling
+from app.services.streaming_availability_service import configured_country
 from app.services.similar_films_service import list_similar_films
 from app.services.tmdb_film_service import TmdbFilmService
 from app.services.watch_provider_service import WatchProviderService
@@ -190,7 +190,7 @@ def list_films(
     service_provider_ids = None
     service_country = None
     if on_my_services:
-        service_country = get_app_config().watch_providers.country_code or "GB"
+        service_country = configured_country()
         service_provider_ids = streaming_repository.list_provider_ids(db, service_country)
     films, total = film_repository.list_films(
         db,

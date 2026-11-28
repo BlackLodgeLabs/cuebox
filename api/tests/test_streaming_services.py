@@ -129,14 +129,27 @@ async def test_enrichment_and_scheduler_fill_the_cache_used_by_the_filter(
         runtime=110,
         on_watchlist=False,
     )
+    watched_id = _seed(
+        db_session,
+        title="Watched Film",
+        tmdb_id=10052,
+        genres=["Drama"],
+        runtime=110,
+        on_watchlist=False,
+    )
+    watched = film_repository.get_by_id(db_session, uuid.UUID(watched_id))
+    assert watched is not None
+    watched.status = FilmStatus.WATCHED
+    db_session.commit()
     updated = await refresh_stale_watchlist(providers)
-    assert updated == 1
+    assert updated == 2
 
     integration_client.put("/api/v1/settings/services", json={"provider_ids": [8]})
 
     matched = _titles(integration_client.get("/api/v1/films?on_my_services=true&sort=title&sort_dir=asc"))
     assert enriched.title in matched
     assert "Scheduled Film" in matched
+    assert "Watched Film" in matched
     assert "Not On Watchlist" not in matched
 
     integration_client.put("/api/v1/settings/services", json={"provider_ids": [999]})

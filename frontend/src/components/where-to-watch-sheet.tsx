@@ -68,6 +68,7 @@ function OrderedProviders({ categories }: { categories: WatchProviderCategory[] 
         <section className="space-y-3">
           <p className="font-mono text-cb-meta uppercase text-cb-muted">My services</p>
           <h3 className="font-display text-cb-section leading-none">Ready to play</h3>
+          <span aria-hidden className="mt-1.5 block h-0.5 w-7 bg-cb-teal" />
           <ProviderRows providers={mine} />
         </section>
       ) : null}
@@ -75,7 +76,12 @@ function OrderedProviders({ categories }: { categories: WatchProviderCategory[] 
         <p className="font-mono text-cb-meta uppercase text-cb-muted">Others</p>
       ) : null}
       {others.map((category) => (
-        <ProviderGroup key={category.type} category={category} showLabel={mine.length === 0} />
+        <ProviderGroup
+          key={category.type}
+          category={category}
+          showLabel={mine.length === 0}
+          categoryLabel={category.label}
+        />
       ))}
     </div>
   );
@@ -103,7 +109,12 @@ function ProviderRows({
               <Icon name="play_arrow" size={18} />
             </span>
           )}
-          <span className="font-ui text-cb-body text-cb-text">{provider.provider_name}</span>
+          <span className="min-w-0">
+            <span className="block font-ui text-cb-body text-cb-text">{provider.provider_name}</span>
+            {provider.categoryLabel ? (
+              <span className="block font-mono text-[11px] text-cb-muted">{provider.categoryLabel}</span>
+            ) : null}
+          </span>
         </li>
       ))}
     </ul>
@@ -113,16 +124,19 @@ function ProviderRows({
 function ProviderGroup({
   category,
   showLabel = true,
+  categoryLabel,
 }: {
   category: WatchProviderCategory;
   showLabel?: boolean;
+  categoryLabel?: string;
 }) {
+  const providers = category.providers.map((provider) => ({ ...provider, categoryLabel }));
   return (
     <section className="space-y-3">
       {showLabel ? (
         <h3 className="font-mono text-cb-meta uppercase text-cb-muted">{category.label}</h3>
       ) : null}
-      <ProviderRows providers={category.providers} />
+      <ProviderRows providers={providers} />
     </section>
   );
 }
