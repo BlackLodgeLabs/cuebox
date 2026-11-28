@@ -109,13 +109,16 @@ export function ProgrammeLayout({
   session,
   title,
   backLink,
+  settled = false,
 }: {
   session: RecommendationDetailResponse;
   title: string;
   backLink?: ProgrammeBackLink;
+  /** Skip the rise when the shuffle already settled this programme. */
+  settled?: boolean;
 }) {
   const reduced = useReducedMotion();
-  const settle = programmeSettleMotion(reduced);
+  const settle = programmeSettleMotion(settled || reduced);
   const filmIds = [session.winner.film_id, ...session.runners_up.map((film) => film.film_id)];
   const providers = useFilmsWatchProviders(filmIds);
   const winnerService = firstServiceName(providers.get(session.winner.film_id)?.data?.categories);

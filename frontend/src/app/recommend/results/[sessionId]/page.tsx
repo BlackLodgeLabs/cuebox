@@ -1,18 +1,28 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { DevModePanel } from "@/components/dev-mode/dev-mode-panel";
 import { DevModeProvider } from "@/components/dev-mode/dev-mode-provider";
-import { RecommendationCeremony } from "@/components/recommendation-ceremony";
-import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
+import { LoadingState } from "@/components/loading-state";
+import { ProgrammeLayout } from "@/components/programme-layout";
 import { useRecommendation } from "@/hooks/use-recommendations";
+import { TONIGHT_PROGRAMME_TITLE } from "@/lib/programme-format";
+import {
+  consumeProgrammeSettled,
+  peekProgrammeSettled,
+} from "@/lib/recommend-handoff";
 
 export default function ResultsPage() {
   const params = useParams<{ sessionId: string }>();
-  const { data, isLoading, isError, refetch } = useRecommendation(
-    params.sessionId,
-  );
+  const sessionId = params.sessionId;
+  const { data, isLoading, isError, refetch } = useRecommendation(sessionId);
+  const [settled] = useState(() => peekProgrammeSettled(sessionId));
+
+  useEffect(() => {
+    consumeProgrammeSettled(sessionId);
+  }, [sessionId]);
 
   if (isLoading) {
     return <LoadingState message="Loading recommendation…" />;
@@ -29,21 +39,12 @@ export default function ResultsPage() {
 
   return (
     <DevModeProvider>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-h1">Your pick</h1>
-          <p className="mt-1 text-body-md text-muted-foreground">
-            Based on your preferences from{" "}
-            {new Date(data.created_at).toLocaleString()}
-          </p>
-        </div>
-        <RecommendationCeremony
-          mode="fresh"
-          data={data}
-          sessionId={params.sessionId}
-        />
-        <DevModePanel sessionId={params.sessionId} />
-      </div>
+      <ProgrammeLayout
+        session={data}
+        title={TONIGHT_PROGRAMME_TITLE}
+        settled={settled}
+      />
+      <DevModePanel sessionId={sessionId} />
     </DevModeProvider>
   );
 }

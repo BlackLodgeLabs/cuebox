@@ -53,6 +53,7 @@ def film_to_summary(
     latest_score: float | None = None,
 ) -> FilmSummary:
     metadata: FilmMetadata | None = film.metadata_
+    profile: FilmSemanticProfile | None = film.semantic_profile
     summary_removed_at = None
     watched_statuses = (FilmStatus.WATCHED, FilmStatus.ARCHIVED, FilmStatus.PENDING_WATCH_REVIEW)
     if film.status in watched_statuses and removed_at is not None:
@@ -70,6 +71,13 @@ def film_to_summary(
         runtime=metadata.runtime if metadata else None,
         genres=list(metadata.genres) if metadata else [],
         backdrop_url=metadata.backdrop_url if metadata else None,
+        synopsis=metadata.synopsis if metadata else None,
+        tones=list(profile.tones) if profile is not None and profile.tones else [],
+        emotional_outcomes=(
+            list(profile.emotional_outcomes)
+            if profile is not None and profile.emotional_outcomes
+            else []
+        ),
         latest_score=latest_score,
         created_at=film.created_at,
         updated_at=film.updated_at,

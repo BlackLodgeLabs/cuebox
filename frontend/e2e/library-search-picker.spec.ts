@@ -48,6 +48,17 @@ const catalogueFilm = {
 const addedFilmId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
 async function stubHomePresence(page: import("@playwright/test").Page) {
+  await page.route(`**${API_PATH_PREFIX}/films?status=active**`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [localActive],
+        pagination: { total: 1, limit: 100, offset: 0, has_more: false },
+      }),
+    });
+  });
+
   await page.route(`**${API_PATH_PREFIX}/films?limit=1**`, async (route) => {
     await route.fulfill({
       status: 200,
@@ -137,15 +148,19 @@ async function stubSearch(
 
 test.describe("search card (mocked API)", () => {
   test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await stubHomePresence(page);
   });
 
   test("home no longer embeds the inline picker", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
+    await expect(page.getByText("Today's feature · from your watchlist")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "The Wicker Man" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Get a pick for tonight" })).toBeVisible();
     await expect(page.getByTestId("library-search-input")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Create a recommendation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "History" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Create a recommendation" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Add a film" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Mark watched" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "View watchlist" })).toHaveCount(0);
@@ -279,21 +294,22 @@ test.describe("search card (mocked API)", () => {
   });
 
   test("empty watchlist still opens the card from ?focus=search", async ({ page }) => {
-    await page.unroute(`**${API_PATH_PREFIX}/films?limit=1**`);
-    await page.route(`**${API_PATH_PREFIX}/films?limit=1**`, async (route) => {
+    await page.unroute(`**${API_PATH_PREFIX}/films?status=active**`);
+    await page.route(`**${API_PATH_PREFIX}/films?status=active**`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           data: [],
-          pagination: { total: 0, limit: 1, offset: 0, has_more: false },
+          pagination: { total: 0, limit: 100, offset: 0, has_more: false },
         }),
       });
     });
 
     await page.goto("/?focus=search");
-    await expect(page.getByRole("heading", { name: "Welcome to Cuebox" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Nothing on your watchlist yet" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Import watchlist" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Cuebox" })).toHaveCount(0);
     await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
     await expect(page.getByTestId("library-search-input")).toHaveCount(0);
     await expect(page).not.toHaveURL(/focus=search/);

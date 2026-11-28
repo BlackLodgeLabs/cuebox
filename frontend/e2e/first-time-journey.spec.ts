@@ -64,17 +64,15 @@ test.describe("First-time user journey", () => {
       await page.getByRole("button", { name: "Next" }).click();
     }
 
-    await page.getByRole("button", { name: /get recommendation/i }).click();
+    await page.getByRole("button", { name: "Find my pick" }).click();
 
-    await expect(page).toHaveURL(/\/recommend\/results\/[a-f0-9-]+\?stage=1/i, {
+    await expect(page).toHaveURL(/\/recommend\/results\/[a-f0-9-]+$/i, {
       timeout: 60_000,
     });
-    await expect(page.getByRole("heading", { name: /your pick/i })).toBeVisible();
-    await expect(page.getByTestId("ceremony-stage-winner")).toBeVisible();
-    const winnerTitleEl = page
-      .getByTestId("ceremony-stage-winner")
-      .locator(".font-heading")
-      .first();
+    await expect(
+      page.getByRole("heading", { name: /tonight.s programme/i }),
+    ).toBeVisible();
+    const winnerTitleEl = page.getByRole("heading", { level: 2 });
     await expect(winnerTitleEl).toBeVisible();
     const winnerTitle =
       (await winnerTitleEl.textContent())?.replace(/\s*\(\d{4}\)\s*$/, "").trim() ??
@@ -82,7 +80,7 @@ test.describe("First-time user journey", () => {
 
     await page.goto("/history");
     await expect(
-      page.getByRole("link", { name: new RegExp(winnerTitle, "i") }),
+      page.getByRole("button", { name: new RegExp(winnerTitle, "i") }),
     ).toBeVisible({ timeout: 15_000 });
   });
 });

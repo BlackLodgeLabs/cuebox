@@ -5,17 +5,18 @@ test.describe("Design system smoke", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(page.getByRole("link", { name: "Cuebox" })).toBeVisible();
-    await expect(page.getByText("Cue", { exact: true })).toBeVisible();
-    await expect(page.getByText("box.", { exact: true })).toBeVisible();
+    const header = page.locator("[data-shell-header]");
+    await expect(header.getByText("Cue", { exact: true })).toBeVisible();
+    await expect(header.getByText("box.", { exact: true })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Search films" })).toBeVisible();
     const bg = await page.evaluate(() =>
       getComputedStyle(document.body).backgroundColor,
     );
     expect(bg).toBe("rgb(11, 11, 11)");
-    const cue = await page.getByText("Cue", { exact: true }).evaluate((el) =>
+    const cue = await header.getByText("Cue", { exact: true }).evaluate((el) =>
       getComputedStyle(el).color,
     );
-    const box = await page.getByText("box.", { exact: true }).evaluate((el) =>
+    const box = await header.getByText("box.", { exact: true }).evaluate((el) =>
       getComputedStyle(el).color,
     );
     expect(cue).toBe("rgb(224, 122, 40)");

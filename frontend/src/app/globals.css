@@ -136,6 +136,33 @@
   }
 }
 
+.history-stub {
+  position: relative;
+  flex: 0 0 var(--cb-history-stub-width, 76px);
+  width: var(--cb-history-stub-width, 76px);
+  border-right: 1.5px dashed #3a3a3a;
+}
+
+.history-stub::before,
+.history-stub::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--cb-bg);
+}
+
+.history-stub::before {
+  top: -6px;
+}
+
+.history-stub::after {
+  bottom: -6px;
+}
+
 .cb-press {
   transition-property: transform, color, background-color, border-color, box-shadow;
   transition-duration: var(--cb-press-up, 200ms);
