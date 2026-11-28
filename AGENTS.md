@@ -4,7 +4,7 @@ Guidance for AI agents working in the Cuebox repository.
 
 ## Project overview
 
-Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 8: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API with gated Developer Mode (`/dev/*`), full Next.js MVP UX styled with the Modern Neo-Noir Cinema design system ([documents/DESIGN.md](documents/DESIGN.md)), integration/NFR validation, and root [README.md](README.md).
+Locally hosted web app for picking films from a Letterboxd watchlist. Through Phase 8: Postgres schema, import/metadata/semantic enrichment pipeline, film embeddings (pgvector), watchlist sync (CSV + RSS), six-stage recommendation engine with profile caching and history, FastAPI API with gated Developer Mode (`/dev/*`), full Next.js MVP UX styled from the Nov 2026 design pack ([docs/design/redesign-2026-11/](docs/design/redesign-2026-11/)), integration/NFR validation, and root [README.md](README.md).
 
 Specifications live under `documents/`; see [README.md](README.md) for human setup and quick start. Product direction (themes, not schedules) lives in [documents/ROADMAP.md](documents/ROADMAP.md) — consult it when scoping features that may overlap upcoming work.
 
@@ -91,7 +91,7 @@ print('PASS: ready films present')
 "
 ```
 
-Pass criteria: at least 10 films with `enrichment_status` of `ready`; the home page at http://localhost:3000 shows **New recommendation** (not the empty-watchlist import CTA). To re-seed manually on an empty volume: `python3 scripts/seed-dev-db.py`. To reset and re-seed: `docker compose down -v` then restart the stack.
+Pass criteria: at least 10 films with `enrichment_status` of `ready`; the home page at http://localhost:3000 shows **Get a pick for tonight** (not the empty-watchlist import CTA). To re-seed manually on an empty volume: `python3 scripts/seed-dev-db.py`. To reset and re-seed: `docker compose down -v` then restart the stack.
 
 ### Running the stack
 
@@ -152,11 +152,10 @@ The API container runs `alembic upgrade head` then `uvicorn` via `api/entrypoint
 
 With `docker compose up`:
 
-1. http://localhost:3000 — **Cuebox** dark UI; empty watchlist shows **Import watchlist** CTA; returning users (or cloud agents after Part 2 bootstrap) see **New recommendation** and **History** links.
-2. Complete the first-time journey: import CSV → poll status → review matches (if any) → questionnaire → results → history.
-3. Sync settings at http://localhost:3000/settings/sync show RSS status.
-4. Collapsed **System status** on the home page still exposes API/database health for debugging.
-5. Optional: set `developer_mode: true` in `config.yaml`, restart the API, then open a results or history detail page with `?dev=1` (or press `Ctrl+Shift+D` / `Cmd+Shift+D`) to view the Developer Mode trace panel.
+1. http://localhost:3000 — **Cuebox** dark UI from [docs/design/redesign-2026-11/](docs/design/redesign-2026-11/). Empty watchlist shows **Import watchlist**. A seeded watchlist shows **Today's feature**, **Get a pick for tonight**, and **Surprise me**. Tabs are Home, Watchlist, Recommend, and More.
+2. Complete the first-time journey: import CSV → poll status → review matches (if any) → the 11-step questionnaire → tonight's programme → history ticket stubs.
+3. Sync settings at http://localhost:3000/settings/sync show RSS status. My services is at http://localhost:3000/settings/services.
+4. Optional: set `developer_mode: true` in `config.yaml`, restart the API, then open a results or history detail page with `?dev=1` (or press `Ctrl+Shift+D` / `Cmd+Shift+D`) to view the Developer Mode trace panel. API health is `http://localhost:8000/api/v1/health`.
 
 Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set in `.env`; live recommendations require `OPENAI_API_KEY` when OpenAI providers are selected in `config.yaml`.
 
@@ -173,7 +172,7 @@ Provider keys (TMDB, OpenAI, etc.) show `error` on the health endpoint until set
 - On **Windows**, shell scripts must use LF line endings (enforced via `.gitattributes`). If you see `exec ./entrypoint.sh: no such file or directory`, re-checkout scripts (`git checkout -- api/entrypoint.sh`) or run `git add --renormalize .` after pulling the `.gitattributes` fix.
 - **Running host pytest / `verify-*-gates.sh` while `docker compose up` is live:** the Compose `.env` sets `DATABASE_URL=...@postgres:5432` (a Compose-internal hostname), and importing `app.main` calls `load_dotenv()`, so a host `pytest` inherits the unresolvable `postgres` host. Export `DATABASE_URL`/`TEST_DATABASE_URL` to a reachable URL first, e.g. `export DATABASE_URL=postgresql+psycopg://cuebox:cuebox@localhost:5432/cuebox; export TEST_DATABASE_URL=$DATABASE_URL`. The gate's Gate 2 ("no DB" unit tests) runs *before* the gate starts its own Postgres, so it also needs a Postgres already listening on `localhost:5432`; the gate reuses any container already publishing 5432 (use a separate ephemeral `pgvector/pgvector:pg16` on 5432 — not the seeded Compose DB on 5433, which the autouse fixture would truncate).
 - **Host frontend production build vs the running dev container:** the Compose `frontend` dev container writes root-owned files into the bind-mounted host `frontend/.next`, so a host `npm run build` (and Phase 8 Gate 7 / Phase 7 regression) fails with `EACCES`. Before building on the host, `docker compose stop frontend` and `sudo rm -rf frontend/.next`, then `docker compose up -d frontend` afterward. Playwright E2E gates need the chromium browser binary (`npx playwright install chromium` plus its apt system deps) which the snapshot is expected to carry.
-- The mocked Playwright test `e2e/dev-mode.spec.ts` "history detail shows dev panel" currently fails on a pre-existing strict-mode selector clash (heading `The Wicker Man` matches both the `h1` title and the `h3` card `The Wicker Man (1973)`); this is unrelated to environment setup.
+- History detail titles the programme with the date (`h1`) and the film (`h2`). Dev-mode assertions should use a heading level so a runner-up title does not clash with the winner.
 
 ## Agent skills
 

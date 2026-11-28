@@ -126,7 +126,7 @@ Each copy also needs its own `POSTGRES_DB`/`POSTGRES_USER`/`POSTGRES_PASSWORD` (
 |----------|---------|
 | [documents/ROADMAP.md](documents/ROADMAP.md) | Product direction pointer for upcoming themes (agents + humans) |
 | [documents/PRD.md](documents/PRD.md) | Product requirements and success criteria |
-| [documents/DESIGN.md](documents/DESIGN.md) | Modern Neo-Noir Cinema design system |
+| [docs/design/redesign-2026-11/](docs/design/redesign-2026-11/) | Visual system, motion locks, and screen PNGs |
 | [documents/api-contracts.md](documents/api-contracts.md) | REST API v1 reference |
 | [documents/Architecture.md](documents/Architecture.md) | Technical architecture |
 | [documents/cloud-agent-part2-test-data.md](documents/cloud-agent-part2-test-data.md) | Cursor Cloud agent test data (Tier 2 seeding) |
