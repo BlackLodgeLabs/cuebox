@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFilmTrailer, useSimilarFilms } from "@/hooks/use-films";
 import { closeToThisFilms } from "@/lib/close-to-this";
 import { communityScores } from "@/lib/community-scores";
+import { filmMetaLine, runtimeLabel } from "@/lib/programme-format";
 import { cn } from "@/lib/utils";
 import type { FilmDetail, FilmStatus, FilmWatch, WatchlistTab } from "@/types/api";
 
@@ -47,13 +48,12 @@ function statusKicker(status: FilmStatus): string {
 
 function heroMeta(film: FilmDetail): string {
   const metadata = film.metadata;
-  const parts: string[] = [];
-  if (film.year) parts.push(String(film.year));
-  const genre = metadata?.genres[0];
-  if (genre) parts.push(genre);
-  if (metadata?.runtime != null) parts.push(`${metadata.runtime}m`);
-  if (metadata?.director) parts.push(metadata.director);
-  return parts.join(" · ");
+  return filmMetaLine([
+    film.year ? String(film.year) : null,
+    metadata?.genres.find((genre) => genre.trim())?.trim() ?? null,
+    runtimeLabel(metadata?.runtime),
+    metadata?.director,
+  ]);
 }
 
 function formatWatchDate(watch: FilmWatch): string {
@@ -485,12 +485,10 @@ export function FilmDetailView({
                           {neighbour.title}
                         </span>
                         <span className="mt-1 block font-mono text-[12px] text-cb-muted">
-                          {[
+                          {filmMetaLine([
                             neighbour.year ? String(neighbour.year) : null,
-                            neighbour.runtime != null ? `${neighbour.runtime}m` : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
+                            runtimeLabel(neighbour.runtime),
+                          ])}
                         </span>
                         {neighbour.semantic_line && (
                           <span className="mt-1 block line-clamp-1 font-ui text-cb-caption text-cb-muted">

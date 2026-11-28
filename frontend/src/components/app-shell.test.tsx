@@ -59,6 +59,24 @@ describe("AppShell", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("previews tonight's programme with Recommend selected and no header", () => {
+    navigationState.pathname = "/dev/programme";
+    renderShell();
+
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Cuebox" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Recommend" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("previews a past night under the wordmark with More selected", () => {
+    navigationState.pathname = "/dev/programme/history";
+    renderShell();
+
+    expect(screen.getByRole("link", { name: "Cuebox" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
+  });
+
   it("routes More to /more", () => {
     renderShell();
 
