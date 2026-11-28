@@ -4,11 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { ChromeOverrideProvider, useTabBarOverride } from "@/components/chrome-override";
 import { Icon } from "@/components/icon";
 import { SearchCard } from "@/components/ui/search-card";
 import { Wordmark } from "@/components/wordmark";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { screenMotion } from "@/lib/motion";
+import { isScreenFadeSuppressed } from "@/lib/recommend-handoff";
 import { cn } from "@/lib/utils";
 
 const BOTTOM_TABS = [
@@ -42,17 +44,33 @@ const BOTTOM_TABS = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <ChromeOverrideProvider>
+      <AppShellFrame>{children}</AppShellFrame>
+    </ChromeOverrideProvider>
+  );
+}
+
+function AppShellFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduced = useReducedMotion();
-  const screen = screenMotion(reduced);
+  const suppressed = isScreenFadeSuppressed(pathname);
+  const screen = suppressed
+    ? { fadeMs: 0, transition: { duration: 0, ease: "linear" as const } }
+    : screenMotion(reduced);
   const [searchOpen, setSearchOpen] = useState(false);
+  const tabOverride = useTabBarOverride();
   const programmeTonight = pathname === "/dev/programme";
   const programmeHistory = pathname.startsWith("/dev/programme/history");
   const programmePreview = programmeTonight || programmeHistory;
+  const questionnaire = pathname === "/recommend";
+  const recommendResults = pathname.startsWith("/recommend/results");
+  const hideHeader = programmeTonight || questionnaire || recommendResults;
+  const hideTabBar = questionnaire && tabOverride !== true;
 
   return (
     <div className="min-h-screen bg-cb-bg text-cb-text">
-      {programmeTonight ? null : (
+      {hideHeader ? null : (
         <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
           <div
             data-shell-header
@@ -83,8 +101,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <main
         className={cn(
-          "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
-          programmePreview ? "pt-2" : "py-8",
+          "mx-auto w-full max-w-7xl px-4 md:px-12",
+          hideTabBar
+            ? "pb-4"
+            : "pb-[calc(90px+env(safe-area-inset-bottom,0px))]",
+          hideHeader || programmePreview ? "pt-2" : "py-8",
         )}
       >
         <AnimatePresence initial={false} mode="popLayout">
@@ -104,6 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <SearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
+      {hideTabBar ? null : (
       <nav
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
@@ -131,6 +153,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
+      )}
     </div>
   );
 }

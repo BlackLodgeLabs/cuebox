@@ -68,7 +68,7 @@ export function filmDetailLine(
 ): string {
   return filmMetaLine([
     film.year != null ? String(film.year) : null,
-    film.genres.find((genre) => genre.trim())?.trim() ?? null,
+    film.genres?.find((genre) => genre.trim())?.trim() ?? null,
     runtimeLabel(film.runtime),
     service,
   ]);

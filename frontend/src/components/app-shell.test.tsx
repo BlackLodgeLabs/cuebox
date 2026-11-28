@@ -77,6 +77,23 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
   });
 
+  it("hides the header and tab bar on the questionnaire", () => {
+    navigationState.pathname = "/recommend";
+    renderShell();
+
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Cuebox" })).not.toBeInTheDocument();
+  });
+
+  it("shows a fresh programme under Recommend without the search header", () => {
+    navigationState.pathname = "/recommend/results/session-1";
+    renderShell();
+
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Recommend" })).toHaveAttribute("aria-current", "page");
+  });
+
   it("routes More to /more", () => {
     renderShell();
 
@@ -90,8 +107,8 @@ describe("AppShell", () => {
     { pathname: "/", active: "Home" },
     { pathname: "/watchlist", active: "Watchlist" },
     { pathname: "/watchlist/add", active: "Watchlist" },
-    { pathname: "/recommend", active: "Recommend" },
     { pathname: "/recommend/abc", active: "Recommend" },
+    { pathname: "/recommend/results/session-1", active: "Recommend" },
     { pathname: "/more", active: "More" },
     { pathname: "/settings/sync", active: "More" },
   ] as const)(

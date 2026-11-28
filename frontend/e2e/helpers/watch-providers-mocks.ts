@@ -32,6 +32,7 @@ const filmDetailWithTmdb = {
     metadata_source: "tmdb",
   },
   semantic_profile: null,
+  watches: [],
   created_at: "2024-11-01T14:30:00Z",
   updated_at: "2024-11-01T15:00:00Z",
 };
@@ -83,6 +84,8 @@ const recommendationDetail = {
     tmdb_rating: 8.7,
     rotten_tomatoes_score: 88,
     poster_url: "https://image.tmdb.org/t/p/w500/matrix.jpg",
+    backdrop_url: "https://image.tmdb.org/t/p/w1280/matrix.jpg",
+    genres: ["Science Fiction"],
     explanation: {
       why_it_matches: "Strong sci-fi alignment.",
       most_influential_factors: ["theme fit"],

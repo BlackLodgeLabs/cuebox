@@ -92,12 +92,18 @@ test.describe("Recommendation ceremony (mocked API)", () => {
     await expect(page.getByTestId("ceremony-stage-record")).toBeVisible();
   });
 
-  test("unarmed stage=1 deep link coerces to stage 3", async ({ page }) => {
-    await page.goto(
-      `/recommend/results/${CEREMONY_SESSION_ID}?stage=1`,
+  test("recommend results show tonight's programme without the ceremony", async ({
+    page,
+  }) => {
+    await page.goto(`/recommend/results/${CEREMONY_SESSION_ID}?stage=1`);
+    await expect(
+      page.getByRole("heading", { name: /tonight.s programme/i }),
+    ).toBeVisible();
+    await expect(page.getByTestId("recommendation-ceremony")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Recommend" })).toHaveAttribute(
+      "aria-current",
+      "page",
     );
-    await expect(page).toHaveURL(new RegExp(`[?&]stage=3`));
-    await expect(page.getByTestId("ceremony-stage-record")).toBeVisible();
   });
 
   test("reduced-motion sets data attribute and ceremony class", async ({
