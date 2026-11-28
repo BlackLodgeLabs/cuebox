@@ -14,7 +14,7 @@ test.describe("Recommendation ceremony (mocked API)", () => {
   test("fresh results advance 1 → 2 → 3 with short then full reasons", async ({
     page,
   }) => {
-    await page.goto(`/history/${CEREMONY_SESSION_ID}`);
+    await page.goto(`/recommend/results/${CEREMONY_SESSION_ID}`);
     await expect(page.getByTestId("ceremony-stage-record")).toBeVisible();
 
     await page.getByTestId("ceremony-replay").click();
@@ -50,36 +50,28 @@ test.describe("Recommendation ceremony (mocked API)", () => {
     await expect(page.getByText("Synopsis")).toBeVisible();
   });
 
-  test("history detail lands on stage 3 with Done sole primary", async ({
+  test("history detail is the dated programme, not the ceremony", async ({
     page,
   }) => {
     await page.goto(`/history/${CEREMONY_SESSION_ID}`);
-    await expect(page.getByTestId("ceremony-progress")).toHaveText("3 / 3");
-    await expect(page.getByTestId("ceremony-stage-record")).toBeVisible();
-    await expect(page.getByTestId("ceremony-replay")).toBeVisible();
-
-    const done = page.getByTestId("ceremony-done");
-    await expect(done).toBeVisible();
-    await expect(done).toHaveClass(/bg-cb-accent/);
-    await expect(page.getByTestId("ceremony-replay")).not.toHaveClass(
-      /bg-cb-accent/,
+    await expect(page.getByRole("heading", { level: 1, name: "Fri 1 Nov" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Back to History" })).toHaveAttribute(
+      "href",
+      "/history",
     );
-    await expect(page.getByTestId("ceremony-more-actions")).not.toHaveClass(
-      /bg-cb-accent/,
+    await expect(page.getByRole("link", { name: "New pick" })).toHaveAttribute(
+      "href",
+      "/recommend",
     );
     await expect(
-      page.getByTestId("ceremony-new-recommendation"),
-    ).toHaveCount(0);
-
-    await page.getByTestId("ceremony-more-actions").click();
-    await expect(page.getByTestId("ceremony-new-recommendation")).toBeVisible();
-    await expect(page.getByTestId("ceremony-new-recommendation")).not.toHaveClass(
-      /bg-cb-accent/,
-    );
+      page.getByRole("heading", { level: 2, name: "Ceremony Winner" }),
+    ).toBeVisible();
+    await expect(page.getByTestId("recommendation-ceremony")).toHaveCount(0);
+    await expect(page.getByTestId("ceremony-replay")).toHaveCount(0);
   });
 
   test("replay plays 1 → 2 → 3 once per tap", async ({ page }) => {
-    await page.goto(`/history/${CEREMONY_SESSION_ID}`);
+    await page.goto(`/recommend/results/${CEREMONY_SESSION_ID}`);
     await page.getByTestId("ceremony-replay").click();
     await expect(page.getByTestId("ceremony-stage-winner")).toBeVisible();
     await page.getByTestId("ceremony-next").click();
@@ -104,7 +96,7 @@ test.describe("Recommendation ceremony (mocked API)", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto(`/history/${CEREMONY_SESSION_ID}`);
+    await page.goto(`/recommend/results/${CEREMONY_SESSION_ID}`);
     await expect(page.getByTestId("recommendation-ceremony")).toHaveAttribute(
       "data-reduced-motion",
       "true",

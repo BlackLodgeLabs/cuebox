@@ -19,8 +19,8 @@ export function DeleteHistoryDialog({
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Remove from history"
-      description="Are you sure you want to remove this from your history? This cannot be undone."
+      title="Remove this night?"
+      description="It will be deleted from History. This does not change the film on your watchlist."
       confirmLabel={isPending ? "Removing…" : "Remove"}
       onConfirm={onConfirm}
       pending={isPending}

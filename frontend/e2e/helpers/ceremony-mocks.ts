@@ -20,6 +20,8 @@ const ceremonyDetail = {
     tmdb_rating: 7.5,
     rotten_tomatoes_score: 89,
     poster_url: null,
+    backdrop_url: null,
+    genres: ["Folk horror"],
     explanation: {
       why_it_matches: "Folk horror atmosphere matches your mood.",
       why_it_matches_short: "Folk horror mood fit.",
@@ -40,6 +42,8 @@ const ceremonyDetail = {
       tmdb_rating: 6.8,
       rotten_tomatoes_score: 70,
       poster_url: null,
+      backdrop_url: null,
+      genres: ["Folk horror"],
       explanation: {
         why_it_matches: "Close alternative with overlapping vibes.",
         why_it_matches_short: "Overlapping vibes.",

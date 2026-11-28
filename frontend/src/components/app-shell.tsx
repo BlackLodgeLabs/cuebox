@@ -42,7 +42,8 @@ const BOTTOM_TABS = [
     isActive: (pathname: string) =>
       pathname === "/more" ||
       pathname.startsWith("/more/") ||
-      pathname.startsWith("/settings"),
+      pathname.startsWith("/settings") ||
+      pathname.startsWith("/history"),
   },
 ] as const;
 
@@ -101,7 +102,9 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const programmeTonight = pathname === "/dev/programme";
   const programmeHistory = pathname.startsWith("/dev/programme/history");
+  const historyNight = /^\/history\/[^/]+/.test(pathname);
   const programmePreview = programmeTonight || programmeHistory;
+  const historyRoute = pathname.startsWith("/history");
   const hideHeader = filmDetail || catalogueFilm || programmeTonight;
   const hideTabs = filmDetail || catalogueFilm;
   const skipRouteFade = isHome && reduced;
@@ -135,7 +138,7 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
             className="mx-auto flex h-[52px] w-full max-w-7xl items-center gap-2 px-4"
           >
             <Wordmark />
-            {programmeHistory ? null : (
+            {programmeHistory || historyNight ? null : (
               <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-cb bg-cb-surface px-3">
                 <Icon name="search" size={18} className="shrink-0 text-cb-muted" />
                 <input
@@ -167,7 +170,7 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
                 ? "mx-auto w-full max-w-7xl px-0 py-0 pb-[calc(90px+env(safe-area-inset-bottom,0px))]"
                 : cn(
                     "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
-                    programmePreview ? "pt-2" : "py-8",
+                    historyRoute ? "pt-1" : programmePreview ? "pt-2" : "py-8",
                   )
         }
       >
