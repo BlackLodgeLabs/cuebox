@@ -79,24 +79,6 @@
       scroll-behavior: auto !important;
     }
 
-    .ceremony-stage,
-    .ceremony-stage * {
-      animation: none !important;
-      transition: none !important;
-    }
-  }
-
-  .ceremony-reduced-motion,
-  .ceremony-reduced-motion * {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .ceremony-reduced-motion.animate-in,
-  .ceremony-reduced-motion .animate-in {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
   }
 }
 
@@ -308,6 +290,13 @@
     [data-cb-batch] {
       animation-duration: var(--cb-dur-reduced, 300ms) !important;
       animation-delay: 0ms !important;
+    }
+
+    /* The filled star is a CSS opacity transition. The universal 0.01ms
+       hammer would otherwise crush the locked 300ms crossfade. */
+    [data-star-fill="crossfade"] {
+      transition-property: opacity !important;
+      transition-duration: var(--cb-dur-reduced, 300ms) !important;
     }
   }
 

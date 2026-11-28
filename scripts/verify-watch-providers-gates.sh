@@ -52,7 +52,7 @@ echo "=== Gate 5: Frontend unit tests (watch-provider coverage) ==="
   src/hooks/use-watch-providers.test.tsx \
   src/components/where-to-watch-section.test.tsx \
   src/components/watch-provider-icons.test.tsx \
-  src/components/results-view.test.tsx) && pass "frontend unit tests"
+  src/components/programme-layout.test.tsx) && pass "frontend unit tests"
 
 echo "=== Gate 6: Playwright watch-providers (mocked API) ==="
 (cd frontend && npx playwright test e2e/watch-providers.spec.ts) && pass "playwright watch-providers"

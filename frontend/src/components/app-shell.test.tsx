@@ -109,6 +109,14 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Recommend" })).toHaveAttribute("aria-current", "page");
   });
 
+  it("keeps the header search off the history list", () => {
+    navigationState.pathname = "/history";
+    renderShell();
+
+    expect(screen.getByRole("link", { name: "Cuebox" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+  });
+
   it("opens a past night under the wordmark with More selected", () => {
     navigationState.pathname = "/history/session-1";
     renderShell();

@@ -1,6 +1,8 @@
 # Cuebox mobile UI — product brief
 
-Status: **Decisions locked** (fact-finding complete). Ready for a UI designer or design-implement pass after prerequisites below.
+Status: **Superseded by the Nov 2026 redesign.** Visual system, motion, and screen layout now live in [`docs/design/redesign-2026-11/`](../docs/design/redesign-2026-11/). This brief is the earlier mobile IA record. Do not treat its Neo-Noir instruction as the current design system.
+
+Status when written: **Decisions locked** (fact-finding complete). Ready for a UI designer or design-implement pass after prerequisites below.
 
 Audience: UI designer (human or agent) taking over visual/IA work for Cuebox’s phone-first experience.
 
