@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getFilm, getFilms, getFilmTrailer, getReviewRequired, getSimilarFilms, getTmdbFilm, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, createFilmWatch, updateFilmWatch, deleteFilmWatch } from "@/lib/api-client";
-import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, CreateWatchRequest, UpdateWatchRequest } from "@/types/api";
+import type { FilmsQueryParams, FilmStatus, FilmSummary, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, CreateWatchRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useFilms(
@@ -217,6 +217,39 @@ export function useDeleteFilmWatch() {
       invalidateWatchReviewQueries(queryClient, variables.filmId);
     },
     onError,
+  });
+}
+
+const HOME_ACTIVE_PAGE = 100;
+/** Safety stop for a very large watchlist. The list endpoint pages at 100. */
+const HOME_ACTIVE_MAX_PAGES = 30;
+
+/** Every active watchlist film Home can place on a rail. */
+export async function loadActiveWatchlist(): Promise<{
+  films: FilmSummary[];
+  total: number;
+}> {
+  const films: FilmSummary[] = [];
+  let offset = 0;
+  let total = 0;
+  for (let page = 0; page < HOME_ACTIVE_MAX_PAGES; page += 1) {
+    const response = await getFilms({
+      status: "active",
+      limit: HOME_ACTIVE_PAGE,
+      offset,
+    });
+    total = response.pagination.total;
+    films.push(...response.data);
+    if (!response.pagination.has_more || response.data.length === 0) break;
+    offset += response.data.length;
+  }
+  return { films, total };
+}
+
+export function useHomeActiveFilms() {
+  return useQuery({
+    queryKey: ["films", "home-active"],
+    queryFn: loadActiveWatchlist,
   });
 }
 
