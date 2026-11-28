@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   HOME_ARRIVAL,
+  arrivalDelayMs,
   irisProgress,
+  irisRadiusPx,
+  splashStopOpacity,
   splashWordmarkOpacity,
 } from "@/lib/home-arrival";
 
@@ -32,7 +35,15 @@ describe("home arrival timings", () => {
     expect(irisProgress(1974 + 380)).toBeCloseTo(0.5, 5);
     expect(irisProgress(1974 + 760)).toBe(1);
     expect(splashWordmarkOpacity(2054)).toBe(1);
-    expect(splashWordmarkOpacity(2054 + 300)).toBeCloseTo(0.5, 5);
+    // Mid-fade uses the tester ease-out, not a linear blend.
+    expect(splashWordmarkOpacity(2054 + 300)).toBeCloseTo(0.125, 5);
     expect(splashWordmarkOpacity(2654)).toBe(0);
+    expect(splashStopOpacity(1974)).toBe(1);
+    expect(splashStopOpacity(1974 + 80)).toBe(0);
+    expect(irisRadiusPx(1974, 4, 900)).toBe(4);
+    expect(irisRadiusPx(1974 + 760, 4, 900)).toBe(900);
+    expect(arrivalDelayMs("title")).toBe(2674);
+    expect(arrivalDelayMs("rest", 0)).toBe(2734);
+    expect(arrivalDelayMs("rest", 1)).toBe(2804);
   });
 });

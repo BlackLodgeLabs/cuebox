@@ -221,9 +221,10 @@ export function useDeleteFilmWatch() {
 }
 
 const HOME_ACTIVE_PAGE = 100;
-const HOME_ACTIVE_MAX_PAGES = 4;
+/** Safety stop for a very large watchlist. The list endpoint pages at 100. */
+const HOME_ACTIVE_MAX_PAGES = 30;
 
-/** Active watchlist pages for Home rails. Stops at 400 films. */
+/** Every active watchlist film Home can place on a rail. */
 export async function loadActiveWatchlist(): Promise<{
   films: FilmSummary[];
   total: number;

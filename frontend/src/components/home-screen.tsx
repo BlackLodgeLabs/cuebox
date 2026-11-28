@@ -119,7 +119,8 @@ function FilledHome({ total, films }: { total: number; films: HomeRowFilm[] }) {
       {rows.length > 0 ? (
         <div className="space-y-8 px-4 pb-8 pt-8">
           {rows.map((row, index) => (
-            <ArrivalRise key={row.id} index={index + 2}>
+            <ArrivalRise key={row.id} index={index + 1}>
+              <div className="cb-rule" />
               <section aria-label={row.title} className="space-y-3">
                 <SectionHeader
                   title={row.title}
@@ -213,7 +214,7 @@ function FeatureHero({
           <div className="h-40 animate-pulse rounded-cb bg-cb-surface/40" />
         ) : (
           <>
-            <ArrivalRise index={0} className="space-y-2">
+            <ArrivalRise slot="title" className="space-y-2">
               <p className="font-ui text-cb-caption text-cb-text">
                 Today&apos;s feature · from your watchlist
               </p>
@@ -228,12 +229,17 @@ function FeatureHero({
                   {film.synopsis}
                 </p>
               ) : null}
-            </ArrivalRise>
-            <ArrivalRise index={1} className="mt-6 space-y-3">
-              <Button type="button" size="lg" className="h-12 w-full" onClick={onWhereToWatch}>
+              <Button
+                type="button"
+                size="lg"
+                className="mt-6 h-12 w-full"
+                onClick={onWhereToWatch}
+              >
                 <Icon name="play_arrow" size={18} />
                 Where to watch
               </Button>
+            </ArrivalRise>
+            <ArrivalRise className="mt-3 space-y-3">
               <Button asChild variant="secondary" size="lg" className="h-12 w-full">
                 <Link href="/recommend">Get a pick for tonight</Link>
               </Button>

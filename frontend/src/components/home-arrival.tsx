@@ -12,8 +12,11 @@ import {
 } from "react";
 import {
   HOME_ARRIVAL,
+  arrivalDelayMs,
   irisProgress,
+  irisRadiusPx,
   irisSoftEdgePx,
+  splashStopOpacity,
   splashWordmarkOpacity,
 } from "@/lib/home-arrival";
 import { cueboxEase } from "@/lib/motion";
@@ -46,7 +49,8 @@ function wallSeconds(msAt1x: number): number {
 
 const HOLD_1X = 150;
 const STAGGER_1X = 190;
-const REEL_1X = 510;
+const DROP_1X = 420;
+const SETTLE_1X = 90;
 
 const LETTERS = [
   { char: "u", tone: "text-cb-accent" },
@@ -76,11 +80,15 @@ function LogoUnfold({ stopRef }: { stopRef: React.RefObject<HTMLSpanElement | nu
           key={letter.char}
           className={`inline-block ${letter.tone}`}
           initial={{ y: "0.55em", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          animate={{ y: ["0.55em", "-0.05em", "0em"], opacity: [0, 1, 1] }}
           transition={{
             delay: wallSeconds(HOLD_1X + index * STAGGER_1X),
-            duration: wallSeconds(REEL_1X),
-            ease: [0.33, 0, 0.67, 1],
+            duration: wallSeconds(DROP_1X + SETTLE_1X),
+            times: [0, DROP_1X / (DROP_1X + SETTLE_1X), 1],
+            ease: [
+              [0.33, 0, 0.67, 1],
+              [0.2, 0.8, 0.2, 1],
+            ],
           }}
         >
           {letter.char}
@@ -90,11 +98,15 @@ function LogoUnfold({ stopRef }: { stopRef: React.RefObject<HTMLSpanElement | nu
         ref={stopRef}
         className="inline-block text-cb-teal"
         initial={{ y: "0.55em", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ y: ["0.55em", "-0.05em", "0em"], opacity: [0, 1, 1] }}
         transition={{
           delay: wallSeconds(HOLD_1X + LETTERS.length * STAGGER_1X),
-          duration: wallSeconds(REEL_1X),
-          ease: [0.33, 0, 0.67, 1],
+          duration: wallSeconds(DROP_1X + SETTLE_1X),
+          times: [0, DROP_1X / (DROP_1X + SETTLE_1X), 1],
+          ease: [
+            [0.33, 0, 0.67, 1],
+            [0.2, 0.8, 0.2, 1],
+          ],
         }}
       >
         .
@@ -125,13 +137,21 @@ function HomeSplash() {
           const rect = stop.getBoundingClientRect();
           const x = rect.left + rect.width / 2;
           const y = rect.top + rect.height / 2;
-          const radius = progress * Math.hypot(window.innerWidth, window.innerHeight);
+          const stopRadius = Math.hypot(rect.width / 2, rect.height / 2) + 0.5;
           const soft = irisSoftEdgePx(elapsed);
+          const far = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y),
+          ) + soft + 8;
+          const radius = irisRadiusPx(elapsed, stopRadius, far);
           const inner = Math.max(0, radius - soft);
           const image = `radial-gradient(circle at ${x}px ${y}px, transparent ${inner}px, #000 ${radius}px)`;
           background.style.maskImage = image;
           background.style.setProperty("-webkit-mask-image", image);
         }
+      }
+      if (stop && elapsed >= HOME_ARRIVAL.irisStartMs) {
+        stop.style.opacity = String(splashStopOpacity(elapsed));
       }
       if (wordmark) {
         wordmark.style.opacity = String(splashWordmarkOpacity(elapsed));
@@ -212,11 +232,13 @@ export function HomeArrivalProvider({ children }: { children: React.ReactNode })
 }
 
 export function ArrivalRise({
-  index,
+  index = 0,
+  slot = "rest",
   className,
   children,
 }: {
-  index: number;
+  index?: number;
+  slot?: "title" | "rest";
   className?: string;
   children: React.ReactNode;
 }) {
@@ -230,7 +252,7 @@ export function ArrivalRise({
       initial={{ opacity: 0, y: HOME_ARRIVAL.restRisePx }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        delay: (HOME_ARRIVAL.restStartMs + index * HOME_ARRIVAL.restStaggerMs) / 1000,
+        delay: arrivalDelayMs(slot, index) / 1000,
         duration: HOME_ARRIVAL.restDurationMs / 1000,
         ease: cueboxEase,
       }}

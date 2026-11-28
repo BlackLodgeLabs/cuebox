@@ -333,6 +333,9 @@ GET /films
 |`director`         |string, nullable |Director name                    |
 |`runtime`          |integer, nullable|Runtime in minutes               |
 |`genres`           |array of string  |Genres from TMDB                 |
+|`synopsis`         |string, nullable |Overview from metadata. Empty when the film has no metadata |
+|`tones`            |array of string  |Semantic tones. Empty when the film has no semantic profile |
+|`emotional_outcomes`|array of string |Semantic emotional outcomes. Empty when the film has no semantic profile |
 |`created_at`       |string           |ISO 8601                         |
 |`updated_at`       |string           |ISO 8601                         |
 |`removed_at`       |string, nullable |Most recent watchlist `removed_at` when listing watched/archived (singular `status` or multi `statuses` that include those values); omitted otherwise |

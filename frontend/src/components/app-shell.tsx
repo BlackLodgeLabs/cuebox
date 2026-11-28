@@ -123,11 +123,11 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
           <motion.div
             key={pathname}
             data-cb-screen=""
-            data-fade-ms={screen.fadeMs}
-            initial={{ opacity: 0 }}
+            data-fade-ms={isHome && reduced ? 0 : screen.fadeMs}
+            initial={isHome && reduced ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={screen.transition}
+            transition={isHome && reduced ? { duration: 0 } : screen.transition}
           >
             {children}
           </motion.div>
