@@ -107,7 +107,6 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
   const tabOverride = useTabBarOverride();
   const programmeTonight = pathname === "/dev/programme";
   const programmeHistory = pathname.startsWith("/dev/programme/history");
-  const historyNight = /^\/history\/[^/]+/.test(pathname);
   const programmePreview = programmeTonight || programmeHistory;
   const historyRoute = pathname.startsWith("/history");
   const questionnaire = pathname === "/recommend";

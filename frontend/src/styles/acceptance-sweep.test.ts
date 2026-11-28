@@ -49,9 +49,9 @@ describe("acceptance sweep", () => {
   it("keeps the reduced-motion star crossfade at 300ms", () => {
     const css = readFileSync(path.join(frontendRoot, "src/app/globals.css"), "utf8");
     const reduced = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce)"));
-    expect(reduced).toContain('[data-reduced="true"][data-crossfade-ms]');
+    expect(reduced).toContain('[data-star-fill="crossfade"]');
     expect(reduced).toMatch(
-      /\[data-reduced="true"\]\[data-crossfade-ms\][\s\S]*transition-duration:\s*var\(--cb-dur-reduced,\s*300ms\)\s*!important/,
+      /\[data-star-fill="crossfade"\][\s\S]*transition-property:\s*opacity\s*!important[\s\S]*transition-duration:\s*var\(--cb-dur-reduced,\s*300ms\)\s*!important/,
     );
   });
 

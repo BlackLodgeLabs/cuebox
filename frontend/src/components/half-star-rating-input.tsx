@@ -117,6 +117,7 @@ export function HalfStarRatingInput({
               viewBox="0 0 24 24"
               className="pointer-events-none absolute left-1 top-1 h-9 w-9"
               aria-hidden
+              data-star-fill={crossfade ? "crossfade" : undefined}
               style={{
                 clipPath: `inset(0 ${(1 - clipAmount) * 100}% 0 0)`,
                 opacity: fadingIn ? 0 : 1,
