@@ -8,6 +8,8 @@ const navigationState = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navigationState.pathname,
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 function renderShell() {

@@ -2,9 +2,14 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
+import {
+  HomeArrivalProvider,
+  arrivalChromeTransition,
+  useArrivalPhase,
+} from "@/components/home-arrival";
 import { SearchCard } from "@/components/ui/search-card";
 import { Wordmark } from "@/components/wordmark";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -42,14 +47,44 @@ const BOTTOM_TABS = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <HomeArrivalProvider>
+      <AppShellFrame>{children}</AppShellFrame>
+    </HomeArrivalProvider>
+  );
+}
+
+function AppShellFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduced = useReducedMotion();
   const screen = screenMotion(reduced);
+  const phase = useArrivalPhase();
+  const playing = phase === "play";
+  const isHome = pathname === "/";
   const [searchOpen, setSearchOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const chrome = arrivalChromeTransition(playing);
+
+  useEffect(() => {
+    if (!isHome) return;
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isHome]);
 
   return (
     <div className="min-h-screen bg-cb-bg text-cb-text">
-      <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
+      <motion.header
+        key={phase}
+        initial={playing ? { opacity: 0 } : false}
+        animate={{ opacity: 1 }}
+        transition={chrome}
+        className={cn(
+          "sticky top-0 z-40 pt-[env(safe-area-inset-top,0px)]",
+          isHome && !scrolled ? "bg-transparent" : "bg-cb-bg",
+        )}
+      >
         <div
           data-shell-header
           className="mx-auto flex h-[52px] w-full max-w-7xl items-center gap-2 px-4"
@@ -72,9 +107,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             />
           </label>
         </div>
-      </header>
+      </motion.header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12">
+      <Suspense fallback={null}>
+        <SearchFocus pathname={pathname} onOpen={() => setSearchOpen(true)} />
+      </Suspense>
+
+      <main
+        className={cn(
+          "mx-auto w-full max-w-7xl pb-[calc(90px+env(safe-area-inset-bottom,0px))]",
+          isHome ? "px-0 py-0" : "px-4 py-8 md:px-12",
+        )}
+      >
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
             key={pathname}
@@ -92,8 +136,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <SearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
-      <nav
+      <motion.nav
+        key={`tabs-${phase}`}
         aria-label="Primary"
+        initial={playing ? { opacity: 0 } : false}
+        animate={{ opacity: 1 }}
+        transition={chrome}
         className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
       >
         <div
@@ -114,9 +162,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </div>
-      </nav>
+      </motion.nav>
     </div>
   );
+}
+
+function SearchFocus({
+  pathname,
+  onOpen,
+}: {
+  pathname: string;
+  onOpen: () => void;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const handled = useRef(false);
+
+  useEffect(() => {
+    if (handled.current) return;
+    if (searchParams.get("focus") !== "search") return;
+    handled.current = true;
+    onOpen();
+    router.replace(pathname || "/", { scroll: false });
+  }, [onOpen, pathname, router, searchParams]);
+
+  return null;
 }
 
 function LinkTab({

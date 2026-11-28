@@ -12,6 +12,8 @@ import { Toaster, toast } from "@/components/ui/sonner";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 function mockReduced(matches: boolean) {
