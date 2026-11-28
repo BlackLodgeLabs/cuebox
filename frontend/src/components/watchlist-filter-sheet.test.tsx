@@ -1,25 +1,43 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_WATCHLIST_FILTERS,
   WatchlistFilterSheet,
-  type WatchlistFilterValues,
 } from "@/components/watchlist-filter-sheet";
+import { RUNTIME_OPTIONS } from "@/lib/questionnaire-vocabulary";
+import { createQueryWrapper } from "@/test/query-wrapper";
+import type { FilmsQueryParams } from "@/types/api";
 
-const seeded: WatchlistFilterValues = {
-  search: "matrix",
-  enrichmentStatus: "ready",
-  year: "1999",
-  sort: "title",
-  sortDir: "asc",
-  createdFrom: "2024-01-01",
-  createdTo: "2024-12-31",
-};
+const { mockGetFilms, mockGetWatchlistGenres } = vi.hoisted(() => ({
+  mockGetFilms: vi.fn(),
+  mockGetWatchlistGenres: vi.fn(),
+}));
+
+vi.mock("@/lib/api-client", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api-client")>(
+    "@/lib/api-client",
+  );
+  return {
+    ...actual,
+    getFilms: (params?: FilmsQueryParams) => mockGetFilms(params),
+    getWatchlistGenres: () => mockGetWatchlistGenres(),
+  };
+});
+
+function mockReduced(matches: boolean) {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    get matches() {
+      return query.includes("prefers-reduced-motion") ? matches : false;
+    },
+    media: query,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }));
+}
 
 describe("WatchlistFilterSheet", () => {
   beforeAll(() => {
-    // Radix Select calls pointer-capture APIs that jsdom does not implement.
     Element.prototype.hasPointerCapture = () => false;
     Element.prototype.setPointerCapture = () => {};
     Element.prototype.releasePointerCapture = () => {};
@@ -29,142 +47,135 @@ describe("WatchlistFilterSheet", () => {
   afterEach(() => {
     cleanup();
     document.body.style.pointerEvents = "";
+    delete (window as { matchMedia?: unknown }).matchMedia;
   });
 
-  it("prefills drafts from values when opened", () => {
-    render(
-      <WatchlistFilterSheet
-        open
-        view="active"
-        onOpenChange={vi.fn()}
-        values={seeded}
-        onApply={vi.fn()}
-        onClear={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByLabelText(/^Search$/i)).toHaveValue("matrix");
-    expect(screen.getByLabelText(/^Year$/i)).toHaveValue(1999);
-    expect(screen.getByRole("button", { name: /Apply/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Clear/i })).toBeInTheDocument();
-  });
-
-  it("Apply commits draft values and Clear commits defaults", () => {
-    const onApply = vi.fn();
-    const onClear = vi.fn();
+  it("offers one runtime choice from RUNTIME_OPTIONS, defaulting to No limit", async () => {
+    mockReduced(true);
+    mockGetWatchlistGenres.mockResolvedValue({ data: ["Horror", "Drama"] });
+    mockGetFilms.mockResolvedValue({
+      data: [],
+      pagination: { total: 11, limit: 1, offset: 0, has_more: false },
+    });
+    const { Wrapper } = createQueryWrapper();
 
     render(
-      <WatchlistFilterSheet
-        open
-        view="active"
-        onOpenChange={vi.fn()}
-        values={DEFAULT_WATCHLIST_FILTERS}
-        onApply={onApply}
-        onClear={onClear}
-      />,
+      <Wrapper>
+        <WatchlistFilterSheet
+          open
+          onOpenChange={vi.fn()}
+          status="active"
+          values={DEFAULT_WATCHLIST_FILTERS}
+          onApply={vi.fn()}
+        />
+      </Wrapper>,
     );
 
-    const search = screen.getByLabelText(/^Search$/i);
-    fireEvent.change(search, { target: { value: "blade" } });
-    fireEvent.click(screen.getByRole("button", { name: /Apply/i }));
-
-    expect(onApply).toHaveBeenCalledWith(
-      expect.objectContaining({ search: "blade" }),
+    for (const option of RUNTIME_OPTIONS) {
+      expect(screen.getByRole("radio", { name: option.label })).toBeInTheDocument();
+    }
+    expect(screen.getByRole("radio", { name: "No limit" })).toHaveAttribute(
+      "aria-checked",
+      "true",
     );
-
-    fireEvent.click(screen.getByRole("button", { name: /Clear/i }));
-    expect(onClear).toHaveBeenCalled();
+    expect(screen.getByRole("radio", { name: "≤ 90 minutes" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    expect(screen.queryByRole("switch", { name: /On my services/i })).not.toBeInTheDocument();
+    expect(document.querySelector("[data-slot='on-my-services']")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Horror" })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Search$/i)).not.toBeInTheDocument();
   });
 
-  it("discards draft edits when closed without Apply", () => {
+  it("previews pagination.total for the pending filters and applies that choice", async () => {
+    const user = userEvent.setup();
+    mockReduced(true);
+    mockGetWatchlistGenres.mockResolvedValue({ data: ["Horror", "Drama"] });
+    mockGetFilms.mockImplementation(async (params?: FilmsQueryParams) => {
+      const total = params?.runtime === "le_90" ? 4 : 11;
+      return {
+        data: [],
+        pagination: { total, limit: 1, offset: 0, has_more: false },
+      };
+    });
     const onApply = vi.fn();
-    const onOpenChange = vi.fn();
+    const { Wrapper } = createQueryWrapper();
 
-    const { rerender } = render(
-      <WatchlistFilterSheet
-        open
-        view="active"
-        onOpenChange={onOpenChange}
-        values={DEFAULT_WATCHLIST_FILTERS}
-        onApply={onApply}
-        onClear={vi.fn()}
-      />,
+    render(
+      <Wrapper>
+        <WatchlistFilterSheet
+          open
+          onOpenChange={vi.fn()}
+          status="watched"
+          values={{ genres: ["Drama"], runtime: "any" }}
+          onApply={onApply}
+        />
+      </Wrapper>,
     );
 
-    fireEvent.change(screen.getByLabelText(/^Search$/i), {
-      target: { value: "ghost" },
+    await screen.findByRole("button", { name: "Show 11 films" });
+    expect(mockGetFilms).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "watched",
+        genres: ["Drama"],
+        limit: 1,
+      }),
+    );
+    expect(mockGetFilms.mock.calls.at(-1)?.[0]).not.toHaveProperty("runtime");
+
+    await user.click(screen.getByRole("radio", { name: "≤ 90 minutes" }));
+    await screen.findByRole("button", { name: "Show 4 films" });
+    await waitFor(() => {
+      const number = document.querySelector("[data-cb-number]");
+      expect(number).toHaveAttribute("data-duration-ms", "0");
+      expect(number).toHaveTextContent("4");
     });
 
-    rerender(
-      <WatchlistFilterSheet
-        open={false}
-        view="active"
-        onOpenChange={onOpenChange}
-        values={DEFAULT_WATCHLIST_FILTERS}
-        onApply={onApply}
-        onClear={vi.fn()}
-      />,
-    );
-
-    rerender(
-      <WatchlistFilterSheet
-        open
-        view="active"
-        onOpenChange={onOpenChange}
-        values={DEFAULT_WATCHLIST_FILTERS}
-        onApply={onApply}
-        onClear={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByLabelText(/^Search$/i)).toHaveValue("");
-    expect(onApply).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Show 4 films" }));
+    expect(onApply).toHaveBeenCalledWith({ genres: ["Drama"], runtime: "le_90" });
   });
 
-  it("shows Date watched and Descending when those are the Watched view values", () => {
-    render(
-      <WatchlistFilterSheet
-        open
-        view="watched"
-        onOpenChange={vi.fn()}
-        values={{ ...DEFAULT_WATCHLIST_FILTERS, sort: "watched_at", sortDir: "desc" }}
-        onApply={vi.fn()}
-        onClear={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveTextContent(
-      "Date watched",
-    );
-    expect(screen.getByRole("combobox", { name: "Sort direction" })).toHaveTextContent(
-      "Descending",
-    );
-  });
-
-  it("offers Date watched on the Watched view and hides it on the other views", async () => {
+  it("Clear all returns the draft to No limit and no genres without applying", async () => {
     const user = userEvent.setup();
-    const props = {
-      open: true,
-      onOpenChange: vi.fn(),
-      values: DEFAULT_WATCHLIST_FILTERS,
-      onApply: vi.fn(),
-      onClear: vi.fn(),
-    };
+    mockReduced(true);
+    mockGetWatchlistGenres.mockResolvedValue({ data: ["Horror"] });
+    mockGetFilms.mockImplementation(async (params?: FilmsQueryParams) => ({
+      data: [],
+      pagination: {
+        total: params?.runtime === "le_120" || (params?.genres && params.genres.length > 0) ? 2 : 9,
+        limit: 1,
+        offset: 0,
+        has_more: false,
+      },
+    }));
+    const onApply = vi.fn();
+    const { Wrapper } = createQueryWrapper();
 
-    const { rerender } = render(<WatchlistFilterSheet {...props} view="watched" />);
-    await user.click(screen.getByRole("combobox", { name: "Sort by" }));
-    expect(screen.getByRole("option", { name: "Date watched" })).toBeInTheDocument();
+    render(
+      <Wrapper>
+        <WatchlistFilterSheet
+          open
+          onOpenChange={vi.fn()}
+          status="active"
+          values={{ genres: ["Horror"], runtime: "le_120" }}
+          onApply={onApply}
+        />
+      </Wrapper>,
+    );
 
-    await user.keyboard("{Escape}");
-    rerender(<WatchlistFilterSheet {...props} view="active" />);
-    await user.click(screen.getByRole("combobox", { name: "Sort by" }));
-    expect(screen.queryByRole("option", { name: "Date watched" })).not.toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Date added" })).toBeInTheDocument();
-
-    await user.keyboard("{Escape}");
-    rerender(<WatchlistFilterSheet {...props} view="archived" />);
-    await user.click(screen.getByRole("combobox", { name: "Sort by" }));
-    expect(screen.queryByRole("option", { name: "Date watched" })).not.toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Title" })).toBeInTheDocument();
+    await screen.findByRole("button", { name: "Show 2 films" });
+    await user.click(screen.getByRole("button", { name: "Clear all" }));
+    expect(screen.getByRole("radio", { name: "No limit" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Horror" }).className).not.toMatch(
+        /text-cb-teal/,
+      );
+    });
+    expect(onApply).not.toHaveBeenCalled();
+    await screen.findByRole("button", { name: "Show 9 films" });
   });
 });

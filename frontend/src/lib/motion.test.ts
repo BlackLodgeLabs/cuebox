@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   batchMotion,
   confirmMotion,
+  watchlistSwitchMotion,
   cueboxEase,
   numberMotion,
   pressMotion,
@@ -75,6 +76,13 @@ describe("locked app-wide motion", () => {
     expect(numberMotion(false)).toEqual({ durationMs: 400, settled: false });
     expect(revealMotion(false)).toMatchObject({ durationMs: 300, animateHeight: true });
     expect(batchMotion(false)).toEqual({ fadeMs: 300, staggerMs: 30 });
+    expect(watchlistSwitchMotion(false)).toEqual({
+      outMs: 400,
+      inMs: 600,
+      delayMs: 200,
+      out: { duration: 0.4, ease: cueboxEase },
+      in: { duration: 0.6, ease: cueboxEase, delay: 0.2 },
+    });
   });
 
   it("treats a 120px drag as the dismiss threshold for the drawer's height", () => {
@@ -119,6 +127,13 @@ describe("locked app-wide motion", () => {
       animateHeight: false,
     });
     expect(batchMotion(true)).toEqual({ fadeMs: 300, staggerMs: 0 });
+    expect(watchlistSwitchMotion(true)).toEqual({
+      outMs: 300,
+      inMs: 300,
+      delayMs: 0,
+      out: { duration: 0.3, ease: "linear" },
+      in: { duration: 0.3, ease: "linear" },
+    });
   });
 });
 

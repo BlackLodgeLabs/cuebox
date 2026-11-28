@@ -79,9 +79,12 @@ export function useInfiniteScroll<T>({
   }, [enabled, isSuccess, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const pages = query.data?.pages ?? [];
+  const total = pages[0]?.pagination.total;
 
   return {
     items: pages.flatMap((page) => page.data),
+    /** `pagination.total` from the first page. Null until that page arrives. */
+    total: total ?? null,
     hasMore: hasNextPage,
     isLoading: query.isLoading,
     isFetchingNextPage,

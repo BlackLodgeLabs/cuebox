@@ -93,6 +93,7 @@ describe("useInfiniteScroll", () => {
 
     await waitFor(() => expect(fetchPage).toHaveBeenCalledTimes(2));
     expect(fetchPage).toHaveBeenLastCalledWith({ offset: 10, limit: 10 });
+    expect(result.current.total).toBe(40);
 
     window.dispatchEvent(new Event("scroll"));
     window.dispatchEvent(new Event("scroll"));
