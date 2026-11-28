@@ -178,4 +178,29 @@ describe("WatchlistFilterSheet", () => {
     expect(onApply).not.toHaveBeenCalled();
     await screen.findByRole("button", { name: "Show 9 films" });
   });
+
+  it("still applies when the preview count fails", async () => {
+    mockReduced(true);
+    mockGetWatchlistGenres.mockResolvedValue({ data: [] });
+    mockGetFilms.mockRejectedValue(new Error("offline"));
+    const onApply = vi.fn();
+    const { Wrapper } = createQueryWrapper();
+
+    render(
+      <Wrapper>
+        <WatchlistFilterSheet
+          open
+          onOpenChange={vi.fn()}
+          status="active"
+          values={DEFAULT_WATCHLIST_FILTERS}
+          onApply={onApply}
+        />
+      </Wrapper>,
+    );
+
+    const show = await screen.findByRole("button", { name: "Show films" });
+    await waitFor(() => expect(show).toBeEnabled());
+    await userEvent.click(show);
+    expect(onApply).toHaveBeenCalledWith(DEFAULT_WATCHLIST_FILTERS);
+  });
 });

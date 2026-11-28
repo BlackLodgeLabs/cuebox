@@ -14,7 +14,7 @@ import {
 import { useFilms, useWatchlistGenres } from "@/hooks/use-films";
 import { RUNTIME_OPTIONS } from "@/lib/questionnaire-vocabulary";
 import { cn } from "@/lib/utils";
-import type { FilmStatus, RuntimePreference } from "@/types/api";
+import type { RuntimePreference, WatchlistTab } from "@/types/api";
 
 export interface WatchlistFilterValues {
   genres: string[];
@@ -30,7 +30,7 @@ interface WatchlistFilterSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Current pill. The preview count uses this status. */
-  status: FilmStatus;
+  status: WatchlistTab;
   values: WatchlistFilterValues;
   onApply: (values: WatchlistFilterValues) => void;
 }
@@ -77,6 +77,7 @@ export function WatchlistFilterSheet({
   );
   const total = preview.data?.pagination.total;
   const filmWord = total === 1 ? "film" : "films";
+  const countPending = total == null && preview.isLoading && !preview.isError;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -153,7 +154,7 @@ export function WatchlistFilterSheet({
           <Button
             type="button"
             className="h-12 w-full"
-            disabled={total == null}
+            disabled={countPending}
             aria-label={total == null ? "Show films" : `Show ${total} ${filmWord}`}
             onClick={() => onApply(draft)}
           >

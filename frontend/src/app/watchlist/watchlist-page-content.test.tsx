@@ -276,4 +276,51 @@ describe("WatchlistPageContent", () => {
     expect(await screen.findByText("No archived films.")).toBeInTheDocument();
     expect(screen.getByText("0 archived")).toBeInTheDocument();
   });
+
+  it("keeps the current posters until the next pill has films to crossfade", async () => {
+    const { Wrapper } = createQueryWrapper();
+    const view = render(
+      <Wrapper>
+        <WatchlistPageContent />
+      </Wrapper>,
+    );
+    expect(await screen.findByText("The Witch")).toBeInTheDocument();
+
+    let release: (value: ReturnType<typeof page>) => void = () => undefined;
+    mockGetFilms.mockImplementation((params?: FilmsQueryParams) => {
+      if (params?.status === "watched") {
+        return new Promise<ReturnType<typeof page>>((resolve) => {
+          release = resolve;
+        });
+      }
+      return Promise.resolve(page(239));
+    });
+    searchParams = new URLSearchParams("tab=watched");
+    view.rerender(
+      <Wrapper>
+        <WatchlistPageContent />
+      </Wrapper>,
+    );
+
+    expect(screen.getByRole("tab", { name: "Watched" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByText("The Witch")).toBeInTheDocument();
+    expect(screen.getByText("239 unwatched")).toBeInTheDocument();
+
+    release(
+      page(2, [
+        {
+          ...witch,
+          id: "film-2",
+          title: "Blade Runner",
+          status: "watched",
+          latest_score: 4.5,
+        },
+      ]),
+    );
+    expect(await screen.findByText("Blade Runner")).toBeInTheDocument();
+    expect(screen.getByText("2 watched")).toBeInTheDocument();
+  });
 });

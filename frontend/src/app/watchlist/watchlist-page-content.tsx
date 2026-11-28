@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorState } from "@/components/error-state";
 import { Icon } from "@/components/icon";
 import { PosterGridSkeleton } from "@/components/loading-state";
@@ -64,10 +64,15 @@ export function WatchlistPageContent() {
   }, []);
 
   const tab = parseTab(searchParams.get("tab"));
+  const [visible, setVisible] = useState<{
+    tab: WatchlistTab;
+    items: FilmSummary[];
+    total: number | null;
+    error: boolean;
+  }>({ tab, items: [], total: null, error: false });
   const sort = resolveWatchlistSort(searchParams.get("sort"), searchParams.get("sort_dir"));
   const genres = parseGenres(searchParams.get("genres"));
   const runtime = parseRuntime(searchParams.get("runtime"));
-  const pill = PILLS.find((item) => item.id === tab) ?? PILLS[0];
   const filtersActive = genres.length > 0 || runtime !== "any";
 
   const updateParams = useCallback(
@@ -137,6 +142,27 @@ export function WatchlistPageContent() {
       }),
   });
 
+  const listRef = useRef(list);
+  listRef.current = list;
+  const listSignature = [
+    tab,
+    list.total ?? "",
+    list.isLoading ? "1" : "0",
+    list.isError ? "1" : "0",
+    list.items.map((film) => film.id).join("\u0000"),
+  ].join("|");
+
+  useEffect(() => {
+    const current = listRef.current;
+    if (current.isLoading && current.items.length === 0 && !current.isError) return;
+    setVisible({
+      tab,
+      items: current.items,
+      total: current.total,
+      error: current.isError && current.items.length === 0,
+    });
+  }, [listSignature, tab]);
+
   function selectTab(next: WatchlistTab) {
     updateParams({
       tab: next === "active" ? null : next,
@@ -161,7 +187,10 @@ export function WatchlistPageContent() {
     setFilterOpen(false);
   }
 
-  const showEmpty = !list.isLoading && !list.isError && list.items.length === 0;
+  const visiblePill = PILLS.find((item) => item.id === visible.tab) ?? PILLS[0];
+  const showSkeleton = visible.items.length === 0 && !visible.error && list.isLoading;
+  const showEmpty =
+    visible.items.length === 0 && !visible.error && !list.isLoading && !list.isError;
 
   return (
     <div>
@@ -169,7 +198,7 @@ export function WatchlistPageContent() {
         <div className="min-w-0">
           <h1 className="font-display text-cb-page leading-none">Watchlist</h1>
           <p className="mt-1 min-h-[1.35em] font-mono text-cb-caption text-cb-muted">
-            {list.total != null ? `${list.total} ${pill.noun}` : null}
+            {visible.total != null ? `${visible.total} ${visiblePill.noun}` : null}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -226,7 +255,7 @@ export function WatchlistPageContent() {
       <div className="relative mt-4">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
-            key={tab}
+            key={visible.tab}
             data-cb-watchlist-crossfade=""
             data-out-ms={switchMotion.outMs}
             data-in-ms={switchMotion.inMs}
@@ -235,20 +264,20 @@ export function WatchlistPageContent() {
             animate={{ opacity: 1, transition: switchMotion.in }}
             exit={{ opacity: 0, transition: switchMotion.out }}
           >
-            {list.isLoading && list.items.length === 0 ? (
-              <PosterGridSkeleton count={9} />
-            ) : null}
-            {list.isError && list.items.length === 0 ? (
+            {showSkeleton ? <PosterGridSkeleton count={9} /> : null}
+            {visible.error ? (
               <ErrorState
                 message="Could not load watchlist."
                 onRetry={() => void list.refetch()}
               />
             ) : null}
-            {showEmpty ? <EmptyWatchlist tab={tab} filtered={filtersActive} /> : null}
-            {list.items.length > 0 ? (
-              <WatchlistPosterGrid films={list.items} tab={tab} />
+            {showEmpty ? (
+              <EmptyWatchlist tab={visible.tab} filtered={filtersActive && visible.tab === tab} />
             ) : null}
-            {list.isFetchingNextPage ? <LoadingMore /> : null}
+            {visible.items.length > 0 ? (
+              <WatchlistPosterGrid films={visible.items} tab={visible.tab} />
+            ) : null}
+            {list.isFetchingNextPage && visible.tab === tab ? <LoadingMore /> : null}
           </motion.div>
         </AnimatePresence>
       </div>
