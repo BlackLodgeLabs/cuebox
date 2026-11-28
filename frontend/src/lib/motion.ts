@@ -261,3 +261,31 @@ export function batchMotion(reduced: boolean) {
     staggerMs: readCssNumber("--cb-watchlist-batch-stagger", 30),
   };
 }
+
+/**
+ * Watchlist pill switch (README §6.5). The incoming grid starts while the
+ * outgoing one is still fading, so 400ms out and a 200ms delay overlap by 200ms.
+ * Reduced motion is a 300ms crossfade with no delay.
+ */
+export function watchlistSwitchMotion(reduced: boolean) {
+  if (reduced) {
+    const transition = fade();
+    return {
+      outMs: REDUCED_FADE_MS,
+      inMs: REDUCED_FADE_MS,
+      delayMs: 0,
+      out: transition,
+      in: transition,
+    };
+  }
+  const outMs = readCssNumber("--cb-watchlist-out", 400);
+  const inMs = readCssNumber("--cb-watchlist-in", 600);
+  const delayMs = readCssNumber("--cb-watchlist-overlap", 200);
+  return {
+    outMs,
+    inMs,
+    delayMs,
+    out: { duration: seconds(outMs), ease: cueboxEase },
+    in: { duration: seconds(inMs), ease: cueboxEase, delay: seconds(delayMs) },
+  };
+}

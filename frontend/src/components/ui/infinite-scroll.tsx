@@ -33,6 +33,7 @@ export function InfiniteBatch<T>({
             data-cb-batch=""
             data-fade-ms={spec.fadeMs}
             data-stagger-ms={delay}
+            className="min-w-0"
             style={{
               animationName: "cb-fade",
               animationDuration: `${spec.fadeMs}ms`,

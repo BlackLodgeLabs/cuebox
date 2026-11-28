@@ -1,18 +1,28 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getFilmTrailer, getReviewRequired, getSimilarFilms, getTmdbFilm, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, createFilmWatch, updateFilmWatch, deleteFilmWatch } from "@/lib/api-client";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getFilm, getFilms, getFilmTrailer, getReviewRequired, getSimilarFilms, getTmdbFilm, getWatchlistGenres, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, createFilmWatch, updateFilmWatch, deleteFilmWatch } from "@/lib/api-client";
 import type { FilmsQueryParams, FilmStatus, FilmSummary, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, CreateWatchRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useFilms(
   params?: FilmsQueryParams,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; keepPrevious?: boolean },
 ) {
   return useQuery({
     queryKey: ["films", params],
     queryFn: () => getFilms(params),
     enabled: options?.enabled ?? true,
+    placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
+  });
+}
+
+export function useWatchlistGenres(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["films", "genres"],
+    queryFn: getWatchlistGenres,
+    enabled: options?.enabled ?? true,
+    select: (response) => response.data,
   });
 }
 

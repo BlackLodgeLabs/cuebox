@@ -1,391 +1,350 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { WatchlistPageContent } from "@/app/watchlist/watchlist-page-content";
+import { createQueryWrapper } from "@/test/query-wrapper";
+import type { FilmSummary, FilmsQueryParams } from "@/types/api";
 
 const mockReplace = vi.fn();
-const mockUseFilms = vi.fn();
-const mockUseFilmStatusTransition = vi.fn();
-let searchParams = new URLSearchParams("tab=watched&search=matrix");
+let searchParams = new URLSearchParams();
+
+const { mockGetFilms, mockGetWatchlistGenres } = vi.hoisted(() => ({
+  mockGetFilms: vi.fn(),
+  mockGetWatchlistGenres: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: (...args: unknown[]) => mockReplace(...args) }),
   useSearchParams: () => searchParams,
 }));
 
-vi.mock("@/hooks/use-films", () => ({
-  useFilms: (...args: unknown[]) => mockUseFilms(...args),
-  useFilmStatusTransition: () => mockUseFilmStatusTransition(),
+vi.mock("next/link", () => ({
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
-vi.mock("@/components/watchlist-poster-grid", () => ({
-  WatchlistPosterGrid: () => <div data-testid="watchlist-poster-grid" />,
+vi.mock("next/image", () => ({
+  default: ({ alt }: { alt: string }) => <img alt={alt} />,
 }));
 
-vi.mock("@/components/watchlist-filter-sheet", async () => {
-  const actual = await vi.importActual<
-    typeof import("@/components/watchlist-filter-sheet")
-  >("@/components/watchlist-filter-sheet");
+vi.mock("@/lib/api-client", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api-client")>(
+    "@/lib/api-client",
+  );
   return {
     ...actual,
-    WatchlistFilterSheet: ({
-      open,
-      onApply,
-      onClear,
-      values,
-    }: {
-      open: boolean;
-      onApply: (values: typeof actual.DEFAULT_WATCHLIST_FILTERS) => void;
-      onClear: () => void;
-      values: typeof actual.DEFAULT_WATCHLIST_FILTERS;
-    }) =>
-      open ? (
-        <div data-testid="watchlist-filter-sheet">
-          <button
-            type="button"
-            onClick={() =>
-              onApply({
-                ...values,
-                search: "applied-search",
-                enrichmentStatus: "ready",
-                year: "1973",
-                sort: "title",
-                sortDir: "asc",
-              })
-            }
-          >
-            Apply
-          </button>
-          <button type="button" onClick={onClear}>
-            Clear
-          </button>
-        </div>
-      ) : null,
+    getFilms: (params?: FilmsQueryParams) => mockGetFilms(params),
+    getWatchlistGenres: () => mockGetWatchlistGenres(),
   };
 });
 
-function mockEmptyFilms() {
-  mockUseFilms.mockImplementation(
-    (params?: { status?: string; on_watchlist?: boolean }) => {
-      if (params?.status === "watched") {
-        return {
-          data: {
-            data: [],
-            pagination: { total: 0, limit: 20, offset: 0, has_more: false },
-          },
-          isLoading: false,
-          isError: false,
-          refetch: vi.fn(),
-        };
-      }
-      if (params?.status === "archived") {
-        return {
-          data: {
-            data: [],
-            pagination: { total: 0, limit: 20, offset: 0, has_more: false },
-          },
-          isLoading: false,
-          isError: false,
-          refetch: vi.fn(),
-        };
-      }
-      return {
-        data: {
-          data: [],
-          pagination: { total: 0, limit: 1, offset: 0, has_more: false },
-        },
-        isLoading: false,
-        isError: false,
-        refetch: vi.fn(),
-      };
-    },
+const witch: FilmSummary = {
+  id: "film-1",
+  title: "The Witch",
+  year: 2015,
+  letterboxd_uri: "https://letterboxd.com/film/the-witch/",
+  status: "active",
+  enrichment_status: "ready",
+  poster_url: null,
+  director: null,
+  runtime: 92,
+  genres: ["Horror"],
+  backdrop_url: null,
+  latest_score: null,
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
+};
+
+function page(total: number, films: FilmSummary[] = [witch], hasMore = false) {
+  return {
+    data: films,
+    pagination: { total, limit: 18, offset: 0, has_more: hasMore },
+  };
+}
+
+function renderPage() {
+  const { Wrapper } = createQueryWrapper();
+  return render(
+    <Wrapper>
+      <WatchlistPageContent />
+    </Wrapper>,
   );
 }
 
 describe("WatchlistPageContent", () => {
-  afterEach(() => {
-    cleanup();
+  beforeAll(() => {
+    Element.prototype.hasPointerCapture = () => false;
+    Element.prototype.setPointerCapture = () => {};
+    Element.prototype.releasePointerCapture = () => {};
+    Element.prototype.scrollIntoView = () => {};
   });
 
   beforeEach(() => {
     mockReplace.mockReset();
-    mockUseFilms.mockReset();
-    searchParams = new URLSearchParams("tab=watched&search=matrix");
-    mockUseFilmStatusTransition.mockReturnValue({
-      mutate: vi.fn(),
-      mutateAsync: vi.fn(),
-      isPending: false,
-    });
-  });
-
-  it("maps watched tab URL param to status=watched query", () => {
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const watchedCall = mockUseFilms.mock.calls.find(
-      ([params]) => params?.status === "watched",
-    );
-    expect(watchedCall).toBeDefined();
-    expect(watchedCall?.[0]).toMatchObject({
-      status: "watched",
-      search: "matrix",
-      limit: 20,
-    });
-    expect(screen.getByText(/No watched films yet/i)).toBeInTheDocument();
-    expect(screen.queryByTestId("watchlist-table")).not.toBeInTheDocument();
-  });
-
-  it("maps archived tab to status=archived", () => {
-    searchParams = new URLSearchParams("tab=archived");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const archivedCall = mockUseFilms.mock.calls.find(
-      ([params]) => params?.status === "archived",
-    );
-    expect(archivedCall?.[0]).toMatchObject({ status: "archived" });
-    expect(screen.getByText(/No archived films/i)).toBeInTheDocument();
-  });
-
-  it("maps active tab to on_watchlist", () => {
-    searchParams = new URLSearchParams("");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-    const activeCall = mockUseFilms.mock.calls.find(
-      ([params]) => params?.on_watchlist === true && params?.limit === 20,
-    );
-    expect(activeCall).toBeDefined();
-  });
-
-  it("opens filter sheet and Apply updates router params", async () => {
-    const user = userEvent.setup();
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const filterButton = screen.getByRole("button", { name: /Filter and sort/i });
-    expect(filterButton.className).toMatch(/min-h-\[44px]/);
-    await user.click(filterButton);
-    expect(screen.getByTestId("watchlist-filter-sheet")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /^Apply$/i }));
-    expect(mockReplace).toHaveBeenCalled();
-    const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
-    expect(url).toContain("search=applied-search");
-    expect(url).toContain("enrichment_status=ready");
-    expect(url).toContain("year=1973");
-    expect(url).toContain("sort=title");
-    expect(url).toContain("sort_dir=asc");
-  });
-
-  it("Clear resets filters via router", async () => {
-    const user = userEvent.setup();
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    await user.click(screen.getByRole("button", { name: /Filter and sort/i }));
-    await user.click(screen.getByRole("button", { name: /^Clear$/i }));
-
-    expect(mockReplace).toHaveBeenCalled();
-    const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
-    expect(url).not.toContain("search=matrix");
-    expect(url).toContain("tab=watched");
-    expect(url).toContain("sort=watched_at");
-    expect(url).toContain("sort_dir=desc");
-  });
-
-  it("Clear on the Watchlist view restores Date added, descending", async () => {
-    const user = userEvent.setup();
-    searchParams = new URLSearchParams("search=matrix&sort=title&sort_dir=asc");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    await user.click(screen.getByRole("button", { name: /Filter and sort/i }));
-    await user.click(screen.getByRole("button", { name: /^Clear$/i }));
-
-    const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
-    expect(url).not.toContain("search=");
-    expect(url).toContain("sort=created_at");
-    expect(url).toContain("sort_dir=desc");
-    expect(url).not.toContain("sort=watched_at");
-  });
-
-  it("requests date watched, newest first, when the Watched view has no sort param", () => {
-    searchParams = new URLSearchParams("tab=watched");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const gridCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
-    expect(gridCall?.[0]).toMatchObject({
-      status: "watched",
-      sort: "watched_at",
-      sort_dir: "desc",
-    });
-  });
-
-  it("requests date added, descending, when Watchlist or Archived has no sort param", () => {
-    searchParams = new URLSearchParams("");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const watchlistCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
-    expect(watchlistCall?.[0]).toMatchObject({
-      on_watchlist: true,
-      sort: "created_at",
-      sort_dir: "desc",
-    });
-
-    cleanup();
-    mockUseFilms.mockClear();
-    searchParams = new URLSearchParams("tab=archived");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const archivedCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
-    expect(archivedCall?.[0]).toMatchObject({
-      status: "archived",
-      sort: "created_at",
-      sort_dir: "desc",
-    });
-  });
-
-  it("drops date watched when leaving the Watched view and keeps search and a title sort", async () => {
-    const user = userEvent.setup();
-    searchParams = new URLSearchParams(
-      "tab=watched&sort=watched_at&sort_dir=asc&search=matrix",
-    );
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    await user.click(screen.getByRole("tab", { name: /^Watchlist/i }));
-    const toWatchlist = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
-    expect(toWatchlist).not.toContain("sort=");
-    expect(toWatchlist).not.toContain("sort_dir=");
-    expect(toWatchlist).toContain("search=matrix");
-    expect(toWatchlist).not.toContain("tab=");
-
-    cleanup();
-    mockReplace.mockClear();
-    searchParams = new URLSearchParams(
-      "tab=watched&sort=title&sort_dir=asc&search=matrix",
-    );
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    await user.click(screen.getByRole("tab", { name: /^Archived/i }));
-    const toArchived = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
-    expect(toArchived).toContain("tab=archived");
-    expect(toArchived).toContain("sort=title");
-    expect(toArchived).toContain("sort_dir=asc");
-    expect(toArchived).toContain("search=matrix");
-  });
-
-  it("drops a direct date-watched sort on Watchlist and Archived", () => {
-    searchParams = new URLSearchParams("sort=watched_at&sort_dir=asc");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const watchlistCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
-    expect(watchlistCall?.[0]).toMatchObject({
-      on_watchlist: true,
-      sort: "created_at",
-      sort_dir: "desc",
-    });
-    const watchlistUrl = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
-    expect(watchlistUrl).not.toContain("sort=");
-    expect(watchlistUrl).not.toContain("sort_dir=");
-
-    cleanup();
-    mockReplace.mockClear();
-    mockUseFilms.mockClear();
-    searchParams = new URLSearchParams("tab=archived&sort=watched_at&sort_dir=desc");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const archivedCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
-    expect(archivedCall?.[0]).toMatchObject({
-      status: "archived",
-      sort: "created_at",
-      sort_dir: "desc",
-    });
-    const archivedUrl = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
-    expect(archivedUrl).toContain("tab=archived");
-    expect(archivedUrl).not.toContain("sort=");
-    expect(archivedUrl).not.toContain("sort_dir=");
-  });
-
-  it("highlights Filter only when the view's own default sort is changed", () => {
-    const filter = () => screen.getByRole("button", { name: "Filter and sort" });
-
-    searchParams = new URLSearchParams("tab=watched");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-    expect(filter().className).not.toMatch(/border-cb-teal/);
-
-    cleanup();
-    searchParams = new URLSearchParams("tab=watched&sort=title&sort_dir=desc");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-    expect(filter().className).toMatch(/border-cb-teal/);
-
-    cleanup();
-    searchParams = new URLSearchParams("tab=watched&sort=watched_at&sort_dir=asc");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-    expect(filter().className).toMatch(/border-cb-teal/);
-
-    cleanup();
-    searchParams = new URLSearchParams("");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-    expect(filter().className).not.toMatch(/border-cb-teal/);
-  });
-
-  it("applies genre and runtime filters from a Home See all link", () => {
-    searchParams = new URLSearchParams("genres=Horror,Folk horror&runtime=le_90");
-    mockEmptyFilms();
-    render(<WatchlistPageContent />);
-
-    const gridCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
-    expect(gridCall?.[0]).toMatchObject({
-      on_watchlist: true,
-      genres: "Horror,Folk horror",
-      runtime: "le_90",
-    });
-  });
-
-  it("renders poster grid when films are present", () => {
-    searchParams = new URLSearchParams("");
-    mockUseFilms.mockImplementation((params?: { limit?: number }) => {
-      if (params?.limit === 20) {
-        return {
-          data: {
-            data: [
-              {
-                id: "film-1",
-                title: "Test Film",
-                status: "active",
-              },
-            ],
-            pagination: { total: 1, limit: 20, offset: 0, has_more: false },
-          },
-          isLoading: false,
-          isError: false,
-          refetch: vi.fn(),
-        };
+    mockGetFilms.mockReset();
+    mockGetWatchlistGenres.mockReset();
+    searchParams = new URLSearchParams();
+    mockGetWatchlistGenres.mockResolvedValue({ data: ["Horror", "Drama"] });
+    mockGetFilms.mockImplementation(async (params?: FilmsQueryParams) => {
+      if (params?.limit === 1) {
+        const narrowed = params.runtime === "le_90" || (params.genres?.length ?? 0) > 0;
+        return page(narrowed ? 4 : 239, []);
       }
-      return {
-        data: {
-          data: [],
-          pagination: { total: 1, limit: 1, offset: 0, has_more: false },
-        },
-        isLoading: false,
-        isError: false,
-        refetch: vi.fn(),
-      };
+      if (params?.status === "watched") return page(2, []);
+      if (params?.status === "archived") return page(0, []);
+      return page(239);
     });
+  });
 
-    render(<WatchlistPageContent />);
-    expect(screen.getByTestId("watchlist-poster-grid")).toBeInTheDocument();
-    expect(screen.queryByRole("columnheader")).not.toBeInTheDocument();
+  afterEach(() => {
+    cleanup();
+    document.body.style.pointerEvents = "";
+    delete (window as { matchMedia?: unknown }).matchMedia;
+  });
+
+  it("shows Unwatched, Watched and Archived with no counts and the view total", async () => {
+    renderPage();
+
+    expect(await screen.findByText("239 unwatched")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Unwatched" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "Watched" })).toHaveTextContent("Watched");
+    expect(screen.getByRole("tab", { name: "Archived" })).toHaveTextContent("Archived");
+    expect(screen.getByRole("tab", { name: "Unwatched" }).textContent).toBe("Unwatched");
+    expect(screen.getByText("The Witch")).toBeInTheDocument();
+    expect(screen.getByText("2015 · 92m")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Previous" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Add film" })).not.toBeInTheDocument();
+
+    expect(mockGetFilms).toHaveBeenCalledTimes(1);
+    expect(mockGetFilms).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "active",
+        sort: "created_at",
+        sort_dir: "desc",
+        limit: 18,
+        offset: 0,
+      }),
+    );
+    expect(mockGetFilms.mock.calls[0][0]).not.toHaveProperty("on_watchlist");
+  });
+
+  it("crossfades a pill change at 400ms out, 600ms in, overlapping by 200ms", async () => {
+    renderPage();
+    await screen.findByText("239 unwatched");
+    const node = document.querySelector("[data-cb-watchlist-crossfade]");
+    expect(node).toHaveAttribute("data-out-ms", "400");
+    expect(node).toHaveAttribute("data-in-ms", "600");
+    expect(node).toHaveAttribute("data-delay-ms", "200");
+  });
+
+  it("uses a 300ms crossfade when motion is reduced", async () => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      get matches() {
+        return query.includes("prefers-reduced-motion");
+      },
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    renderPage();
+    await screen.findByText("239 unwatched");
+    await waitFor(() => {
+      const node = document.querySelector("[data-cb-watchlist-crossfade]");
+      expect(node).toHaveAttribute("data-out-ms", "300");
+      expect(node).toHaveAttribute("data-in-ms", "300");
+      expect(node).toHaveAttribute("data-delay-ms", "0");
+    });
+  });
+
+  it("switches the view without an offset param", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("239 unwatched");
+
+    await user.click(screen.getByRole("tab", { name: "Watched" }));
+    expect(mockReplace).toHaveBeenCalledWith("/watchlist?tab=watched");
+
+    mockReplace.mockClear();
+    searchParams = new URLSearchParams("tab=watched");
+    cleanup();
+    renderPage();
+    await screen.findByText("2 watched");
+    await user.click(screen.getByRole("tab", { name: "Archived" }));
+    expect(String(mockReplace.mock.calls.at(-1)?.[0])).toBe("/watchlist?tab=archived");
+  });
+
+  it("drops a page offset and an unknown sort", async () => {
+    searchParams = new URLSearchParams("offset=36&sort=watched_at&sort_dir=asc");
+    renderPage();
+    await screen.findByText("239 unwatched");
+    expect(mockGetFilms).toHaveBeenCalledWith(
+      expect.objectContaining({ offset: 0, sort: "created_at", sort_dir: "desc" }),
+    );
+    expect(mockReplace).toHaveBeenCalledWith("/watchlist");
+  });
+
+  it("shows Loading more while the next 18 are in flight", async () => {
+    let release: (value: ReturnType<typeof page>) => void = () => undefined;
+    mockGetFilms.mockImplementation((params?: FilmsQueryParams) => {
+      if ((params?.offset ?? 0) > 0) {
+        return new Promise<ReturnType<typeof page>>((resolve) => {
+          release = resolve;
+        });
+      }
+      return Promise.resolve(page(40, [witch], true));
+    });
+    renderPage();
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading more");
+    release(page(40, [], false));
+    await waitFor(() => {
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows an error state when the list cannot load", async () => {
+    mockGetFilms.mockRejectedValue(new Error("offline"));
+    renderPage();
+    expect(await screen.findByText("Could not load watchlist.")).toBeInTheDocument();
+  });
+
+  it("applies genre and runtime filters from a Home See all link", async () => {
+    searchParams = new URLSearchParams("genres=Horror,Folk horror&runtime=le_90");
+    renderPage();
+
+    await screen.findByText("239 unwatched");
+    expect(screen.getByRole("tab", { name: "Unwatched" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Filter" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(mockGetFilms).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "active",
+        genres: ["Horror", "Folk horror"],
+        runtime: "le_90",
+        limit: 18,
+        offset: 0,
+      }),
+    );
+  });
+
+  it("applies a runtime limit and genre from the filter sheet", async () => {
+    const user = userEvent.setup();
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      get matches() {
+        return query.includes("prefers-reduced-motion");
+      },
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    renderPage();
+    await screen.findByText("239 unwatched");
+
+    await user.click(screen.getByRole("button", { name: "Filter" }));
+    await user.click(await screen.findByRole("button", { name: "Horror" }));
+    await user.click(screen.getByRole("radio", { name: "≤ 90 minutes" }));
+    await user.click(await screen.findByRole("button", { name: "Show 4 films" }));
+
+    const url = String(mockReplace.mock.calls.at(-1)?.[0]);
+    expect(url).toContain("genres=Horror");
+    expect(url).toContain("runtime=le_90");
+    expect(url).not.toContain("offset=");
+  });
+
+  it("sets sort and sort_dir from the sort sheet", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("239 unwatched");
+    expect(screen.getByRole("button", { name: "Sort by Date added" })).toHaveTextContent(
+      "Date added",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Sort by Date added" }));
+    await user.click(await screen.findByRole("option", { name: /Rating/ }));
+    expect(String(mockReplace.mock.calls.at(-1)?.[0])).toBe(
+      "/watchlist?sort=rating&sort_dir=desc",
+    );
+  });
+
+  it("says when a view is empty", async () => {
+    mockGetFilms.mockResolvedValue(page(0, []));
+    renderPage();
+    expect(await screen.findByText(/Nothing on your watchlist yet/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Import your watchlist" })).toHaveAttribute(
+      "href",
+      "/import",
+    );
+
+    cleanup();
+    searchParams = new URLSearchParams("tab=archived");
+    mockGetFilms.mockResolvedValue(page(0, []));
+    renderPage();
+    expect(await screen.findByText("No archived films.")).toBeInTheDocument();
+    expect(screen.getByText("0 archived")).toBeInTheDocument();
+  });
+
+  it("keeps the current posters until the next pill has films to crossfade", async () => {
+    const { Wrapper } = createQueryWrapper();
+    const view = render(
+      <Wrapper>
+        <WatchlistPageContent />
+      </Wrapper>,
+    );
+    expect(await screen.findByText("The Witch")).toBeInTheDocument();
+
+    let release: (value: ReturnType<typeof page>) => void = () => undefined;
+    mockGetFilms.mockImplementation((params?: FilmsQueryParams) => {
+      if (params?.status === "watched") {
+        return new Promise<ReturnType<typeof page>>((resolve) => {
+          release = resolve;
+        });
+      }
+      return Promise.resolve(page(239));
+    });
+    searchParams = new URLSearchParams("tab=watched");
+    view.rerender(
+      <Wrapper>
+        <WatchlistPageContent />
+      </Wrapper>,
+    );
+
+    expect(screen.getByRole("tab", { name: "Watched" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByText("The Witch")).toBeInTheDocument();
+    expect(screen.getByText("239 unwatched")).toBeInTheDocument();
+
+    release(
+      page(2, [
+        {
+          ...witch,
+          id: "film-2",
+          title: "Blade Runner",
+          status: "watched",
+          latest_score: 4.5,
+        },
+      ]),
+    );
+    expect(await screen.findByText("Blade Runner")).toBeInTheDocument();
+    expect(screen.getByText("2 watched")).toBeInTheDocument();
   });
 });

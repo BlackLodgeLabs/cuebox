@@ -95,7 +95,7 @@ export default function HistoryPage() {
         <h1 className="font-display text-cb-page leading-[30px] tracking-[0.01em]">History</h1>
         {!history.isLoading && !history.isError ? (
           <p className="mt-1 font-mono text-cb-meta tracking-[0.04em] text-cb-muted">
-            {formatNightCount(history.total)}
+            {formatNightCount(history.total ?? history.items.length)}
           </p>
         ) : null}
       </header>

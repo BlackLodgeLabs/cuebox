@@ -3,6 +3,7 @@ import {
   batchMotion,
   confirmMotion,
   programmeSettleMotion,
+  watchlistSwitchMotion,
   cueboxEase,
   numberMotion,
   pressMotion,
@@ -82,6 +83,13 @@ describe("locked app-wide motion", () => {
       durationMs: 300,
       travel: "y",
     });
+    expect(watchlistSwitchMotion(false)).toEqual({
+      outMs: 400,
+      inMs: 600,
+      delayMs: 200,
+      out: { duration: 0.4, ease: cueboxEase },
+      in: { duration: 0.6, ease: cueboxEase, delay: 0.2 },
+    });
   });
 
   it("treats a 120px drag as the dismiss threshold for the drawer's height", () => {
@@ -132,6 +140,13 @@ describe("locked app-wide motion", () => {
       durationMs: 0,
       travel: "none",
       ease: cueboxEase,
+    });
+    expect(watchlistSwitchMotion(true)).toEqual({
+      outMs: 300,
+      inMs: 300,
+      delayMs: 0,
+      out: { duration: 0.3, ease: "linear" },
+      in: { duration: 0.3, ease: "linear" },
     });
   });
 });

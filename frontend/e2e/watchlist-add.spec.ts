@@ -172,22 +172,34 @@ test.describe("watchlist add flow (mocked API)", () => {
     await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toHaveCount(0);
   });
 
-  test("watchlist page shows add button to /search", async ({ page }) => {
-    await page.route(`**${API_PATH_PREFIX}/films?**`, async (route) => {
+  test("watchlist page uses the header search field instead of an add-film link", async ({
+    page,
+  }) => {
+    await page.route(`**${API_PATH_PREFIX}/films**`, async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname.endsWith("/genres")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ data: [] }),
+        });
+        return;
+      }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           data: [],
-          pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+          pagination: { total: 0, limit: 18, offset: 0, has_more: false },
         }),
       });
     });
 
     await page.goto("/watchlist");
-    await expect(page.getByRole("link", { name: "Add film" })).toHaveAttribute(
-      "href",
-      "/search",
-    );
+    await expect(page.getByRole("link", { name: "Add film" })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Search films" })).toBeVisible();
+    await expect(page.getByText("Nothing on your watchlist yet.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Import your watchlist" })).toBeVisible();
+    await expect(page.getByText("0 unwatched")).toBeVisible();
   });
 });

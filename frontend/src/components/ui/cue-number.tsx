@@ -21,7 +21,13 @@ export function CueNumber({ value, className }: CueNumberProps) {
       data-cb-number=""
       data-duration-ms={spec.durationMs}
       data-settled={spec.settled ? "true" : "false"}
-      className={cn("inline-block tabular-nums", className)}
+      className={cn(
+        "inline-block tabular-nums",
+        // Digit masks overflow the host by 0.5em. Padding keeps that paint
+        // inside this box so neighbouring words stay readable.
+        spec.settled ? undefined : "px-[0.5em]",
+        className,
+      )}
     >
       {spec.settled ? (
         value

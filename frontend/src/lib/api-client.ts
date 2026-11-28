@@ -165,6 +165,10 @@ export function getFilms(
   );
 }
 
+export function getWatchlistGenres(): Promise<{ data: string[] }> {
+  return fetchApi<{ data: string[] }>("/films/genres");
+}
+
 export function getFilm(filmId: string): Promise<FilmDetail> {
   return fetchApi<FilmDetail>(`/films/${filmId}`);
 }
