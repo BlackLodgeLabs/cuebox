@@ -163,7 +163,6 @@ export function FilmDetailView({
 
   const watches = film.watches ?? [];
   const loggedWatches = watches.filter((watch) => !watch.is_pending);
-  const pendingWatch = watches.find((watch) => watch.is_pending);
   const metadata = film.metadata;
   const semantic = film.semantic_profile;
   const isEnriching = film.enrichment_status === "enriching";
@@ -172,11 +171,7 @@ export function FilmDetailView({
   const similar = useSimilarFilms(film.id, { enabled: onWatchlist });
   const neighbours = closeToThisFilms(similar.data, onWatchlist);
   const scores = communityScores(metadata);
-  const hasWatch =
-    loggedWatches.length > 0 ||
-    pendingWatch != null ||
-    film.status === "watched" ||
-    film.status === "pending_watch_review";
+  const hasWatch = loggedWatches.length > 0 || film.status === "watched";
   const watchedLabel = hasWatch ? "Watched" : "Watched?";
 
   useEffect(() => {

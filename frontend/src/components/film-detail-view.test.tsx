@@ -254,6 +254,36 @@ describe("FilmDetailView", () => {
     expect(screen.queryByRole("button", { name: "Trailer" })).not.toBeInTheDocument();
   });
 
+  it("opens create from Watched? while a review is still pending", async () => {
+    const user = userEvent.setup();
+    render(
+      <FilmDetailView
+        film={{
+          ...readyFilm,
+          status: "pending_watch_review",
+          watches: [
+            {
+              id: "watch-pending",
+              score: null,
+              watched_at: null,
+              notes: null,
+              source: "manual",
+              is_pending: true,
+              created_at: "2024-01-01T00:00:00Z",
+              updated_at: "2024-01-01T00:00:00Z",
+            },
+          ],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Watched?" }));
+    expect(screen.getByRole("dialog", { name: "Review sheet" })).toHaveAttribute(
+      "data-mode",
+      "create",
+    );
+  });
+
   it("says Watched once a watch is logged", () => {
     render(
       <FilmDetailView

@@ -161,6 +161,8 @@ describe("WatchReviewDialog", () => {
 
   it("crossfades in 300ms without bounce or glow when motion is reduced", async () => {
     mockReduced(true);
+    const user = userEvent.setup();
+    createMutateAsync.mockResolvedValue(savedWatch(3));
     renderCreate();
 
     await waitFor(() => {
@@ -170,6 +172,10 @@ describe("WatchReviewDialog", () => {
       expect(stars).toHaveAttribute("data-bounce-ms", "0");
       expect(stars).toHaveAttribute("data-glow", "0");
     });
+
+    await user.click(screen.getByRole("radio", { name: "3 stars" }));
+    const fill = document.querySelector("[role=radiogroup] svg + svg");
+    expect(fill?.getAttribute("style")).toContain("opacity 300ms");
   });
 
   it("edits only when Save changes is pressed", async () => {

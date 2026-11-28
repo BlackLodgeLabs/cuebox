@@ -39,11 +39,15 @@ export function HalfStarRatingInput({
 }: HalfStarRatingInputProps) {
   const reduced = useReducedMotion();
   const spec = starFillMotion(reduced || !animate);
-  const instant = !animate || reduced || spec.travel === "none";
+  const crossfade = animate && reduced;
+  const instant = !crossfade && (!animate || spec.travel === "none");
   const [shown, setShown] = useState(value);
 
   useEffect(() => {
-    if (instant) return;
+    if (instant) {
+      setShown(value);
+      return;
+    }
     const frame = requestAnimationFrame(() => setShown(value));
     return () => cancelAnimationFrame(frame);
   }, [instant, value]);
@@ -79,19 +83,21 @@ export function HalfStarRatingInput({
           index === lastIndex &&
           displayed === value;
         const delay = index * spec.staggerMs;
+        const clipAmount = crossfade ? amountsFor(value)[index] : amount;
+        const fadingIn = crossfade && clipAmount > 0 && amount === 0;
+        const glow =
+          spec.glow > 0 && clipAmount > 0
+            ? `drop-shadow(0 0 4px color-mix(in srgb, var(--cb-accent) ${Math.round(spec.glow * 100)}%, transparent))`
+            : undefined;
         return (
           <div
             key={index}
             className="relative h-11 w-11"
-            data-glow={spec.glow > 0 && amount > 0 ? String(spec.glow) : "0"}
+            data-glow={glow ? String(spec.glow) : "0"}
             style={{
               animation: bounce
                 ? `cb-star-bounce ${spec.bounceMs}ms ${ease} ${lastIndex * spec.staggerMs + spec.fillMs}ms both`
                 : undefined,
-              filter:
-                spec.glow > 0 && amount > 0
-                  ? `drop-shadow(0 0 4px color-mix(in srgb, var(--cb-accent) ${Math.round(spec.glow * 100)}%, transparent))`
-                  : undefined,
             }}
           >
             <svg
@@ -112,10 +118,14 @@ export function HalfStarRatingInput({
               className="pointer-events-none absolute left-1 top-1 h-9 w-9"
               aria-hidden
               style={{
-                clipPath: `inset(0 ${(1 - amount) * 100}% 0 0)`,
-                transition: instant
-                  ? "none"
-                  : `clip-path ${spec.fillMs}ms ${ease} ${delay}ms`,
+                clipPath: `inset(0 ${(1 - clipAmount) * 100}% 0 0)`,
+                opacity: fadingIn ? 0 : 1,
+                filter: glow,
+                transition: crossfade
+                  ? `opacity ${spec.crossfadeMs}ms linear`
+                  : instant
+                    ? "none"
+                    : `clip-path ${spec.fillMs}ms ${ease} ${delay}ms`,
               }}
             >
               <path d={STAR_PATH} fill="currentColor" />

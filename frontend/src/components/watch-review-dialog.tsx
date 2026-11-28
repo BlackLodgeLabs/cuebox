@@ -111,6 +111,7 @@ export function WatchReviewDialog({
   const [shown, setShown] = useState(false);
   const [creating, setCreating] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [scoreLive, setScoreLive] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -123,6 +124,7 @@ export function WatchReviewDialog({
     setShown(editing);
     setCreating(false);
     setConfirmOpen(false);
+    setScoreLive(editing);
     savedNoteRef.current = editing ? (initialNotes ?? "").trim() : "";
   }, [open, mode, filmId, watchIdProp, initialScore, initialWatchedAt, initialNotes]);
 
@@ -145,6 +147,12 @@ export function WatchReviewDialog({
   const fade = reduced
     ? `opacity ${createSpec.crossfadeMs}ms linear`
     : `opacity ${fadeMs}ms ${ease} ${fadeDelay}ms, transform ${fadeMs}ms ${ease} ${fadeDelay}ms`;
+
+  useEffect(() => {
+    if (mode !== "create" || !shown) return;
+    const timer = window.setTimeout(() => setScoreLive(true), fadeDelay);
+    return () => window.clearTimeout(timer);
+  }, [mode, shown, fadeDelay]);
 
   async function chooseScore(next: number) {
     if (creating || next === score) return;
@@ -329,7 +337,7 @@ export function WatchReviewDialog({
                   : undefined
               }
             >
-              {score != null ? (
+              {score != null && (mode === "edit" || scoreLive) ? (
                 <p className="mt-2 text-center font-display text-[22px] font-bold leading-none text-cb-text">
                   <CueNumber value={score} />
                 </p>
