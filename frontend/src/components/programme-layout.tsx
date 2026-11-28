@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useFilmsWatchProviders } from "@/hooks/use-watch-providers";
 import {
-  filmMetaLine,
+  filmDetailLine,
   firstServiceName,
   formatProgrammeDate,
   preferenceSummaryText,
   programmeSubline,
-  runtimeLabel,
 } from "@/lib/programme-format";
 import { programmeSettleMotion, type CueEase } from "@/lib/motion";
 import type { FilmResult, RecommendationDetailResponse } from "@/types/api";
@@ -97,12 +96,7 @@ function FilmMeta({
   film: FilmResult;
   service: string | null;
 }) {
-  const line = filmMetaLine([
-    film.year != null ? String(film.year) : null,
-    film.genres.find((genre) => genre.trim())?.trim() ?? null,
-    runtimeLabel(film.runtime),
-    service,
-  ]);
+  const line = filmDetailLine(film, service);
   if (!line) return null;
   return <p className="font-mono text-xs leading-4 text-cb-muted">{line}</p>;
 }
@@ -128,8 +122,9 @@ export function ProgrammeLayout({
   const summary = preferenceSummaryText(session.profile_summary?.narrative_profile);
   const subline = programmeSubline(session.created_at, summary);
   const why =
+    session.winner.explanation.why_it_matches.trim() ||
     session.winner.explanation.why_it_matches_short?.trim() ||
-    session.winner.explanation.why_it_matches.trim();
+    "";
   const sideDate = backLink ? "" : formatProgrammeDate(session.created_at);
   let settleIndex = 0;
 
@@ -187,30 +182,36 @@ export function ProgrammeLayout({
         </SettleItem>
       ) : null}
 
-      <SettleItem index={settleIndex++} settle={settle}>
-        <article
-          aria-label="Your pick"
-          className="relative h-[220px] overflow-hidden rounded-cb bg-cb-surface"
+      <article
+        aria-label="Your pick"
+        className="relative h-[220px] overflow-hidden rounded-cb bg-cb-surface"
+      >
+        <Still
+          src={session.winner.backdrop_url}
+          className="h-full w-full object-cover object-[center_40%]"
+        />
+        <SettleItem
+          index={settleIndex++}
+          settle={settle}
+          className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-12"
         >
-          <Still
-            src={session.winner.backdrop_url}
-            className="h-full w-full object-cover object-[center_40%]"
-          />
           <div
-            className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-12"
             style={{
               background:
                 "linear-gradient(to top, rgba(11,11,11,0.94) 0%, rgba(11,11,11,0.55) 62%, rgba(11,11,11,0) 100%)",
             }}
-          >
+            className="absolute inset-0"
+            aria-hidden
+          />
+          <div className="relative">
             <p className="text-xs font-medium leading-4 text-[#C8C3BA]">Your pick</p>
             <h2 className="mt-0.5 font-display text-cb-display leading-[1.05]">
               {session.winner.title}
             </h2>
             <FilmMeta film={session.winner} service={winnerService} />
           </div>
-        </article>
-      </SettleItem>
+        </SettleItem>
+      </article>
 
       {why ? (
         <SettleItem index={settleIndex++} settle={settle} className="my-4">
@@ -232,11 +233,7 @@ export function ProgrammeLayout({
           <ol>
             {session.runners_up.map((film) => {
               const service = firstServiceName(providers.get(film.film_id)?.data?.categories);
-              const meta = filmMetaLine([
-                film.year != null ? String(film.year) : null,
-                film.genres.find((genre) => genre.trim())?.trim() ?? null,
-                runtimeLabel(film.runtime),
-              ]);
+              const meta = filmDetailLine(film);
               const synopsis = film.synopsis?.trim() ?? "";
               return (
                 <li
@@ -256,7 +253,7 @@ export function ProgrammeLayout({
                       <p className="mt-1 font-mono text-xs leading-4 text-cb-muted">{meta}</p>
                     ) : null}
                     {synopsis ? (
-                      <p className="my-1 line-clamp-2 font-ui text-cb-caption leading-[18px] text-cb-text">
+                      <p className="my-1 font-ui text-cb-caption leading-[18px] text-cb-text">
                         {synopsis}
                       </p>
                     ) : null}

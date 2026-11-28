@@ -54,12 +54,24 @@ export function runtimeLabel(runtime: number | null | undefined): string | null 
   return `${runtime}m`;
 }
 
-/** Join only the parts that exist, so a missing year or service leaves no stray dot. */
 export function filmMetaLine(parts: Array<string | null | undefined>): string {
   return parts
     .map((part) => part?.trim() ?? "")
     .filter((part) => part.length > 0)
     .join(" · ");
+}
+
+/** Year, first genre, runtime, and an optional service. Empty parts are dropped. */
+export function filmDetailLine(
+  film: { year: number | null; genres: string[]; runtime: number | null },
+  service?: string | null,
+): string {
+  return filmMetaLine([
+    film.year != null ? String(film.year) : null,
+    film.genres.find((genre) => genre.trim())?.trim() ?? null,
+    runtimeLabel(film.runtime),
+    service,
+  ]);
 }
 
 /** Stream (flatrate) first, then ads, rent, and buy. */

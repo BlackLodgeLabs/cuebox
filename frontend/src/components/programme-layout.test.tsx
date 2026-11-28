@@ -70,7 +70,7 @@ function session(
       explanation: {
         why_it_matches:
           "The same folk dread you rated highly in The Wicker Man, in a tighter 92 minutes.",
-        why_it_matches_short: null,
+        why_it_matches_short: "Short folk blurb.",
         most_influential_factors: ["folk horror"],
         why_it_beat_alternatives: null,
         caveats: null,
@@ -142,6 +142,7 @@ describe("ProgrammeLayout fresh pick", () => {
         "The same folk dread you rated highly in The Wicker Man, in a tighter 92 minutes.",
       ),
     ).toBeInTheDocument();
+    expect(screen.queryByText("Short folk blurb.")).not.toBeInTheDocument();
 
     const view = screen.getByRole("link", { name: "View your pick" });
     expect(view).toHaveAttribute("href", "/watchlist/witch");
@@ -324,6 +325,10 @@ describe("ProgrammeLayout settle", () => {
     render(<ProgrammeLayout session={session()} title="Tonight’s programme" />, {
       wrapper: Wrapper,
     });
+
+    const hero = screen.getByRole("article", { name: "Your pick" });
+    expect(hero.querySelector("img")?.closest("[data-settle]")).toBeNull();
+    expect(hero.querySelector("[data-settle]")).not.toBeNull();
 
     const items = document.querySelectorAll("[data-settle]");
     expect(items.length).toBeGreaterThanOrEqual(5);

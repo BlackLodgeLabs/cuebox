@@ -196,7 +196,7 @@ test.describe("Programme layout (mocked API)", () => {
   });
 
   test("renders a past night titled Sat 14 Nov with a History back link", async ({ page }) => {
-    await page.goto(`/dev/programme?session=${SESSION_ID}&variant=history`);
+    await page.goto(`/dev/programme/history?session=${SESSION_ID}`);
     await expect(page.getByRole("heading", { level: 1, name: "Sat 14 Nov" })).toBeVisible();
     const back = page.getByRole("link", { name: "Back to History" });
     await expect(back).toBeVisible();
