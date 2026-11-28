@@ -21,7 +21,7 @@ describe("taste ticks", () => {
       rowDelayMs: 0,
       ease: "linear",
       glow: false,
-      triggerRatio: 0,
+      triggerRatio: 0.4,
       fadeTogether: true,
     });
   });

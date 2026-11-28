@@ -92,7 +92,12 @@ describe("TasteTickChart", () => {
     expect(chart).toHaveAttribute("data-glow", "off");
 
     act(() => {
-      FakeObserver.instances.at(-1)?.trigger(0.1);
+      FakeObserver.instances.at(-1)?.trigger(0.39);
+    });
+    expect(chart).toHaveAttribute("data-playing", "false");
+
+    act(() => {
+      FakeObserver.instances.at(-1)?.trigger(0.4);
     });
     expect(chart).toHaveAttribute("data-playing", "true");
 

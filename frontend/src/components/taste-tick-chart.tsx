@@ -46,18 +46,16 @@ export function TasteTickChart({ scores }: { scores: TasteProfileScores }) {
       (entries) => {
         const entry = entries[0];
         if (!entry) return;
-        const visible = reduced
-          ? entry.isIntersecting
-          : entry.intersectionRatio >= motionSpec.triggerRatio;
+        const visible = entry.intersectionRatio >= motionSpec.triggerRatio;
         if (!visible) return;
         setPlaying(true);
         observer.disconnect();
       },
-      { threshold: reduced ? 0 : [motionSpec.triggerRatio] },
+      { threshold: [motionSpec.triggerRatio] },
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [reduced, motionSpec.triggerRatio]);
+  }, [motionSpec.triggerRatio]);
 
   const rows = ROWS.flatMap((row) => {
     const score = scores[row.key];

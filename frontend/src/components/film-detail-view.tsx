@@ -175,8 +175,12 @@ export function FilmDetailView({
   const similar = useSimilarFilms(film.id, { enabled: onWatchlist });
   const neighbours = closeToThisFilms(similar.data, onWatchlist);
   const scores = communityScores(metadata);
-  const watchedLabel =
-    loggedWatches.length > 0 || film.status === "watched" ? "Watched" : "Watched?";
+  const hasWatch =
+    loggedWatches.length > 0 ||
+    pendingWatch != null ||
+    film.status === "watched" ||
+    film.status === "pending_watch_review";
+  const watchedLabel = hasWatch ? "Watched" : "Watched?";
 
   useEffect(() => {
     if (autoOpenEditMatch) setEditOpen(true);
@@ -512,7 +516,7 @@ export function FilmDetailView({
               </span>
             </BarButton>
           )}
-          <BarButton label="Watch" onClick={() => setWatchSheetOpen(true)}>
+          <BarButton label="Watch" pressable onClick={() => setWatchSheetOpen(true)}>
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-cb-accent text-cb-ink shadow-glow motion-reduce:shadow-none">
               <Icon name="tv" size={22} />
             </span>
@@ -644,18 +648,24 @@ function BarButton({
   label,
   onClick,
   watched = false,
+  pressable = false,
   children,
 }: {
   label: string;
   onClick: () => void;
   watched?: boolean;
+  /** Amber primary: shared 4% press (120ms down, 200ms back). */
+  pressable?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-11 min-w-11 flex-1 flex-col items-center gap-2 px-0.5"
+      className={cn(
+        "flex min-h-11 min-w-11 flex-1 flex-col items-center gap-2 px-0.5",
+        pressable && "cb-press",
+      )}
     >
       {children}
       <span

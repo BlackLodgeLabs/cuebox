@@ -225,6 +225,7 @@ describe("FilmDetailView", () => {
 
     expect(screen.getByRole("button", { name: "Trailer" })).toBeInTheDocument();
     const watch = screen.getByRole("button", { name: "Watch" });
+    expect(watch.className).toContain("cb-press");
     expect(watch.querySelector(".shadow-glow")).not.toBeNull();
     expect(watch.querySelector(".bg-cb-accent")).not.toBeNull();
     expect(screen.getByRole("button", { name: "Watched?" })).toBeInTheDocument();

@@ -21,7 +21,7 @@ export function tasteTickMotion(reduced: boolean): TasteTickMotion {
       rowDelayMs: 0,
       ease: "linear",
       glow: false,
-      triggerRatio: 0,
+      triggerRatio: 0.4,
       fadeTogether: true,
     };
   }
