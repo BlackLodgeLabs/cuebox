@@ -90,7 +90,7 @@ test.describe("watchlist add flow (mocked API)", () => {
     });
   });
 
-  test("add film search and confirm via Home picker redirect chain", async ({ page }) => {
+  test("add film from the search card via the legacy add route", async ({ page }) => {
     await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -110,41 +110,22 @@ test.describe("watchlist add flow (mocked API)", () => {
       });
     });
 
-    let filmPolls = 0;
-    await page.route(`**${API_PATH_PREFIX}/films/${addedFilmId}`, async (route) => {
-      filmPolls += 1;
-      const status = filmPolls >= 2 ? "ready" : "enriching";
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          id: addedFilmId,
-          title: "The Matrix",
-          year: 1999,
-          letterboxd_uri: "https://letterboxd.com/film/the-matrix/",
-          status: "active",
-          enrichment_status: status,
-          metadata: null,
-          semantic_profile: null,
-          watches: [],
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
-        }),
-      });
-    });
-
     await page.goto("/watchlist/add");
     await expect(page).toHaveURL(/\/$/);
-    await page.getByTestId("library-search-input").fill("Matrix");
-    await expect(page.getByText("The Matrix (1999)")).toBeVisible();
-    await page.getByRole("button", { name: "Add to watchlist" }).click();
-    await expect(page).toHaveURL(new RegExp(`/watchlist/${addedFilmId}$`));
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
+    await page.getByRole("combobox", { name: "Search films" }).fill("Matrix");
+    await expect(page.getByRole("option", { name: /The Matrix/ })).toBeVisible();
+    await page.getByRole("button", { name: "Add The Matrix to watchlist" }).click();
+    await expect(page.getByText("Added to watchlist")).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
   });
 
-  test("home shows inline search without dual intent CTAs", async ({ page }) => {
+  test("home shows recommendation and history without the inline picker", async ({
+    page,
+  }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
-    await expect(page.getByTestId("library-search-input")).toBeVisible();
+    await expect(page.getByTestId("library-search-input")).toHaveCount(0);
     const links = page.getByRole("link");
     await expect(links.filter({ hasText: "Create a recommendation" })).toHaveAttribute(
       "href",

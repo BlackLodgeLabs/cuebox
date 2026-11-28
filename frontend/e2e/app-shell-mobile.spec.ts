@@ -249,6 +249,7 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     await expect(search).toHaveAttribute("placeholder", "Search films");
     await search.click();
     await expect(page).toHaveURL(/\/watchlist/);
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
   });
 
   test("tab hit targets meet 44px minimum", async ({ page }) => {

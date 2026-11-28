@@ -1,11 +1,11 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { FilmSearchCard } from "@/components/film-search-card";
 import { Icon } from "@/components/icon";
-import { SearchCard } from "@/components/ui/search-card";
 import { Wordmark } from "@/components/wordmark";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { screenMotion } from "@/lib/motion";
@@ -41,14 +41,47 @@ const BOTTOM_TABS = [
   },
 ] as const;
 
+function isCatalogueFilmPath(pathname: string): boolean {
+  return pathname.startsWith("/films/tmdb/");
+}
+
+function SearchFocusOpener({ onOpen }: { onOpen: () => void }) {
+  const params = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const handled = useRef(false);
+
+  useEffect(() => {
+    if (params.get("focus") !== "search") {
+      handled.current = false;
+      return;
+    }
+    if (handled.current) return;
+    handled.current = true;
+    onOpen();
+    const url = new URL(window.location.href);
+    url.searchParams.delete("focus");
+    const next = `${pathname}${url.search}`;
+    router.replace(next, { scroll: false });
+  }, [params, pathname, onOpen, router]);
+
+  return null;
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduced = useReducedMotion();
   const screen = screenMotion(reduced);
   const [searchOpen, setSearchOpen] = useState(false);
+  const immersive = isCatalogueFilmPath(pathname);
+  const openSearch = useCallback(() => setSearchOpen(true), []);
 
   return (
     <div className="min-h-screen bg-cb-bg text-cb-text">
+      <Suspense fallback={null}>
+        <SearchFocusOpener onOpen={openSearch} />
+      </Suspense>
+      {immersive ? null : (
       <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
         <div
           data-shell-header
@@ -73,25 +106,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </label>
         </div>
       </header>
+      )}
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12">
+      <main
+        className={cn(
+          "mx-auto w-full max-w-7xl",
+          immersive
+            ? "pb-[env(safe-area-inset-bottom,0px)]"
+            : "px-4 py-8 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
+        )}
+      >
         <AnimatePresence initial={false} mode="popLayout">
-          <motion.div
-            key={pathname}
-            data-cb-screen=""
-            data-fade-ms={screen.fadeMs}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={screen.transition}
-          >
+          <ScreenPane key={pathname} fadeMs={screen.fadeMs} transition={screen.transition}>
             {children}
-          </motion.div>
+          </ScreenPane>
         </AnimatePresence>
       </main>
 
-      <SearchCard open={searchOpen} onOpenChange={setSearchOpen} />
+      <FilmSearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
+      {immersive ? null : (
       <nav
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
@@ -115,7 +149,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
+      )}
     </div>
+  );
+}
+
+function ScreenPane({
+  children,
+  fadeMs,
+  transition,
+}: {
+  children: React.ReactNode;
+  fadeMs: number;
+  transition: ReturnType<typeof screenMotion>["transition"];
+}) {
+  const present = useIsPresent();
+  return (
+    <motion.div
+      data-cb-screen=""
+      data-fade-ms={fadeMs}
+      aria-hidden={present ? undefined : true}
+      inert={present ? undefined : true}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={transition}
+    >
+      {children}
+    </motion.div>
   );
 }
 

@@ -23,32 +23,8 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
-}));
-
 vi.mock("@/hooks/use-films", () => ({
   useHasWatchlist: () => useHasWatchlistMock(),
-}));
-
-vi.mock("@/components/library-search-picker", () => ({
-  LibrarySearchPicker: ({
-    placeholder,
-    helperText,
-  }: {
-    placeholder?: string;
-    helperText?: string;
-  }) => (
-    <div>
-      {helperText ? <p>{helperText}</p> : null}
-      <input
-        data-testid="library-search-input"
-        placeholder={placeholder}
-        aria-label="Library and TMDB search"
-      />
-    </div>
-  ),
 }));
 
 function renderHome() {
@@ -84,11 +60,7 @@ describe("HomePage hub", () => {
         "Find a film in your library, create a recommendation, or open History.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("library-search-input")).toBeInTheDocument();
-    expect(screen.getByTestId("library-search-input")).toHaveAttribute(
-      "placeholder",
-      "Find a film in your library or add one…",
-    );
+    expect(screen.queryByTestId("library-search-input")).not.toBeInTheDocument();
 
     const recommend = screen.getByRole("link", {
       name: "Create a recommendation",
@@ -119,11 +91,6 @@ describe("HomePage hub", () => {
       screen.queryByRole("link", { name: "View history" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/System status/i)).not.toBeInTheDocument();
-
-    const picker = screen.getByTestId("library-search-input");
-    const recommendTop = recommend.getBoundingClientRect().top;
-    const pickerTop = picker.getBoundingClientRect().top;
-    expect(pickerTop).toBeLessThanOrEqual(recommendTop);
   });
 
   it("empty watchlist shows Import watchlist and no System status", () => {

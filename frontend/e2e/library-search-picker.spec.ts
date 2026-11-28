@@ -14,6 +14,8 @@ const localActive = {
   director: "Robin Hardy",
   runtime: 88,
   genres: ["Horror"],
+  backdrop_url: null,
+  latest_score: null,
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
 };
@@ -25,6 +27,22 @@ const tmdbOnly = {
   year: 1999,
   overview: "A computer hacker learns about the true nature of reality.",
   poster_url: null,
+};
+
+const catalogueFilm = {
+  tmdb_id: 603,
+  title: "The Matrix",
+  year: 1999,
+  overview: "A computer hacker learns about the true nature of reality.",
+  backdrop_url: null,
+  poster_url: null,
+  genres: ["Science Fiction"],
+  runtime: 136,
+  director: "Lana Wachowski",
+  tmdb_rating: 8.2,
+  trailer_url: null,
+  film_id: null,
+  status: null,
 };
 
 const addedFilmId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -89,377 +107,178 @@ async function stubHomePresence(page: import("@playwright/test").Page) {
   });
 }
 
-test.describe("library search picker (mocked API)", () => {
+async function stubSearch(
+  page: import("@playwright/test").Page,
+  library: unknown[],
+  tmdb: unknown[],
+) {
+  await page.route(`**${API_PATH_PREFIX}/films?statuses=**`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: library,
+        pagination: { total: library.length, limit: 20, offset: 0, has_more: false },
+      }),
+    });
+  });
+
+  await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: tmdb,
+        pagination: { total: tmdb.length, limit: 20, offset: 0, has_more: false },
+      }),
+    });
+  });
+}
+
+test.describe("search card (mocked API)", () => {
   test.beforeEach(async ({ page }) => {
     await stubHomePresence(page);
   });
 
-  test("home embeds picker above recommendation/history; dual CTAs gone", async ({
-    page,
-  }) => {
+  test("home no longer embeds the inline picker", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
-    await expect(page.getByTestId("library-search-input")).toBeVisible();
-    await expect(
-      page.getByPlaceholder("Find a film in your library or add one…"),
-    ).toBeVisible();
+    await expect(page.getByTestId("library-search-input")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Create a recommendation" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "History" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Add a film" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Mark watched" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "View watchlist" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Review now" })).toHaveCount(0);
-
-    const searchBox = page.getByTestId("library-search-input");
-    const recommend = page.getByRole("link", { name: "Create a recommendation" });
-    const history = page.getByRole("link", { name: "History" });
-    await expect(recommend).toBeVisible();
-    await expect(history).toBeVisible();
-
-    const searchY = (await searchBox.boundingBox())?.y ?? 0;
-    const recommendY = (await recommend.boundingBox())?.y ?? 0;
-    expect(searchY).toBeLessThan(recommendY);
-
-    const historyBox = await history.boundingBox();
-    expect(historyBox).toBeTruthy();
-    expect(historyBox!.height).toBeGreaterThanOrEqual(44);
   });
 
-  test("picker row actions meet ≥44px touch targets", async ({ page }) => {
-    await page.route(`**${API_PATH_PREFIX}/films?statuses=**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [localActive],
-          pagination: { total: 1, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [tmdbOnly],
-          pagination: { total: 1, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    await page.goto("/");
-    await page.getByTestId("library-search-input").fill("Wicker");
-    await expect(page.getByText("The Wicker Man (1973)")).toBeVisible();
-
-    const view = page.getByRole("link", { name: "View", exact: true });
-    const mark = page.getByRole("button", { name: "Mark watched", exact: true });
-    for (const control of [view, mark]) {
-      const box = await control.boundingBox();
-      expect(box).toBeTruthy();
-      expect(box!.height).toBeGreaterThanOrEqual(44);
-      expect(box!.width).toBeGreaterThanOrEqual(44);
-    }
-
-    const matrix = page.getByText("The Matrix (1999)");
-    await matrix.scrollIntoViewIfNeeded();
-    await expect(matrix).toBeVisible();
-
-    for (const name of ["Add to watchlist", "Add & mark watched"] as const) {
-      const control = page.getByRole("button", { name, exact: true });
-      await control.scrollIntoViewIfNeeded();
-      const box = await control.boundingBox();
-      expect(box, name).toBeTruthy();
-      expect(box!.height, `${name} height`).toBeGreaterThanOrEqual(44);
-      expect(box!.width, `${name} width`).toBeGreaterThanOrEqual(44);
-    }
-  });
-
-  test("focusing search scrolls input into view", async ({ page }) => {
-    await page.addInitScript(() => {
-      const w = window as unknown as {
-        __scrollIntoViewLog: { id: string; block?: string }[];
-      };
-      w.__scrollIntoViewLog = [];
-      const original = HTMLElement.prototype.scrollIntoView;
-      HTMLElement.prototype.scrollIntoView = function (
-        this: HTMLElement,
-        arg?: boolean | ScrollIntoViewOptions,
-      ) {
-        const block =
-          typeof arg === "object" && arg && "block" in arg
-            ? String(arg.block)
-            : undefined;
-        w.__scrollIntoViewLog.push({
-          id: this.getAttribute("data-testid") ?? this.id ?? "",
-          block,
-        });
-        return original.call(this, arg as ScrollIntoViewOptions);
-      };
-    });
-
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/");
-    await page.getByTestId("library-search-input").click();
-
-    const log = await page.evaluate(() => {
-      const w = window as unknown as {
-        __scrollIntoViewLog: { id: string; block?: string }[];
-      };
-      return w.__scrollIntoViewLog ?? [];
-    });
-    expect(
-      log.some(
-        (entry) =>
-          entry.id === "library-search-input" && entry.block === "start",
-      ),
-    ).toBe(true);
-  });
-
-  test("search merges local and TMDB; mark watched posts status", async ({ page }) => {
-    await page.route(`**${API_PATH_PREFIX}/films?statuses=**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [localActive],
-          pagination: { total: 1, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [
-            {
-              tmdb_id: 11453,
-              title: "The Wicker Man",
-              original_title: "The Wicker Man",
-              year: 1973,
-              overview: "Duplicate of local",
-              poster_url: null,
-            },
-            tmdbOnly,
-          ],
-          pagination: { total: 2, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    let statusBody: unknown = null;
-    await page.route(`**/films/${localActive.id}/status`, async (route) => {
-      statusBody = route.request().postDataJSON();
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          ...localActive,
-          status: "pending_watch_review",
-          watch_review_incomplete: true,
-        }),
-      });
-    });
-
-    await page.goto("/");
-    await expect(
-      page.getByText(/Search your library \(including watched films\) or add from TMDB/i),
-    ).toBeVisible();
-    await page.getByTestId("library-search-input").fill("Wicker");
-    await expect(page.getByText("The Wicker Man (1973)")).toBeVisible();
-    const matrix = page.getByText("The Matrix (1999)");
-    await matrix.scrollIntoViewIfNeeded();
-    await expect(matrix).toBeVisible();
-    await expect(page.getByRole("button", { name: "Mark watched", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add to watchlist" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add & mark watched" })).toBeVisible();
-
-    await page.getByRole("button", { name: "Mark watched", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Review watched film" })).toBeVisible();
-    expect(statusBody).toEqual({ status: "pending_watch_review" });
-  });
-
-  test("/search and /watchlist/add redirect to Home with focused picker", async ({
+  test("header on Home and Watchlist opens the card over the current page", async ({
     page,
   }) => {
-    await page.goto("/search?intent=mark-watched");
-    await expect(page).toHaveURL(/\/(\?focus=search)?$/);
-    await expect(page.getByTestId("library-search-input")).toBeFocused();
+    await page.goto("/");
+    await page.getByRole("textbox", { name: "Search films" }).click();
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Search films" })).toBeFocused();
     await expect(page).toHaveURL(/\/$/);
-    await expect(page).not.toHaveURL(/focus=search/);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByRole("dialog", { name: "Search films" })).toHaveCount(0);
 
-    await page.goto("/watchlist/add");
-    await expect(page.getByTestId("library-search-input")).toBeFocused();
-    await expect(page).toHaveURL(/\/$/);
+    await page.goto("/watchlist");
+    await page.getByRole("textbox", { name: "Search films" }).click();
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
+    await expect(page).toHaveURL(/\/watchlist/);
   });
 
-  test("Home ?focus=search focuses input then clears param", async ({ page }) => {
-    await page.goto("/?focus=search");
-    await expect(page.getByTestId("library-search-input")).toBeFocused();
-    await expect(page).toHaveURL(/\/$/);
-    await expect(page).not.toHaveURL(/focus=search/);
-  });
-
-  test("TMDB-only add works through Home picker", async ({ page }) => {
-    await page.route(`**${API_PATH_PREFIX}/films?statuses=**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [],
-          pagination: { total: 0, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [tmdbOnly],
-          pagination: { total: 1, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    await page.route(`**${API_PATH_PREFIX}/watchlist/films`, async (route) => {
-      await route.fulfill({
-        status: 202,
-        contentType: "application/json",
-        body: JSON.stringify({
-          film_id: addedFilmId,
-          enrichment_status: "enriching",
-        }),
-      });
-    });
-
-    let filmPolls = 0;
-    await page.route(`**${API_PATH_PREFIX}/films/${addedFilmId}`, async (route) => {
-      filmPolls += 1;
-      const status = filmPolls >= 2 ? "ready" : "enriching";
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          id: addedFilmId,
-          title: "The Matrix",
-          year: 1999,
-          letterboxd_uri: "https://letterboxd.com/film/the-matrix/",
-          status: "active",
-          enrichment_status: status,
-          metadata: null,
-          semantic_profile: null,
-          watches: [],
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
-        }),
-      });
-    });
-
-    await page.goto("/watchlist/add");
-    await expect(page.getByTestId("library-search-input")).toBeVisible();
-    await page.getByTestId("library-search-input").fill("Matrix");
-    const matrixAdd = page.getByText("The Matrix (1999)");
-    await matrixAdd.scrollIntoViewIfNeeded();
-    await expect(matrixAdd).toBeVisible();
-    await page.getByRole("button", { name: "Add to watchlist" }).click();
-    await expect(page).toHaveURL(new RegExp(`/watchlist/${addedFilmId}$`));
-  });
-
-  test("TMDB Add & mark watched opens review after enrichment", async ({ page }) => {
-    await page.route(`**${API_PATH_PREFIX}/films?statuses=**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [],
-          pagination: { total: 0, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [tmdbOnly],
-          pagination: { total: 1, limit: 20, offset: 0, has_more: false },
-        }),
-      });
-    });
-
-    await page.route(`**${API_PATH_PREFIX}/watchlist/films`, async (route) => {
-      await route.fulfill({
-        status: 202,
-        contentType: "application/json",
-        body: JSON.stringify({
-          film_id: addedFilmId,
-          enrichment_status: "enriching",
-        }),
-      });
-    });
-
-    let filmPolls = 0;
-    await page.route(`**${API_PATH_PREFIX}/films/${addedFilmId}`, async (route) => {
-      filmPolls += 1;
-      const status = filmPolls >= 2 ? "ready" : "enriching";
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          id: addedFilmId,
-          title: "The Matrix",
-          year: 1999,
-          letterboxd_uri: "https://letterboxd.com/film/the-matrix/",
-          status: "active",
-          enrichment_status: status,
-          metadata: null,
-          semantic_profile: null,
-          watches: [],
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
-        }),
-      });
-    });
-
-    let statusBody: unknown = null;
-    await page.route(`**/films/${addedFilmId}/status`, async (route) => {
-      statusBody = route.request().postDataJSON();
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          id: addedFilmId,
-          title: "The Matrix",
-          year: 1999,
-          letterboxd_uri: "https://letterboxd.com/film/the-matrix/",
-          status: "pending_watch_review",
-          enrichment_status: "ready",
+  test("groups watchlist hits above catalogue hits; eye opens detail", async ({
+    page,
+  }) => {
+    await stubSearch(
+      page,
+      [localActive],
+      [
+        {
+          tmdb_id: 11453,
+          title: "The Wicker Man",
+          original_title: "The Wicker Man",
+          year: 1973,
+          overview: "Duplicate of local",
           poster_url: null,
-          director: null,
-          runtime: null,
-          genres: [],
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
+        },
+        tmdbOnly,
+      ],
+    );
+
+    await page.goto("/");
+    await page.getByRole("textbox", { name: "Search films" }).click();
+    await page.getByRole("combobox", { name: "Search films" }).fill("Wicker");
+
+    await expect(page.getByText("On your watchlist", { exact: true })).toBeVisible();
+    await expect(page.getByText("Not on your watchlist", { exact: true })).toBeVisible();
+    await expect(page.getByText("1973 · 88m")).toBeVisible();
+    await expect(page.getByRole("option", { name: /The Matrix/ })).toBeVisible();
+    await expect(page.getByRole("option")).toHaveCount(2);
+    await expect(page.getByRole("button", { name: "Add & mark watched" })).toHaveCount(0);
+
+    const eye = page.getByRole("button", { name: "Open The Wicker Man" });
+    const box = await eye.boundingBox();
+    expect(box).toBeTruthy();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+
+    await eye.click();
+    await expect(page).toHaveURL(new RegExp(`/watchlist/${localActive.id}$`));
+  });
+
+  test("plus adds a catalogue film and shows Added to watchlist", async ({ page }) => {
+    await stubSearch(page, [], [tmdbOnly]);
+    await page.route(`**${API_PATH_PREFIX}/watchlist/films`, async (route) => {
+      await route.fulfill({
+        status: 202,
+        contentType: "application/json",
+        body: JSON.stringify({
+          film_id: addedFilmId,
+          enrichment_status: "enriching",
         }),
       });
     });
 
     await page.goto("/");
-    await page.getByTestId("library-search-input").fill("Matrix");
-    const matrixReview = page.getByText("The Matrix (1999)");
-    await matrixReview.scrollIntoViewIfNeeded();
-    await expect(matrixReview).toBeVisible();
-    await page.getByRole("button", { name: "Add & mark watched" }).click();
-    await expect(page.getByRole("heading", { name: "Review watched film" })).toBeVisible();
-    expect(statusBody).toEqual({ status: "pending_watch_review" });
+    await page.getByRole("textbox", { name: "Search films" }).click();
+    await page.getByRole("combobox", { name: "Search films" }).fill("Matrix");
+    await page.getByRole("button", { name: "Add The Matrix to watchlist" }).click();
+
+    await expect(page.getByText("Added to watchlist")).toBeVisible();
+    await expect(page.getByText("The Matrix").last()).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
   });
 
-  test("empty watchlist Home has Import only; focus param does not crash", async ({
+  test("a catalogue hit opens the lighter page and hides a missing trailer", async ({
     page,
   }) => {
+    await stubSearch(page, [], [tmdbOnly]);
+    await page.route(`**${API_PATH_PREFIX}/films/tmdb/603`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(catalogueFilm),
+      });
+    });
+
+    await page.goto("/");
+    await page.getByRole("textbox", { name: "Search films" }).click();
+    await page.getByRole("combobox", { name: "Search films" }).fill("Matrix");
+    await page.getByRole("option", { name: /The Matrix/ }).click();
+
+    await expect(page).toHaveURL(/\/films\/tmdb\/603$/);
+    const film = page.getByRole("article");
+    await expect(film.getByRole("heading", { name: "The Matrix" })).toBeVisible();
+    await expect(film.getByText("82%")).toBeVisible();
+    await expect(film.getByRole("link", { name: "Trailer" })).toHaveCount(0);
+    await expect(film.getByRole("button", { name: "Add to watchlist" })).toBeVisible();
+    await expect(page.getByRole("tab")).toHaveCount(0);
+  });
+
+  test("/search and /watchlist/add open the card on Home", async ({ page }) => {
+    await page.goto("/search?intent=mark-watched");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page).not.toHaveURL(/focus=search/);
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Search films" })).toBeFocused();
+
+    await page.goto("/watchlist/add");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page).not.toHaveURL(/focus=search/);
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
+  });
+
+  test("Home ?focus=search opens the card then clears the param", async ({ page }) => {
+    await page.goto("/?focus=search");
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page).not.toHaveURL(/focus=search/);
+  });
+
+  test("empty watchlist still opens the card from ?focus=search", async ({ page }) => {
     await page.unroute(`**${API_PATH_PREFIX}/films?limit=1**`);
     await page.route(`**${API_PATH_PREFIX}/films?limit=1**`, async (route) => {
       await route.fulfill({
@@ -475,7 +294,16 @@ test.describe("library search picker (mocked API)", () => {
     await page.goto("/?focus=search");
     await expect(page.getByRole("heading", { name: "Welcome to Cuebox" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Import watchlist" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
     await expect(page.getByTestId("library-search-input")).toHaveCount(0);
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).not.toHaveURL(/focus=search/);
+  });
+
+  test("no match has an empty state", async ({ page }) => {
+    await stubSearch(page, [], []);
+    await page.goto("/");
+    await page.getByRole("textbox", { name: "Search films" }).click();
+    await page.getByRole("combobox", { name: "Search films" }).fill("zzzz-no-film");
+    await expect(page.getByText('No films match "zzzz-no-film".')).toBeVisible();
   });
 });

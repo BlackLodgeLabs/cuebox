@@ -1,20 +1,33 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/app-shell";
+import { createQueryWrapper } from "@/test/query-wrapper";
 
 const navigationState = vi.hoisted(() => ({
   pathname: "/",
+  search: "",
+  replace: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navigationState.pathname,
+  useSearchParams: () => new URLSearchParams(navigationState.search),
+  useRouter: () => ({
+    replace: navigationState.replace,
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
 }));
 
 function renderShell() {
+  const { Wrapper } = createQueryWrapper();
   return render(
-    <AppShell>
-      <div>content</div>
-    </AppShell>,
+    <Wrapper>
+      <AppShell>
+        <div>content</div>
+      </AppShell>
+    </Wrapper>,
   );
 }
 
@@ -29,6 +42,8 @@ function bottomTabLinks() {
 describe("AppShell", () => {
   beforeEach(() => {
     navigationState.pathname = "/";
+    navigationState.search = "";
+    navigationState.replace.mockReset();
   });
 
   afterEach(() => {
@@ -171,6 +186,34 @@ describe("AppShell", () => {
       expect(tab.className).toContain("min-h-[44px]");
       expect(tab.className).toContain("min-w-[44px]");
     }
+  });
+
+  it("opens the search card from the header on the watchlist", async () => {
+    navigationState.pathname = "/watchlist";
+    renderShell();
+
+    expect(screen.queryByRole("dialog", { name: "Search films" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("textbox", { name: "Search films" }));
+    expect(screen.getByRole("dialog", { name: "Search films" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveAttribute("data-open-ms", "700");
+    expect(screen.getByRole("dialog")).toHaveAttribute("data-from-scale", "0.96");
+  });
+
+  it("opens the search card from ?focus=search and clears the param", async () => {
+    navigationState.search = "focus=search";
+    renderShell();
+
+    expect(await screen.findByRole("dialog", { name: "Search films" })).toBeInTheDocument();
+    expect(navigationState.replace).toHaveBeenCalledWith("/", { scroll: false });
+  });
+
+  it("hides the shell chrome on the catalogue film page", () => {
+    navigationState.pathname = "/films/tmdb/603";
+    renderShell();
+
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
+    expect(screen.getByText("content")).toBeInTheDocument();
   });
 
   it("does not render a FAB control", () => {
