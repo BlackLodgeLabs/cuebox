@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { ChromeOverrideProvider, useTabBarOverride } from "@/components/chrome-override";
 import { FilmSearchCard } from "@/components/film-search-card";
 import {
   HomeArrivalProvider,
@@ -14,6 +15,7 @@ import { Icon } from "@/components/icon";
 import { Wordmark } from "@/components/wordmark";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { screenMotion } from "@/lib/motion";
+import { isScreenFadeSuppressed } from "@/lib/recommend-handoff";
 import { cn } from "@/lib/utils";
 
 const BOTTOM_TABS = [
@@ -82,7 +84,9 @@ function SearchFocusOpener({ onOpen }: { onOpen: () => void }) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <HomeArrivalProvider>
-      <AppShellFrame>{children}</AppShellFrame>
+      <ChromeOverrideProvider>
+        <AppShellFrame>{children}</AppShellFrame>
+      </ChromeOverrideProvider>
     </HomeArrivalProvider>
   );
 }
@@ -100,14 +104,18 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const openSearch = useCallback(() => setSearchOpen(true), []);
+  const tabOverride = useTabBarOverride();
   const programmeTonight = pathname === "/dev/programme";
   const programmeHistory = pathname.startsWith("/dev/programme/history");
   const historyNight = /^\/history\/[^/]+/.test(pathname);
   const programmePreview = programmeTonight || programmeHistory;
   const historyRoute = pathname.startsWith("/history");
-  const hideHeader = filmDetail || catalogueFilm || programmeTonight;
-  const hideTabs = filmDetail || catalogueFilm;
-  const skipRouteFade = isHome && reduced;
+  const questionnaire = pathname === "/recommend";
+  const recommendResults = pathname.startsWith("/recommend/results");
+  const hideHeader =
+    filmDetail || catalogueFilm || programmeTonight || questionnaire || recommendResults;
+  const hideTabs = filmDetail || catalogueFilm || (questionnaire && tabOverride !== true);
+  const skipRouteFade = (isHome && reduced) || isScreenFadeSuppressed(pathname);
 
   useEffect(() => {
     if (!isHome) return;
@@ -168,10 +176,18 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
               ? "mx-auto w-full max-w-7xl pb-[env(safe-area-inset-bottom,0px)]"
               : isHome
                 ? "mx-auto w-full max-w-7xl px-0 py-0 pb-[calc(90px+env(safe-area-inset-bottom,0px))]"
-                : cn(
-                    "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
-                    historyRoute ? "pt-1" : programmePreview ? "pt-2" : "py-8",
-                  )
+                : questionnaire || recommendResults
+                  ? cn(
+                      "mx-auto w-full max-w-7xl px-4 md:px-12",
+                      hideTabs
+                        ? "pb-4"
+                        : "pb-[calc(90px+env(safe-area-inset-bottom,0px))]",
+                      "pt-2",
+                    )
+                  : cn(
+                      "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
+                      historyRoute ? "pt-1" : programmePreview ? "pt-2" : "py-8",
+                    )
         }
       >
         <AnimatePresence initial={false} mode="popLayout">

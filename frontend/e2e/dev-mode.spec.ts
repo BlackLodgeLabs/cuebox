@@ -23,7 +23,7 @@ test.describe("Developer Mode UI (mocked API)", () => {
   test("hides dev panel when backend developer mode is disabled", async ({ page }) => {
     await mockDeveloperModeDisabled(page);
     await page.goto(`/recommend/results/${DEV_SESSION_ID}?dev=1`);
-    await expect(page.getByRole("heading", { name: /your pick/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /tonight.s programme/i })).toBeVisible();
     await expect(page.getByText("Developer Mode", { exact: true })).not.toBeVisible();
   });
 
