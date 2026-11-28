@@ -133,12 +133,12 @@ export default function ReviewPage() {
                             }`}
                       </CardDescription>
                       {!isLetterboxdReview && film.candidate_payload.director && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-ui text-cb-ui text-cb-muted">
                           {film.candidate_payload.director}
                         </p>
                       )}
                       {!isLetterboxdReview && (
-                        <p className="mt-1 text-label-md normal-case tracking-normal text-secondary">
+                        <p className="mt-1 font-mono text-cb-meta normal-case tracking-normal text-cb-teal">
                           Confidence: {confidence}%
                         </p>
                       )}
