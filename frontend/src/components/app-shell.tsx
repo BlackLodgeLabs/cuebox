@@ -1,11 +1,11 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { FilmSearchCard } from "@/components/film-search-card";
 import { Icon } from "@/components/icon";
-import { SearchCard } from "@/components/ui/search-card";
 import { Wordmark } from "@/components/wordmark";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { screenMotion } from "@/lib/motion";
@@ -41,25 +41,57 @@ const BOTTOM_TABS = [
   },
 ] as const;
 
+function isCatalogueFilmPath(pathname: string): boolean {
+  return pathname.startsWith("/films/tmdb/");
+}
+
 /** Film detail replaces the shell header and tab bar with its own hero and action bar. */
 export function isFilmDetailPath(pathname: string): boolean {
   return /^\/watchlist\/(?!add$)[^/]+$/.test(pathname);
 }
 
+function SearchFocusOpener({ onOpen }: { onOpen: () => void }) {
+  const params = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const handled = useRef(false);
+
+  useEffect(() => {
+    if (params.get("focus") !== "search") {
+      handled.current = false;
+      return;
+    }
+    if (handled.current) return;
+    handled.current = true;
+    onOpen();
+    const url = new URL(window.location.href);
+    url.searchParams.delete("focus");
+    const next = `${pathname}${url.search}`;
+    router.replace(next, { scroll: false });
+  }, [params, pathname, onOpen, router]);
+
+  return null;
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const filmDetail = isFilmDetailPath(pathname);
+  const catalogueFilm = isCatalogueFilmPath(pathname);
   const reduced = useReducedMotion();
   const screen = screenMotion(reduced);
   const [searchOpen, setSearchOpen] = useState(false);
+  const openSearch = useCallback(() => setSearchOpen(true), []);
   const programmeTonight = pathname === "/dev/programme";
   const programmeHistory = pathname.startsWith("/dev/programme/history");
   const programmePreview = programmeTonight || programmeHistory;
-
-  const hideHeader = filmDetail || programmeTonight;
+  const hideHeader = filmDetail || catalogueFilm || programmeTonight;
+  const hideTabs = filmDetail || catalogueFilm;
 
   return (
     <div className="min-h-screen bg-cb-bg text-cb-text">
+      <Suspense fallback={null}>
+        <SearchFocusOpener onOpen={openSearch} />
+      </Suspense>
       {hideHeader ? null : (
         <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
           <div
@@ -93,30 +125,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className={
           filmDetail
             ? "mx-auto w-full max-w-7xl px-0 py-0 pb-[calc(112px+env(safe-area-inset-bottom,0px))]"
-            : cn(
-                "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
-                programmePreview ? "pt-2" : "py-8",
-              )
+            : catalogueFilm
+              ? "mx-auto w-full max-w-7xl pb-[env(safe-area-inset-bottom,0px)]"
+              : cn(
+                  "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
+                  programmePreview ? "pt-2" : "py-8",
+                )
         }
       >
         <AnimatePresence initial={false} mode="popLayout">
-          <motion.div
-            key={pathname}
-            data-cb-screen=""
-            data-fade-ms={screen.fadeMs}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={screen.transition}
-          >
+          <ScreenPane key={pathname} fadeMs={screen.fadeMs} transition={screen.transition}>
             {children}
-          </motion.div>
+          </ScreenPane>
         </AnimatePresence>
       </main>
 
-      <SearchCard open={searchOpen} onOpenChange={setSearchOpen} />
+      <FilmSearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
-      {filmDetail ? null : (
+      {hideTabs ? null : (
         <nav
           aria-label="Primary"
           className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
@@ -146,6 +172,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       )}
     </div>
+  );
+}
+
+function ScreenPane({
+  children,
+  fadeMs,
+  transition,
+}: {
+  children: React.ReactNode;
+  fadeMs: number;
+  transition: ReturnType<typeof screenMotion>["transition"];
+}) {
+  const present = useIsPresent();
+  return (
+    <motion.div
+      data-cb-screen=""
+      data-fade-ms={fadeMs}
+      aria-hidden={present ? undefined : true}
+      inert={present ? undefined : true}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={transition}
+    >
+      {children}
+    </motion.div>
   );
 }
 

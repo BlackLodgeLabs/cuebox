@@ -65,7 +65,11 @@ export function SearchCard({ open, onOpenChange, children }: SearchCardProps) {
               transition: { duration: spec.close.duration, ease },
             }}
           >
-            <Command label="Search films" className="bg-cb-surface text-cb-text">
+            <Command
+              label="Search films"
+              shouldFilter={false}
+              className="flex max-h-[min(640px,calc(100dvh-140px))] flex-col bg-cb-surface text-cb-text"
+            >
               {children ?? (
                 <>
                   <Command.Input
