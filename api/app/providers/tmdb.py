@@ -51,6 +51,44 @@ class TmdbWatchProvidersResult:
 
 
 @dataclass(frozen=True)
+class TmdbVideo:
+    key: str
+    name: str
+    site: str
+    video_type: str
+    official: bool
+    published_at: str | None
+
+
+def select_youtube_trailer(videos: list[TmdbVideo]) -> TmdbVideo | None:
+    """Best YouTube video: official Trailer, then Teaser, newest first within a rank.
+
+    Official teasers beat unofficial teasers. An unofficial trailer is only
+    used when no Trailer or Teaser of higher rank exists. Clips and non-YouTube
+    videos are ignored.
+    """
+    candidates = [
+        video
+        for video in videos
+        if video.site == "YouTube" and video.key and video.video_type in {"Trailer", "Teaser"}
+    ]
+    if not candidates:
+        return None
+    newest_first = sorted(candidates, key=lambda video: video.published_at or "", reverse=True)
+
+    def _rank(video: TmdbVideo) -> int:
+        if video.video_type == "Trailer" and video.official:
+            return 0
+        if video.video_type == "Teaser" and video.official:
+            return 1
+        if video.video_type == "Teaser":
+            return 2
+        return 3
+
+    return min(newest_first, key=_rank)
+
+
+@dataclass(frozen=True)
 class TmdbMovieDetails:
     tmdb_id: int
     imdb_id: str | None
@@ -152,6 +190,34 @@ class TmdbClient:
             director=credits,
         )
 
+    async def get_movie_videos(self, tmdb_id: int) -> list[TmdbVideo]:
+        response = await request_with_retry(
+            self._client,
+            "GET",
+            f"{TMDB_BASE_URL}/movie/{tmdb_id}/videos",
+            params={"api_key": self._api_key},
+        )
+        response.raise_for_status()
+        parsed: list[TmdbVideo] = []
+        for item in response.json().get("results", []):
+            if not isinstance(item, dict):
+                continue
+            key = item.get("key")
+            if not key:
+                continue
+            published_at = item.get("published_at")
+            parsed.append(
+                TmdbVideo(
+                    key=str(key),
+                    name=str(item.get("name") or ""),
+                    site=str(item.get("site") or ""),
+                    video_type=str(item.get("type") or ""),
+                    official=bool(item.get("official")),
+                    published_at=str(published_at) if published_at else None,
+                )
+            )
+        return parsed
+
     async def get_movie_keywords(self, tmdb_id: int) -> list[str]:
         response = await request_with_retry(
             self._client,
@@ -218,6 +284,41 @@ class TmdbClient:
             buy=_parse_entries("buy"),
             ads=_parse_entries("ads"),
         )
+
+    async def list_movie_watch_providers(
+        self,
+        *,
+        country_code: str = "GB",
+    ) -> list[TmdbWatchProviderEntry]:
+        """Selectable providers for a country. This is the catalog, not per-film availability."""
+        response = await request_with_retry(
+            self._client,
+            "GET",
+            f"{TMDB_BASE_URL}/watch/providers/movie",
+            params={"api_key": self._api_key, "watch_region": country_code},
+        )
+        response.raise_for_status()
+        parsed: list[TmdbWatchProviderEntry] = []
+        for item in response.json().get("results", []):
+            if not isinstance(item, dict):
+                continue
+            provider_id = item.get("provider_id")
+            provider_name = item.get("provider_name")
+            if provider_id is None or not provider_name:
+                continue
+            parsed.append(
+                TmdbWatchProviderEntry(
+                    provider_id=int(provider_id),
+                    provider_name=str(provider_name),
+                    logo_path=item.get("logo_path"),
+                    display_priority=int(item.get("display_priority") or 0),
+                )
+            )
+        return parsed
+
+    @staticmethod
+    def youtube_url(key: str) -> str:
+        return f"https://www.youtube.com/watch?v={key}"
 
     @staticmethod
     def poster_url(path: str | None) -> str | None:

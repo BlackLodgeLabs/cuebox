@@ -1,18 +1,28 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFilm, getFilms, getReviewRequired, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, updateFilmWatch } from "@/lib/api-client";
-import type { FilmsQueryParams, FilmStatus, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, UpdateWatchRequest } from "@/types/api";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getFilm, getFilms, getFilmTrailer, getReviewRequired, getSimilarFilms, getTmdbFilm, getWatchlistGenres, getWatchReviewRequired, getPendingReviewCount, rematchFilm, searchTmdb, searchTmdbGlobal, addToWatchlist, setFilmStatus, completeWatchReview, cancelWatchReview, createFilmWatch, updateFilmWatch, deleteFilmWatch } from "@/lib/api-client";
+import type { FilmsQueryParams, FilmStatus, FilmSummary, ReviewRequiredQueryParams, TmdbSearchParams, CompleteWatchReviewRequest, CreateWatchRequest, UpdateWatchRequest } from "@/types/api";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
 
 export function useFilms(
   params?: FilmsQueryParams,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; keepPrevious?: boolean },
 ) {
   return useQuery({
     queryKey: ["films", params],
     queryFn: () => getFilms(params),
     enabled: options?.enabled ?? true,
+    placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
+  });
+}
+
+export function useWatchlistGenres(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["films", "genres"],
+    queryFn: getWatchlistGenres,
+    enabled: options?.enabled ?? true,
+    select: (response) => response.data,
   });
 }
 
@@ -166,6 +176,25 @@ export function useCancelWatchReview() {
   });
 }
 
+export function useCreateFilmWatch() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({
+      filmId,
+      body,
+    }: {
+      filmId: string;
+      body: CreateWatchRequest;
+    }) => createFilmWatch(filmId, body),
+    onSuccess: (_data, variables) => {
+      invalidateWatchReviewQueries(queryClient, variables.filmId);
+    },
+    onError,
+  });
+}
+
 export function useUpdateFilmWatch() {
   const queryClient = useQueryClient();
   const onError = useToastOnError();
@@ -184,6 +213,53 @@ export function useUpdateFilmWatch() {
       invalidateWatchReviewQueries(queryClient, variables.filmId);
     },
     onError,
+  });
+}
+
+export function useDeleteFilmWatch() {
+  const queryClient = useQueryClient();
+  const onError = useToastOnError();
+
+  return useMutation({
+    mutationFn: ({ filmId, watchId }: { filmId: string; watchId: string }) =>
+      deleteFilmWatch(filmId, watchId),
+    onSuccess: (_data, variables) => {
+      invalidateWatchReviewQueries(queryClient, variables.filmId);
+    },
+    onError,
+  });
+}
+
+const HOME_ACTIVE_PAGE = 100;
+/** Safety stop for a very large watchlist. The list endpoint pages at 100. */
+const HOME_ACTIVE_MAX_PAGES = 30;
+
+/** Every active watchlist film Home can place on a rail. */
+export async function loadActiveWatchlist(): Promise<{
+  films: FilmSummary[];
+  total: number;
+}> {
+  const films: FilmSummary[] = [];
+  let offset = 0;
+  let total = 0;
+  for (let page = 0; page < HOME_ACTIVE_MAX_PAGES; page += 1) {
+    const response = await getFilms({
+      status: "active",
+      limit: HOME_ACTIVE_PAGE,
+      offset,
+    });
+    total = response.pagination.total;
+    films.push(...response.data);
+    if (!response.pagination.has_more || response.data.length === 0) break;
+    offset += response.data.length;
+  }
+  return { films, total };
+}
+
+export function useHomeActiveFilms() {
+  return useQuery({
+    queryKey: ["films", "home-active"],
+    queryFn: loadActiveWatchlist,
   });
 }
 
@@ -208,5 +284,39 @@ export function useWatchlistCount() {
     queryKey: ["films", "watchlist-count"],
     queryFn: () => getFilms({ on_watchlist: true, limit: 1 }),
     select: (data) => data.pagination.total,
+  });
+}
+
+export function useSimilarFilms(
+  filmId: string,
+  options?: { limit?: number; enabled?: boolean },
+) {
+  const limit = options?.limit ?? 6;
+  return useQuery({
+    queryKey: ["films", filmId, "similar", limit],
+    queryFn: () => getSimilarFilms(filmId, { limit }),
+    enabled: Boolean(filmId) && (options?.enabled ?? true),
+  });
+}
+
+export function useFilmTrailer(
+  filmId: string,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["films", filmId, "trailer"],
+    queryFn: () => getFilmTrailer(filmId),
+    enabled: Boolean(filmId) && (options?.enabled ?? true),
+  });
+}
+
+export function useTmdbFilm(
+  tmdbId: number | null,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ["films", "tmdb", tmdbId],
+    queryFn: () => getTmdbFilm(tmdbId as number),
+    enabled: tmdbId != null && (options?.enabled ?? true),
   });
 }

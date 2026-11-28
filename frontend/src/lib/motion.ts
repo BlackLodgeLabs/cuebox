@@ -1,0 +1,331 @@
+/**
+ * App-wide motion from the Nov 2026 design pack (README §6.6).
+ * Locked durations live here and in `styles/tokens.css`. Resolvers read the
+ * CSS variables when the document has them, and fall back to the lock.
+ * Reduced motion is a 300ms fade or an instant settle: no travel, scale, or glow.
+ */
+
+export const cueboxEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+export const sheetTransition = {
+  open: { duration: 0.8, ease: cueboxEase },
+  close: { duration: 0.7, ease: cueboxEase },
+};
+
+export const toastTransition = {
+  enter: { duration: 0.7, ease: cueboxEase },
+  exit: { duration: 0.6, ease: cueboxEase },
+};
+
+export const searchTransition = {
+  open: { duration: 0.7, ease: cueboxEase },
+  close: { duration: 0.6, ease: cueboxEase },
+};
+
+export const REDUCED_FADE_MS = 300;
+export const SHEET_DISMISS_PX = 120;
+export const SEARCH_FROM_SCALE = 0.96;
+/** Search card dim from the locked app-wide tester (`motion/06-app-wide`). */
+export const SEARCH_DIM = 0.72;
+
+export type CueEase = [number, number, number, number] | "linear";
+
+export type CueTransition = {
+  duration: number;
+  ease: CueEase;
+};
+
+function seconds(ms: number): number {
+  return ms / 1000;
+}
+
+function fade(ms = REDUCED_FADE_MS): CueTransition {
+  return { duration: seconds(ms), ease: "linear" };
+}
+
+/** Read a token. Accepts `800ms`, `0.8s`, or a unitless number. */
+export function readCssNumber(name: string, fallback: number): number {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return fallback;
+  }
+  const raw = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (!raw) return fallback;
+  const value = Number.parseFloat(raw);
+  if (!Number.isFinite(value)) return fallback;
+  if (raw.endsWith("ms")) return value;
+  if (raw.endsWith("s")) return value * 1000;
+  return value;
+}
+
+/**
+ * Fraction of the drawer height Vaul should treat as a dismiss.
+ * 120px on a 600px sheet is 0.2. A sheet shorter than the threshold
+ * dismisses only after it has travelled its full height.
+ */
+export function sheetCloseThreshold(
+  drawerHeightPx: number,
+  dismissPx = SHEET_DISMISS_PX,
+): number {
+  if (!Number.isFinite(drawerHeightPx) || drawerHeightPx <= 0) return 1;
+  return Math.min(1, dismissPx / drawerHeightPx);
+}
+
+export function sheetMotion(reduced: boolean) {
+  const dismissPx = readCssNumber("--cb-sheet-dismiss-px", SHEET_DISMISS_PX);
+  const dim = readCssNumber("--cb-sheet-dim", 0.55);
+  if (reduced) {
+    return {
+      open: fade(),
+      close: fade(),
+      openMs: REDUCED_FADE_MS,
+      closeMs: REDUCED_FADE_MS,
+      dim,
+      dimFadeMs: REDUCED_FADE_MS,
+      dismissPx,
+      travel: "none" as const,
+    };
+  }
+  const openMs = readCssNumber("--cb-sheet-up", sheetTransition.open.duration * 1000);
+  const closeMs = readCssNumber("--cb-sheet-down", sheetTransition.close.duration * 1000);
+  const dimFadeMs = readCssNumber("--cb-sheet-dim-fade", 450);
+  return {
+    open: { duration: seconds(openMs), ease: cueboxEase },
+    close: { duration: seconds(closeMs), ease: cueboxEase },
+    openMs,
+    closeMs,
+    dim,
+    dimFadeMs,
+    dismissPx,
+    travel: "y" as const,
+  };
+}
+
+export function toastMotion(reduced: boolean) {
+  const stayMs = readCssNumber("--cb-toast-stay", 2800);
+  const radiusPx = readCssNumber("--cb-radius", 12);
+  if (reduced) {
+    return {
+      enter: fade(),
+      exit: fade(),
+      enterMs: REDUCED_FADE_MS,
+      exitMs: REDUCED_FADE_MS,
+      travelPx: 0,
+      stayMs,
+      radiusPx,
+    };
+  }
+  const enterMs = readCssNumber("--cb-toast-in", toastTransition.enter.duration * 1000);
+  const exitMs = readCssNumber("--cb-toast-out", toastTransition.exit.duration * 1000);
+  const travelPx = readCssNumber("--cb-toast-travel", 20);
+  return {
+    enter: { duration: seconds(enterMs), ease: cueboxEase },
+    exit: { duration: seconds(exitMs), ease: cueboxEase },
+    enterMs,
+    exitMs,
+    travelPx,
+    stayMs,
+    radiusPx,
+  };
+}
+
+export function searchMotion(reduced: boolean) {
+  const dim = SEARCH_DIM;
+  if (reduced) {
+    return {
+      open: fade(),
+      close: fade(),
+      openMs: REDUCED_FADE_MS,
+      closeMs: REDUCED_FADE_MS,
+      fromScale: 1,
+      dim,
+      travel: "none" as const,
+    };
+  }
+  const openMs = readCssNumber("--cb-search-open", searchTransition.open.duration * 1000);
+  const closeMs = readCssNumber("--cb-search-close", searchTransition.close.duration * 1000);
+  const fromScale = readCssNumber("--cb-search-from-scale", SEARCH_FROM_SCALE);
+  return {
+    open: { duration: seconds(openMs), ease: cueboxEase },
+    close: { duration: seconds(closeMs), ease: cueboxEase },
+    openMs,
+    closeMs,
+    fromScale,
+    dim,
+    travel: "scale" as const,
+  };
+}
+
+export function confirmMotion(reduced: boolean) {
+  const dim = readCssNumber("--cb-dialog-dim", 0.62);
+  const radiusPx = readCssNumber("--cb-radius-lg", 16);
+  if (reduced) {
+    return {
+      transition: fade(),
+      durationMs: REDUCED_FADE_MS,
+      fromScale: 1,
+      dim,
+      radiusPx,
+      travel: "none" as const,
+    };
+  }
+  const durationMs = readCssNumber("--cb-dialog-dur", 400);
+  const fromScale = readCssNumber("--cb-dialog-from-scale", 0.92);
+  return {
+    transition: { duration: seconds(durationMs), ease: cueboxEase },
+    durationMs,
+    fromScale,
+    dim,
+    radiusPx,
+    travel: "scale" as const,
+  };
+}
+
+export function pressMotion(reduced: boolean) {
+  if (reduced) {
+    return { scale: 1, downMs: 0, upMs: 0 };
+  }
+  return {
+    scale: readCssNumber("--cb-press-scale", 0.96),
+    downMs: readCssNumber("--cb-press-down", 120),
+    upMs: readCssNumber("--cb-press-up", 200),
+  };
+}
+
+export function screenMotion(reduced: boolean) {
+  if (reduced) {
+    return { fadeMs: REDUCED_FADE_MS, transition: fade() };
+  }
+  const fadeMs = readCssNumber("--cb-screen-fade", 400);
+  return {
+    fadeMs,
+    transition: { duration: seconds(fadeMs), ease: cueboxEase },
+  };
+}
+
+export function numberMotion(reduced: boolean) {
+  if (reduced) {
+    return { durationMs: 0, settled: true };
+  }
+  return {
+    durationMs: readCssNumber("--cb-numberflow", 400),
+    settled: false,
+  };
+}
+
+export function revealMotion(reduced: boolean) {
+  const durationMs = readCssNumber("--cb-synopsis-more", REDUCED_FADE_MS);
+  if (reduced) {
+    return {
+      durationMs: REDUCED_FADE_MS,
+      animateHeight: false,
+      transition: fade(),
+    };
+  }
+  return {
+    durationMs,
+    animateHeight: true,
+    transition: { duration: seconds(durationMs), ease: cueboxEase },
+  };
+}
+
+/**
+ * Programme settle (README §6.2): 8px rise, 70ms stagger, 300ms each, ease-out.
+ * Reduced motion shows the settled layout at once: no travel.
+ */
+export function programmeSettleMotion(reduced: boolean) {
+  if (reduced) {
+    return {
+      risePx: 0,
+      staggerMs: 0,
+      durationMs: 0,
+      travel: "none" as const,
+      ease: cueboxEase,
+    };
+  }
+  return {
+    risePx: readCssNumber("--cb-reco-settle-rise", 8),
+    staggerMs: readCssNumber("--cb-reco-settle-stagger", 70),
+    durationMs: readCssNumber("--cb-reco-settle-dur", 300),
+    travel: "y" as const,
+    ease: cueboxEase,
+  };
+}
+
+/**
+ * Review star fill (README §6.4), create sheet only.
+ * 70ms per star, 330ms ease-out fill, 30% bounce over 190ms,
+ * Saved 40ms after the bounce fading over 220ms, amber glow at 35%.
+ * Reduced motion is a 300ms crossfade: no bounce and no glow.
+ */
+export function starFillMotion(reduced: boolean) {
+  const staggerMs = readCssNumber("--cb-star-stagger", 70);
+  const fillMs = readCssNumber("--cb-star-fill", 330);
+  const bounceMs = readCssNumber("--cb-star-bounce-dur", 190);
+  const bounce = readCssNumber("--cb-star-bounce", 0.3);
+  const savedDelayMs = readCssNumber("--cb-star-saved-delay", 40);
+  const savedFadeMs = readCssNumber("--cb-star-saved-fade", 220);
+  const glow = readCssNumber("--cb-star-glow-intensity", 0.35);
+  if (reduced) {
+    return {
+      staggerMs: 0,
+      fillMs: 0,
+      bounceMs: 0,
+      bounce: 0,
+      savedDelayMs: 0,
+      savedFadeMs: REDUCED_FADE_MS,
+      glow: 0,
+      crossfadeMs: REDUCED_FADE_MS,
+      travel: "none" as const,
+    };
+  }
+  return {
+    staggerMs,
+    fillMs,
+    bounceMs,
+    bounce,
+    savedDelayMs,
+    savedFadeMs,
+    glow,
+    crossfadeMs: 0,
+    travel: "fill" as const,
+  };
+}
+
+export function batchMotion(reduced: boolean) {
+  const fadeMs = readCssNumber("--cb-watchlist-batch-fade", REDUCED_FADE_MS);
+  if (reduced) {
+    return { fadeMs: REDUCED_FADE_MS, staggerMs: 0 };
+  }
+  return {
+    fadeMs,
+    staggerMs: readCssNumber("--cb-watchlist-batch-stagger", 30),
+  };
+}
+
+/**
+ * Watchlist pill switch (README §6.5). The incoming grid starts while the
+ * outgoing one is still fading, so 400ms out and a 200ms delay overlap by 200ms.
+ * Reduced motion is a 300ms crossfade with no delay.
+ */
+export function watchlistSwitchMotion(reduced: boolean) {
+  if (reduced) {
+    const transition = fade();
+    return {
+      outMs: REDUCED_FADE_MS,
+      inMs: REDUCED_FADE_MS,
+      delayMs: 0,
+      out: transition,
+      in: transition,
+    };
+  }
+  const outMs = readCssNumber("--cb-watchlist-out", 400);
+  const inMs = readCssNumber("--cb-watchlist-in", 600);
+  const delayMs = readCssNumber("--cb-watchlist-overlap", 200);
+  return {
+    outMs,
+    inMs,
+    delayMs,
+    out: { duration: seconds(outMs), ease: cueboxEase },
+    in: { duration: seconds(inMs), ease: cueboxEase, delay: seconds(delayMs) },
+  };
+}

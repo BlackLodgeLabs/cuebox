@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cuebox — Watchlist · Crossfade and infinite scroll</title>
+  <link rel="stylesheet" href="watchlist.css">
+  <style>
+    html, body {
+      background: #E6E7EB !important;
+      color: #12141A !important;
+      font-family: "Archivo", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px 48px;
+    }
+    .lede { width: 390px; margin: 0 0 20px; }
+    .lede h1 {
+      font-family: "Big Shoulders", sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 30px;
+      margin-bottom: 6px;
+      color: #12141A;
+    }
+    .lede p { font-size: 13px; line-height: 18px; color: #3A3D44; }
+
+    #phone {
+      width: 390px;
+      height: 844px;
+      min-height: 844px;
+      padding-bottom: 0;
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #phone .bat b { background: var(--text); }
+    #phone .status {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 6;
+    }
+    #phone .chrome {
+      flex: 0 0 auto;
+      background: var(--bg);
+      z-index: 4;
+      padding-top: 54px;
+    }
+    #phone .status-chips .chip { cursor: pointer; }
+    #scroller {
+      display: block;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0;
+      gap: 0;
+      scrollbar-width: thin;
+      scrollbar-color: #2A2A2A transparent;
+    }
+    #scroller .tile { flex: none; width: auto; }
+    html.render #scroller { scrollbar-width: none; }
+    html.render #scroller::-webkit-scrollbar { display: none; }
+    #stage { position: relative; }
+    #gridOut {
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    #phone .tabbar {
+      position: relative;
+      left: auto; right: auto; bottom: auto;
+      flex: 0 0 90px;
+      height: 90px;
+    }
+
+    .loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      color: var(--teal);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .loader.on {
+      height: 56px;
+      opacity: 1;
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(42, 154, 148, 0.28);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      flex: 0 0 16px;
+      box-shadow: none;
+    }
+    .endcap {
+      display: none;
+      text-align: center;
+      padding: 12px 16px 20px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .endcap.on { display: block; }
+
+    #finger {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      margin: -14px 0 0 -14px;
+      border-radius: 50%;
+      border: 2px solid rgba(243, 237, 228, 0.95);
+      background: rgba(243, 237, 228, 0.32);
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0;
+      transform: scale(0.7);
+    }
+
+    .controls { width: 390px; margin-top: 24px; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn-main {
+      flex: 1 1 0;
+      height: 44px;
+      border: 1px solid #C8CACF;
+      border-radius: 12px;
+      background: #fff;
+      color: #12141A;
+      font-family: "Archivo", sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-main:hover { border-color: #12141A; }
+    .btn-main:active { background: #F3F3F5; }
+    .btn-main.primary { background: #12141A; color: #F3EDE4; border-color: #12141A; }
+    .btn-main.primary:hover { background: #1C1E24; }
+    .control { margin-bottom: 16px; }
+    .readout {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+    .readout .label { font-size: 13px; font-weight: 600; color: #12141A; }
+    .readout .value {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      color: #12141A;
+    }
+    .readout .unit {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: #3A3D44;
+      margin-left: 6px;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-row button {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid #C8CACF;
+      border-radius: 12px;
+      background: #fff;
+      color: #12141A;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .slider-row button:hover { border-color: #12141A; }
+    .slider-row button:active { background: #F3F3F5; }
+    input[type="range"] {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 44px;
+      margin: 0;
+      accent-color: #E07A28;
+      cursor: pointer;
+    }
+    select {
+      font-family: "Archivo", sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      height: 36px;
+      border: 1px solid #C8CACF;
+      border-radius: 10px;
+      background: #fff;
+      color: #12141A;
+      padding: 0 8px;
+      cursor: pointer;
+    }
+    .controls .toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0 0;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      font-weight: 600;
+      color: #12141A;
+      cursor: pointer;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .controls .toggle input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      flex: 0 0 18px;
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      border: 1.5px solid #12141A;
+      border-radius: 4px;
+      background: #fff;
+      display: grid;
+      place-content: center;
+    }
+    .controls .toggle input[type="checkbox"]:checked {
+      background: #E07A28;
+      border-color: #E07A28;
+    }
+    .controls .toggle input[type="checkbox"]:checked::after {
+      content: "";
+      width: 9px;
+      height: 5px;
+      border: 2px solid #fff;
+      border-top: 0;
+      border-right: 0;
+      transform: rotate(-45deg) translate(0, -1px);
+    }
+    .ends {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 54px 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: #3A3D44;
+    }
+    .controls .hint {
+      display: block;
+      margin-top: 16px;
+      width: 100%;
+      font-size: 12px;
+      line-height: 18px;
+      color: #3A3D44;
+    }
+    .controls .hint strong { color: #12141A; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="lede">
+    <h1>Filter crossfade</h1>
+    <p>Tap Unwatched, Watched or Archived to crossfade the grid. Scroll down and the next page loads on its own. Press Replay to return to the top of Unwatched.</p>
+  </div>
+
+  <div class="phone" id="phone">
+    <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+    <div class="chrome">
+      <header class="hdr">
+        <span class="wordmark" aria-label="Cuebox."><span class="cue">Cue</span><span class="box">box</span><span class="stop">.</span></span>
+        <div class="search-field" role="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16.2 16.2 20 20"/></svg><span class="ph">Search films</span></div>
+      </header>
+      <div class="page-head">
+        <div>
+          <h1>Watchlist</h1>
+          <p class="count" id="count">239 unwatched</p>
+        </div>
+        <div class="tools"><button class="sort-btn" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h8M8 17h4"/><path d="M4 7v10"/></svg>Date added</button><button class="filter-btn" type="button" aria-label="Filters"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button></div>
+      </div>
+      <div class="status-chips" role="tablist" aria-label="List" id="pills">
+        <button class="chip on" type="button" data-list="unwatched" aria-pressed="true">Unwatched</button>
+        <button class="chip" type="button" data-list="watched" aria-pressed="false">Watched</button>
+        <button class="chip" type="button" data-list="archived" aria-pressed="false">Archived</button>
+      </div>
+    </div>
+    <div id="scroller">
+      <div id="stage">
+        <div class="grid" id="gridOut" hidden></div>
+        <div class="grid" id="grid"></div>
+      </div>
+      <div class="loader" id="loader" aria-live="polite"><i class="spinner" id="spinner"></i><span>Loading more</span></div>
+      <div class="endcap" id="endcap">That’s all in this preview</div>
+    </div>
+    <nav class="tabbar" aria-label="Main">
+      <div class="tabs">
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 11 12 4.5 19.5 11v8.5a1 1 0 0 1-1 1h-4v-6h-5v6h-4a1 1 0 0 1-1-1V11Z"/></svg><span>Home</span></div>
+        <div class="tab on"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M7 4.5h10v16l-5-3.2-5 3.2V4.5Z"/></svg><span>Watchlist</span></div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.6"/><path d="M8 5.5v13M16 5.5v13M3.5 9.5h4M16.5 9.5h4M3.5 14.5h4M16.5 14.5h4"/></svg><span>Recommend</span></div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.35" fill="currentColor" stroke="none"/></svg><span>More</span></div>
+      </div>
+      <div class="home-ind"><i></i></div>
+    </nav>
+    <div id="finger" aria-hidden="true"></div>
+  </div>
+
+  <div class="controls">
+    <div class="btn-row">
+      <button type="button" class="btn-main primary" id="replay">Replay</button>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Fade out</span><div><span class="value" id="outVal">400</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="out" data-dir="-1" aria-label="Shorter fade out">−</button>
+        <input type="range" id="out" min="0" max="400" step="10" value="400" aria-label="Crossfade out duration in milliseconds">
+        <button type="button" data-field="out" data-dir="1" aria-label="Longer fade out">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>400</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Fade in</span><div><span class="value" id="inVal">600</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="in" data-dir="-1" aria-label="Shorter fade in">−</button>
+        <input type="range" id="in" min="0" max="600" step="10" value="600" aria-label="Crossfade in duration in milliseconds">
+        <button type="button" data-field="in" data-dir="1" aria-label="Longer fade in">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>600</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Overlap / gap</span><div><span class="value" id="overlapVal">200</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="overlap" data-dir="-1" aria-label="Less overlap">−</button>
+        <input type="range" id="overlap" min="-200" max="200" step="10" value="200" aria-label="Overlap in milliseconds. Positive means the new grid starts before the old one has gone. Negative leaves a gap.">
+        <button type="button" data-field="overlap" data-dir="1" aria-label="More overlap">+</button>
+      </div>
+      <div class="ends"><span>−200 gap</span><span>200 overlap</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Easing</span>
+        <select id="ease" aria-label="Crossfade easing">
+          <option value="cuebox" selected>Ease out (recommended)</option>
+          <option value="inOut">Ease in-out</option>
+          <option value="decel">Decelerate</option>
+          <option value="emphasized">Emphasized</option>
+          <option value="linear">Linear</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">New-batch fade</span><div><span class="value" id="batchVal">300</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="batch" data-dir="-1" aria-label="Faster batch fade">−</button>
+        <input type="range" id="batch" min="80" max="600" step="10" value="300" aria-label="New batch fade duration in milliseconds">
+        <button type="button" data-field="batch" data-dir="1" aria-label="Slower batch fade">+</button>
+      </div>
+      <div class="ends"><span>80</span><span>600</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Per-poster stagger</span><div><span class="value" id="staggerVal">30</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="stagger" data-dir="-1" aria-label="Less stagger">−</button>
+        <input type="range" id="stagger" min="0" max="120" step="5" value="30" aria-label="Per-poster stagger for a new batch, in milliseconds. Zero fades all at once.">
+        <button type="button" data-field="stagger" data-dir="1" aria-label="More stagger">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>120</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Fetch delay</span><div><span class="value" id="fetchVal">600</span><span class="unit">ms</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="fetch" data-dir="-1" aria-label="Shorter fetch">−</button>
+        <input type="range" id="fetch" min="0" max="2000" step="50" value="600" aria-label="Simulated fetch delay in milliseconds">
+        <button type="button" data-field="fetch" data-dir="1" aria-label="Longer fetch">+</button>
+      </div>
+      <div class="ends"><span>0</span><span>2000</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Load trigger</span><div><span class="value" id="triggerVal">600</span><span class="unit">px</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="trigger" data-dir="-1" aria-label="Later trigger">−</button>
+        <input type="range" id="trigger" min="100" max="1200" step="50" value="600" aria-label="How far from the bottom, in pixels, before the next page starts loading">
+        <button type="button" data-field="trigger" data-dir="1" aria-label="Earlier trigger">+</button>
+      </div>
+      <div class="ends"><span>100</span><span>1200</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Page size</span><div><span class="value" id="pageVal">18</span><span class="unit">films</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="page" data-dir="-1" aria-label="Fewer films">−</button>
+        <input type="range" id="page" min="6" max="36" step="3" value="18" aria-label="Number of films in each page">
+        <button type="button" data-field="page" data-dir="1" aria-label="More films">+</button>
+      </div>
+      <div class="ends"><span>6</span><span>36</span></div>
+    </div>
+
+    <div class="control">
+      <div class="readout"><span class="label">Speed</span><div><span class="value" id="speedVal">1.00</span><span class="unit">×</span></div></div>
+      <div class="slider-row">
+        <button type="button" data-field="speed" data-dir="-1" aria-label="Slower">−</button>
+        <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1" aria-label="Speed multiplier">
+        <button type="button" data-field="speed" data-dir="1" aria-label="Faster">+</button>
+      </div>
+      <div class="ends"><span>0.25×</span><span>2×</span></div>
+    </div>
+
+    <label class="toggle" style="margin-top:4px">
+      <input type="checkbox" id="reduced"> Preview reduced motion
+    </label>
+    <p class="hint">Locked values are a calm <strong>400ms</strong> fade-out and <strong>600ms</strong> fade-in, overlapping by <strong>200ms</strong>, with the same ease-out as the other locked screens. New pages fade in over <strong>300ms</strong>, staggered by <strong>30ms</strong> per poster. The next page starts loading <strong>600px</strong> from the bottom, after a <strong>600ms</strong> stand-in wait. The pills have no counts — the total stays under the title, as locked. Changing a control does not replay on its own; press Replay or switch a pill to see the new values. Page size applies the next time you Replay or switch lists.</p>
+  </div>
+
+  <script src="option-2.js"></script>
+</body>
+</html>

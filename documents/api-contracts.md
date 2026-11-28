@@ -271,6 +271,7 @@ GET /films
 |`statuses`         |string |—           |Comma-separated exact `film_status` set (e.g. `active,pending_watch_review,watched`). Unlike singular `status=watched`, does **not** expand `watched` to include `pending_watch_review` — list both explicitly when needed. Cannot be combined with `status`. Empty / blank tokens → `VALIDATION_ERROR`.|
 |`enrichment_status`|string |—           |Filter by `enrichment_status` (see enum in §3.2)          |
 |`on_watchlist`     |boolean|`false`     |When `true`, only films with an active watchlist entry    |
+|`on_my_services`   |boolean|`false`     |When `true`, only films whose cached flatrate provider ids overlap the user's saved services for the configured country. Reads `film_streaming_availability`. Does not call TMDB. An empty saved list matches nothing. Combines with the other filters, sorts, and pagination.|
 |`search`           |string |—           |Case-insensitive substring match on title                 |
 |`year`             |integer|—           |Exact release year                                        |
 |`year_from`        |integer|—           |Minimum release year (inclusive)                          |
@@ -282,7 +283,7 @@ GET /films
 |`limit`            |integer|20          |Page size                                                 |
 |`offset`           |integer|0           |Page offset                                               |
 
-`sort=watched_at` orders by each film's date watched: the newest of every `film_watches.watched_at` (completed and pending) and any `staged_watched_dates`. An unknown watched date (`source=letterboxd_import` and the day `1984-09-28`) is ignored on `watched_at` and inside the staged list. Later staged days on that same row still count. The stored row is not rewritten. A staged value that is not an ISO date (`YYYY-MM-DD`) is ignored. A manual or RSS watch on that calendar day still sorts as that day. Dateless films sort last in both directions (`NULLS LAST`). Films that share a date watched, including the dateless group, break ties by title ascending, then film id. This does not change `latest_watched_at`.
+`sort=watched_at` orders by each film's date watched: the newest of every `film_watches.watched_at` (completed and pending) and any `staged_watched_dates`. An unknown watched date (`source=letterboxd_import` and the day `1984-09-28`) is ignored on `watched_at` and inside the staged list. A null `watched_at` is dateless in the same way and sorts last in both directions. Later staged days on that same row still count. The stored row is not rewritten. A staged value that is not an ISO date (`YYYY-MM-DD`) is ignored. A manual or RSS watch on that calendar day still sorts as that day. Dateless films sort last in both directions (`NULLS LAST`). Films that share a date watched, including the dateless group, break ties by title ascending, then film id. This does not change `latest_watched_at` for a stored sentinel day. A film whose only watch dates are null reports `latest_watched_at: null`.
 
 #### Response `200 OK`
 
@@ -301,6 +302,9 @@ GET /films
       "director": "Robin Hardy",
       "runtime": 88,
       "genres": ["Horror", "Mystery"],
+      "synopsis": "A devoutly Christian police officer is sent to a remote island to investigate a missing girl.",
+      "tones": ["Eerie", "Unsettling"],
+      "emotional_outcomes": ["Disturbed", "Unsettled"],
       "created_at": "2024-11-01T14:30:00Z",
       "updated_at": "2024-11-01T15:00:00Z",
       "removed_at": null,
@@ -333,10 +337,13 @@ GET /films
 |`director`         |string, nullable |Director name                    |
 |`runtime`          |integer, nullable|Runtime in minutes               |
 |`genres`           |array of string  |Genres from TMDB                 |
+|`synopsis`         |string, nullable |Overview from metadata. Empty when the film has no metadata |
+|`tones`            |array of string  |Semantic tones. Empty when the film has no semantic profile |
+|`emotional_outcomes`|array of string |Semantic emotional outcomes. Empty when the film has no semantic profile |
 |`created_at`       |string           |ISO 8601                         |
 |`updated_at`       |string           |ISO 8601                         |
 |`removed_at`       |string, nullable |Most recent watchlist `removed_at` when listing watched/archived (singular `status` or multi `statuses` that include those values); omitted otherwise |
-|`latest_watched_at`|date, nullable   |Latest finalized watch record date when listing watched/pending/archived extras |
+|`latest_watched_at`|date, nullable   |Latest non-null watch date when listing watched/pending/archived extras. Null `watched_at` values are skipped. A stored Letterboxd unknown-date sentinel is still returned. |
 |`watch_review_incomplete`|boolean  |`true` when `status=pending_watch_review` |
 |`pending_watch`    |object, nullable |Pending watch-review prefill when listing watched/archived or `statuses` including `pending_watch_review` / `watched` / `archived` |
 
@@ -350,7 +357,7 @@ GET /films
 
 ### 4.1.1 Set Film Status
 
-Manually transition a film between `active`, `pending_watch_review`, and `archived`. Direct `active → watched` is forbidden — use `POST /films/{film_id}/watch-review` to complete a watch diary entry. Forbidden transitions (`watched` ↔ `archived`, `pending_watch_review` ↔ `archived`) return `409`. Restoring to `active` enforces the 500-film active watchlist cap.
+Manually transition a film between `active`, `pending_watch_review`, and `archived`. Direct `active → watched` via this endpoint is forbidden — use `POST /films/{film_id}/watches` (star tap) or `POST /films/{film_id}/watch-review` (pending draft) to log a watch. Forbidden transitions (`watched` ↔ `archived`, `pending_watch_review` ↔ `archived`, `watched → pending_watch_review`) return `409`. Restoring to `active` enforces the 500-film active watchlist cap.
 
 ```
 POST /films/{film_id}/status
@@ -368,7 +375,7 @@ POST /films/{film_id}/status
 { "status": "active" }
 ```
 
-Allowed values: `active` | `pending_watch_review` | `archived`. (`watched` is only reachable via watch-review completion.)
+Allowed values: `active` | `pending_watch_review` | `archived`. (`watched` is reached by `POST /films/{film_id}/watches` or by completing a watch review.)
 
 #### Response `200 OK`
 
@@ -434,13 +441,46 @@ DELETE /films/{film_id}/watch-review
 
 Deletes the pending watch record and reverts film to `active` (reactivates watchlist entry). Returns `204`.
 
+#### Log a watch (star tap)
+
+```
+POST /films/{film_id}/watches
+```
+
+```json
+{
+  "score": 4.5,
+  "watched_at": null,
+  "notes": "Optional diary note"
+}
+```
+
+`score` is required (0.5–5.0, half steps). `watched_at` and `notes` may be omitted. An omitted or null `watched_at` stores null and never writes the Letterboxd unknown-date sentinel (`1984-09-28`). Future dates are rejected (`422`).
+
+Creates a finalized `manual` watch and returns `FilmDetail` (the new watch id is on `watches`):
+
+- `active`: deactivates the active watchlist entry and marks the film `watched`.
+- `pending_watch_review`: finalizes the existing draft with these values. Does not insert a second row for that draft.
+- `watched`: appends another watch. Status stays `watched`.
+- `archived`: `409`.
+
+A second finalized watch on the same non-null date is `409`.
+
 #### Edit watch record
 
 ```
 PATCH /films/{film_id}/watches/{watch_id}
 ```
 
-Same body as complete. Updates a finalized watch record only.
+Partial body: any of `score`, `watched_at`, and `notes` may be omitted and are left unchanged. `"watched_at": null` clears the date. Future dates are rejected (`422`). Updates a finalized watch record only (`409` for a pending draft). Returns the watch.
+
+#### Delete a watch
+
+```
+DELETE /films/{film_id}/watches/{watch_id}
+```
+
+Deletes a finalized watch and returns `204`. The film stays `watched` even when this was its only watch. A pending draft is `409` (cancel with `DELETE /films/{film_id}/watch-review`). Unknown film or a watch that belongs to another film is `404`.
 
 -----
 
@@ -742,7 +782,8 @@ GET /films/{film_id}/watch-providers
           "provider_id": 8,
           "provider_name": "Netflix",
           "logo_url": "https://image.tmdb.org/t/p/w92/...",
-          "display_priority": 1
+          "display_priority": 1,
+          "subscribed": false
         }
       ]
     }
@@ -751,6 +792,8 @@ GET /films/{film_id}/watch-providers
 ```
 
 Empty category groups are omitted. When the country object exists but all monetization arrays are empty, returns `200` with `categories: []`.
+
+Within each category, providers the user has saved (`subscribed: true`) are listed before the others. Display priority still orders providers inside each of those two groups. A successful response for the configured country also writes the film's flatrate ids into `film_streaming_availability` when that row is missing or older than `watch_providers.availability_max_age_hours`. That write is not a list query. `GET /films` never calls TMDB for this.
 
 #### Errors
 
@@ -807,6 +850,120 @@ POST /watchlist/films
 |`NOT_FOUND`     |404 |Invalid TMDB movie ID           |
 |`CONFLICT`      |409 |TMDB ID already linked to another film |
 |`PROVIDER_ERROR`|502 |TMDB HTTP failure               |
+
+-----
+
+### 4.9 Close to this
+
+Unwatched watchlist films nearest to a film's semantic embedding. Compares the film's active `film_embeddings` row (cosine distance) to other films that are `status=active` and have an active watchlist entry. The film itself is excluded. A film with no embedding for the active version returns an empty list.
+
+```
+GET /films/{film_id}/similar
+```
+
+#### Query Parameters
+
+|Parameter|Type|Default|Description|
+|---------|----|-------|-----------|
+|`limit`  |int |6      |1–20 neighbours|
+
+#### Response `200 OK`
+
+A JSON array of `FilmSummary` objects, each with `semantic_line` (the film's semantic summary, or `null`).
+
+```json
+[
+  {
+    "id": "f1a2b3c4-...",
+    "title": "Near Film",
+    "year": 1999,
+    "letterboxd_uri": "https://letterboxd.com/film/near-film/",
+    "status": "active",
+    "enrichment_status": "ready",
+    "tmdb_id": 603,
+    "poster_url": "https://image.tmdb.org/t/p/w500/poster.jpg",
+    "director": "Director",
+    "runtime": 120,
+    "genres": ["Drama"],
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-01-01T00:00:00Z",
+    "semantic_line": "A rain-soaked noir about loyalty."
+  }
+]
+```
+
+#### Errors
+
+|Code              |HTTP|Trigger              |
+|------------------|----|---------------------|
+|`NOT_FOUND`       |404 |`film_id` not found  |
+|`VALIDATION_ERROR`|400 |`limit` outside 1–20 |
+
+-----
+
+### 4.10 Film Trailer
+
+Best YouTube video for a film from TMDB `/movie/{id}/videos`. Preference order: official Trailer, then Teaser (official before unofficial), then an unofficial Trailer. Newest `published_at` wins within a rank. No matching video, or no `tmdb_id`, returns `url: null`.
+
+```
+GET /films/{film_id}/trailer
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "url": "https://www.youtube.com/watch?v=official-trailer",
+  "name": "Official Trailer",
+  "site": "YouTube"
+}
+```
+
+#### Errors
+
+|Code            |HTTP|Trigger                                      |
+|----------------|----|---------------------------------------------|
+|`NOT_FOUND`     |404 |`film_id` not found                          |
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure                            |
+|`PROVIDER_ERROR`|503 |`TMDB_API_KEY` missing or TMDB not configured|
+
+-----
+
+### 4.11 TMDB Film Page
+
+Lighter page for a TMDB movie that may not be on the watchlist. Built from TMDB movie details, credits, and the trailer selection in §4.10. When the TMDB id is already stored on a Cuebox film, `film_id` and `status` are set so Search can open the full detail page.
+
+```
+GET /films/tmdb/{tmdb_id}
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "tmdb_id": 603,
+  "title": "The Matrix",
+  "year": 1999,
+  "overview": "A computer hacker learns about the true nature of reality.",
+  "backdrop_url": "https://image.tmdb.org/t/p/w780/backdrop.jpg",
+  "poster_url": "https://image.tmdb.org/t/p/w500/poster.jpg",
+  "genres": ["Action", "Science Fiction"],
+  "runtime": 136,
+  "director": "Lana Wachowski",
+  "tmdb_rating": 8.7,
+  "trailer_url": "https://www.youtube.com/watch?v=official-trailer",
+  "film_id": null,
+  "status": null
+}
+```
+
+#### Errors
+
+|Code            |HTTP|Trigger                                      |
+|----------------|----|---------------------------------------------|
+|`NOT_FOUND`     |404 |TMDB has no movie for `tmdb_id`              |
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure                            |
+|`PROVIDER_ERROR`|503 |`TMDB_API_KEY` missing or TMDB not configured|
 
 -----
 
@@ -1084,6 +1241,54 @@ GET /sync/rss/status
 |`last_polled_at`            |string, nullable |ISO 8601; null if never polled           |
 |`last_poll_status`          |string, nullable |`success` | `error`; null if never polled|
 |`events_processed_last_poll`|integer, nullable|Count of events applied in the last poll |
+
+-----
+
+### 6.4 My services
+
+The user's chosen TMDB provider ids for the configured country (`watch_providers.country_code`, GB). Countries other than that one are out of scope.
+
+```
+GET /settings/services
+PUT /settings/services
+GET /settings/services/catalog
+```
+
+#### `GET /settings/services` and `PUT /settings/services`
+
+`PUT` replaces the selection. Ids must be positive integers, duplicates are dropped, and the stored list is returned in ascending id order. An empty list clears the selection. At most 100 ids.
+
+```json
+{ "country_code": "GB", "provider_ids": [8, 337] }
+```
+
+`PUT` body is `{ "provider_ids": [8, 337] }`. A non-positive id is `VALIDATION_ERROR` (400).
+
+#### `GET /settings/services/catalog`
+
+Selectable movie providers for the configured country, from TMDB's provider list, including logo URLs. Sorted by `display_priority`, then name.
+
+```json
+{
+  "country_code": "GB",
+  "providers": [
+    {
+      "provider_id": 8,
+      "provider_name": "Netflix",
+      "logo_url": "https://image.tmdb.org/t/p/w92/netflix.jpg",
+      "display_priority": 1
+    }
+  ]
+}
+```
+
+|Code            |HTTP|Trigger                                      |
+|----------------|----|---------------------------------------------|
+|`VALIDATION_ERROR`|400|A provider id is not a positive integer, or more than 100 ids|
+|`PROVIDER_ERROR`|502 |TMDB HTTP failure on the catalog             |
+|`PROVIDER_ERROR`|503 |`TMDB_API_KEY` missing or TMDB not configured|
+
+The flatrate cache for watchlist films is filled when enrichment finishes and refreshed by the scheduler (same process as RSS, every 900 seconds, only rows older than `availability_max_age_hours`). There is no separate refresh route.
 
 -----
 

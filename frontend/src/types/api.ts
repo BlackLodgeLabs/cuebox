@@ -83,7 +83,7 @@ export type FilmStatus = "active" | "pending_watch_review" | "watched" | "archiv
 export interface FilmWatch {
   id: string;
   score: number | null;
-  watched_at: string;
+  watched_at: string | null;
   notes: string | null;
   source: "manual" | "rss" | "letterboxd_import";
   is_pending: boolean;
@@ -103,12 +103,21 @@ export interface FilmSummary {
   director: string | null;
   runtime: number | null;
   genres: string[];
+  backdrop_url: string | null;
+  synopsis?: string | null;
+  tones?: string[];
+  emotional_outcomes?: string[];
+  latest_score: number | null;
   created_at: string;
   updated_at: string;
   removed_at?: string | null;
   latest_watched_at?: string | null;
   watch_review_incomplete?: boolean;
   pending_watch?: FilmWatch | null;
+}
+
+export interface SimilarFilm extends FilmSummary {
+  semantic_line: string | null;
 }
 
 export interface SetFilmStatusRequest {
@@ -173,6 +182,8 @@ export interface WatchProviderItem {
   provider_name: string;
   logo_url: string | null;
   display_priority: number;
+  /** True when this provider is one of the user's saved services. */
+  subscribed?: boolean;
 }
 
 export type WatchProviderCategoryType = "flatrate" | "rent" | "buy" | "ads";
@@ -189,6 +200,28 @@ export interface FilmWatchProvidersResponse {
   country_code: string;
   link: string | null;
   categories: WatchProviderCategory[];
+}
+
+export interface FilmTrailer {
+  url: string | null;
+  name: string | null;
+  site: string | null;
+}
+
+export interface TmdbFilm {
+  tmdb_id: number;
+  title: string;
+  year: number | null;
+  overview: string | null;
+  backdrop_url: string | null;
+  poster_url: string | null;
+  genres: string[];
+  runtime: number | null;
+  director: string | null;
+  tmdb_rating: number | null;
+  trailer_url: string | null;
+  film_id: string | null;
+  status: FilmStatus | null;
 }
 
 export interface CandidatePayload {
@@ -363,6 +396,8 @@ export interface FilmResult {
   tmdb_rating: number | null;
   rotten_tomatoes_score: number | null;
   poster_url: string | null;
+  backdrop_url: string | null;
+  genres: string[];
   explanation: FilmExplanation;
 }
 
@@ -390,7 +425,7 @@ export interface RecommendationDetailResponse extends RecommendationResponse {
   profile_summary?: ProfileSummary;
 }
 
-export type WatchStatusFilter = "watched" | "unwatched";
+export type WatchStatusFilter = "watched" | "unwatched" | "archived";
 
 export interface HistoryCard {
   session_id: string;
@@ -410,7 +445,9 @@ export type FilmSortField =
   | "year"
   | "created_at"
   | "enrichment_status"
-  | "watched_at";
+  | "watched_at"
+  | "runtime"
+  | "rating";
 export type SortDirection = "asc" | "desc";
 
 export interface FilmsQueryParams {
@@ -420,6 +457,10 @@ export interface FilmsQueryParams {
   enrichment_status?: string;
   on_watchlist?: boolean;
   search?: string;
+  /** Comma-separated genre names. Any-of, case-insensitive. */
+  genres?: string | string[];
+  /** Questionnaire runtime ceiling. Omitted or `any` does not filter. */
+  runtime?: RuntimePreference;
   year?: number;
   year_from?: number;
   year_to?: number;
@@ -427,8 +468,27 @@ export interface FilmsQueryParams {
   created_to?: string;
   sort?: FilmSortField;
   sort_dir?: SortDirection;
+  /** When true, only films whose cached flatrate ids overlap saved services. */
+  on_my_services?: boolean;
   limit?: number;
   offset?: number;
+}
+
+export interface StreamingServicesResponse {
+  country_code: string;
+  provider_ids: number[];
+}
+
+export interface StreamingCatalogItem {
+  provider_id: number;
+  provider_name: string;
+  logo_url: string | null;
+  display_priority: number;
+}
+
+export interface StreamingCatalogResponse {
+  country_code: string;
+  providers: StreamingCatalogItem[];
 }
 
 export interface ReviewRequiredQueryParams {
@@ -452,10 +512,16 @@ export interface CompleteWatchReviewRequest {
   notes?: string;
 }
 
-export interface UpdateWatchRequest {
+export interface CreateWatchRequest {
   score: number;
-  watched_at: string;
-  notes?: string;
+  watched_at?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateWatchRequest {
+  score?: number;
+  watched_at?: string | null;
+  notes?: string | null;
 }
 
 export interface PendingReviewCountResponse {

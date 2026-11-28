@@ -1,27 +1,42 @@
 import type { Metadata, Viewport } from "next";
-import { Cabin, Libre_Franklin, Space_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { AppShell } from "@/components/app-shell";
 import { Providers } from "@/components/providers";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const cabin = Cabin({
-  subsets: ["latin"],
-  variable: "--font-cabin",
+const bigShoulders = localFont({
+  src: "../fonts/BigShoulders-Variable.ttf",
+  variable: "--font-big-shoulders",
   display: "swap",
+  weight: "100 900",
+  adjustFontFallback: false,
 });
 
-const libreFranklin = Libre_Franklin({
-  subsets: ["latin"],
-  variable: "--font-libre-franklin",
+const archivo = localFont({
+  src: "../fonts/Archivo-Variable.ttf",
+  variable: "--font-archivo",
   display: "swap",
+  weight: "100 900",
+  adjustFontFallback: false,
 });
 
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-space-mono",
+const ibmPlexMono = localFont({
+  src: [
+    {
+      path: "../fonts/IBMPlexMono-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/IBMPlexMono-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+  ],
+  variable: "--font-ibm-plex-mono",
   display: "swap",
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {
@@ -41,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cabin.variable} ${libreFranklin.variable} ${spaceMono.variable}`}
+      className={`${bigShoulders.variable} ${archivo.variable} ${ibmPlexMono.variable}`}
       suppressHydrationWarning
     >
       <head>

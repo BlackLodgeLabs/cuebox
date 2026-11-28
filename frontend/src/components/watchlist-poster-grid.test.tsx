@@ -1,5 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WatchlistPosterGrid } from "@/components/watchlist-poster-grid";
 import type { FilmSummary } from "@/types/api";
@@ -13,7 +12,6 @@ vi.mock("next/link", () => ({
     children: React.ReactNode;
     href: string;
     className?: string;
-    "aria-label"?: string;
   }) => (
     <a href={href} {...props}>
       {children}
@@ -27,143 +25,134 @@ vi.mock("next/image", () => ({
 
 const baseFilm: FilmSummary = {
   id: "film-1",
-  title: "Test Film",
-  year: 1999,
-  letterboxd_uri: "https://letterboxd.com/film/test/",
+  title: "The Witch",
+  year: 2015,
+  letterboxd_uri: "https://letterboxd.com/film/the-witch/",
   status: "active",
   enrichment_status: "ready",
   poster_url: null,
   director: null,
-  runtime: null,
-  genres: [],
+  runtime: 92,
+  genres: ["Horror"],
+  backdrop_url: null,
+  latest_score: null,
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
 };
 
+function films(count: number): FilmSummary[] {
+  return Array.from({ length: count }, (_, index) => ({
+    ...baseFilm,
+    id: `film-${index}`,
+    title: `Film ${index}`,
+  }));
+}
+
 describe("WatchlistPosterGrid", () => {
   afterEach(() => {
     cleanup();
+    delete (window as { matchMedia?: unknown }).matchMedia;
   });
 
-  it("renders poster + title only without year/enrichment/date metadata", () => {
-    const { container } = render(
-      <WatchlistPosterGrid
-        films={[baseFilm]}
-        tab="active"
-        onStatusTransition={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText("Test Film")).toBeInTheDocument();
-    expect(screen.getByText("NO POSTER")).toBeInTheDocument();
-    expect(container.textContent).not.toMatch(/1999/);
-    expect(container.textContent).not.toMatch(/Ready/i);
-    expect(container.textContent).not.toMatch(/2024-01-01/);
-    expect(container.textContent).not.toMatch(/Added/i);
-  });
-
-  it("links poster and title to film detail with tab", () => {
-    render(
-      <WatchlistPosterGrid
-        films={[baseFilm]}
-        tab="watched"
-        onStatusTransition={vi.fn()}
-      />,
-    );
-
-    const links = screen.getAllByRole("link");
-    expect(links.some((link) => link.getAttribute("href") === "/watchlist/film-1?tab=watched")).toBe(
-      true,
-    );
-  });
-
-  it("opens ⋯ menu with Mark watched / Archive for active films", async () => {
-    const user = userEvent.setup();
-    const onMarkWatched = vi.fn();
-
-    render(
-      <WatchlistPosterGrid
-        films={[baseFilm]}
-        tab="active"
-        onStatusTransition={vi.fn()}
-        onMarkWatched={onMarkWatched}
-      />,
-    );
-
-    const trigger = screen.getByRole("button", { name: /Actions for Test Film/i });
-    expect(trigger.className).toMatch(/min-h-\[44px]/);
-    expect(trigger.className).toMatch(/min-w-\[44px]/);
-
-    await user.click(trigger);
-    expect(await screen.findByRole("menuitem", { name: /Mark watched/i })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: /^Archive$/i })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("menuitem", { name: /Mark watched/i }));
-    expect(onMarkWatched).toHaveBeenCalledWith(baseFilm);
-  });
-
-  it("shows Return to watchlist for watched films", async () => {
-    const user = userEvent.setup();
-    const onStatusTransition = vi.fn();
-
-    render(
-      <WatchlistPosterGrid
-        films={[{ ...baseFilm, status: "watched" }]}
-        tab="watched"
-        onStatusTransition={onStatusTransition}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: /Actions for Test Film/i }));
-    await user.click(await screen.findByRole("menuitem", { name: /Return to watchlist/i }));
-    expect(onStatusTransition).toHaveBeenCalledWith("film-1", "active");
-  });
-
-  it("shows Re-enable on watchlist for archived films", async () => {
-    const user = userEvent.setup();
-    const onStatusTransition = vi.fn();
-
-    render(
-      <WatchlistPosterGrid
-        films={[{ ...baseFilm, status: "archived" }]}
-        tab="archived"
-        onStatusTransition={onStatusTransition}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: /Actions for Test Film/i }));
-    await user.click(await screen.findByRole("menuitem", { name: /Re-enable on watchlist/i }));
-    expect(onStatusTransition).toHaveBeenCalledWith("film-1", "active");
-  });
-
-  it("does not navigate when ⋯ is clicked", () => {
-    render(
-      <WatchlistPosterGrid
-        films={[baseFilm]}
-        tab="active"
-        onStatusTransition={vi.fn()}
-      />,
-    );
-
-    const trigger = screen.getByRole("button", { name: /Actions for Test Film/i });
-    const clickEvent = new MouseEvent("click", { bubbles: true, cancelable: true });
-    const preventSpy = vi.spyOn(clickEvent, "preventDefault");
-    const stopSpy = vi.spyOn(clickEvent, "stopPropagation");
-    fireEvent(trigger, clickEvent);
-    expect(preventSpy).toHaveBeenCalled();
-    expect(stopSpy).toHaveBeenCalled();
-  });
-
-  it("keeps grid list role and per-film title link", () => {
-    render(
-      <WatchlistPosterGrid
-        films={[baseFilm]}
-        tab="active"
-        onStatusTransition={vi.fn()}
-      />,
-    );
+  it("shows a poster, the title, and year · runtime in a 3-column grid", () => {
+    render(<WatchlistPosterGrid films={[baseFilm]} tab="active" />);
 
     const grid = screen.getByTestId("watchlist-poster-grid");
-    expect(within(grid).getByText("Test Film")).toBeInTheDocument();
+    expect(grid.className).toContain("grid-cols-3");
+    expect(screen.getByText("The Witch")).toBeInTheDocument();
+    expect(screen.getByText("2015 · 92m")).toBeInTheDocument();
+    expect(screen.getByText("NO POSTER")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Actions for/i })).not.toBeInTheDocument();
+  });
+
+  it("omits a missing year or runtime instead of leaving a dangling separator", () => {
+    const { rerender } = render(
+      <WatchlistPosterGrid films={[{ ...baseFilm, runtime: null }]} tab="active" />,
+    );
+    expect(screen.getByText("2015")).toBeInTheDocument();
+    expect(screen.queryByText(/·/)).not.toBeInTheDocument();
+
+    rerender(
+      <WatchlistPosterGrid films={[{ ...baseFilm, year: null }]} tab="active" />,
+    );
+    expect(screen.getByText("92m")).toBeInTheDocument();
+
+    rerender(
+      <WatchlistPosterGrid
+        films={[{ ...baseFilm, year: null, runtime: null }]}
+        tab="active"
+      />,
+    );
+    expect(screen.queryByText("2015")).not.toBeInTheDocument();
+    expect(screen.queryByText("92m")).not.toBeInTheDocument();
+  });
+
+  it("links the card to the film, keeping the current view", () => {
+    render(<WatchlistPosterGrid films={[baseFilm]} tab="watched" />);
+    expect(screen.getByRole("link", { name: /The Witch/ })).toHaveAttribute(
+      "href",
+      "/watchlist/film-1?tab=watched",
+    );
+  });
+
+  it("shows an amber score badge only for rated films on the Watched view", () => {
+    render(
+      <WatchlistPosterGrid
+        films={[
+          { ...baseFilm, id: "rated", title: "Blade Runner", latest_score: 4.5, latest_watched_at: null },
+          { ...baseFilm, id: "whole", title: "Seven Samurai", latest_score: 4 },
+          { ...baseFilm, id: "bare", title: "Sid and Nancy", latest_score: null },
+        ]}
+        tab="watched"
+      />,
+    );
+
+    const badges = screen.getAllByTestId("watchlist-rating-badge");
+    expect(badges).toHaveLength(2);
+    expect(badges[0]).toHaveTextContent("4.5");
+    expect(badges[1]).toHaveTextContent("4");
+    expect(badges[0].textContent).not.toMatch(/Sid and Nancy/);
+    expect(badges[0].querySelector(".text-cb-accent")?.textContent).toBe("star");
+    expect(screen.getByText("Sid and Nancy")).toBeInTheDocument();
+  });
+
+  it("hides a score on Unwatched and Archived", () => {
+    const rated = { ...baseFilm, latest_score: 5 };
+    const { rerender } = render(<WatchlistPosterGrid films={[rated]} tab="active" />);
+    expect(screen.queryByTestId("watchlist-rating-badge")).not.toBeInTheDocument();
+
+    rerender(<WatchlistPosterGrid films={[rated]} tab="archived" />);
+    expect(screen.queryByTestId("watchlist-rating-badge")).not.toBeInTheDocument();
+  });
+
+  it("fades films after the first 18, staggered 30ms", () => {
+    render(<WatchlistPosterGrid films={films(20)} tab="active" />);
+
+    expect(screen.getByText("Film 0").closest("[data-cb-batch]")).toBeNull();
+    const firstNew = screen.getByText("Film 18").closest("[data-cb-batch]");
+    const secondNew = screen.getByText("Film 19").closest("[data-cb-batch]");
+    expect(firstNew).toHaveAttribute("data-fade-ms", "300");
+    expect(firstNew).toHaveAttribute("data-stagger-ms", "0");
+    expect(secondNew).toHaveAttribute("data-fade-ms", "300");
+    expect(secondNew).toHaveAttribute("data-stagger-ms", "30");
+  });
+
+  it("fades a new batch together when motion is reduced", async () => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      get matches() {
+        return query.includes("prefers-reduced-motion");
+      },
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+
+    render(<WatchlistPosterGrid films={films(20)} tab="active" />);
+
+    const secondNew = screen.getByText("Film 19").closest("[data-cb-batch]");
+    expect(secondNew).toHaveAttribute("data-fade-ms", "300");
+    await waitFor(() => {
+      expect(secondNew).toHaveAttribute("data-stagger-ms", "0");
+    });
   });
 });

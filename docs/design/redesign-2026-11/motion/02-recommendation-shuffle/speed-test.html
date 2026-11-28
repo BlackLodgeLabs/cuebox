@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cuebox — Film-strip speed test</title>
+  <style>
+    @font-face {
+      font-family: "Big Shoulders";
+      src: url("fonts/BigShoulders-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "Archivo";
+      src: url("fonts/Archivo-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      src: url("fonts/IBMPlexMono-Regular.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      src: url("fonts/IBMPlexMono-Medium.ttf") format("truetype");
+      font-weight: 500;
+      font-style: normal;
+      font-display: block;
+    }
+
+    :root {
+      --bg: #0B0B0B;
+      --text: #F3EDE4;
+      --muted: #A39E96;
+      --accent: #E07A28;
+      --teal: #2A9A94;
+      --studio: #E6E7EB;
+      --studio-ink: #12141A;
+      --studio-muted: #3A3D44;
+      --cell-w: 214px;
+      --strip-h: 196px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: var(--studio);
+      color: var(--studio-ink);
+      font-family: "Archivo", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px 48px;
+    }
+
+    .lede {
+      width: 390px;
+      margin: 0 0 20px;
+    }
+    .lede h1 {
+      font-family: "Big Shoulders", sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 30px;
+      margin-bottom: 6px;
+    }
+    .lede p {
+      font-size: 13px;
+      line-height: 18px;
+      color: var(--studio-muted);
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      min-height: 844px;
+      background: var(--bg);
+      color: var(--text);
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+    }
+
+    .status {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      padding: 14px 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+    }
+    .status .time { font-weight: 600; font-size: 15px; letter-spacing: 0.02em; color: var(--text); }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+    .sig { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+    .sig i { width: 3px; background: var(--text); display: block; border-radius: 0.5px; }
+    .sig i:nth-child(1) { height: 4px; }
+    .sig i:nth-child(2) { height: 6px; }
+    .sig i:nth-child(3) { height: 9px; }
+    .sig i:nth-child(4) { height: 12px; }
+    .bat { width: 22px; height: 12px; border: 1.5px solid var(--text); border-radius: 3px; position: relative; padding: 1.5px; }
+    .bat::after { content: ""; position: absolute; right: -3px; top: 3px; width: 2px; height: 4px; background: var(--text); border-radius: 0 1px 1px 0; }
+    .bat b { display: block; height: 100%; width: 70%; background: var(--text); border-radius: 1px; }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 54px 0 24px;
+    }
+    .stage-copy { text-align: center; margin-bottom: 28px; padding: 0 24px; }
+    .stage-copy h1 {
+      font-family: "Big Shoulders", sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 30px;
+      letter-spacing: 0.01em;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+    .stage-copy .sub {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .strip-viewport {
+      position: relative;
+      width: 390px;
+      height: var(--strip-h);
+      overflow: hidden;
+    }
+    .strip-viewport::before,
+    .strip-viewport::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 36px;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .strip-viewport::before {
+      left: 0;
+      background: linear-gradient(to right, var(--bg), rgba(11, 11, 11, 0));
+    }
+    .strip-viewport::after {
+      right: 0;
+      background: linear-gradient(to left, var(--bg), rgba(11, 11, 11, 0));
+    }
+    .strip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+      will-change: transform;
+      background: #141414;
+      box-shadow:
+        inset 0 1px 0 rgba(243, 237, 228, 0.06),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+    }
+    .strip::before,
+    .strip::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 16px;
+      pointer-events: none;
+      background-image: radial-gradient(ellipse 4px 3px at 50% 50%, #0B0B0B 70%, transparent 74%);
+      background-size: 14px 16px;
+      background-repeat: repeat-x;
+      background-position: 0 center;
+      z-index: 2;
+    }
+    .strip::before { top: 0; }
+    .strip::after { bottom: 0; }
+
+    .cell {
+      position: relative;
+      flex: 0 0 var(--cell-w);
+      width: var(--cell-w);
+      height: 100%;
+    }
+    .cell .window {
+      position: absolute;
+      left: 7px;
+      right: 7px;
+      top: 18px;
+      bottom: 18px;
+      overflow: hidden;
+      background: #0B0B0B;
+      border-radius: 1px;
+    }
+    .cell .window img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .controls {
+      width: 390px;
+      margin-top: 24px;
+    }
+    .readout {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .readout .label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .readout .value {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+    .readout .unit {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 13px;
+      color: var(--studio-muted);
+      margin-left: 6px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .row button {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid #C8CACF;
+      border-radius: 12px;
+      background: #fff;
+      color: var(--studio-ink);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .row button:hover { border-color: #12141A; }
+    .row button:active { background: #F3F3F5; }
+
+    input[type="range"] {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 44px;
+      margin: 0;
+      accent-color: #E07A28;
+      cursor: pointer;
+    }
+
+    .ends {
+      display: flex;
+      justify-content: space-between;
+      margin: 4px 54px 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--studio-muted);
+    }
+
+    .hint {
+      margin-top: 16px;
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--studio-muted);
+    }
+    .hint strong { color: var(--studio-ink); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="lede">
+    <h1>Film-strip speed</h1>
+    <p>The roll loops and never lands. Drag the slider or use the buttons until it feels right. The number is the exact speed.</p>
+  </div>
+
+  <div class="phone" id="phone">
+    <div class="status"><span class="time">22:06</span><span class="status-icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><b></b></span></span></div>
+    <div class="stage">
+      <div class="stage-copy">
+        <h1>Cueing your pick</h1>
+        <p class="sub">From your watchlist</p>
+      </div>
+      <div class="strip-viewport">
+        <div class="strip" id="strip"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="readout">
+      <span class="label">Speed</span>
+      <div><span class="value" id="readout">420</span><span class="unit">px/s</span></div>
+    </div>
+    <div class="row">
+      <button type="button" id="slower" aria-label="Slower by 10 pixels per second">−</button>
+      <input type="range" id="slider" min="100" max="1200" step="10" value="420" aria-label="Strip speed in pixels per second">
+      <button type="button" id="faster" aria-label="Faster by 10 pixels per second">+</button>
+    </div>
+    <div class="ends"><span>100</span><span>1200</span></div>
+    <p class="hint">The locked cruise is a constant <strong>420 px/s</strong>. An earlier option-B recording used 260 px/s. Option A’s brief rush was 2000 px/s. Changing the speed does not jump or restart the strip. Arrow keys also nudge it by 10.</p>
+  </div>
+
+  <script>
+    const FILMS = [
+      { src: "art/wicker-meadow.jpg", pos: "center 42%", alt: "The Wicker Man" },
+      { src: "art/old-house.jpg", pos: "center 40%", alt: "Lamb" },
+      { src: "art/daisies.jpg", pos: "center 45%", alt: "Midsommar" },
+      { src: "art/fog-woods.jpg", pos: "center 40%", alt: "The Innocents" },
+      { src: "art/fire-warm.jpg", pos: "center 40%", alt: "Burning" },
+      { src: "art/fog-moor.jpg", pos: "center 40%", alt: "Carnival of Souls" },
+      { src: "art/rain-neon.jpg", pos: "center 40%", alt: "Under the Skin" },
+      { src: "art/coastal-cliffs.jpg", pos: "center 50%", alt: "Portrait of a Lady on Fire" },
+      { src: "art/witch-forest.jpg", pos: "center 40%", alt: "The Witch" },
+    ];
+    const COPIES = 2;
+    const CELL = 214;
+    const MIN = 100;
+    const MAX = 1200;
+    const STEP = 10;
+    const DEFAULT = 420;
+
+    const strip = document.getElementById("strip");
+    const slider = document.getElementById("slider");
+    const readout = document.getElementById("readout");
+    const slower = document.getElementById("slower");
+    const faster = document.getElementById("faster");
+
+    const frag = document.createDocumentFragment();
+    for (let c = 0; c < COPIES; c++) {
+      FILMS.forEach((film) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        const win = document.createElement("div");
+        win.className = "window";
+        const img = document.createElement("img");
+        img.src = film.src;
+        img.alt = film.alt;
+        img.style.objectPosition = film.pos;
+        win.appendChild(img);
+        cell.appendChild(win);
+        frag.appendChild(cell);
+      });
+    }
+    strip.appendChild(frag);
+
+    const loopW = FILMS.length * CELL; // one set; the second copy makes the wrap seamless
+
+    let speed = DEFAULT;
+    let x = 0;
+    let last = performance.now();
+
+    function wrapX(v) {
+      // Keep translateX in [-loopW, 0) so the second copy is always ready off-screen.
+      return ((v % loopW) + loopW) % loopW - loopW;
+    }
+
+    function setSpeed(next) {
+      const clamped = Math.max(MIN, Math.min(MAX, Math.round(next / STEP) * STEP));
+      speed = clamped;
+      slider.value = String(clamped);
+      readout.textContent = String(clamped);
+    }
+
+    function tick(now) {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      x = wrapX(x - speed * dt);
+      strip.style.transform = "translate3d(" + x + "px, 0, 0)";
+      requestAnimationFrame(tick);
+    }
+
+    slider.addEventListener("input", () => setSpeed(Number(slider.value)));
+    slower.addEventListener("click", () => setSpeed(speed - STEP));
+    faster.addEventListener("click", () => setSpeed(speed + STEP));
+    document.addEventListener("keydown", (e) => {
+      if (e.target === slider) return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+        e.preventDefault();
+        setSpeed(speed - STEP);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setSpeed(speed + STEP);
+      }
+    });
+
+    // For the test script, and for anyone peeking in the console.
+    window.cueboxSpeedTest = {
+      get speed() { return speed; },
+      setSpeed,
+      get x() { return x; },
+      loopW,
+    };
+
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

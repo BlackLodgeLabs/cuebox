@@ -25,10 +25,6 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
 }));
 
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
-
 vi.mock("@/lib/api-client", () => ({
   getFilms: getFilmsMock,
   searchTmdbGlobal: searchTmdbGlobalMock,
@@ -59,6 +55,8 @@ function makeFilm(overrides: Partial<FilmSummary> & Pick<FilmSummary, "id" | "ti
     director: null,
     runtime: null,
     genres: [],
+    backdrop_url: null,
+    latest_score: null,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
@@ -362,17 +360,10 @@ describe("LibrarySearchPicker", () => {
     );
 
     await waitFor(() => {
-      expect(setFilmStatusMock).toHaveBeenCalledWith(
-        addedFilmId,
-        "pending_watch_review",
-      );
+      expect(screen.getByText("Tap a star to save")).toBeInTheDocument();
     });
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: "Review watched film" }),
-      ).toBeInTheDocument();
-    });
+    expect(setFilmStatusMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "The Matrix" })).toBeInTheDocument();
 
     expect(pushMock).not.toHaveBeenCalled();
   });

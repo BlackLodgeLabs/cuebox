@@ -40,6 +40,8 @@ class EnrichmentConfig(BaseModel):
 
 class WatchProvidersConfig(BaseModel):
     country_code: str = "GB"
+    # Flatrate rows older than this are refreshed by the scheduler and on demand.
+    availability_max_age_hours: int = 24
 
 
 class ScoringConfig(BaseModel):

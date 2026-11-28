@@ -13,6 +13,7 @@ from app.schemas.film_schemas import (
     FilmWatchSummary,
     ReviewRequiredItem,
     SemanticProfileBlock,
+    SimilarFilm,
 )
 from app.schemas.watch_review_schemas import FilmWatchBlock, WatchReviewRequiredItem
 
@@ -49,8 +50,10 @@ def film_to_summary(
     removed_at: datetime | None = None,
     latest_watched_at: date | None = None,
     pending_watch: FilmWatch | None = None,
+    latest_score: float | None = None,
 ) -> FilmSummary:
     metadata: FilmMetadata | None = film.metadata_
+    profile: FilmSemanticProfile | None = film.semantic_profile
     summary_removed_at = None
     watched_statuses = (FilmStatus.WATCHED, FilmStatus.ARCHIVED, FilmStatus.PENDING_WATCH_REVIEW)
     if film.status in watched_statuses and removed_at is not None:
@@ -67,12 +70,30 @@ def film_to_summary(
         director=metadata.director if metadata else None,
         runtime=metadata.runtime if metadata else None,
         genres=list(metadata.genres) if metadata else [],
+        backdrop_url=metadata.backdrop_url if metadata else None,
+        synopsis=metadata.synopsis if metadata else None,
+        tones=list(profile.tones) if profile is not None and profile.tones else [],
+        emotional_outcomes=(
+            list(profile.emotional_outcomes)
+            if profile is not None and profile.emotional_outcomes
+            else []
+        ),
+        latest_score=latest_score,
         created_at=film.created_at,
         updated_at=film.updated_at,
         removed_at=summary_removed_at,
         latest_watched_at=latest_watched_at,
         watch_review_incomplete=film.status == FilmStatus.PENDING_WATCH_REVIEW,
         pending_watch=watch_to_summary(pending_watch) if pending_watch is not None else None,
+    )
+
+
+def film_to_similar(film: Film) -> SimilarFilm:
+    profile = film.semantic_profile
+    summary = film_to_summary(film)
+    return SimilarFilm(
+        **summary.model_dump(),
+        semantic_line=profile.semantic_summary if profile is not None else None,
     )
 
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
@@ -28,7 +28,6 @@ export function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [selectedName, setSelectedName] = useState<string | null>(null);
-  const { toast } = useToast();
   const compact = variant === "compact";
 
   useEffect(() => {
@@ -59,9 +58,9 @@ export function FileUpload({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded border-2 border-dashed border-border bg-card transition-all",
+        "flex flex-col items-center justify-center rounded-cb border-2 border-dashed border-cb-divider bg-cb-surface transition-all",
         compact ? "gap-2 p-4" : "gap-4 p-8",
-        dragOver && "border-secondary shadow-glow",
+        dragOver && "border-cb-teal",
         disabled && "pointer-events-none opacity-50 grayscale",
       )}
       onDragOver={(e) => {
@@ -78,26 +77,26 @@ export function FileUpload({
       <Icon
         name="upload"
         size={compact ? 28 : 40}
-        className="text-muted-foreground"
+        className="text-cb-muted"
       />
       <div className="text-center">
         <p className="text-body-lg font-medium">{label}</p>
         {compact ? (
           <>
-            <p className="text-body-md text-muted-foreground md:hidden">
+            <p className="font-ui text-cb-body text-cb-muted md:hidden">
               Tap to choose a CSV
             </p>
-            <p className="hidden text-body-md text-muted-foreground md:block">
+            <p className="hidden font-ui text-cb-body text-cb-muted md:block">
               Drag and drop a Letterboxd watchlist CSV, or click to browse
             </p>
           </>
         ) : (
-          <p className="text-body-md text-muted-foreground">
+          <p className="font-ui text-cb-body text-cb-muted">
             Drag and drop a Letterboxd watchlist CSV, or click to browse
           </p>
         )}
         {selectedName && (
-          <p className="mt-2 min-w-0 break-all text-label-md normal-case tracking-normal text-primary">
+          <p className="mt-2 min-w-0 break-all text-label-md normal-case tracking-normal text-cb-text">
             Selected: {selectedName}
           </p>
         )}

@@ -20,6 +20,7 @@ const addedFilmId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
 test.describe("watchlist add flow (mocked API)", () => {
   test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.route(`**${API_PATH_PREFIX}/films?limit=1**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -90,7 +91,7 @@ test.describe("watchlist add flow (mocked API)", () => {
     });
   });
 
-  test("add film search and confirm via Home picker redirect chain", async ({ page }) => {
+  test("add film from the search card via the legacy add route", async ({ page }) => {
     await page.route(`**${API_PATH_PREFIX}/films/tmdb-search**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -110,69 +111,95 @@ test.describe("watchlist add flow (mocked API)", () => {
       });
     });
 
-    let filmPolls = 0;
-    await page.route(`**${API_PATH_PREFIX}/films/${addedFilmId}`, async (route) => {
-      filmPolls += 1;
-      const status = filmPolls >= 2 ? "ready" : "enriching";
+    await page.goto("/watchlist/add");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
+    await page.getByRole("combobox", { name: "Search films" }).fill("Matrix");
+    await expect(page.getByRole("option", { name: /The Matrix/ })).toBeVisible();
+    await page.getByRole("button", { name: "Add The Matrix to watchlist" }).click();
+    await expect(page.getByText("Added to watchlist")).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("home shows the daily feature actions without the old hub", async ({ page }) => {
+    await page.route(`**${API_PATH_PREFIX}/films?**`, async (route) => {
+      const url = new URL(route.request().url());
+      const active = url.searchParams.get("status") === "active";
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          id: addedFilmId,
-          title: "The Matrix",
-          year: 1999,
-          letterboxd_uri: "https://letterboxd.com/film/the-matrix/",
-          status: "active",
-          enrichment_status: status,
-          metadata: null,
-          semantic_profile: null,
-          watches: [],
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
+          data: active
+            ? [
+                {
+                  id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                  title: "The Wicker Man",
+                  year: 1973,
+                  status: "active",
+                  enrichment_status: "ready",
+                  runtime: 88,
+                  genres: ["Folk horror"],
+                  tones: ["dread"],
+                  emotional_outcomes: ["unease"],
+                  synopsis: "A devout policeman lands on a Hebridean island.",
+                  poster_url: null,
+                  backdrop_url: null,
+                  letterboxd_uri: "https://letterboxd.com/film/the-wicker-man/",
+                  created_at: "2024-01-01T00:00:00Z",
+                  updated_at: "2024-01-01T00:00:00Z",
+                },
+              ]
+            : [],
+          pagination: {
+            total: active ? 1 : 0,
+            limit: 20,
+            offset: 0,
+            has_more: false,
+          },
         }),
       });
     });
 
-    await page.goto("/watchlist/add");
-    await expect(page).toHaveURL(/\/$/);
-    await page.getByTestId("library-search-input").fill("Matrix");
-    await expect(page.getByText("The Matrix (1999)")).toBeVisible();
-    await page.getByRole("button", { name: "Add to watchlist" }).click();
-    await expect(page).toHaveURL(new RegExp(`/watchlist/${addedFilmId}$`));
-  });
-
-  test("home shows inline search without dual intent CTAs", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
-    await expect(page.getByTestId("library-search-input")).toBeVisible();
-    const links = page.getByRole("link");
-    await expect(links.filter({ hasText: "Create a recommendation" })).toHaveAttribute(
+    await expect(page.getByRole("heading", { name: "The Wicker Man" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Get a pick for tonight" })).toHaveAttribute(
       "href",
       "/recommend",
     );
-    await expect(links.filter({ hasText: "History" })).toHaveAttribute("href", "/history");
-    await expect(links.filter({ hasText: "View watchlist" })).toHaveCount(0);
-    await expect(links.filter({ hasText: "Start questionnaire" })).toHaveCount(0);
-    await expect(links.filter({ hasText: "Add a film" })).toHaveCount(0);
-    await expect(links.filter({ hasText: "Mark watched" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Surprise me" })).toBeVisible();
+    await expect(page.getByTestId("library-search-input")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toHaveCount(0);
   });
 
-  test("watchlist page shows add button to /search", async ({ page }) => {
-    await page.route(`**${API_PATH_PREFIX}/films?**`, async (route) => {
+  test("watchlist page uses the header search field instead of an add-film link", async ({
+    page,
+  }) => {
+    await page.route(`**${API_PATH_PREFIX}/films**`, async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname.endsWith("/genres")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ data: [] }),
+        });
+        return;
+      }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           data: [],
-          pagination: { total: 0, limit: 20, offset: 0, has_more: false },
+          pagination: { total: 0, limit: 18, offset: 0, has_more: false },
         }),
       });
     });
 
     await page.goto("/watchlist");
-    await expect(page.getByRole("link", { name: "Add film" })).toHaveAttribute(
-      "href",
-      "/search",
-    );
+    await expect(page.getByRole("link", { name: "Add film" })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Search films" })).toBeVisible();
+    await expect(page.getByText("Nothing on your watchlist yet.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Import your watchlist" })).toBeVisible();
+    await expect(page.getByText("0 unwatched")).toBeVisible();
   });
 });

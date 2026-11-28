@@ -130,6 +130,8 @@ class FilmResult(BaseModel):
     tmdb_rating: float | None = None
     rotten_tomatoes_score: int | None = None
     poster_url: str | None = None
+    backdrop_url: str | None = None
+    genres: list[str] = Field(default_factory=list)
     explanation: Explanation
 
 

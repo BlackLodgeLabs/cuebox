@@ -1,14 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DeleteHistoryDialogProps {
   open: boolean;
@@ -24,34 +16,14 @@ export function DeleteHistoryDialog({
   isPending,
 }: DeleteHistoryDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Remove from history</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to remove this from your history? This cannot
-            be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={onConfirm}
-            disabled={isPending}
-          >
-            {isPending ? "Removing…" : "Remove"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Remove this night?"
+      description="It will be deleted from History. This does not change the film on your watchlist."
+      confirmLabel={isPending ? "Removing…" : "Remove"}
+      onConfirm={onConfirm}
+      pending={isPending}
+    />
   );
 }

@@ -1,40 +1,175 @@
-/**
- * Cuebox design tokens — canonical values from documents/DESIGN.md (YAML frontmatter)
- * and phase-6.5 resolved decisions.
- */
+/* Cuebox design tokens
+   Locked 14 Nov 2026 (foundations) and 24 Nov 2026 (motion).
+   Copied from docs/design/redesign-2026-11/tokens/tokens.css.
+   Shadcn variables below alias these tokens. */
+
 :root {
-  --background: #121411;
-  --foreground: #e3e3de;
+  /* Colour — T2 Balance */
+  --cb-bg: #0b0b0b;
+  --cb-surface: #171717;
+  --cb-text: #f3ede4;
+  --cb-muted: #a39e96;
+  --cb-accent: #e07a28; /* amber — the only colour that may glow */
+  --cb-teal: #2a9a94; /* links, the active tab, selected chips. Always flat. */
+  --cb-divider: #2a2a2a;
+  --cb-ink: #0b0b0b; /* text on amber */
+  --cb-danger: #c75b4a; /* delete / destructive */
+  --cb-dim: rgba(11, 11, 11, 0.55); /* sheet backdrop; confirm uses 0.62 */
 
-  --card: #1a1c19;
-  --card-foreground: #e3e3de;
+  /* Effects */
+  --cb-glow: 0 0 18px rgba(224, 122, 40, 0.5);
+  --cb-glow-reco: 0 0 18px rgba(224, 122, 40, 0.45);
 
-  --popover: #292b27;
-  --popover-foreground: #e3e3de;
+  /* Radius */
+  --cb-radius: 12px; /* default: buttons, fields, chips, search, toasts */
+  --cb-radius-sm: 8px; /* poster tiles, small images */
+  --cb-radius-lg: 16px; /* sheets, confirm dialogs */
+  --cb-radius-pill: 999px;
 
-  --primary: #aed0a3;
-  --primary-foreground: #1b3717;
+  /* Spacing scale */
+  --cb-space-1: 4px;
+  --cb-space-2: 8px;
+  --cb-space-3: 16px;
+  --cb-space-4: 24px;
+  --cb-space-5: 32px;
+  --cb-space-6: 48px;
 
-  --secondary: #cccc5c;
-  --secondary-foreground: #323200;
+  /* Type */
+  --cb-font-display: var(--font-big-shoulders), "Big Shoulders", sans-serif;
+  --cb-font-ui: var(--font-archivo), "Archivo", sans-serif;
+  --cb-font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
 
-  --muted: #1e201d;
-  --muted-foreground: #c3c8bd;
+  --cb-size-display: 40px;
+  --cb-size-title: 36px;
+  --cb-size-page: 28px;
+  --cb-size-section: 22px;
+  --cb-size-card: 18px;
+  --cb-size-tile: 16px;
+  --cb-size-body: 15px;
+  --cb-size-ui: 14px;
+  --cb-size-caption: 13px;
+  --cb-size-tab: 11px;
+  --cb-size-meta: 11px;
+  --cb-size-meta-sm: 10px;
 
-  --accent: #292b27;
-  --accent-foreground: #e3e3de;
+  /* Motion — shared easing */
+  --cb-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --cb-ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+  --cb-dur-reduced: 300ms;
 
-  --destructive: #ffb4ab;
-  --destructive-foreground: #690005;
+  /* Home — option E iris (after the 0.85× logo unfold) */
+  --cb-home-logo-scale: 0.85;
+  --cb-home-iris-delay-after-lock: 80ms;
+  --cb-home-iris-dur: 760ms;
+  --cb-home-wordmark-fade-delay: 80ms;
+  --cb-home-wordmark-fade-dur: 600ms;
+  --cb-home-section-rise: 6px;
+  --cb-home-section-stagger: 70ms;
+  --cb-home-section-dur: 300ms;
 
-  --border: #434840;
-  --input: #434840;
-  --ring: #cccc5c;
+  /* Recommendation — constant 420px/s cruise, 2.5s wind-down */
+  --cb-reco-cruise-px-s: 420;
+  --cb-reco-slow-dur: 2500ms;
+  --cb-reco-slow-power: 1.38;
+  --cb-reco-highlight-rise: 80ms;
+  --cb-reco-highlight-hold: 120ms;
+  --cb-reco-highlight-fade: 400ms;
+  --cb-reco-highlight-opacity: 0.95;
+  --cb-reco-expand-dur: 580ms;
+  --cb-reco-settle-rise: 8px;
+  --cb-reco-settle-stagger: 70ms;
+  --cb-reco-settle-dur: 300ms;
 
-  --surface-container-high: #292b27;
-  --surface-container-highest: #333532;
-  --outline: #8d9288;
-  --accent-tertiary: #aed0a3;
+  /* Film detail — taste ticks */
+  --cb-tick-stagger: 70ms;
+  --cb-tick-fill: 330ms;
+  --cb-tick-row-delay: 90ms;
+  --cb-tick-trigger: 0.4;
 
-  --radius: 0.25rem;
+  /* Review — star fill (create sheet only) */
+  --cb-star-stagger: 70ms;
+  --cb-star-fill: 330ms;
+  --cb-star-bounce: 0.3;
+  --cb-star-bounce-dur: 190ms;
+  --cb-star-saved-delay: 40ms;
+  --cb-star-saved-fade: 220ms;
+  --cb-star-glow-intensity: 0.35;
+
+  /* Watchlist — filter crossfade + infinite scroll */
+  --cb-watchlist-out: 400ms;
+  --cb-watchlist-in: 600ms;
+  --cb-watchlist-overlap: 200ms;
+  --cb-watchlist-trigger-px: 600;
+  --cb-watchlist-page-size: 18;
+  --cb-watchlist-batch-fade: 300ms;
+  --cb-watchlist-batch-stagger: 30ms;
+
+  /* App-wide shared patterns */
+  --cb-sheet-up: 800ms;
+  --cb-sheet-down: 700ms;
+  --cb-sheet-dim: 0.55;
+  --cb-sheet-dim-fade: 450ms;
+  --cb-sheet-dismiss-px: 120;
+  --cb-toast-in: 700ms;
+  --cb-toast-out: 600ms;
+  --cb-toast-travel: 20px;
+  --cb-toast-stay: 2800ms;
+  --cb-search-open: 700ms;
+  --cb-search-close: 600ms;
+  --cb-search-from-scale: 0.96;
+  --cb-dialog-dur: 400ms;
+  --cb-dialog-from-scale: 0.92;
+  --cb-dialog-dim: 0.62;
+  --cb-press-scale: 0.96;
+  --cb-press-down: 120ms;
+  --cb-press-up: 200ms;
+  --cb-screen-fade: 400ms;
+  --cb-numberflow: 400ms;
+  --cb-synopsis-more: 300ms;
+
+  /* History — ticket stubs */
+  --cb-history-page-size: 10;
+  --cb-history-stub-width: 76px;
+  --cb-history-months: 1;
+  --cb-history-perforation: 1;
+
+  /* shadcn variables point at Cuebox tokens */
+  --background: var(--cb-bg);
+  --foreground: var(--cb-text);
+  --card: var(--cb-surface);
+  --card-foreground: var(--cb-text);
+  --popover: var(--cb-surface);
+  --popover-foreground: var(--cb-text);
+  --primary: var(--cb-accent);
+  --primary-foreground: var(--cb-ink);
+  --secondary: var(--cb-teal);
+  --secondary-foreground: var(--cb-bg);
+  --muted: var(--cb-surface);
+  --muted-foreground: var(--cb-muted);
+  --accent: var(--cb-surface);
+  --accent-foreground: var(--cb-text);
+  --destructive: var(--cb-danger);
+  --destructive-foreground: var(--cb-text);
+  --border: var(--cb-divider);
+  --input: var(--cb-divider);
+  --ring: var(--cb-accent);
+  --surface-container-high: var(--cb-surface);
+  --surface-container-highest: var(--cb-surface);
+  --outline: var(--cb-muted);
+  --accent-tertiary: var(--cb-teal);
+  --radius: var(--cb-radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cb-ease-out: linear;
+    --cb-glow: none;
+    --cb-glow-reco: none;
+  }
+}
+
+@keyframes cb-star-bounce {
+  0% { transform: scale(1); }
+  45% { transform: scale(var(--cb-star-bounce-peak, 1.3)); }
+  100% { transform: scale(1); }
 }

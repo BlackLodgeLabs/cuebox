@@ -2,10 +2,10 @@ import { fireEvent, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FileUpload } from "@/components/file-upload";
 
-const toastMock = vi.fn();
+const toastMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: toastMock }),
+vi.mock("@/components/ui/sonner", () => ({
+  toast: toastMock,
 }));
 
 describe("FileUpload", () => {

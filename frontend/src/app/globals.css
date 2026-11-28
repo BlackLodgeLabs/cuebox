@@ -10,114 +10,299 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body text-body-md antialiased;
+    @apply bg-cb-bg text-cb-text font-ui text-cb-body antialiased;
   }
 
   h1 {
-    @apply font-heading text-h1;
+    @apply font-display text-h1;
   }
 
   h2 {
-    @apply font-heading text-h2;
+    @apply font-display text-h2;
+  }
+}
+
+@layer utilities {
+  .cb-opsz-72 {
+    font-variation-settings: "opsz" 72, "wght" 700;
+  }
+
+  .font-display {
+    font-variation-settings: "opsz" 72, "wght" 700;
   }
 }
 
 @layer components {
   .text-h1 {
-    @apply font-heading text-[32px] font-bold leading-[38px] md:text-[40px] md:leading-[48px] md:tracking-[-0.02em];
+    @apply font-display text-cb-page;
   }
 
   .text-h2 {
-    @apply font-heading text-2xl font-semibold leading-8;
+    @apply font-display text-cb-section;
   }
 
   .text-body-lg {
-    @apply font-body text-lg font-normal leading-7;
+    @apply font-ui text-cb-tile font-medium;
   }
 
   .text-body-md {
-    @apply font-body text-base font-normal leading-6;
+    @apply font-ui text-cb-body;
   }
 
   .text-title-lg {
-    @apply font-mono text-xl font-semibold leading-7 tracking-[0.01em];
+    @apply font-display text-cb-card;
   }
 
   .text-label-md {
-    @apply font-mono text-sm font-semibold leading-5 tracking-[0.05em] uppercase;
-  }
-
-  .hover-glow {
-    @apply transition-shadow duration-200;
-  }
-
-  .hover-glow:hover:not(:disabled) {
-    box-shadow: 0 0 12px rgba(174, 208, 163, 0.35);
-  }
-
-  .active-flicker:active:not(:disabled) {
-    opacity: 0.7;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+    @apply font-mono text-cb-meta uppercase;
   }
 
   .warning-banner {
-    @apply rounded border border-secondary bg-card;
-    box-shadow: 0 0 16px rgba(174, 208, 163, 0.15);
+    @apply rounded-cb border border-cb-divider bg-cb-surface;
   }
 
-  .main-scanlines {
-    @apply relative;
-  }
-
-  .main-scanlines::after {
-    content: "";
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    z-index: 50;
-    opacity: 0.04;
-    background-image: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(255, 255, 255, 0.12) 2px,
-      rgba(255, 255, 255, 0.12) 3px
-    );
+  .cb-rule {
+    @apply h-px w-full bg-cb-divider;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .main-scanlines::after {
-      display: none;
+    .shadow-glow {
+      box-shadow: none !important;
     }
 
-    .ceremony-stage,
-    .ceremony-stage * {
-      animation: none !important;
-      transition: none !important;
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+  }
+}
+
+/* Shared motion kit. Full-motion timings stay unlayered so they beat Vaul
+   and Sonner. Reduced-motion overrides live in @layer components, after the
+   universal 0.01ms hammer: important rules in a layer beat unlayered
+   important rules, and a more specific rule in the same layer wins. */
+@keyframes cb-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cb-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes cb-confirm-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--cb-dialog-from-scale, 0.92));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes cb-confirm-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--cb-dialog-from-scale, 0.92));
+  }
+}
+
+.history-stub {
+  position: relative;
+  flex: 0 0 var(--cb-history-stub-width, 76px);
+  width: var(--cb-history-stub-width, 76px);
+  border-right: 1.5px dashed #3a3a3a;
+}
+
+.history-stub::before,
+.history-stub::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--cb-bg);
+}
+
+.history-stub::before {
+  top: -6px;
+}
+
+.history-stub::after {
+  bottom: -6px;
+}
+
+.cb-press {
+  transition-property: transform, color, background-color, border-color, box-shadow;
+  transition-duration: var(--cb-press-up, 200ms);
+  transition-timing-function: var(--cb-ease-out);
+}
+
+.cb-press:active {
+  transform: scale(var(--cb-press-scale, 0.96));
+  transition-duration: var(--cb-press-down, 120ms);
+}
+
+[data-vaul-drawer].cb-sheet[data-state="open"] {
+  animation-duration: var(--cb-sheet-up, 800ms);
+  animation-timing-function: var(--cb-ease-out);
+}
+
+[data-vaul-drawer].cb-sheet[data-state="closed"] {
+  animation-duration: var(--cb-sheet-down, 700ms);
+  animation-timing-function: var(--cb-ease-out);
+}
+
+[data-vaul-drawer].cb-sheet.vaul-dragging {
+  animation: none !important;
+}
+
+.cb-sheet-overlay {
+  background: rgb(0 0 0 / var(--cb-sheet-dim, 0.55));
+}
+
+[data-vaul-overlay].cb-sheet-overlay[data-state="open"],
+[data-vaul-overlay].cb-sheet-overlay[data-state="closed"] {
+  animation-duration: var(--cb-sheet-dim-fade, 450ms);
+  animation-timing-function: var(--cb-ease-out);
+}
+
+.cb-sheet-handle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.cb-confirm[data-state="open"] {
+  animation: cb-confirm-in var(--cb-dialog-dur, 400ms) var(--cb-ease-out);
+}
+
+.cb-confirm[data-state="closed"] {
+  animation: cb-confirm-out var(--cb-dialog-dur, 400ms) var(--cb-ease-out);
+}
+
+.cb-confirm-overlay {
+  background: rgb(0 0 0 / var(--cb-dialog-dim, 0.62));
+}
+
+.cb-confirm-overlay[data-state="open"] {
+  animation: cb-fade var(--cb-dialog-dur, 400ms) var(--cb-ease-out);
+}
+
+.cb-confirm-overlay[data-state="closed"] {
+  animation: cb-fade-out var(--cb-dialog-dur, 400ms) var(--cb-ease-out) forwards;
+}
+
+[data-sonner-toaster].cb-toaster {
+  --border-radius: var(--cb-radius, 12px);
+  font-family: var(--font-archivo), sans-serif;
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast] {
+  --y: translateY(calc(var(--cb-toast-travel, 20px) * -1));
+  transition:
+    transform var(--cb-toast-in, 700ms) var(--cb-ease-out),
+    opacity var(--cb-toast-in, 700ms) var(--cb-ease-out),
+    height var(--cb-toast-in, 700ms) var(--cb-ease-out);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-mounted="true"] {
+  --y: translateY(0);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-removed="true"][data-front="true"] {
+  --y: translateY(calc(var(--cb-toast-travel, 20px) * -1));
+  opacity: 0;
+  transition:
+    transform var(--cb-toast-out, 600ms) var(--cb-ease-out),
+    opacity var(--cb-toast-out, 600ms) var(--cb-ease-out);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-styled="true"] {
+  border-radius: var(--cb-radius, 12px);
+  background: var(--cb-surface);
+  color: var(--cb-text);
+  border: 1px solid var(--cb-divider);
+  box-shadow: none;
+  font-family: var(--font-archivo), sans-serif;
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast] [data-description] {
+  color: var(--cb-muted);
+}
+
+[data-sonner-toaster].cb-toaster [data-sonner-toast][data-type="error"] {
+  border-color: var(--cb-danger);
+  box-shadow: none;
+}
+
+@layer components {
+  @media (prefers-reduced-motion: reduce) {
+    .cb-press:active {
+      transform: none !important;
+    }
+
+    [data-vaul-drawer].cb-sheet {
+      animation-name: cb-fade !important;
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+      transform: none !important;
+    }
+
+    [data-vaul-drawer].cb-sheet[data-state="closed"] {
+      animation-name: cb-fade-out !important;
+    }
+
+    [data-vaul-overlay].cb-sheet-overlay {
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+    }
+
+    .cb-confirm,
+    .cb-confirm-overlay {
+      animation-name: cb-fade !important;
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+    }
+
+    .cb-confirm[data-state="closed"],
+    .cb-confirm-overlay[data-state="closed"] {
+      animation-name: cb-fade-out !important;
+    }
+
+    [data-sonner-toaster].cb-toaster [data-sonner-toast] {
+      --y: translateY(0) !important;
+      transition-property: opacity !important;
+      transition-duration: var(--cb-dur-reduced, 300ms) !important;
+      transition-timing-function: linear !important;
+    }
+
+    [data-cb-batch] {
+      animation-duration: var(--cb-dur-reduced, 300ms) !important;
+      animation-delay: 0ms !important;
+    }
+
+    /* The filled star is a CSS opacity transition. The universal 0.01ms
+       hammer would otherwise crush the locked 300ms crossfade. */
+    [data-star-fill="crossfade"] {
+      transition-property: opacity !important;
+      transition-duration: var(--cb-dur-reduced, 300ms) !important;
     }
   }
 
-  .ceremony-reduced-motion,
-  .ceremony-reduced-motion * {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .ceremony-reduced-motion.animate-in,
-  .ceremony-reduced-motion .animate-in {
-    animation: none !important;
-    opacity: 1 !important;
+  [data-cb-reduced="true"][data-vaul-drawer] {
+    animation-name: cb-fade !important;
+    animation-duration: var(--cb-dur-reduced, 300ms) !important;
     transform: none !important;
-  }
-
-  .btn-chamfer {
-    clip-path: polygon(
-      8px 0,
-      100% 0,
-      100% calc(100% - 8px),
-      calc(100% - 8px) 100%,
-      0 100%,
-      0 8px
-    );
   }
 }

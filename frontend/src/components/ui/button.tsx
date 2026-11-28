@@ -1,30 +1,34 @@
+"use client"
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
+import { pressMotion } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-focus-lime disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-cb font-ui text-cb-ui font-medium transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "btn-chamfer bg-primary text-primary-foreground hover-glow active-flicker hover:bg-primary/90",
+          "bg-cb-accent font-semibold text-cb-ink shadow-glow hover:bg-cb-accent/90 motion-reduce:shadow-none",
         destructive:
-          "rounded bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-cb-danger text-cb-text hover:bg-cb-danger/90",
         outline:
-          "rounded border border-border bg-transparent hover:border-outline hover:bg-accent hover-glow",
+          "border border-cb-divider bg-cb-surface text-cb-text hover:border-cb-muted",
         secondary:
-          "rounded bg-secondary text-secondary-foreground hover-glow active-flicker hover:bg-secondary/90",
+          "border border-cb-teal bg-transparent text-cb-teal hover:bg-cb-surface",
         ghost:
-          "rounded hover:bg-accent hover:text-accent-foreground hover-glow",
-        link: "text-primary underline-offset-4 hover:underline",
+          "text-cb-text hover:bg-cb-surface",
+        link: "text-cb-teal underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-8 rounded px-3 text-xs",
-        lg: "h-11 rounded px-8",
+        sm: "h-8 px-3 text-cb-caption",
+        lg: "h-11 px-8",
         icon: "h-10 w-10",
       },
     },
@@ -42,15 +46,26 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, style, ...props }, ref) => {
+    const amber = variant == null || variant === "default"
+    const press = pressMotion(useReducedMotion())
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(
-          buttonVariants({ variant, size }),
-          asChild && variant === "default" && "btn-chamfer",
-          className,
-        )}
+        className={cn(buttonVariants({ variant, size }), amber && "cb-press", className)}
+        data-cb-press={amber ? "true" : undefined}
+        data-press-down-ms={amber ? press.downMs : undefined}
+        data-press-up-ms={amber ? press.upMs : undefined}
+        style={
+          amber
+            ? ({
+                ...style,
+                ["--cb-press-scale" as string]: String(press.scale),
+                ["--cb-press-down" as string]: `${press.downMs}ms`,
+                ["--cb-press-up" as string]: `${press.upMs}ms`,
+              } as React.CSSProperties)
+            : style
+        }
         ref={ref}
         {...props}
       />

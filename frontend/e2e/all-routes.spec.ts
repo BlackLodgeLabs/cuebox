@@ -34,7 +34,9 @@ test.describe("All 11 frontend routes", () => {
   test("route 4: review /review", async ({ page }) => {
     await page.goto("/review");
     await expect(
-      page.getByRole("heading", { name: /review matches|all matches resolved/i }),
+      page.getByRole("heading", {
+        name: /review matches|all matches resolved|all caught up|^review$/i,
+      }),
     ).toBeVisible();
   });
 

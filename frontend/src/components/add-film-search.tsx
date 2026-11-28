@@ -105,8 +105,8 @@ export function AddFilmSearch({
                 className={cn(
                   "flex w-full gap-3 rounded border p-3 text-left transition-colors",
                   isSelected
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50",
+                    ? "border-cb-teal bg-cb-surface text-cb-text"
+                    : "border-cb-divider hover:border-cb-muted",
                 )}
               >
                 <FilmPoster src={result.poster_url} alt={result.title} size="sm" />
@@ -169,7 +169,7 @@ export function AlreadyOnWatchlistMessage({ filmId }: { filmId: string }) {
   return (
     <p className="rounded border border-border bg-surface-high p-3 text-sm">
       Already on your watchlist.{" "}
-      <Link href={`/watchlist/${filmId}`} className="text-primary hover:underline">
+      <Link href={`/watchlist/${filmId}`} className="text-cb-teal hover:underline">
         View film
       </Link>
     </p>
@@ -180,7 +180,7 @@ export function PendingReviewMessage({ reviewId }: { reviewId?: string | null })
   return (
     <p className="rounded border border-border bg-surface-high p-3 text-sm">
       This film is waiting for a Letterboxd URL before it can join your watchlist.{" "}
-      <Link href="/review" className="text-primary hover:underline">
+      <Link href="/review" className="text-cb-teal hover:underline">
         Complete on the review page
       </Link>
       {reviewId ? ` (review ${reviewId.slice(0, 8)}…)` : ""}

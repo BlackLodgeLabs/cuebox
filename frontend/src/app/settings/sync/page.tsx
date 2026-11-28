@@ -137,7 +137,7 @@ export default function SyncSettingsPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-h1">Sync settings</h1>
-        <p className="mt-1 text-body-md text-muted-foreground">
+        <p className="mt-1 font-ui text-cb-body text-cb-muted">
           Keep your local watchlist aligned with Letterboxd.
         </p>
       </div>
@@ -161,7 +161,7 @@ export default function SyncSettingsPage() {
             }}
             disabled={syncCsv.isPending}
           />
-          {csvError && <p className="text-sm text-destructive">{csvError}</p>}
+          {csvError && <p className="font-ui text-cb-ui text-cb-danger">{csvError}</p>}
           <Button
             size="lg"
             className="min-h-11 w-full sm:w-auto"
@@ -171,13 +171,13 @@ export default function SyncSettingsPage() {
             {syncCsv.isPending ? "Syncing…" : "Sync watchlist"}
           </Button>
           {syncResult && (
-            <div className="rounded-md border p-4 text-sm">
-              <p className="font-medium">Sync complete</p>
-              <ul className="mt-2 space-y-1 text-muted-foreground">
+            <div className="rounded-cb border border-cb-divider bg-cb-surface p-4 font-ui text-cb-ui">
+              <p className="font-medium text-cb-text">Sync complete</p>
+              <ul className="mt-2 space-y-1 text-cb-muted">
                 <li>Added: {syncResult.added}</li>
                 <li>Unchanged: {syncResult.unchanged}</li>
                 {syncResult.failed > 0 && (
-                  <li className="text-destructive">Failed: {syncResult.failed}</li>
+                  <li className="text-cb-danger">Failed: {syncResult.failed}</li>
                 )}
               </ul>
             </div>
@@ -226,7 +226,7 @@ export default function SyncSettingsPage() {
             disabled={syncWatched.isPending}
           />
           {watchedError && (
-            <p className="text-sm text-destructive">{watchedError}</p>
+            <p className="font-ui text-cb-ui text-cb-danger">{watchedError}</p>
           )}
           <Button
             size="lg"
@@ -237,9 +237,9 @@ export default function SyncSettingsPage() {
             {syncWatched.isPending ? "Importing…" : "Import watched history"}
           </Button>
           {watchedResult && (
-            <div className="rounded-md border p-4 text-sm">
-              <p className="font-medium">Watched history imported</p>
-              <ul className="mt-2 space-y-1 text-muted-foreground">
+            <div className="rounded-cb border border-cb-divider bg-cb-surface p-4 font-ui text-cb-ui">
+              <p className="font-medium text-cb-text">Watched history imported</p>
+              <ul className="mt-2 space-y-1 text-cb-muted">
                 <li>Films seen: {watchedResult.films_seen}</li>
                 <li>Films created: {watchedResult.films_created}</li>
                 <li>Watches created: {watchedResult.watches_created}</li>
@@ -249,7 +249,7 @@ export default function SyncSettingsPage() {
                 </li>
                 <li>Sent to review queue: {watchedResult.pending_review}</li>
                 {watchedResult.failures.length > 0 && (
-                  <li className="text-destructive">
+                  <li className="text-cb-danger">
                     Failures: {watchedResult.failures.length}
                   </li>
                 )}
@@ -257,14 +257,14 @@ export default function SyncSettingsPage() {
               <div className="mt-3 flex flex-wrap gap-3">
                 <Link
                   href="/watchlist?tab=watched"
-                  className="text-sm text-primary underline-offset-4 hover:underline"
+                  className="font-ui text-cb-ui text-cb-teal underline-offset-4 hover:underline"
                 >
                   View Watched list
                 </Link>
                 {watchedResult.pending_review > 0 && (
                   <Link
                     href="/watchlist?tab=active"
-                    className="text-sm text-primary underline-offset-4 hover:underline"
+                    className="font-ui text-cb-ui text-cb-teal underline-offset-4 hover:underline"
                   >
                     Open watch review queue
                   </Link>
@@ -296,7 +296,7 @@ export default function SyncSettingsPage() {
               }}
             />
           </div>
-          {rssError && <p className="text-sm text-destructive">{rssError}</p>}
+          {rssError && <p className="font-ui text-cb-ui text-cb-danger">{rssError}</p>}
           <Button
             size="lg"
             className="min-h-11 w-full sm:w-auto"
@@ -306,8 +306,8 @@ export default function SyncSettingsPage() {
             {syncRss.isPending ? "Saving…" : "Save RSS config"}
           </Button>
 
-          <div className="border-t pt-4">
-            <h3 className="font-medium">RSS status</h3>
+          <div className="border-t border-cb-divider pt-4">
+            <h3 className="font-display text-cb-card text-cb-text">RSS status</h3>
             {rssLoading && <LoadingState message="Loading RSS status…" />}
             {rssStatusError && (
               <ErrorState
@@ -316,24 +316,24 @@ export default function SyncSettingsPage() {
               />
             )}
             {rssStatus && (
-              <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <dt className="text-label-md normal-case tracking-normal text-muted-foreground">Configured</dt>
-                <dd className="font-mono text-sm">{rssStatus.configured ? "Yes" : "No"}</dd>
+              <dl className="mt-3 grid grid-cols-2 gap-2 font-ui text-cb-ui">
+                <dt className="text-cb-muted">Configured</dt>
+                <dd className="font-mono text-cb-meta">{rssStatus.configured ? "Yes" : "No"}</dd>
                 {rssStatus.username && (
                   <>
-                    <dt className="text-muted-foreground">Username</dt>
+                    <dt className="text-cb-muted">Username</dt>
                     <dd>{rssStatus.username}</dd>
                   </>
                 )}
-                <dt className="text-muted-foreground">Poll interval</dt>
+                <dt className="text-cb-muted">Poll interval</dt>
                 <dd>{rssStatus.polling_interval_seconds}s</dd>
-                <dt className="text-muted-foreground">Last polled</dt>
+                <dt className="text-cb-muted">Last polled</dt>
                 <dd>
                   {rssStatus.last_polled_at
                     ? new Date(rssStatus.last_polled_at).toLocaleString()
                     : "Never"}
                 </dd>
-                <dt className="text-muted-foreground">Last poll status</dt>
+                <dt className="text-cb-muted">Last poll status</dt>
                 <dd>
                   {rssStatus.last_poll_status ? (
                     <Badge
@@ -351,7 +351,7 @@ export default function SyncSettingsPage() {
                 </dd>
                 {rssStatus.events_processed_last_poll !== null && (
                   <>
-                    <dt className="text-muted-foreground">Events last poll</dt>
+                    <dt className="text-cb-muted">Events last poll</dt>
                     <dd>{rssStatus.events_processed_last_poll}</dd>
                   </>
                 )}

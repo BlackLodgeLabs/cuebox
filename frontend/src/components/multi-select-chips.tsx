@@ -27,10 +27,10 @@ export function MultiSelectChips({
               type="button"
               onClick={() => onChange(toggleMultiSelect(value, option))}
               className={cn(
-                "inline-flex min-h-11 items-center rounded border px-3 py-2 text-label-md normal-case tracking-normal transition-all hover-glow",
+                "inline-flex min-h-11 items-center rounded-cb border px-3 py-2 font-ui text-cb-caption transition-colors motion-reduce:transition-none",
                 selected
-                  ? "border-primary bg-primary text-primary-foreground shadow-glow"
-                  : "border-border bg-surface-high text-muted-foreground hover:border-secondary",
+                  ? "border-cb-teal bg-cb-surface text-cb-teal"
+                  : "border-cb-divider bg-cb-surface text-cb-muted hover:border-cb-muted",
               )}
             >
               {option}

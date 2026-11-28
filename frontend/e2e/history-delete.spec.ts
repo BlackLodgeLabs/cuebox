@@ -10,39 +10,52 @@ test.describe("History delete (mocked API)", () => {
     await mockHistoryDeleteFlow(page);
   });
 
-  test("remove hit area is ≥44×44", async ({ page }) => {
+  test("remove rail stays hidden until a swipe", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/history");
 
-    const remove = page
-      .locator(".hover-glow")
-      .filter({ hasText: "Delete Me Film" })
-      .getByRole("button", { name: /remove from history/i });
-    await expect(remove).toBeVisible();
-    const box = await remove.boundingBox();
+    const ticket = page.getByRole("button", { name: /Delete Me Film/ });
+    await expect(ticket).toBeVisible();
+    const rail = page.locator("[data-remove-rail]").first();
+    await expect(rail).toHaveAttribute("data-revealed", "false");
+    await expect(page.getByRole("button", { name: "Previous", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Next", exact: true })).toHaveCount(0);
+
+    const box = await ticket.boundingBox();
     expect(box).toBeTruthy();
-    expect(box!.height).toBeGreaterThanOrEqual(44);
-    expect(box!.width).toBeGreaterThanOrEqual(44);
+    const startX = box!.x + box!.width - 40;
+    const y = box!.y + box!.height / 2;
+    await page.mouse.move(startX, y);
+    await page.mouse.down();
+    await page.mouse.move(startX - 40, y, { steps: 8 });
+    await expect(rail).toHaveAttribute("data-revealed", "true");
+    const revealed = await rail.boundingBox();
+    expect(revealed).toBeTruthy();
+    expect(revealed!.height).toBeGreaterThanOrEqual(44);
+    expect(revealed!.width).toBeGreaterThanOrEqual(44);
+    await page.mouse.up();
   });
 
-  test("confirm remove deletes card from history list", async ({ page }) => {
+  test("confirm remove deletes the night from history", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/history");
 
     await expect(page.getByText("Delete Me Film")).toBeVisible();
     await expect(page.getByText("Keep Me Film")).toBeVisible();
 
-    await page
-      .locator(".hover-glow")
-      .filter({ hasText: "Delete Me Film" })
-      .getByRole("button", { name: /remove from history/i })
-      .click();
+    const ticket = page.getByRole("button", { name: /Delete Me Film/ });
+    const box = await ticket.boundingBox();
+    expect(box).toBeTruthy();
+    const y = box!.y + box!.height / 2;
+    await page.mouse.move(box!.x + box!.width / 2, y);
+    await page.mouse.down();
+    await page.waitForTimeout(600);
+    await page.mouse.up();
 
-    await expect(
-      page.getByRole("dialog", { name: /remove from history/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("alertdialog", { name: /remove this night/i })).toBeVisible();
     await expect(
       page.getByText(
-        "Are you sure you want to remove this from your history? This cannot be undone.",
+        "It will be deleted from History. This does not change the film on your watchlist.",
       ),
     ).toBeVisible();
 
@@ -50,7 +63,7 @@ test.describe("History delete (mocked API)", () => {
 
     await expect(page.getByText("Delete Me Film")).not.toBeVisible();
     await expect(page.getByText("Keep Me Film")).toBeVisible();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByRole("alertdialog")).not.toBeVisible();
 
     await page.reload();
     await expect(page.getByText("Delete Me Film")).not.toBeVisible();

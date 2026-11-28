@@ -15,7 +15,7 @@ import {
 import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { Input } from "@/components/ui/input";
-import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
+import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { useReviewRequired, useWatchReviewRequired } from "@/hooks/use-films";
 import {
   useAcceptReview,
@@ -33,9 +33,7 @@ export default function ReviewPage() {
   const [watchDialog, setWatchDialog] = useState<{
     filmId: string;
     filmTitle: string;
-    initialScore?: number | null;
-    initialWatchedAt?: string;
-    initialNotes?: string | null;
+    year: number | null;
   } | null>(null);
 
   const isLoading = matchQuery.isLoading || watchQuery.isLoading;
@@ -97,7 +95,7 @@ export default function ReviewPage() {
                   resolveLetterboxd.variables?.reviewId === film.review_id);
 
               return (
-                <Card key={film.review_id} className="bg-surface-high hover-glow">
+                <Card key={film.review_id} className="bg-cb-surface">
                   <CardHeader className="flex flex-row gap-4">
                     <FilmPoster
                       src={film.candidate_payload.poster_url}
@@ -105,7 +103,7 @@ export default function ReviewPage() {
                       size="sm"
                     />
                     <div className="flex-1">
-                      <CardTitle className="text-base">
+                      <CardTitle>
                         {isLetterboxdReview ? (
                           <>
                             {film.candidate_payload.title}
@@ -116,7 +114,7 @@ export default function ReviewPage() {
                         ) : (
                           <Link
                             href={`/watchlist/${film.film_id}?editMatch=1`}
-                            className="hover:text-primary hover:underline"
+                            className="hover:text-cb-teal hover:underline"
                           >
                             {film.title}
                             {film.year ? ` (${film.year})` : ""}
@@ -133,12 +131,12 @@ export default function ReviewPage() {
                             }`}
                       </CardDescription>
                       {!isLetterboxdReview && film.candidate_payload.director && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-ui text-cb-ui text-cb-muted">
                           {film.candidate_payload.director}
                         </p>
                       )}
                       {!isLetterboxdReview && (
-                        <p className="mt-1 text-label-md normal-case tracking-normal text-secondary">
+                        <p className="mt-1 font-mono text-cb-meta normal-case tracking-normal text-cb-teal">
                           Confidence: {confidence}%
                         </p>
                       )}
@@ -218,19 +216,19 @@ export default function ReviewPage() {
             {watchFilms.map((film) => (
               <Card
                 key={film.film_id}
-                className="cursor-pointer bg-surface-high hover-glow"
+                className="cursor-pointer bg-cb-surface"
                 onClick={() =>
                   setWatchDialog({
                     filmId: film.film_id,
                     filmTitle: film.title,
-                    ...watchToDialogProps(film.pending_watch),
+                    year: film.year,
                   })
                 }
               >
                 <CardHeader className="flex flex-row gap-4">
                   <FilmPoster src={film.poster_url} alt={film.title} size="sm" />
                   <div>
-                    <CardTitle className="text-base">
+                    <CardTitle>
                       {film.title}
                       {film.year ? ` (${film.year})` : ""}
                     </CardTitle>
@@ -253,13 +251,12 @@ export default function ReviewPage() {
         <WatchReviewDialog
           filmId={watchDialog.filmId}
           filmTitle={watchDialog.filmTitle}
+          year={watchDialog.year}
           open
+          mode="create"
           onOpenChange={(open) => {
             if (!open) setWatchDialog(null);
           }}
-          initialScore={watchDialog.initialScore}
-          initialWatchedAt={watchDialog.initialWatchedAt}
-          initialNotes={watchDialog.initialNotes}
         />
       )}
     </div>

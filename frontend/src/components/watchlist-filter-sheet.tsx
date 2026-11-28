@@ -1,236 +1,183 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { MultiSelectChips } from "@/components/multi-select-chips";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CueNumber } from "@/components/ui/cue-number";
+import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { formatEnrichmentStatus } from "@/lib/enrichment-status";
-import type { FilmSortField, SortDirection, WatchlistTab } from "@/types/api";
-
-const ENRICHMENT_OPTIONS = [
-  "pending",
-  "matching",
-  "review_required",
-  "enriching",
-  "ready",
-  "failed",
-] as const;
+import { useFilms, useWatchlistGenres } from "@/hooks/use-films";
+import { RUNTIME_OPTIONS } from "@/lib/questionnaire-vocabulary";
+import { cn } from "@/lib/utils";
+import type { RuntimePreference, WatchlistTab } from "@/types/api";
 
 export interface WatchlistFilterValues {
-  search: string;
-  enrichmentStatus: string;
-  year: string;
-  sort: FilmSortField;
-  sortDir: SortDirection;
-  createdFrom: string;
-  createdTo: string;
+  genres: string[];
+  runtime: RuntimePreference;
+  onMyServices: boolean;
 }
 
 export const DEFAULT_WATCHLIST_FILTERS: WatchlistFilterValues = {
-  search: "",
-  enrichmentStatus: "all",
-  year: "",
-  sort: "created_at",
-  sortDir: "desc",
-  createdFrom: "",
-  createdTo: "",
+  genres: [],
+  runtime: "any",
+  onMyServices: false,
 };
 
 interface WatchlistFilterSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  view: WatchlistTab;
+  /** Current pill. The preview count uses this status. */
+  status: WatchlistTab;
   values: WatchlistFilterValues;
   onApply: (values: WatchlistFilterValues) => void;
-  onClear: () => void;
+}
+
+function mergeGenres(fromServer: string[], selected: string[]): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+  for (const label of [...fromServer, ...selected]) {
+    const key = label.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(label);
+  }
+  return merged;
 }
 
 export function WatchlistFilterSheet({
   open,
   onOpenChange,
-  view,
+  status,
   values,
   onApply,
-  onClear,
 }: WatchlistFilterSheetProps) {
   const [draft, setDraft] = useState<WatchlistFilterValues>(values);
 
   useEffect(() => {
-    if (open) {
-      setDraft(values);
-    }
+    if (open) setDraft(values);
   }, [open, values]);
+
+  const genresQuery = useWatchlistGenres({ enabled: open });
+  const genreOptions = useMemo(
+    () => mergeGenres(genresQuery.data ?? [], draft.genres),
+    [draft.genres, genresQuery.data],
+  );
+
+  const preview = useFilms(
+    {
+      status,
+      limit: 1,
+      ...(draft.genres.length > 0 ? { genres: draft.genres } : {}),
+      ...(draft.runtime === "any" ? {} : { runtime: draft.runtime }),
+      ...(draft.onMyServices ? { on_my_services: true } : {}),
+    },
+    { enabled: open, keepPrevious: true },
+  );
+  const total = preview.data?.pagination.total;
+  const filmWord = total === 1 ? "film" : "films";
+  const countPending = total == null && preview.isLoading && !preview.isError;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto sm:max-w-lg sm:mx-auto">
-        <SheetHeader>
-          <SheetTitle>Filter and sort</SheetTitle>
-          <SheetDescription>
-            Adjust search, enrichment, year, and sort. Apply to update the grid.
+      <SheetContent side="bottom" className="max-h-[85vh]">
+        <SheetHeader className="text-left">
+          <SheetTitle>Filter</SheetTitle>
+          <SheetDescription className="sr-only">
+            Narrow this view by your services, genre, and runtime.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="watchlist-filter-search">Search</Label>
-            <Input
-              id="watchlist-filter-search"
-              placeholder="Filter by title…"
-              value={draft.search}
-              onChange={(e) =>
-                setDraft((prev) => ({ ...prev, search: e.target.value }))
-              }
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto">
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="on-my-services" className="font-ui text-cb-ui text-cb-text">
+              On my services
+            </label>
+            <Switch
+              id="on-my-services"
+              checked={draft.onMyServices}
+              onCheckedChange={(on) => setDraft((prev) => ({ ...prev, onMyServices: on }))}
+              aria-label="On my services"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Enrichment</Label>
-            <Select
-              value={draft.enrichmentStatus}
-              onValueChange={(value) =>
-                setDraft((prev) => ({ ...prev, enrichmentStatus: value }))
-              }
+            <p className="text-label-md text-cb-muted">Genre</p>
+            {genreOptions.length > 0 ? (
+              <MultiSelectChips
+                options={genreOptions}
+                value={draft.genres}
+                onChange={(genres) => setDraft((prev) => ({ ...prev, genres }))}
+              />
+            ) : (
+              <p className="font-ui text-cb-caption text-cb-muted">
+                {genresQuery.isError ? "Could not load genres." : "No genres yet."}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <p id="watchlist-runtime-label" className="text-label-md text-cb-muted">
+              Runtime
+            </p>
+            <div
+              role="radiogroup"
+              aria-labelledby="watchlist-runtime-label"
+              className="flex flex-wrap gap-2"
             >
-              <SelectTrigger aria-label="Enrichment status">
-                <SelectValue placeholder="Enrichment status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {ENRICHMENT_OPTIONS.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {formatEnrichmentStatus(status)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="watchlist-filter-year">Year</Label>
-            <Input
-              id="watchlist-filter-year"
-              type="number"
-              placeholder="Year"
-              value={draft.year}
-              onChange={(e) =>
-                setDraft((prev) => ({ ...prev, year: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Sort by</Label>
-              <Select
-                value={draft.sort}
-                onValueChange={(value) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    sort: value as FilmSortField,
-                  }))
-                }
-              >
-                <SelectTrigger aria-label="Sort by">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="title">Title</SelectItem>
-                  <SelectItem value="year">Year</SelectItem>
-                  <SelectItem value="created_at">Date added</SelectItem>
-                  {view === "watched" ? (
-                    <SelectItem value="watched_at">Date watched</SelectItem>
-                  ) : null}
-                  <SelectItem value="enrichment_status">Enrichment</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Direction</Label>
-              <Select
-                value={draft.sortDir}
-                onValueChange={(value) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    sortDir: value as SortDirection,
-                  }))
-                }
-              >
-                <SelectTrigger aria-label="Sort direction">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asc">Ascending</SelectItem>
-                  <SelectItem value="desc">Descending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="watchlist-filter-created-from">Added from</Label>
-              <Input
-                id="watchlist-filter-created-from"
-                type="date"
-                value={draft.createdFrom}
-                onChange={(e) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    createdFrom: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="watchlist-filter-created-to">Added to</Label>
-              <Input
-                id="watchlist-filter-created-to"
-                type="date"
-                value={draft.createdTo}
-                onChange={(e) =>
-                  setDraft((prev) => ({ ...prev, createdTo: e.target.value }))
-                }
-              />
+              {RUNTIME_OPTIONS.map((option) => {
+                const selected = draft.runtime === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={cn(
+                      "inline-flex min-h-11 items-center rounded-cb border px-3 py-2 font-ui text-cb-caption",
+                      selected
+                        ? "border-cb-teal bg-cb-surface text-cb-teal"
+                        : "border-cb-divider bg-cb-surface text-cb-muted",
+                    )}
+                    onClick={() =>
+                      setDraft((prev) => ({ ...prev, runtime: option.value }))
+                    }
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        <SheetFooter className="mt-8 gap-2">
+        <div className="mt-auto flex flex-col items-center gap-3 pt-2">
+          <button
+            type="button"
+            className="font-ui text-cb-ui text-cb-teal"
+            onClick={() => setDraft(DEFAULT_WATCHLIST_FILTERS)}
+          >
+            Clear all
+          </button>
           <Button
             type="button"
-            variant="outline"
-            onClick={() => {
-              setDraft(DEFAULT_WATCHLIST_FILTERS);
-              onClear();
-            }}
+            className="h-12 w-full"
+            disabled={countPending}
+            aria-label={total == null ? "Show films" : `Show ${total} ${filmWord}`}
+            onClick={() => onApply(draft)}
           >
-            Clear
+            <span className="inline-flex items-baseline gap-1">
+              <span>Show</span>
+              {total == null ? <span>…</span> : <CueNumber value={total} />}
+              <span>{filmWord}</span>
+            </span>
           </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              onApply(draft);
-            }}
-          >
-            Apply
-          </Button>
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   );

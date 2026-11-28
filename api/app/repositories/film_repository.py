@@ -6,15 +6,42 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Literal
 
-from sqlalchemy import Date, and_, case, cast, func, lateral, literal, nulls_last, select, true
+from sqlalchemy import (
+    Date,
+    and_,
+    case,
+    cast,
+    false,
+    func,
+    lateral,
+    literal,
+    nulls_last,
+    or_,
+    select,
+    true,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session, selectinload
 
 from app.database.enums import EnrichmentStatus, FilmAddSource, FilmStatus, WatchSource
 from app.services.watched_csv_parser import DEFAULT_WATCHED_AT
-from app.database.models import Film, FilmWatch, WatchlistEntry
+from app.database.models import (
+    Film,
+    FilmMetadata,
+    FilmStreamingAvailability,
+    FilmWatch,
+    WatchlistEntry,
+)
 
-FilmSortField = Literal["title", "year", "created_at", "enrichment_status", "watched_at"]
+FilmSortField = Literal[
+    "title",
+    "year",
+    "created_at",
+    "enrichment_status",
+    "watched_at",
+    "runtime",
+    "rating",
+]
 SortDirection = Literal["asc", "desc"]
 _ColumnSortField = Literal["title", "year", "created_at", "enrichment_status"]
 
@@ -204,12 +231,20 @@ def list_films(
     year_to: int | None = None,
     created_from: date | None = None,
     created_to: date | None = None,
+    genres: list[str] | None = None,
+    runtime_max: int | None = None,
+    on_my_services: bool = False,
+    service_provider_ids: list[int] | None = None,
+    service_country: str | None = None,
     sort: FilmSortField = "created_at",
     sort_dir: SortDirection = "desc",
     limit: int = 20,
     offset: int = 0,
 ) -> tuple[list[Film], int]:
-    stmt = select(Film).options(selectinload(Film.metadata_))
+    stmt = select(Film).options(
+        selectinload(Film.metadata_),
+        selectinload(Film.semantic_profile),
+    )
     count_stmt = select(func.count()).select_from(Film)
 
     if on_watchlist:
@@ -257,11 +292,88 @@ def list_films(
         stmt = stmt.where(Film.created_at <= end)
         count_stmt = count_stmt.where(Film.created_at <= end)
 
+    # Runtime and rating read film_metadata. Genre and runtime filters do too.
+    # A missing metadata row stays in an unfiltered sort (nulls last) and drops
+    # out of an active genre or runtime filter.
+    if sort in ("runtime", "rating") or genres or runtime_max is not None:
+        metadata_join = (FilmMetadata, FilmMetadata.film_id == Film.id)
+        stmt = stmt.outerjoin(*metadata_join)
+        count_stmt = count_stmt.outerjoin(*metadata_join)
+    if genres:
+        genre_clause = _metadata_has_any_genre(genres)
+        stmt = stmt.where(genre_clause)
+        count_stmt = count_stmt.where(genre_clause)
+    if runtime_max is not None:
+        runtime_clause = and_(
+            FilmMetadata.runtime.is_not(None),
+            FilmMetadata.runtime <= runtime_max,
+        )
+        stmt = stmt.where(runtime_clause)
+        count_stmt = count_stmt.where(runtime_clause)
+    if on_my_services:
+        # Cache only. An empty selection matches nothing. A film with no row,
+        # or no overlap with the chosen flatrate ids, is excluded.
+        selected = service_provider_ids or []
+        if not selected:
+            stmt = stmt.where(false())
+            count_stmt = count_stmt.where(false())
+        else:
+            availability_join = (
+                FilmStreamingAvailability,
+                FilmStreamingAvailability.film_id == Film.id,
+            )
+            stmt = stmt.join(*availability_join)
+            count_stmt = count_stmt.join(*availability_join)
+            overlap = FilmStreamingAvailability.flatrate_provider_ids.overlap(selected)
+            country_clause = FilmStreamingAvailability.country_code == (service_country or "")
+            stmt = stmt.where(overlap, country_clause)
+            count_stmt = count_stmt.where(overlap, country_clause)
+
     order = _order_by(sort, sort_dir)
 
     total = db.scalar(count_stmt) or 0
     films = list(db.scalars(stmt.order_by(*order).limit(limit).offset(offset)).all())
     return films, total
+
+
+def _metadata_has_any_genre(names: list[str]):
+    """Case-insensitive any-of match against the JSON genre array."""
+    lowered = [name.lower() for name in names]
+    genre_rows = lateral(
+        func.jsonb_array_elements_text(FilmMetadata.genres).table_valued("value")
+    ).alias("watchlist_genre")
+    return (
+        select(literal(1))
+        .select_from(genre_rows)
+        .where(func.lower(genre_rows.c.value).in_(lowered))
+        .correlate(FilmMetadata)
+        .exists()
+    )
+
+
+def list_watchlist_genres(db: Session) -> list[str]:
+    """Distinct genre labels on films with an active watchlist entry."""
+    stmt = (
+        select(FilmMetadata.genres)
+        .join(Film, Film.id == FilmMetadata.film_id)
+        .join(
+            WatchlistEntry,
+            (WatchlistEntry.film_id == Film.id) & WatchlistEntry.active.is_(True),
+        )
+    )
+    chosen: dict[str, str] = {}
+    for raw_genres in db.scalars(stmt):
+        for genre in raw_genres or []:
+            if not isinstance(genre, str):
+                continue
+            label = genre.strip()
+            if not label:
+                continue
+            key = label.casefold()
+            current = chosen.get(key)
+            if current is None or label < current:
+                chosen[key] = label
+    return [chosen[key] for key in sorted(chosen)]
 
 
 def _order_by(sort: FilmSortField, sort_dir: SortDirection) -> tuple[object, ...]:
@@ -271,23 +383,44 @@ def _order_by(sort: FilmSortField, sort_dir: SortDirection) -> tuple[object, ...
             _newest_watched_day().asc() if sort_dir == "asc" else _newest_watched_day().desc()
         )
         return (nulls_last(direction), Film.title.asc(), Film.id.asc())
+    if sort == "runtime":
+        direction = (
+            FilmMetadata.runtime.asc() if sort_dir == "asc" else FilmMetadata.runtime.desc()
+        )
+        return (nulls_last(direction), Film.title.asc(), Film.id.asc())
+    if sort == "rating":
+        # TMDB on every view, including Watched. Own stars are not a sort key.
+        direction = (
+            FilmMetadata.tmdb_rating.asc()
+            if sort_dir == "asc"
+            else FilmMetadata.tmdb_rating.desc()
+        )
+        return (nulls_last(direction), Film.title.asc(), Film.id.asc())
     sort_column = _SORT_COLUMNS[sort]
     direction = sort_column.asc() if sort_dir == "asc" else sort_column.desc()
     return (direction,)
 
 
 def _is_unknown_watched_date():
-    """Unknown watched date: stored day, but not a day the film was watched."""
-    return and_(
-        FilmWatch.source == WatchSource.LETTERBOXD_IMPORT,
-        FilmWatch.watched_at == DEFAULT_WATCHED_AT,
+    """Days that do not count as a date watched.
+
+    Letterboxd import stores an unknown day as 1984-09-28. A null watched_at
+    is the same dateless case (a manual watch saved without a date).
+    """
+    return or_(
+        FilmWatch.watched_at.is_(None),
+        and_(
+            FilmWatch.source == WatchSource.LETTERBOXD_IMPORT,
+            FilmWatch.watched_at == DEFAULT_WATCHED_AT,
+        ),
     )
 
 
 def _newest_watched_day():
     """Newest real watch day, including pending drafts and staged extra days.
 
-    An unknown watched date on ``watched_at`` is skipped. Later staged days on
+    An unknown watched date on ``watched_at`` is skipped, as is a null date.
+    Later staged days on
     that same row still count. A staged value that is itself the unknown
     watched date is skipped, and a film whose only days are unknown sorts as
     a dateless film.
@@ -404,8 +537,6 @@ def list_recommendation_candidates(
     exclude_non_english: bool = False,
 ) -> list[Film]:
     """Active, ready films eligible for recommendation Stage 1 filtering."""
-    from app.database.models import FilmMetadata
-
     stmt = (
         select(Film)
         .join(FilmMetadata, FilmMetadata.film_id == Film.id)

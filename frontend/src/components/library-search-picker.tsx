@@ -12,10 +12,7 @@ import { FilmPoster } from "@/components/film-poster";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  WatchReviewDialog,
-  watchToDialogProps,
-} from "@/components/watch-review-dialog";
+import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import {
   useAddToWatchlist,
   useFilm,
@@ -23,7 +20,7 @@ import {
   useFilms,
   useGlobalTmdbSearch,
 } from "@/hooks/use-films";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { ApiClientError, getFilm } from "@/lib/api-client";
 import { scrollFieldIntoView } from "@/lib/scroll-field-into-view";
 import {
@@ -45,11 +42,8 @@ interface LibrarySearchPickerProps {
 interface ReviewDialogState {
   filmId: string;
   filmTitle: string;
-  cancelOnDismiss: boolean;
-  initialWatchedAt?: string;
-  initialScore?: number | null;
-  initialNotes?: string | null;
-  watchId?: string;
+  year: number | null;
+  genre: string | null;
 }
 
 const DEFAULT_PLACEHOLDER = "Find a film…";
@@ -62,7 +56,6 @@ export function LibrarySearchPicker({
   helperText = DEFAULT_HELPER_TEXT,
 }: LibrarySearchPickerProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [reviewDialog, setReviewDialog] = useState<ReviewDialogState | null>(
@@ -138,25 +131,16 @@ export function LibrarySearchPicker({
         return;
       }
 
-      void (async () => {
-        try {
-          await statusTransition.mutateAsync({
-            filmId,
-            status: "pending_watch_review",
-          });
-          setReviewDialog({
-            filmId,
-            filmTitle,
-            cancelOnDismiss: true,
-          });
-          toast({
-            title: "Ready to review",
-            description: `${filmTitle} is ready — add your watch details.`,
-          });
-        } catch {
-          // useFilmStatusTransition toasts on error
-        }
-      })();
+      setReviewDialog({
+        filmId,
+        filmTitle,
+        year: polling.data.year,
+        genre: polling.data.metadata?.genres.find((genre) => genre.trim()) ?? null,
+      });
+      toast({
+        title: "Ready to review",
+        description: `${filmTitle} is ready — tap a star to save.`,
+      });
       return;
     }
 
@@ -218,27 +202,12 @@ export function LibrarySearchPicker({
     setConflictMessage(null);
   }
 
-  async function openMarkWatchedDialog(film: FilmSummary) {
-    await statusTransition.mutateAsync({
-      filmId: film.id,
-      status: "pending_watch_review",
-    });
+  function openReviewDialog(film: FilmSummary) {
     setReviewDialog({
       filmId: film.id,
       filmTitle: film.title,
-      cancelOnDismiss: true,
-    });
-  }
-
-  function openCompleteReviewDialog(film: FilmSummary) {
-    const pendingProps = film.pending_watch
-      ? watchToDialogProps(film.pending_watch)
-      : { initialWatchedAt: film.latest_watched_at ?? undefined };
-    setReviewDialog({
-      filmId: film.id,
-      filmTitle: film.title,
-      cancelOnDismiss: false,
-      ...pendingProps,
+      year: film.year,
+      genre: film.genres.find((genre) => genre.trim()) ?? null,
     });
   }
 
@@ -317,27 +286,12 @@ export function LibrarySearchPicker({
 
       if (result.already_on_watchlist) {
         const film = await getFilm(result.film_id);
-        if (film.status === "active") {
-          await statusTransition.mutateAsync({
-            filmId: film.id,
-            status: "pending_watch_review",
-          });
+        if (film.status === "active" || film.status === "pending_watch_review") {
           setReviewDialog({
             filmId: film.id,
             filmTitle: film.title,
-            cancelOnDismiss: true,
-          });
-          return;
-        }
-        if (film.status === "pending_watch_review") {
-          const pending = film.watches.find((watch) => watch.is_pending);
-          setReviewDialog({
-            filmId: film.id,
-            filmTitle: film.title,
-            cancelOnDismiss: false,
-            ...(pending
-              ? watchToDialogProps(pending)
-              : {}),
+            year: film.year,
+            genre: film.metadata?.genres.find((genre) => genre.trim()) ?? null,
           });
           return;
         }
@@ -433,8 +387,8 @@ export function LibrarySearchPicker({
               hit={hit}
               isStatusPending={statusTransition.isPending}
               isAddPending={isAddPending}
-              onMarkWatched={(film) => void openMarkWatchedDialog(film)}
-              onCompleteReview={openCompleteReviewDialog}
+              onMarkWatched={openReviewDialog}
+              onCompleteReview={openReviewDialog}
               onReturnToWatchlist={(film) => void handleReturnToWatchlist(film)}
               onAddTmdb={(result) => void handleAddTmdb(result)}
               onAddAndMarkWatched={(result) => void handleAddAndMarkWatched(result)}
@@ -462,12 +416,10 @@ export function LibrarySearchPicker({
         <WatchReviewDialog
           filmId={reviewDialog.filmId}
           filmTitle={reviewDialog.filmTitle}
+          year={reviewDialog.year}
+          genre={reviewDialog.genre}
           open
-          cancelOnDismiss={reviewDialog.cancelOnDismiss}
-          watchId={reviewDialog.watchId}
-          initialScore={reviewDialog.initialScore}
-          initialWatchedAt={reviewDialog.initialWatchedAt}
-          initialNotes={reviewDialog.initialNotes}
+          mode="create"
           onOpenChange={(open) => {
             if (!open) {
               setReviewDialog(null);

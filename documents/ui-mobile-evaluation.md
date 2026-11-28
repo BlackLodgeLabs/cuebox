@@ -1,5 +1,7 @@
 # Cuebox mobile UI / IA evaluation
 
+Historical review of `feature/mobile-ui` against the earlier brief. The current UI is the Nov 2026 pack in [`docs/design/redesign-2026-11/`](../docs/design/redesign-2026-11/).
+
 **Branch evaluated:** `feature/mobile-ui`  
 **Viewport:** iPhone 14/15 — **390×844** CSS px @ 2x (`isMobile` / touch)  
 **Data state:** Returning-user paths (seeded ready films + one live recommendation session + one pending metadata review)  

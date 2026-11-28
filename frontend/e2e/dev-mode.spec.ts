@@ -23,7 +23,7 @@ test.describe("Developer Mode UI (mocked API)", () => {
   test("hides dev panel when backend developer mode is disabled", async ({ page }) => {
     await mockDeveloperModeDisabled(page);
     await page.goto(`/recommend/results/${DEV_SESSION_ID}?dev=1`);
-    await expect(page.getByRole("heading", { name: /your pick/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /tonight.s programme/i })).toBeVisible();
     await expect(page.getByText("Developer Mode", { exact: true })).not.toBeVisible();
   });
 
@@ -84,7 +84,8 @@ test.describe("Developer Mode UI (mocked API)", () => {
         response.url().includes("/dev/system/versions") && response.ok(),
     );
 
-    await expect(page.getByRole("heading", { level: 1, name: "The Wicker Man" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Fri 1 Nov" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "The Wicker Man" })).toBeVisible();
     await expect(page.getByText("Developer Mode", { exact: true })).toBeVisible();
     await expect(page.getByText("Profile hash")).toBeVisible();
   });

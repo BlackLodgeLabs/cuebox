@@ -52,7 +52,7 @@ export async function completeRecommendationJourney(page: Page): Promise<string>
     await page.getByRole("button", { name: "Next" }).click();
   }
 
-  await page.getByRole("button", { name: /get recommendation/i }).click();
+  await page.getByRole("button", { name: "Find my pick" }).click();
 
   await expect(page).toHaveURL(/\/recommend\/results\/[a-f0-9-]+$/i, {
     timeout: 60_000,

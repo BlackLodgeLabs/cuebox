@@ -646,6 +646,8 @@ def _film_result(film, explanation, *, is_winner: bool) -> FilmResult:
         tmdb_rating=float(metadata.tmdb_rating) if metadata and metadata.tmdb_rating is not None else None,
         rotten_tomatoes_score=metadata.rotten_tomatoes_score if metadata else None,
         poster_url=metadata.poster_url if metadata else None,
+        backdrop_url=metadata.backdrop_url if metadata else None,
+        genres=list(metadata.genres) if metadata and metadata.genres else [],
         explanation=expl,
     )
 

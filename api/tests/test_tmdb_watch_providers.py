@@ -73,6 +73,13 @@ async def test_get_movie_watch_providers_omits_missing_arrays(tmdb_client: TmdbC
     assert result.ads == []
 
 
+async def test_list_movie_watch_providers_parses_catalog(tmdb_client: TmdbClient):
+    entries = await tmdb_client.list_movie_watch_providers(country_code="GB")
+    assert [entry.provider_name for entry in entries] == ["Disney Plus", "Netflix", "Prime Video"]
+    assert entries[1].provider_id == 8
+    assert entries[1].logo_path == "/netflix.jpg"
+
+
 def test_provider_logo_url_builds_image_tmdb_url():
     url = TmdbClient.provider_logo_url("/foo.jpg", size="w92")
     assert url == "https://image.tmdb.org/t/p/w92/foo.jpg"

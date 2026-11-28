@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FilmDetailView } from "@/components/film-detail-view";
-import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { FilmDetailSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilm, useFilmStatusTransition } from "@/hooks/use-films";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import type { WatchlistTab } from "@/types/api";
 
 function parseWatchlistTab(value: string | null): WatchlistTab | undefined {
@@ -19,11 +18,10 @@ function parseWatchlistTab(value: string | null): WatchlistTab | undefined {
 
 export default function WatchlistFilmPage() {
   const params = useParams<{ filmId: string }>();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const filmId = params.filmId;
-  const { toast } = useToast();
   const prevStatusRef = useRef<string | null>(null);
-  const [markWatchedOpen, setMarkWatchedOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useFilm(filmId, {
     pollWhileEnriching: true,
@@ -74,31 +72,20 @@ export default function WatchlistFilmPage() {
   }
 
   return (
-    <>
-      <FilmDetailView
-        film={data}
-        autoOpenEditMatch={autoOpenEdit}
-        watchlistTab={watchlistTab}
-        isStatusPending={statusTransition.isPending}
-        onStatusTransition={(status) =>
-          statusTransition.mutate({ filmId, status })
-        }
-        onMarkWatched={async () => {
-          await statusTransition.mutateAsync({
-            filmId,
-            status: "pending_watch_review",
-          });
-          setMarkWatchedOpen(true);
-        }}
-      />
-
-      <WatchReviewDialog
-        filmId={filmId}
-        filmTitle={data.title}
-        open={markWatchedOpen}
-        cancelOnDismiss
-        onOpenChange={setMarkWatchedOpen}
-      />
-    </>
+    <FilmDetailView
+      film={data}
+      autoOpenEditMatch={autoOpenEdit}
+      watchlistTab={watchlistTab}
+      isStatusPending={statusTransition.isPending}
+      onStatusTransition={(status) =>
+        statusTransition.mutate({ filmId, status })
+      }
+      onRemove={() => {
+        statusTransition.mutate(
+          { filmId, status: "archived" },
+          { onSuccess: () => router.push("/watchlist") },
+        );
+      }}
+    />
   );
 }

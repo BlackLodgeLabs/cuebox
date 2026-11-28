@@ -1,124 +1,91 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ErrorState } from "@/components/error-state";
+import { Icon } from "@/components/icon";
+import { PosterGridSkeleton } from "@/components/loading-state";
+import { LoadingMore } from "@/components/ui/infinite-scroll";
 import {
-  DEFAULT_WATCHLIST_FILTERS,
   WatchlistFilterSheet,
   type WatchlistFilterValues,
 } from "@/components/watchlist-filter-sheet";
 import { WatchlistPosterGrid } from "@/components/watchlist-poster-grid";
-import { WatchReviewDialog, watchToDialogProps } from "@/components/watch-review-dialog";
-import { Icon } from "@/components/icon";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ErrorState } from "@/components/error-state";
-import { PosterGridSkeleton } from "@/components/loading-state";
-import { useFilmStatusTransition, useFilms } from "@/hooks/use-films";
+import { WatchlistSortSheet } from "@/components/watchlist-sort-sheet";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { WATCHLIST_PAGE_SIZE, useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { getFilms } from "@/lib/api-client";
+import { watchlistSwitchMotion } from "@/lib/motion";
+import {
+  resolveWatchlistSort,
+  watchlistSortIsDefault,
+  type WatchlistSort,
+} from "@/lib/watchlist-sort";
 import { cn } from "@/lib/utils";
-import type { FilmSortField, FilmStatus, FilmSummary, SortDirection, WatchlistTab } from "@/types/api";
+import type { FilmSummary, RuntimePreference, WatchlistTab } from "@/types/api";
 
-const LIMIT = 20;
-
-function viewDefaultSort(tab: WatchlistTab): FilmSortField {
-  return tab === "watched" ? "watched_at" : "created_at";
-}
-
-function parseSort(value: string | null, tab: WatchlistTab): FilmSortField {
-  if (
-    value === "title" ||
-    value === "year" ||
-    value === "created_at" ||
-    value === "enrichment_status" ||
-    value === "watched_at"
-  ) {
-    return value;
-  }
-  return viewDefaultSort(tab);
-}
-
-function parseSortDir(value: string | null): SortDirection {
-  return value === "asc" ? "asc" : "desc";
-}
+const PILLS: { id: WatchlistTab; label: string; noun: string }[] = [
+  { id: "active", label: "Unwatched", noun: "unwatched" },
+  { id: "watched", label: "Watched", noun: "watched" },
+  { id: "archived", label: "Archived", noun: "archived" },
+];
 
 function parseTab(value: string | null): WatchlistTab {
-  if (value === "watched" || value === "archived") {
-    return value;
-  }
+  if (value === "watched" || value === "archived") return value;
   return "active";
 }
 
-function tabLabel(tab: WatchlistTab, count: number | undefined): string {
-  const names: Record<WatchlistTab, string> = {
-    active: "Watchlist",
-    watched: "Watched",
-    archived: "Archived",
-  };
-  const total = count ?? "…";
-  return `${names[tab]} (${total})`;
+function parseGenres(value: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
-function filtersAreActive(values: WatchlistFilterValues, tab: WatchlistTab): boolean {
-  return (
-    values.search !== "" ||
-    values.enrichmentStatus !== "all" ||
-    values.year !== "" ||
-    values.createdFrom !== "" ||
-    values.createdTo !== "" ||
-    values.sort !== viewDefaultSort(tab) ||
-    values.sortDir !== "desc"
-  );
+function parseRuntime(value: string | null): RuntimePreference {
+  if (value === "le_90" || value === "le_120" || value === "le_150") return value;
+  return "any";
+}
+
+function parseOnMyServices(value: string | null): boolean {
+  return value === "true" || value === "1";
 }
 
 export function WatchlistPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const tab = parseTab(searchParams.get("tab"));
-  const rawSort = searchParams.get("sort");
-  const dateWatchedOffView = rawSort === "watched_at" && tab !== "watched";
-  const sort = dateWatchedOffView ? viewDefaultSort(tab) : parseSort(rawSort, tab);
-  const sortDir = dateWatchedOffView ? "desc" : parseSortDir(searchParams.get("sort_dir"));
-  const offset = Number(searchParams.get("offset") ?? "0") || 0;
-  const yearFromUrl = searchParams.get("year") ?? "";
-  const createdFrom = searchParams.get("created_from") ?? "";
-  const createdTo = searchParams.get("created_to") ?? "";
-  const enrichmentStatus = searchParams.get("enrichment_status") ?? "all";
-  const searchFromUrl = searchParams.get("search") ?? "";
-
+  const reduced = useReducedMotion();
+  const switchMotion = watchlistSwitchMotion(reduced);
+  const [crossfade, setCrossfade] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const filterValues = useMemo<WatchlistFilterValues>(
-    () => ({
-      search: searchFromUrl,
-      enrichmentStatus,
-      year: yearFromUrl,
-      sort,
-      sortDir,
-      createdFrom,
-      createdTo,
-    }),
-    [
-      createdFrom,
-      createdTo,
-      enrichmentStatus,
-      searchFromUrl,
-      sort,
-      sortDir,
-      yearFromUrl,
-    ],
-  );
+  useEffect(() => {
+    setCrossfade(true);
+  }, []);
+
+  const tab = parseTab(searchParams.get("tab"));
+  const [visible, setVisible] = useState<{
+    tab: WatchlistTab;
+    items: FilmSummary[];
+    total: number | null;
+    error: boolean;
+  }>({ tab, items: [], total: null, error: false });
+  const sort = resolveWatchlistSort(searchParams.get("sort"), searchParams.get("sort_dir"));
+  const genres = parseGenres(searchParams.get("genres"));
+  const runtime = parseRuntime(searchParams.get("runtime"));
+  const onMyServices = parseOnMyServices(searchParams.get("on_my_services"));
+  const filtersActive = genres.length > 0 || runtime !== "any" || onMyServices;
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
+        if (value == null || value === "") params.delete(key);
+        else params.set(key, value);
       }
       const query = params.toString();
       router.replace(query ? `/watchlist?${query}` : "/watchlist");
@@ -126,286 +93,254 @@ export function WatchlistPageContent() {
     [router, searchParams],
   );
 
-  const applyFilters = useCallback(
-    (values: WatchlistFilterValues) => {
-      updateParams({
-        search: values.search || null,
-        enrichment_status:
-          values.enrichmentStatus === "all" ? null : values.enrichmentStatus,
-        year: values.year || null,
-        sort: values.sort,
-        sort_dir: values.sortDir,
-        created_from: values.createdFrom || null,
-        created_to: values.createdTo || null,
-        offset: null,
-      });
-      setFilterOpen(false);
-    },
-    [updateParams],
-  );
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    const rawSort = params.get("sort");
+    const rawDir = params.get("sort_dir");
+    const resolved = resolveWatchlistSort(rawSort, rawDir);
+    let changed = false;
 
-  const clearFilters = useCallback(() => {
-    applyFilters({
-      ...DEFAULT_WATCHLIST_FILTERS,
-      sort: viewDefaultSort(tab),
-      sortDir: "desc",
-    });
-  }, [applyFilters, tab]);
+    if (params.has("offset")) {
+      params.delete("offset");
+      changed = true;
+    }
+    if (watchlistSortIsDefault(resolved)) {
+      if (params.has("sort") || params.has("sort_dir")) {
+        params.delete("sort");
+        params.delete("sort_dir");
+        changed = true;
+      }
+    } else if (rawSort !== resolved.sort || rawDir !== resolved.sortDir) {
+      params.set("sort", resolved.sort);
+      params.set("sort_dir", resolved.sortDir);
+      changed = true;
+    }
+    const rawRuntime = params.get("runtime");
+    if (rawRuntime != null && parseRuntime(rawRuntime) === "any") {
+      params.delete("runtime");
+      changed = true;
+    }
+    if (!changed) return;
+    const next = params.toString();
+    router.replace(next ? `/watchlist?${next}` : "/watchlist");
+  }, [router, searchParams]);
+
+  const list = useInfiniteScroll<FilmSummary>({
+    queryKey: [
+      "watchlist",
+      tab,
+      sort.sort,
+      sort.sortDir,
+      genres.join("\u0000"),
+      runtime,
+      onMyServices ? "1" : "0",
+    ],
+    pageSize: WATCHLIST_PAGE_SIZE,
+    fetchPage: ({ offset, limit }) =>
+      getFilms({
+        status: tab,
+        sort: sort.sort,
+        sort_dir: sort.sortDir,
+        ...(genres.length > 0 ? { genres } : {}),
+        ...(runtime === "any" ? {} : { runtime }),
+        ...(onMyServices ? { on_my_services: true } : {}),
+        offset,
+        limit,
+      }),
+  });
+
+  const listRef = useRef(list);
+  listRef.current = list;
+  const listSignature = [
+    tab,
+    list.total ?? "",
+    list.isLoading ? "1" : "0",
+    list.isError ? "1" : "0",
+    list.items.map((film) => film.id).join("\u0000"),
+  ].join("|");
 
   useEffect(() => {
-    if (searchParams.get("sort") === "watched_at" && tab !== "watched") {
-      updateParams({ sort: null, sort_dir: null, offset: null });
-    }
-  }, [searchParams, tab, updateParams]);
-
-  const sharedFilters = useMemo(
-    () => ({
-      search: searchFromUrl || undefined,
-      year: yearFromUrl ? Number(yearFromUrl) : undefined,
-      created_from: createdFrom || undefined,
-      created_to: createdTo || undefined,
-      enrichment_status:
-        enrichmentStatus === "all" ? undefined : enrichmentStatus,
-      sort,
-      sort_dir: sortDir,
-      limit: LIMIT,
-      offset,
-    }),
-    [
-      createdFrom,
-      createdTo,
-      enrichmentStatus,
-      offset,
-      searchFromUrl,
-      sort,
-      sortDir,
-      yearFromUrl,
-    ],
-  );
-
-  const queryParams = useMemo(() => {
-    if (tab === "watched") {
-      return { ...sharedFilters, status: "watched" as const };
-    }
-    if (tab === "archived") {
-      return { ...sharedFilters, status: "archived" as const };
-    }
-    return { ...sharedFilters, on_watchlist: true };
-  }, [sharedFilters, tab]);
-
-  const { data, isLoading, isError, refetch } = useFilms(queryParams);
-  const activeCountQuery = useFilms({ on_watchlist: true, limit: 1 });
-  const watchedCountQuery = useFilms({ status: "watched", limit: 1 });
-  const archivedCountQuery = useFilms({ status: "archived", limit: 1 });
-  const statusTransition = useFilmStatusTransition();
-  const [reviewDialog, setReviewDialog] = useState<{
-    filmId: string;
-    filmTitle: string;
-    cancelOnDismiss?: boolean;
-    initialScore?: number | null;
-    initialWatchedAt?: string;
-    initialNotes?: string | null;
-  } | null>(null);
-
-  const openMarkWatchedDialog = async (film: FilmSummary) => {
-    await statusTransition.mutateAsync({
-      filmId: film.id,
-      status: "pending_watch_review",
+    const current = listRef.current;
+    if (current.isLoading && current.items.length === 0 && !current.isError) return;
+    setVisible({
+      tab,
+      items: current.items,
+      total: current.total,
+      error: current.isError && current.items.length === 0,
     });
-    setReviewDialog({
-      filmId: film.id,
-      filmTitle: film.title,
-      cancelOnDismiss: true,
-    });
-  };
+  }, [listSignature, tab]);
 
-  const openCompleteReviewDialog = (film: FilmSummary) => {
-    const pendingProps = film.pending_watch
-      ? watchToDialogProps(film.pending_watch)
-      : { initialWatchedAt: film.latest_watched_at ?? undefined };
-    setReviewDialog({
-      filmId: film.id,
-      filmTitle: film.title,
-      cancelOnDismiss: false,
-      ...pendingProps,
-    });
-  };
-
-  const handleTabChange = (value: string) => {
+  function selectTab(next: WatchlistTab) {
     updateParams({
-      tab: value === "active" ? null : value,
+      tab: next === "active" ? null : next,
       offset: null,
-      ...(sort === "watched_at" && value !== "watched"
-        ? { sort: null, sort_dir: null }
-        : {}),
     });
-  };
+  }
 
-  const handleStatusTransition = (filmId: string, status: FilmStatus) => {
-    if (status === "pending_watch_review") {
-      const film = data?.data.find((item) => item.id === filmId);
-      if (film) {
-        void openMarkWatchedDialog(film);
-      }
-      return;
-    }
-    statusTransition.mutate({ filmId, status });
-  };
+  function selectSort(next: WatchlistSort) {
+    updateParams({
+      sort: watchlistSortIsDefault(next) ? null : next.sort,
+      sort_dir: watchlistSortIsDefault(next) ? null : next.sortDir,
+      offset: null,
+    });
+  }
 
-  const subtitle = (() => {
-    if (!data) {
-      return "Browse films and enrichment data from your Letterboxd watchlist.";
-    }
-    const count = data.pagination.total;
-    const noun = count === 1 ? "film" : "films";
-    if (tab === "watched") {
-      return `${count} watched ${noun}`;
-    }
-    if (tab === "archived") {
-      return `${count} archived ${noun}`;
-    }
-    return `${count} ${noun} on your watchlist`;
-  })();
+  function applyFilters(values: WatchlistFilterValues) {
+    updateParams({
+      genres: values.genres.length > 0 ? values.genres.join(",") : null,
+      runtime: values.runtime === "any" ? null : values.runtime,
+      on_my_services: values.onMyServices ? "true" : null,
+      offset: null,
+    });
+    setFilterOpen(false);
+  }
 
-  const emptyState = (() => {
-    if (tab === "watched") {
-      return (
-        <div className="py-12 text-center text-muted-foreground">
-          No watched films yet. Mark films as watched from your watchlist.
-        </div>
-      );
-    }
-    if (tab === "archived") {
-      return (
-        <div className="py-12 text-center text-muted-foreground">
-          No archived films. Archive films from your watchlist to see them here.
-        </div>
-      );
-    }
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        No films match your filters.{" "}
-        <Link href="/import" className="text-primary hover:underline">
-          Import your watchlist
-        </Link>
-      </div>
-    );
-  })();
-
-  const filtersActive = filtersAreActive(filterValues, tab);
+  const visiblePill = PILLS.find((item) => item.id === visible.tab) ?? PILLS[0];
+  const showSkeleton = visible.items.length === 0 && !visible.error && list.isLoading;
+  const showEmpty =
+    visible.items.length === 0 && !visible.error && !list.isLoading && !list.isError;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-h1">Watchlist</h1>
-          <p className="mt-1 text-body-md text-muted-foreground">{subtitle}</p>
+    <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-cb-page leading-none">Watchlist</h1>
+          <p className="mt-1 min-h-[1.35em] font-mono text-cb-caption text-cb-muted">
+            {visible.total != null ? `${visible.total} ${visiblePill.noun}` : null}
+          </p>
         </div>
-        <Button asChild>
-          <Link href="/search">Add film</Link>
-        </Button>
-      </div>
-
-      <Tabs value={tab} onValueChange={handleTabChange}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList>
-            <TabsTrigger value="active">
-              {tabLabel("active", activeCountQuery.data?.pagination.total)}
-            </TabsTrigger>
-            <TabsTrigger value="watched">
-              {tabLabel("watched", watchedCountQuery.data?.pagination.total)}
-            </TabsTrigger>
-            <TabsTrigger value="archived">
-              {tabLabel("archived", archivedCountQuery.data?.pagination.total)}
-            </TabsTrigger>
-          </TabsList>
-
-          <Button
+        <div className="flex shrink-0 items-center gap-2">
+          <button
             type="button"
-            variant="outline"
-            aria-label="Filter and sort"
+            className="inline-flex h-9 items-center gap-1.5 rounded-cb-pill border border-cb-divider bg-cb-bg px-3 font-ui text-cb-caption text-cb-text"
+            aria-haspopup="dialog"
+            aria-label={`Sort by ${sort.label}`}
+            onClick={() => setSortOpen(true)}
+          >
+            <Icon name="swap_vert" size={16} />
+            {sort.label}
+          </button>
+          <button
+            type="button"
+            aria-label="Filter"
+            aria-pressed={filtersActive}
             className={cn(
-              "min-h-[44px] min-w-[44px] gap-2",
-              filtersActive && "border-primary text-primary",
+              "inline-flex h-9 w-9 items-center justify-center rounded-cb-pill border bg-cb-bg",
+              filtersActive
+                ? "border-cb-teal text-cb-teal"
+                : "border-cb-divider text-cb-text",
             )}
             onClick={() => setFilterOpen(true)}
           >
-            <Icon name="filter_list" size={20} />
-            Filter
-          </Button>
+            <Icon name="tune" size={18} />
+          </button>
         </div>
+      </div>
 
-        <TabsContent value={tab} className="mt-6 space-y-6">
-          {isLoading && <PosterGridSkeleton count={6} />}
+      <div role="tablist" aria-label="Watchlist view" className="mt-4 flex gap-2">
+        {PILLS.map((item) => {
+          const selected = tab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              className={cn(
+                "inline-flex h-9 items-center rounded-cb-pill border px-3 font-ui text-cb-caption",
+                selected
+                  ? "border-cb-teal text-cb-teal"
+                  : "border-cb-divider text-cb-text",
+              )}
+              onClick={() => selectTab(item.id)}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
 
-          {isError && (
-            <ErrorState
-              message="Could not load watchlist."
-              onRetry={() => void refetch()}
-            />
-          )}
-
-          {data && data.data.length === 0 && emptyState}
-
-          {data && data.data.length > 0 && (
-            <>
-              <WatchlistPosterGrid
-                films={data.data}
-                tab={tab}
-                onStatusTransition={handleStatusTransition}
-                onMarkWatched={(film) => void openMarkWatchedDialog(film)}
-                onCompleteReview={openCompleteReviewDialog}
-                isStatusPending={statusTransition.isPending}
+      <div className="relative mt-4">
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.div
+            key={visible.tab}
+            data-cb-watchlist-crossfade=""
+            data-out-ms={switchMotion.outMs}
+            data-in-ms={switchMotion.inMs}
+            data-delay-ms={switchMotion.delayMs}
+            initial={crossfade ? { opacity: 0 } : false}
+            animate={{ opacity: 1, transition: switchMotion.in }}
+            exit={{ opacity: 0, transition: switchMotion.out }}
+          >
+            {showSkeleton ? <PosterGridSkeleton count={9} /> : null}
+            {visible.error ? (
+              <ErrorState
+                message="Could not load watchlist."
+                onRetry={() => void list.refetch()}
               />
+            ) : null}
+            {showEmpty ? (
+              <EmptyWatchlist tab={visible.tab} filtered={filtersActive && visible.tab === tab} />
+            ) : null}
+            {visible.items.length > 0 ? (
+              <WatchlistPosterGrid films={visible.items} tab={visible.tab} />
+            ) : null}
+            {list.isFetchingNextPage && visible.tab === tab ? <LoadingMore /> : null}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-              <div className="flex justify-center gap-3">
-                <Button
-                  variant="outline"
-                  disabled={offset === 0}
-                  onClick={() =>
-                    updateParams({
-                      offset: offset - LIMIT > 0 ? String(offset - LIMIT) : null,
-                    })
-                  }
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={!data.pagination.has_more}
-                  onClick={() => updateParams({ offset: String(offset + LIMIT) })}
-                >
-                  Next
-                </Button>
-              </div>
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
-
+      <WatchlistSortSheet
+        open={sortOpen}
+        onOpenChange={setSortOpen}
+        value={sort}
+        onSelect={selectSort}
+      />
       <WatchlistFilterSheet
         open={filterOpen}
         onOpenChange={setFilterOpen}
-        view={tab}
-        values={filterValues}
+        status={tab}
+        values={{ genres, runtime, onMyServices }}
         onApply={applyFilters}
-        onClear={clearFilters}
       />
-
-      {reviewDialog && (
-        <WatchReviewDialog
-          filmId={reviewDialog.filmId}
-          filmTitle={reviewDialog.filmTitle}
-          open
-          cancelOnDismiss={reviewDialog.cancelOnDismiss}
-          onOpenChange={(open) => {
-            if (!open) setReviewDialog(null);
-          }}
-          initialScore={reviewDialog.initialScore}
-          initialWatchedAt={reviewDialog.initialWatchedAt}
-          initialNotes={reviewDialog.initialNotes}
-        />
-      )}
     </div>
+  );
+}
+
+function EmptyWatchlist({
+  tab,
+  filtered,
+}: {
+  tab: WatchlistTab;
+  filtered: boolean;
+}) {
+  if (filtered) {
+    return (
+      <p className="py-12 text-center font-ui text-cb-body text-cb-muted">
+        No films match these filters.
+      </p>
+    );
+  }
+  if (tab === "watched") {
+    return (
+      <p className="py-12 text-center font-ui text-cb-body text-cb-muted">
+        No watched films yet.
+      </p>
+    );
+  }
+  if (tab === "archived") {
+    return (
+      <p className="py-12 text-center font-ui text-cb-body text-cb-muted">
+        No archived films.
+      </p>
+    );
+  }
+  return (
+    <p className="py-12 text-center font-ui text-cb-body text-cb-muted">
+      Nothing on your watchlist yet.{" "}
+      <Link href="/import" className="text-cb-teal hover:underline">
+        Import your watchlist
+      </Link>
+    </p>
   );
 }

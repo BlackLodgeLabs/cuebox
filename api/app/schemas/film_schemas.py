@@ -31,6 +31,11 @@ class FilmSummary(BaseModel):
     director: str | None = None
     runtime: int | None = None
     genres: list[str] = Field(default_factory=list)
+    backdrop_url: str | None = None
+    synopsis: str | None = None
+    tones: list[str] = Field(default_factory=list)
+    emotional_outcomes: list[str] = Field(default_factory=list)
+    latest_score: float | None = None
     created_at: datetime
     updated_at: datetime
     removed_at: datetime | None = None
@@ -39,9 +44,41 @@ class FilmSummary(BaseModel):
     pending_watch: "FilmWatchSummary | None" = None
 
 
+class GenreListResponse(BaseModel):
+    data: list[str]
+
+
 class FilmListResponse(BaseModel):
     data: list[FilmSummary]
     pagination: PaginationMeta
+
+
+class SimilarFilm(FilmSummary):
+    """Watchlist neighbour returned by close-to-this similarity."""
+
+    semantic_line: str | None = None
+
+
+class FilmTrailerResponse(BaseModel):
+    url: str | None
+    name: str | None = None
+    site: str | None = None
+
+
+class TmdbFilmResponse(BaseModel):
+    tmdb_id: int
+    title: str
+    year: int | None
+    overview: str | None
+    backdrop_url: str | None
+    poster_url: str | None
+    genres: list[str] = Field(default_factory=list)
+    runtime: int | None
+    director: str | None
+    tmdb_rating: float | None
+    trailer_url: str | None
+    film_id: UUID | None = None
+    status: str | None = None
 
 
 class FilmMetadataBlock(BaseModel):
@@ -98,7 +135,7 @@ class FilmDetail(BaseModel):
 class FilmWatchSummary(BaseModel):
     id: UUID
     score: float | None
-    watched_at: date
+    watched_at: date | None
     notes: str | None = None
     source: str
     is_pending: bool

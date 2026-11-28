@@ -160,6 +160,9 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
       .getByRole("link", { name: "More" })
       .click();
     await expect(page).toHaveURL(/\/more$/);
+    // The 400ms screen fade keeps the previous screen mounted until it
+    // finishes, and that copy already shows the incoming page.
+    await expect(page.getByRole("heading", { name: "More" })).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "More" })).toBeVisible();
     await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
       "aria-current",
@@ -169,12 +172,22 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     const destinations = page.getByRole("navigation", {
       name: "More destinations",
     });
-    await expect(destinations.getByRole("link", { name: /sync/i })).toBeVisible();
-    await expect(destinations.getByRole("link", { name: /import/i })).toBeVisible();
-    await expect(destinations.getByRole("link", { name: /history/i })).toBeVisible();
+    const hrefs = await destinations.getByRole("link").evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")),
+    );
+    expect(hrefs).toEqual([
+      "/history",
+      "/settings/services",
+      "/settings/sync",
+      "/import",
+      "/review",
+    ]);
+    await expect(destinations.getByRole("link", { name: /reviews/i })).toBeVisible();
+    await expect(destinations.getByRole("link", { name: /reviews/i })).not.toContainText(/\d/);
 
     await destinations.getByRole("link", { name: /sync/i }).click();
     await expect(page).toHaveURL(/\/settings\/sync/);
+    await expect(page.getByRole("heading", { name: "Sync settings" })).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "Sync settings" })).toBeVisible();
     await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
       "aria-current",
@@ -182,15 +195,22 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     );
   });
 
-  test("active tab uses primary tint and indicator", async ({ page }) => {
+  test("active tab is flat teal", async ({ page }) => {
     await stubShellApis(page);
     await page.goto("/");
 
     const home = page
       .getByRole("navigation", { name: "Primary" })
       .getByRole("link", { name: "Home" });
-    await expect(home).toHaveClass(/text-primary/);
-    await expect(home.locator("[data-active-indicator]")).toHaveCount(1);
+    await expect(home).toHaveClass(/text-cb-teal/);
+    await expect(home.locator("[data-active-indicator]")).toHaveCount(0);
+    const shadow = await home.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(shadow).toBe("none");
+
+    const header = await page.locator("[data-shell-header]").boundingBox();
+    const tabBar = await page.locator("[data-shell-tabbar]").boundingBox();
+    expect(header?.height).toBeCloseTo(52, 0);
+    expect(tabBar?.height).toBeCloseTo(90, 0);
   });
 
   test("sticky header includes top safe-area padding class", async ({ page }) => {
@@ -201,14 +221,16 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     await expect(header).toHaveClass(/safe-area-inset-top/);
   });
 
-  test("off-tab pages expose ← Home chrome", async ({ page }) => {
+  test("history sits under More, and other off-tab pages keep ← Home", async ({ page }) => {
     await stubShellApis(page);
 
     await page.goto("/history");
-    await expect(page.getByRole("link", { name: /← home/i })).toHaveAttribute(
-      "href",
-      "/",
+    await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
+      "aria-current",
+      "page",
     );
+    await expect(page.getByRole("link", { name: /← home/i })).toHaveCount(0);
 
     await page.goto("/import");
     await expect(page.getByRole("link", { name: /← home/i })).toHaveAttribute(
@@ -224,25 +246,39 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     );
   });
 
-  test("Review badge appears when pending and opens /review", async ({ page }) => {
+  test("More shows the pending review count when films are waiting", async ({
+    page,
+  }) => {
+    await stubShellApis(page, 2);
+    await page.goto("/more");
+
+    const reviews = page
+      .getByRole("navigation", { name: "More destinations" })
+      .getByRole("link", { name: /reviews/i });
+    await expect(reviews).toBeVisible();
+    await expect(reviews).toContainText("2");
+    await expect(page.getByRole("link", { name: /Review \d/ })).toHaveCount(0);
+  });
+
+  test("header has no review-count badge", async ({ page }) => {
     await stubShellApis(page, 2);
     await page.goto("/");
 
-    const review = page.getByRole("link", { name: "Review 2" });
-    await expect(review).toBeVisible();
-    await review.click();
-    await expect(page).toHaveURL(/\/review/);
-    await expect(
-      page.getByRole("heading", { name: "Review", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /Review \d/ })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Search films" })).toBeVisible();
   });
 
-  test("Search films lands on Home picker via /search", async ({ page }) => {
+  test("Search films field is a visual placeholder and does not navigate", async ({
+    page,
+  }) => {
     await stubShellApis(page);
     await page.goto("/watchlist");
-    await page.getByRole("link", { name: "Search films" }).click();
-    await expect(page).toHaveURL(/\/(\?focus=search)?$/);
-    await expect(page.getByTestId("library-search-input")).toBeVisible();
+    const search = page.getByRole("textbox", { name: "Search films" });
+    await expect(search).toBeVisible();
+    await expect(search).toHaveAttribute("placeholder", "Search films");
+    await search.click();
+    await expect(page).toHaveURL(/\/watchlist/);
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
   });
 
   test("tab hit targets meet 44px minimum", async ({ page }) => {

@@ -8,24 +8,42 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import not_found, validation_error
 from app.database.enums import EnrichmentStatus, FilmStatus
-from app.dependencies import get_db, get_metadata_service, get_provider_service, get_watch_provider_service
-from app.repositories import film_repository, film_watch_repository, metadata_review_repository, watchlist_repository
+from app.dependencies import (
+    get_db,
+    get_metadata_service,
+    get_provider_service,
+    get_tmdb_film_service,
+    get_watch_provider_service,
+)
+from app.repositories import (
+    film_repository,
+    film_watch_repository,
+    metadata_review_repository,
+    streaming_repository,
+    watchlist_repository,
+)
 from app.repositories.film_repository import FilmSortField, SortDirection
 from app.schemas.film_schemas import (
     FilmDetail,
     FilmListResponse,
     FilmStatusRequest,
+    FilmTrailerResponse,
     FilmWatchSummary,
+    GenreListResponse,
     PaginationMeta,
     RematchRequest,
     RematchResponse,
     ReviewRequiredListResponse,
+    SimilarFilm,
+    TmdbFilmResponse,
     TmdbSearchResponse,
 )
+from app.schemas.recommendations import RuntimePreference
 from app.schemas.watch_providers import FilmWatchProvidersResponse
 from app.services.enrichment_pipeline import run_semantic_pipeline_for_film
 from app.schemas.watch_review_schemas import (
     CompleteWatchReviewRequest,
+    CreateWatchRequest,
     PendingReviewCountResponse,
     UpdateWatchRequest,
     WatchReviewRequiredListResponse,
@@ -41,11 +59,23 @@ from app.services.film_status_service import FilmStatusService
 from app.services.watch_review_service import WatchReviewService
 from app.services.metadata_service import MetadataService
 from app.services.provider_service import ProviderService
+from app.services.scoring_service import runtime_ceiling
+from app.services.streaming_availability_service import configured_country
+from app.services.similar_films_service import list_similar_films
+from app.services.tmdb_film_service import TmdbFilmService
 from app.services.watch_provider_service import WatchProviderService
 
 router = APIRouter(prefix="/films", tags=["films"])
 
-_VALID_SORT_FIELDS = {"title", "year", "created_at", "enrichment_status", "watched_at"}
+_VALID_SORT_FIELDS = {
+    "title",
+    "year",
+    "created_at",
+    "enrichment_status",
+    "watched_at",
+    "runtime",
+    "rating",
+}
 _VALID_SORT_DIRS = {"asc", "desc"}
 
 
@@ -84,6 +114,36 @@ def _parse_enrichment_status(value: str | None) -> EnrichmentStatus | None:
         raise validation_error(f"Invalid enrichment_status: {value}") from exc
 
 
+def _parse_genres(value: str | None) -> list[str] | None:
+    if value is None:
+        return None
+    tokens = [token.strip() for token in value.split(",")]
+    if not tokens or any(token == "" for token in tokens):
+        raise validation_error("genres must be a non-empty comma-separated list")
+    return tokens
+
+
+def _parse_runtime_limit(value: str | None) -> int | None:
+    """Minute ceiling from the questionnaire runtime values, or None for no limit.
+
+    ``any`` and an omitted parameter both mean no runtime filter. Unknown tokens
+    are rejected. Minutes come from ``runtime_ceiling`` so this list does not
+    keep a second copy of the cut-offs.
+    """
+    if value is None:
+        return None
+    token = value.strip()
+    allowed = ", ".join(item.value for item in RuntimePreference)
+    try:
+        preference = RuntimePreference(token)
+    except ValueError as exc:
+        raise validation_error(f"Invalid runtime: {value}. Must be one of: {allowed}") from exc
+    ceiling = runtime_ceiling(preference.value)
+    if ceiling is None and preference is not RuntimePreference.ANY:
+        raise validation_error(f"Invalid runtime: {value}. Must be one of: {allowed}")
+    return ceiling
+
+
 def _parse_sort(value: str | None) -> FilmSortField:
     if value is None:
         return "created_at"
@@ -109,6 +169,8 @@ def list_films(
     enrichment_status: str | None = None,
     on_watchlist: bool = False,
     search: str | None = None,
+    genres: str | None = None,
+    runtime: str | None = None,
     year: int | None = None,
     year_from: int | None = None,
     year_to: int | None = None,
@@ -116,6 +178,7 @@ def list_films(
     created_to: date | None = None,
     sort: str | None = None,
     sort_dir: str | None = None,
+    on_my_services: bool = False,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -124,6 +187,11 @@ def list_films(
         raise validation_error("Cannot combine status and statuses query parameters")
     parsed_status = _parse_film_status(status)
     parsed_statuses = _parse_film_statuses(statuses)
+    service_provider_ids = None
+    service_country = None
+    if on_my_services:
+        service_country = configured_country()
+        service_provider_ids = streaming_repository.list_provider_ids(db, service_country)
     films, total = film_repository.list_films(
         db,
         status=parsed_status,
@@ -131,6 +199,8 @@ def list_films(
         enrichment_status=_parse_enrichment_status(enrichment_status),
         on_watchlist=on_watchlist,
         search=search,
+        genres=_parse_genres(genres),
+        runtime_max=_parse_runtime_limit(runtime),
         year=year,
         year_from=year_from,
         year_to=year_to,
@@ -138,6 +208,9 @@ def list_films(
         created_to=created_to,
         sort=_parse_sort(sort),
         sort_dir=_parse_sort_dir(sort_dir),
+        on_my_services=on_my_services,
+        service_provider_ids=service_provider_ids,
+        service_country=service_country,
         limit=limit,
         offset=offset,
     )
@@ -160,6 +233,9 @@ def list_films(
         removed_at_map = watchlist_repository.get_latest_removed_at_batch(db, film_ids)
         latest_watched_at_map = film_watch_repository.get_latest_watched_at_batch(db, film_ids)
         pending_watch_map = film_watch_repository.get_pending_watch_batch(db, film_ids)
+    latest_score_map = film_watch_repository.get_latest_rated_score_batch(
+        db, [film.id for film in films]
+    )
     return FilmListResponse(
         data=[
             film_to_summary(
@@ -167,6 +243,7 @@ def list_films(
                 removed_at=removed_at_map.get(film.id),
                 latest_watched_at=latest_watched_at_map.get(film.id),
                 pending_watch=pending_watch_map.get(film.id),
+                latest_score=latest_score_map.get(film.id),
             )
             for film in films
         ],
@@ -177,6 +254,11 @@ def list_films(
             has_more=offset + len(films) < total,
         ),
     )
+
+
+@router.get("/genres", response_model=GenreListResponse)
+def list_watchlist_genres(db: Session = Depends(get_db)) -> GenreListResponse:
+    return GenreListResponse(data=film_repository.list_watchlist_genres(db))
 
 
 @router.get("/reviews/pending-count", response_model=PendingReviewCountResponse)
@@ -244,6 +326,15 @@ async def tmdb_search_global(
     return TmdbSearchResponse(data=results, pagination=pagination)
 
 
+@router.get("/tmdb/{tmdb_id}", response_model=TmdbFilmResponse)
+async def get_tmdb_film(
+    tmdb_id: int,
+    db: Session = Depends(get_db),
+    tmdb_film_service: TmdbFilmService = Depends(get_tmdb_film_service),
+) -> TmdbFilmResponse:
+    return await tmdb_film_service.get_tmdb_film(db, tmdb_id)
+
+
 @router.get("/{film_id}/tmdb-search", response_model=TmdbSearchResponse)
 async def tmdb_search(
     film_id: uuid.UUID,
@@ -273,6 +364,24 @@ async def rematch_film(
     db.commit()
     background_tasks.add_task(run_semantic_pipeline_for_film, film.id, provider_service)
     return RematchResponse(film_id=film.id, enrichment_status="enriching")
+
+
+@router.get("/{film_id}/trailer", response_model=FilmTrailerResponse)
+async def get_film_trailer(
+    film_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tmdb_film_service: TmdbFilmService = Depends(get_tmdb_film_service),
+) -> FilmTrailerResponse:
+    return await tmdb_film_service.get_trailer(db, film_id)
+
+
+@router.get("/{film_id}/similar", response_model=list[SimilarFilm])
+def get_similar_films(
+    film_id: uuid.UUID,
+    limit: int = Query(default=6, ge=1, le=20),
+    db: Session = Depends(get_db),
+) -> list[SimilarFilm]:
+    return list_similar_films(db, film_id, limit=limit)
 
 
 @router.get("/{film_id}/watch-providers", response_model=FilmWatchProvidersResponse)
@@ -314,6 +423,26 @@ def cancel_watch_review(
     db.commit()
 
 
+@router.post("/{film_id}/watches", response_model=FilmDetail)
+def create_film_watch(
+    film_id: uuid.UUID,
+    body: CreateWatchRequest,
+    db: Session = Depends(get_db),
+) -> FilmDetail:
+    film = WatchReviewService.create_watch(
+        db,
+        film_id,
+        score=body.score,
+        watched_at=body.watched_at,
+        notes=body.notes,
+    )
+    db.commit()
+    film = film_repository.get_by_id_with_relations(db, film.id)
+    assert film is not None
+    watches = film_watch_repository.list_all_for_film(db, film.id)
+    return film_to_detail(film, watches=watches)
+
+
 @router.patch("/{film_id}/watches/{watch_id}", response_model=FilmWatchSummary)
 def update_film_watch(
     film_id: uuid.UUID,
@@ -321,16 +450,19 @@ def update_film_watch(
     body: UpdateWatchRequest,
     db: Session = Depends(get_db),
 ) -> FilmWatchSummary:
-    watch = WatchReviewService.edit_watch(
-        db,
-        film_id,
-        watch_id,
-        score=body.score,
-        watched_at=body.watched_at,
-        notes=body.notes,
-    )
+    watch = WatchReviewService.edit_watch(db, film_id, watch_id, body)
     db.commit()
     return watch_to_summary(watch)
+
+
+@router.delete("/{film_id}/watches/{watch_id}", status_code=204)
+def delete_film_watch(
+    film_id: uuid.UUID,
+    watch_id: uuid.UUID,
+    db: Session = Depends(get_db),
+) -> None:
+    WatchReviewService.delete_watch(db, film_id, watch_id)
+    db.commit()
 
 
 @router.post("/{film_id}/status", response_model=FilmDetail)
