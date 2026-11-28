@@ -10,7 +10,7 @@ export function OffTabPageHeader({ title, subtitle }: OffTabPageHeaderProps) {
     <div className="space-y-3">
       <Link
         href="/"
-        className="inline-flex min-h-11 items-center font-ui text-cb-body text-cb-muted hover:text-cb-text"
+        className="inline-flex min-h-11 items-center font-ui text-cb-body text-cb-teal hover:underline"
       >
         ← Home
       </Link>

@@ -307,7 +307,7 @@ export default function SyncSettingsPage() {
           </Button>
 
           <div className="border-t border-cb-divider pt-4">
-            <h3 className="font-ui font-medium text-cb-text">RSS status</h3>
+            <h3 className="font-display text-cb-card text-cb-text">RSS status</h3>
             {rssLoading && <LoadingState message="Loading RSS status…" />}
             {rssStatusError && (
               <ErrorState
@@ -318,7 +318,7 @@ export default function SyncSettingsPage() {
             {rssStatus && (
               <dl className="mt-3 grid grid-cols-2 gap-2 font-ui text-cb-ui">
                 <dt className="text-cb-muted">Configured</dt>
-                <dd className="font-mono text-cb-ui">{rssStatus.configured ? "Yes" : "No"}</dd>
+                <dd className="font-mono text-cb-meta">{rssStatus.configured ? "Yes" : "No"}</dd>
                 {rssStatus.username && (
                   <>
                     <dt className="text-cb-muted">Username</dt>

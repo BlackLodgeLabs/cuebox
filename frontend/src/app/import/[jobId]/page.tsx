@@ -85,7 +85,7 @@ export default function ImportStatusPage() {
                 </>
               ) : (
                 <>
-                  <Progress value={undefined} className="animate-pulse" />
+                  <Progress value={undefined} />
                   <p className="font-ui text-cb-ui text-cb-muted">
                     Parsing CSV… ({data.processed_films} processed so far)
                   </p>
@@ -122,7 +122,7 @@ export default function ImportStatusPage() {
                 <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto text-sm">
                   {data.failure_summary.map((item) => (
                     <li key={item.letterboxd_uri} className="min-w-0 rounded-cb border border-cb-divider p-2">
-                      <p className="break-all font-mono text-cb-caption text-cb-teal">
+                      <p className="break-all font-mono text-cb-meta normal-case tracking-normal text-cb-muted">
                         {item.letterboxd_uri}
                       </p>
                       <p className="font-ui text-cb-ui text-cb-muted">{item.reason}</p>

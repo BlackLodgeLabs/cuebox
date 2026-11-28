@@ -105,7 +105,7 @@ export default function ReviewPage() {
                       size="sm"
                     />
                     <div className="flex-1">
-                      <CardTitle className="text-base">
+                      <CardTitle>
                         {isLetterboxdReview ? (
                           <>
                             {film.candidate_payload.title}
@@ -230,7 +230,7 @@ export default function ReviewPage() {
                 <CardHeader className="flex flex-row gap-4">
                   <FilmPoster src={film.poster_url} alt={film.title} size="sm" />
                   <div>
-                    <CardTitle className="text-base">
+                    <CardTitle>
                       {film.title}
                       {film.year ? ` (${film.year})` : ""}
                     </CardTitle>

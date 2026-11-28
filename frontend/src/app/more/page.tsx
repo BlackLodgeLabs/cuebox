@@ -8,13 +8,13 @@ const MORE_DESTINATIONS = [
   {
     href: "/history",
     label: "History",
-    description: "Past recommendation nights.",
+    description: "Browse past recommendations.",
     icon: "history",
   },
   {
     href: "/settings/services",
     label: "My services",
-    description: "Subscriptions used to sort where to watch.",
+    description: "Services you use to watch.",
     icon: "live_tv",
   },
   {
@@ -34,6 +34,7 @@ const MORE_DESTINATIONS = [
     label: "Reviews",
     description: "Metadata matches and watch reviews.",
     icon: "rate_review",
+    showPendingCount: true,
   },
 ] as const;
 
@@ -62,10 +63,10 @@ export default function MorePage() {
           >
             <Icon name={item.icon} size={22} className="shrink-0 text-cb-muted" />
             <span className="min-w-0 flex-1">
-              <span className="block font-ui text-cb-body text-cb-text">
+              <span className="block font-display text-cb-tile text-cb-text">
                 {item.label}
-                {item.href === "/review" && reviewCount !== null ? (
-                  <span className="ml-2 font-ui text-cb-caption text-cb-teal">{reviewCount}</span>
+                {"showPendingCount" in item && item.showPendingCount && reviewCount !== null ? (
+                  <span className="ml-2 font-ui text-cb-caption text-cb-muted">{reviewCount}</span>
                 ) : null}
               </span>
               <span className="mt-0.5 block font-ui text-cb-caption text-cb-muted">
