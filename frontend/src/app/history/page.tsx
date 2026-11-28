@@ -2,48 +2,30 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DeleteHistoryDialog } from "@/components/delete-history-dialog";
-import { FilmPoster } from "@/components/film-poster";
+import { HistoryTicket } from "@/components/history-ticket";
 import {
   DEFAULT_HISTORY_FILTERS,
   HistoryFilterSheet,
   type HistoryFilterValues,
 } from "@/components/history-filter-sheet";
 import { Icon } from "@/components/icon";
-import { OffTabPageHeader } from "@/components/off-tab-page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CardGridSkeleton } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
+import { LoadingState } from "@/components/loading-state";
+import { InfiniteBatch, LoadingMore } from "@/components/ui/infinite-scroll";
+import { HISTORY_PAGE_SIZE } from "@/hooks/use-infinite-scroll";
 import {
   useDeleteRecommendation,
-  useRecommendationHistory,
+  useInfiniteRecommendationHistory,
 } from "@/hooks/use-recommendations";
 import { useToastOnError } from "@/hooks/use-toast-on-error";
+import { formatNightCount, historyMonthLabel } from "@/lib/history-format";
 import { cn } from "@/lib/utils";
-import type { WatchStatusFilter } from "@/types/api";
+import type { HistoryCard, WatchStatusFilter } from "@/types/api";
 
-function historyStatusBadgeLabel(tag: string): string {
-  if (tag === "runner_up_watched") {
-    return "Runner-up watched";
-  }
-  return tag;
-}
-
-function historyFiltersActive(values: HistoryFilterValues): boolean {
-  return (
-    values.dateFrom !== "" ||
-    values.dateTo !== "" ||
-    values.watchStatus !== "all"
-  );
+function filtersActive(values: HistoryFilterValues): boolean {
+  return values.dateFrom !== "" || values.dateTo !== "" || values.watchStatus !== "all";
 }
 
 export default function HistoryPage() {
@@ -54,40 +36,37 @@ export default function HistoryPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [watchStatus, setWatchStatus] = useState<WatchStatusFilter | "all">(
-    "all",
-  );
+  const [watchStatus, setWatchStatus] = useState<WatchStatusFilter | "all">("all");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [offset, setOffset] = useState(0);
-  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
-    null,
-  );
-  const limit = 20;
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    setOffset(0);
-  }, [debouncedSearch, dateFrom, dateTo, watchStatus]);
+  const filterValues: HistoryFilterValues = { dateFrom, dateTo, watchStatus };
+  const active = filtersActive(filterValues);
 
-  const filterValues: HistoryFilterValues = {
-    dateFrom,
-    dateTo,
-    watchStatus,
-  };
-  const filtersActive = historyFiltersActive(filterValues);
-
-  const { data, isLoading, isError, refetch } = useRecommendationHistory({
+  const history = useInfiniteRecommendationHistory({
     search: debouncedSearch || undefined,
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
     watch_status: watchStatus === "all" ? undefined : watchStatus,
-    limit,
-    offset,
   });
+
+  const monthBreaks = useMemo(() => {
+    const breaks = new Map<string, string>();
+    let previous = "";
+    for (const item of history.items) {
+      const label = historyMonthLabel(item.created_at);
+      if (label !== previous) {
+        breaks.set(item.session_id, label);
+        previous = label;
+      }
+    }
+    return breaks;
+  }, [history.items]);
 
   const applyFilters = (values: HistoryFilterValues) => {
     setDateFrom(values.dateFrom);
@@ -111,127 +90,96 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <OffTabPageHeader
-        title="Recommendation history"
-        subtitle="Browse past picks and revisit your preferences."
-      />
+    <div>
+      <header className="pb-2.5 pt-1">
+        <h1 className="font-display text-cb-page leading-[30px] tracking-[0.01em]">History</h1>
+        {!history.isLoading && !history.isError ? (
+          <p className="mt-1 font-mono text-cb-meta tracking-[0.04em] text-cb-muted">
+            {formatNightCount(history.total)}
+          </p>
+        ) : null}
+      </header>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          placeholder="Search by title…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-0 flex-1 max-w-xs"
-          aria-label="Search by title"
-        />
-        <Button
+      <div className="flex items-center gap-2 pb-3">
+        <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-cb border border-cb-divider bg-cb-surface px-3 text-cb-teal">
+          <Icon name="search" size={16} className="shrink-0" />
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by title…"
+            aria-label="Search by title"
+            autoComplete="off"
+            className="w-full bg-transparent font-ui text-cb-caption text-cb-text outline-none placeholder:text-cb-muted"
+          />
+        </label>
+        <button
           type="button"
-          variant="outline"
           aria-label="Filter history"
           className={cn(
-            "min-h-[44px] min-w-[44px] gap-2",
-            filtersActive && "border-cb-teal text-cb-teal",
+            "flex h-9 shrink-0 items-center gap-1.5 rounded-cb border bg-cb-surface px-3 font-ui text-cb-caption font-medium",
+            active
+              ? "border-cb-teal text-cb-teal"
+              : "border-cb-divider text-cb-text",
           )}
           onClick={() => setFilterOpen(true)}
         >
-          <Icon name="filter_list" size={20} />
+          <Icon name="filter_list" size={16} />
           Filter
-        </Button>
+        </button>
       </div>
 
-      {isLoading && <CardGridSkeleton count={4} />}
+      {history.isLoading && <LoadingState message="Loading history…" />}
 
-      {isError && (
+      {history.isError && (
         <ErrorState
           message="Could not load recommendation history."
-          onRetry={() => void refetch()}
+          onRetry={() => void history.refetch()}
         />
       )}
 
-      {data && data.data.length === 0 && (
-        <div className="py-12 text-center text-muted-foreground">
-          No recommendations found.{" "}
-          <Link href="/recommend" className="text-cb-teal hover:underline">
-            Start your first one
+      {!history.isLoading && !history.isError && history.items.length === 0 && (
+        <div className="py-12 text-center font-ui text-cb-caption text-cb-muted">
+          {active || debouncedSearch ? "No nights match." : "No nights yet."}{" "}
+          <Link href="/recommend" className="text-cb-teal">
+            New pick
           </Link>
         </div>
       )}
 
-      {data && data.data.length > 0 && (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data.data.map((item) => (
-              <Card key={item.session_id} className="h-full">
-                <CardHeader className="flex flex-row gap-3">
-                  <button
-                    type="button"
-                    className="flex min-w-0 flex-1 cursor-pointer gap-3 text-left"
-                    onClick={() => router.push(`/history/${item.session_id}`)}
+      {history.items.length > 0 && (
+        <InfiniteBatch
+          items={history.items}
+          pageSize={HISTORY_PAGE_SIZE}
+          getKey={(item) => item.session_id}
+          renderItem={(item: HistoryCard) => {
+            const month = monthBreaks.get(item.session_id);
+            const first = history.items[0]?.session_id === item.session_id;
+            return (
+              <>
+                {month ? (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2.5 pb-2 font-mono text-[11px] uppercase tracking-[0.08em] text-cb-muted",
+                      first ? "pt-1" : "pt-3.5",
+                    )}
                   >
-                    <FilmPoster
-                      src={item.winner_poster_url}
-                      alt={item.winner_title}
-                      size="sm"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="truncate text-base">
-                        {item.winner_title}
-                        {item.winner_year ? ` (${item.winner_year})` : ""}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {item.preference_summary}
-                      </CardDescription>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(item.created_at).toLocaleDateString()}
-                        </span>
-                        {(item.history_status_tag ?? item.winner_watch_status) && (
-                          <Badge variant="secondary" className="text-xs">
-                            {historyStatusBadgeLabel(
-                              item.history_status_tag ?? item.winner_watch_status ?? "",
-                            )}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="min-h-11 min-w-11 shrink-0 text-muted-foreground hover:text-destructive"
-                    aria-label="Remove from history"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDeletingSessionId(item.session_id);
-                    }}
-                  >
-                    <span aria-hidden="true">✕</span>
-                  </Button>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-
-          <div className="flex justify-center gap-3">
-            <Button
-              variant="outline"
-              disabled={offset === 0}
-              onClick={() => setOffset((o) => Math.max(0, o - limit))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              disabled={!data.pagination.has_more}
-              onClick={() => setOffset((o) => o + limit)}
-            >
-              Next
-            </Button>
-          </div>
-        </>
+                    <i aria-hidden className="block h-px w-6 bg-cb-teal" />
+                    {month}
+                  </div>
+                ) : null}
+                <HistoryTicket
+                  item={item}
+                  onOpen={() => router.push(`/history/${item.session_id}`)}
+                  onRemove={() => setDeletingSessionId(item.session_id)}
+                />
+              </>
+            );
+          }}
+        />
       )}
+
+      {history.isFetchingNextPage ? <LoadingMore /> : null}
 
       <HistoryFilterSheet
         open={filterOpen}

@@ -63,7 +63,7 @@ export function filmMetaLine(parts: Array<string | null | undefined>): string {
 
 /** Year, first genre, runtime, and an optional service. Empty parts are dropped. */
 export function filmDetailLine(
-  film: { year: number | null; genres: string[]; runtime: number | null },
+  film: { year: number | null; genres?: string[] | null; runtime: number | null },
   service?: string | null,
 ): string {
   return filmMetaLine([

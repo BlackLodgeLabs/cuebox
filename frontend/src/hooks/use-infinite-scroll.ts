@@ -80,8 +80,11 @@ export function useInfiniteScroll<T>({
 
   const pages = query.data?.pages ?? [];
 
+  const items = pages.flatMap((page) => page.data);
+
   return {
-    items: pages.flatMap((page) => page.data),
+    items,
+    total: pages[0]?.pagination.total ?? items.length,
     hasMore: hasNextPage,
     isLoading: query.isLoading,
     isFetchingNextPage,
