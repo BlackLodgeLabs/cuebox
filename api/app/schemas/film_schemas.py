@@ -32,6 +32,9 @@ class FilmSummary(BaseModel):
     runtime: int | None = None
     genres: list[str] = Field(default_factory=list)
     backdrop_url: str | None = None
+    synopsis: str | None = None
+    tones: list[str] = Field(default_factory=list)
+    emotional_outcomes: list[str] = Field(default_factory=list)
     latest_score: float | None = None
     created_at: datetime
     updated_at: datetime

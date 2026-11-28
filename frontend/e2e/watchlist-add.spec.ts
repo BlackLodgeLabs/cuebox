@@ -20,6 +20,7 @@ const addedFilmId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
 test.describe("watchlist add flow (mocked API)", () => {
   test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.route(`**${API_PATH_PREFIX}/films?limit=1**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -120,22 +121,55 @@ test.describe("watchlist add flow (mocked API)", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("home shows recommendation and history without the inline picker", async ({
-    page,
-  }) => {
+  test("home shows the daily feature actions without the old hub", async ({ page }) => {
+    await page.route(`**${API_PATH_PREFIX}/films?**`, async (route) => {
+      const url = new URL(route.request().url());
+      const active = url.searchParams.get("status") === "active";
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: active
+            ? [
+                {
+                  id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                  title: "The Wicker Man",
+                  year: 1973,
+                  status: "active",
+                  enrichment_status: "ready",
+                  runtime: 88,
+                  genres: ["Folk horror"],
+                  tones: ["dread"],
+                  emotional_outcomes: ["unease"],
+                  synopsis: "A devout policeman lands on a Hebridean island.",
+                  poster_url: null,
+                  backdrop_url: null,
+                  letterboxd_uri: "https://letterboxd.com/film/the-wicker-man/",
+                  created_at: "2024-01-01T00:00:00Z",
+                  updated_at: "2024-01-01T00:00:00Z",
+                },
+              ]
+            : [],
+          pagination: {
+            total: active ? 1 : 0,
+            limit: 20,
+            offset: 0,
+            has_more: false,
+          },
+        }),
+      });
+    });
+
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toBeVisible();
-    await expect(page.getByTestId("library-search-input")).toHaveCount(0);
-    const links = page.getByRole("link");
-    await expect(links.filter({ hasText: "Create a recommendation" })).toHaveAttribute(
+    await expect(page.getByRole("heading", { name: "The Wicker Man" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Get a pick for tonight" })).toHaveAttribute(
       "href",
       "/recommend",
     );
-    await expect(links.filter({ hasText: "History" })).toHaveAttribute("href", "/history");
-    await expect(links.filter({ hasText: "View watchlist" })).toHaveCount(0);
-    await expect(links.filter({ hasText: "Start questionnaire" })).toHaveCount(0);
-    await expect(links.filter({ hasText: "Add a film" })).toHaveCount(0);
-    await expect(links.filter({ hasText: "Mark watched" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Surprise me" })).toBeVisible();
+    await expect(page.getByTestId("library-search-input")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "What do you want to watch?" })).toHaveCount(0);
   });
 
   test("watchlist page shows add button to /search", async ({ page }) => {

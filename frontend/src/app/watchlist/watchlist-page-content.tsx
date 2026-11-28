@@ -17,7 +17,14 @@ import { ErrorState } from "@/components/error-state";
 import { PosterGridSkeleton } from "@/components/loading-state";
 import { useFilmStatusTransition, useFilms } from "@/hooks/use-films";
 import { cn } from "@/lib/utils";
-import type { FilmSortField, FilmStatus, FilmSummary, SortDirection, WatchlistTab } from "@/types/api";
+import type {
+  FilmSortField,
+  FilmStatus,
+  FilmSummary,
+  RuntimePreference,
+  SortDirection,
+  WatchlistTab,
+} from "@/types/api";
 
 const LIMIT = 20;
 
@@ -40,6 +47,13 @@ function parseSort(value: string | null, tab: WatchlistTab): FilmSortField {
 
 function parseSortDir(value: string | null): SortDirection {
   return value === "asc" ? "asc" : "desc";
+}
+
+function parseRuntimeParam(value: string | null): RuntimePreference | undefined {
+  if (value === "le_90" || value === "le_120" || value === "le_150" || value === "any") {
+    return value;
+  }
+  return undefined;
 }
 
 function parseTab(value: string | null): WatchlistTab {
@@ -86,6 +100,8 @@ export function WatchlistPageContent() {
   const createdTo = searchParams.get("created_to") ?? "";
   const enrichmentStatus = searchParams.get("enrichment_status") ?? "all";
   const searchFromUrl = searchParams.get("search") ?? "";
+  const genresFromUrl = searchParams.get("genres") ?? "";
+  const runtimeFromUrl = parseRuntimeParam(searchParams.get("runtime"));
 
   const [filterOpen, setFilterOpen] = useState(false);
 
@@ -145,12 +161,20 @@ export function WatchlistPageContent() {
   );
 
   const clearFilters = useCallback(() => {
-    applyFilters({
-      ...DEFAULT_WATCHLIST_FILTERS,
+    updateParams({
+      search: null,
+      enrichment_status: null,
+      year: null,
       sort: viewDefaultSort(tab),
-      sortDir: "desc",
+      sort_dir: "desc",
+      created_from: null,
+      created_to: null,
+      genres: null,
+      runtime: null,
+      offset: null,
     });
-  }, [applyFilters, tab]);
+    setFilterOpen(false);
+  }, [tab, updateParams]);
 
   useEffect(() => {
     if (searchParams.get("sort") === "watched_at" && tab !== "watched") {
@@ -166,6 +190,8 @@ export function WatchlistPageContent() {
       created_to: createdTo || undefined,
       enrichment_status:
         enrichmentStatus === "all" ? undefined : enrichmentStatus,
+      genres: genresFromUrl || undefined,
+      runtime: runtimeFromUrl,
       sort,
       sort_dir: sortDir,
       limit: LIMIT,
@@ -175,6 +201,8 @@ export function WatchlistPageContent() {
       createdFrom,
       createdTo,
       enrichmentStatus,
+      genresFromUrl,
+      runtimeFromUrl,
       offset,
       searchFromUrl,
       sort,

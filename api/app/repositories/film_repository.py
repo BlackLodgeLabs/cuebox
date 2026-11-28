@@ -231,7 +231,10 @@ def list_films(
     limit: int = 20,
     offset: int = 0,
 ) -> tuple[list[Film], int]:
-    stmt = select(Film).options(selectinload(Film.metadata_))
+    stmt = select(Film).options(
+        selectinload(Film.metadata_),
+        selectinload(Film.semantic_profile),
+    )
     count_stmt = select(func.count()).select_from(Film)
 
     if on_watchlist:

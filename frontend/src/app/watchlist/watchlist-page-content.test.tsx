@@ -340,6 +340,19 @@ describe("WatchlistPageContent", () => {
     expect(filter().className).not.toMatch(/border-cb-teal/);
   });
 
+  it("applies genre and runtime filters from a Home See all link", () => {
+    searchParams = new URLSearchParams("genres=Horror,Folk horror&runtime=le_90");
+    mockEmptyFilms();
+    render(<WatchlistPageContent />);
+
+    const gridCall = mockUseFilms.mock.calls.find((call) => call[0]?.limit === 20);
+    expect(gridCall?.[0]).toMatchObject({
+      on_watchlist: true,
+      genres: "Horror,Folk horror",
+      runtime: "le_90",
+    });
+  });
+
   it("renders poster grid when films are present", () => {
     searchParams = new URLSearchParams("");
     mockUseFilms.mockImplementation((params?: { limit?: number }) => {
