@@ -13,26 +13,12 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/sonner";
 import { useAddToWatchlist, useTmdbFilm } from "@/hooks/use-films";
+import { communityScores } from "@/lib/community-scores";
+import { filmDetailLine, filmMetaLine } from "@/lib/programme-format";
 import type { TmdbFilm } from "@/types/api";
 
-/**
- * TMDB `vote_average` is 0–10. The screen shows a whole-number percent.
- */
-export function tmdbCommunityPercent(
-  voteAverage: number | null | undefined,
-): number | null {
-  if (voteAverage == null || !Number.isFinite(voteAverage)) return null;
-  return Math.round(voteAverage * 10);
-}
-
 function catalogueMeta(film: TmdbFilm): string {
-  const parts: string[] = [];
-  if (film.year != null) parts.push(String(film.year));
-  const genre = film.genres[0];
-  if (genre) parts.push(genre);
-  if (film.runtime != null) parts.push(`${film.runtime}m`);
-  if (film.director) parts.push(film.director);
-  return parts.join(" · ");
+  return filmMetaLine([filmDetailLine(film), film.director]);
 }
 
 function onWatchlist(film: TmdbFilm): film is TmdbFilm & { film_id: string } {
@@ -88,7 +74,10 @@ function TmdbFilmPageContent({ tmdbId }: { tmdbId: number }) {
     );
   }
 
-  const percent = tmdbCommunityPercent(film.tmdb_rating);
+  const score = communityScores({
+    tmdb_rating: film.tmdb_rating,
+    rotten_tomatoes_score: null,
+  })[0];
   const meta = catalogueMeta(film);
 
   async function add() {
@@ -135,10 +124,10 @@ function TmdbFilmPageContent({ tmdbId }: { tmdbId: number }) {
         {meta ? (
           <p className="mt-cb-2 font-mono text-cb-caption text-cb-muted">{meta}</p>
         ) : null}
-        {percent != null ? (
+        {score ? (
           <p className="mt-cb-3 inline-flex items-center gap-cb-2 rounded-cb bg-cb-surface px-cb-2 py-cb-1 font-mono text-cb-meta-sm">
-            <span className="text-cb-teal">TMDB</span>
-            <span className="text-cb-text">{percent}%</span>
+            <span className="text-cb-teal">{score.label}</span>
+            <span className="text-cb-text">{score.percent}%</span>
           </p>
         ) : null}
 

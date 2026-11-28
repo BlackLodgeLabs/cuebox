@@ -79,9 +79,9 @@ export default function ImportPage() {
           {inlineError && (
             <div
               role="alert"
-              className="space-y-3 rounded border border-destructive/40 bg-destructive/10 p-3"
+              className="space-y-3 rounded-cb border border-cb-danger/40 bg-cb-danger/10 p-3"
             >
-              <p className="text-body-md text-destructive">{inlineError}</p>
+              <p className="font-ui text-cb-body text-cb-danger">{inlineError}</p>
               <Button
                 type="button"
                 variant="outline"

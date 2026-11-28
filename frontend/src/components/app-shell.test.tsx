@@ -74,6 +74,24 @@ describe("AppShell", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("previews tonight's programme with Recommend selected and no header", () => {
+    navigationState.pathname = "/dev/programme";
+    renderShell();
+
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Cuebox" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Recommend" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("previews a past night under the wordmark with More selected", () => {
+    navigationState.pathname = "/dev/programme/history";
+    renderShell();
+
+    expect(screen.getByRole("link", { name: "Cuebox" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
+  });
+
   it("routes More to /more", () => {
     renderShell();
 
@@ -214,6 +232,26 @@ describe("AppShell", () => {
     expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
     expect(screen.getByText("content")).toBeInTheDocument();
+  });
+
+  it("hides the header and tab bar on a film detail screen", () => {
+    navigationState.pathname = "/watchlist/film-1";
+    renderShell();
+
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
+    expect(document.querySelector("header")).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(document.querySelector("main")?.className).toContain("px-0");
+  });
+
+  it("keeps the shell on the watchlist and the add-film route", () => {
+    for (const pathname of ["/watchlist", "/watchlist/add"]) {
+      navigationState.pathname = pathname;
+      const { unmount } = renderShell();
+      expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
+      expect(document.querySelector("header")).not.toBeNull();
+      unmount();
+    }
   });
 
   it("does not render a FAB control", () => {

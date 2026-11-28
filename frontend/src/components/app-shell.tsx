@@ -45,6 +45,11 @@ function isCatalogueFilmPath(pathname: string): boolean {
   return pathname.startsWith("/films/tmdb/");
 }
 
+/** Film detail replaces the shell header and tab bar with its own hero and action bar. */
+export function isFilmDetailPath(pathname: string): boolean {
+  return /^\/watchlist\/(?!add$)[^/]+$/.test(pathname);
+}
+
 function SearchFocusOpener({ onOpen }: { onOpen: () => void }) {
   const params = useSearchParams();
   const pathname = usePathname();
@@ -70,51 +75,63 @@ function SearchFocusOpener({ onOpen }: { onOpen: () => void }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const filmDetail = isFilmDetailPath(pathname);
+  const catalogueFilm = isCatalogueFilmPath(pathname);
   const reduced = useReducedMotion();
   const screen = screenMotion(reduced);
   const [searchOpen, setSearchOpen] = useState(false);
-  const catalogueFilm = isCatalogueFilmPath(pathname);
   const openSearch = useCallback(() => setSearchOpen(true), []);
+  const programmeTonight = pathname === "/dev/programme";
+  const programmeHistory = pathname.startsWith("/dev/programme/history");
+  const programmePreview = programmeTonight || programmeHistory;
+  const hideHeader = filmDetail || catalogueFilm || programmeTonight;
+  const hideTabs = filmDetail || catalogueFilm;
 
   return (
     <div className="min-h-screen bg-cb-bg text-cb-text">
       <Suspense fallback={null}>
         <SearchFocusOpener onOpen={openSearch} />
       </Suspense>
-      {catalogueFilm ? null : (
-      <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
-        <div
-          data-shell-header
-          className="mx-auto flex h-[52px] w-full max-w-7xl items-center gap-2 px-4"
-        >
-          <Wordmark />
-          <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-cb bg-cb-surface px-3">
-            <Icon name="search" size={18} className="shrink-0 text-cb-muted" />
-            <input
-              readOnly
-              placeholder="Search films"
-              aria-label="Search films"
-              className="w-full cursor-pointer bg-transparent font-ui text-cb-caption text-cb-text outline-none placeholder:text-cb-muted"
-              onClick={() => setSearchOpen(true)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  setSearchOpen(true);
-                }
-              }}
-            />
-          </label>
-        </div>
-      </header>
+      {hideHeader ? null : (
+        <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
+          <div
+            data-shell-header
+            className="mx-auto flex h-[52px] w-full max-w-7xl items-center gap-2 px-4"
+          >
+            <Wordmark />
+            {programmeHistory ? null : (
+              <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-cb bg-cb-surface px-3">
+                <Icon name="search" size={18} className="shrink-0 text-cb-muted" />
+                <input
+                  readOnly
+                  placeholder="Search films"
+                  aria-label="Search films"
+                  className="w-full cursor-pointer bg-transparent font-ui text-cb-caption text-cb-text outline-none placeholder:text-cb-muted"
+                  onClick={() => setSearchOpen(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSearchOpen(true);
+                    }
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        </header>
       )}
 
       <main
-        className={cn(
-          "mx-auto w-full max-w-7xl",
-          catalogueFilm
-            ? "pb-[env(safe-area-inset-bottom,0px)]"
-            : "px-4 py-8 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
-        )}
+        className={
+          filmDetail
+            ? "mx-auto w-full max-w-7xl px-0 py-0 pb-[calc(112px+env(safe-area-inset-bottom,0px))]"
+            : catalogueFilm
+              ? "mx-auto w-full max-w-7xl pb-[env(safe-area-inset-bottom,0px)]"
+              : cn(
+                  "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
+                  programmePreview ? "pt-2" : "py-8",
+                )
+        }
       >
         <AnimatePresence initial={false} mode="popLayout">
           <ScreenPane key={pathname} fadeMs={screen.fadeMs} transition={screen.transition}>
@@ -125,30 +142,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <FilmSearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
-      {catalogueFilm ? null : (
-      <nav
-        aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
-      >
-        <div
-          data-shell-tabbar
-          className="mx-auto flex h-[90px] max-w-7xl items-stretch justify-around px-2"
+      {hideTabs ? null : (
+        <nav
+          aria-label="Primary"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
         >
-          {BOTTOM_TABS.map((tab) => {
-            const active = tab.isActive(pathname);
+          <div
+            data-shell-tabbar
+            className="mx-auto flex h-[90px] max-w-7xl items-stretch justify-around px-2"
+          >
+            {BOTTOM_TABS.map((tab) => {
+              const active = programmeTonight
+                ? tab.label === "Recommend"
+                : programmeHistory
+                  ? tab.label === "More"
+                  : tab.isActive(pathname);
 
-            return (
-              <LinkTab
-                key={tab.href}
-                href={tab.href}
-                label={tab.label}
-                icon={tab.icon}
-                active={active}
-              />
-            );
-          })}
-        </div>
-      </nav>
+              return (
+                <LinkTab
+                  key={tab.href}
+                  href={tab.href}
+                  label={tab.label}
+                  icon={tab.icon}
+                  active={active}
+                />
+              );
+            })}
+          </div>
+        </nav>
       )}
     </div>
   );

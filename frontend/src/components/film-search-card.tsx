@@ -16,6 +16,7 @@ import {
   PICKER_LIBRARY_STATUSES,
   type LibrarySearchHit,
 } from "@/lib/library-search-merge";
+import { filmMetaLine, runtimeLabel } from "@/lib/programme-format";
 import { cn } from "@/lib/utils";
 import type { FilmSummary, TmdbSearchResultItem } from "@/types/api";
 
@@ -49,10 +50,10 @@ export function FilmSearchCard({ open, onOpenChange }: FilmSearchCardProps) {
 }
 
 function searchResultMeta(year: number | null, runtime: number | null): string {
-  const parts: string[] = [];
-  if (year != null) parts.push(String(year));
-  if (runtime != null) parts.push(`${runtime}m`);
-  return parts.join(" · ");
+  return filmMetaLine([
+    year != null ? String(year) : null,
+    runtimeLabel(runtime),
+  ]);
 }
 
 function FilmSearchPanel({ onClose }: { onClose: () => void }) {
