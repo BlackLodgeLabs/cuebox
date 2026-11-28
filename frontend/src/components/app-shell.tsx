@@ -41,8 +41,14 @@ const BOTTOM_TABS = [
   },
 ] as const;
 
+/** Film detail replaces the shell header and tab bar with its own hero and action bar. */
+export function isFilmDetailPath(pathname: string): boolean {
+  return /^\/watchlist\/(?!add$)[^/]+$/.test(pathname);
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const filmDetail = isFilmDetailPath(pathname);
   const reduced = useReducedMotion();
   const screen = screenMotion(reduced);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -50,9 +56,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const programmeHistory = pathname.startsWith("/dev/programme/history");
   const programmePreview = programmeTonight || programmeHistory;
 
+  const hideHeader = filmDetail || programmeTonight;
+
   return (
     <div className="min-h-screen bg-cb-bg text-cb-text">
-      {programmeTonight ? null : (
+      {hideHeader ? null : (
         <header className="sticky top-0 z-40 bg-cb-bg pt-[env(safe-area-inset-top,0px)]">
           <div
             data-shell-header
@@ -82,10 +90,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main
-        className={cn(
-          "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
-          programmePreview ? "pt-2" : "py-8",
-        )}
+        className={
+          filmDetail
+            ? "mx-auto w-full max-w-7xl px-0 py-0 pb-[calc(112px+env(safe-area-inset-bottom,0px))]"
+            : cn(
+                "mx-auto w-full max-w-7xl px-4 pb-[calc(90px+env(safe-area-inset-bottom,0px))] md:px-12",
+                programmePreview ? "pt-2" : "py-8",
+              )
+        }
       >
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
@@ -104,33 +116,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <SearchCard open={searchOpen} onOpenChange={setSearchOpen} />
 
-      <nav
-        aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
-      >
-        <div
-          data-shell-tabbar
-          className="mx-auto flex h-[90px] max-w-7xl items-stretch justify-around px-2"
+      {filmDetail ? null : (
+        <nav
+          aria-label="Primary"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-cb-divider bg-cb-bg pb-[env(safe-area-inset-bottom,0px)]"
         >
-          {BOTTOM_TABS.map((tab) => {
-            const active = programmeTonight
-              ? tab.label === "Recommend"
-              : programmeHistory
-                ? tab.label === "More"
-                : tab.isActive(pathname);
+          <div
+            data-shell-tabbar
+            className="mx-auto flex h-[90px] max-w-7xl items-stretch justify-around px-2"
+          >
+            {BOTTOM_TABS.map((tab) => {
+              const active = programmeTonight
+                ? tab.label === "Recommend"
+                : programmeHistory
+                  ? tab.label === "More"
+                  : tab.isActive(pathname);
 
-            return (
-              <LinkTab
-                key={tab.href}
-                href={tab.href}
-                label={tab.label}
-                icon={tab.icon}
-                active={active}
-              />
-            );
-          })}
-        </div>
-      </nav>
+              return (
+                <LinkTab
+                  key={tab.href}
+                  href={tab.href}
+                  label={tab.label}
+                  icon={tab.icon}
+                  active={active}
+                />
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

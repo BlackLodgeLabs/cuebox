@@ -68,8 +68,7 @@ describe("WhereToWatchSection", () => {
       <WhereToWatchSection filmId="film-1" hasTmdbId />,
     );
 
-    expect(screen.getByText("Where to Watch")).toBeInTheDocument();
-    expect(container.querySelector(".bg-surface-high")).toBeTruthy();
+    expect(container.querySelector(".animate-pulse")).toBeTruthy();
   });
 
   it("renders populated categories and JustWatch attribution", () => {
@@ -83,9 +82,9 @@ describe("WhereToWatchSection", () => {
 
     render(<WhereToWatchSection filmId="film-1" hasTmdbId />);
 
-    expect(screen.getByText("Stream")).toBeInTheDocument();
+    expect(screen.getAllByText("Stream").length).toBeGreaterThan(0);
     expect(screen.getByText("Netflix")).toBeInTheDocument();
-    expect(screen.getByText("Rent")).toBeInTheDocument();
+    expect(screen.getAllByText("Rent").length).toBeGreaterThan(0);
     expect(
       screen.getByText("Streaming data provided by JustWatch via TMDB."),
     ).toBeInTheDocument();

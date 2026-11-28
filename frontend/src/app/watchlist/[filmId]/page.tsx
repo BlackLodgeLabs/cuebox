@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FilmDetailView } from "@/components/film-detail-view";
 import { WatchReviewDialog } from "@/components/watch-review-dialog";
 import { FilmDetailSkeleton } from "@/components/loading-state";
@@ -19,6 +19,7 @@ function parseWatchlistTab(value: string | null): WatchlistTab | undefined {
 
 export default function WatchlistFilmPage() {
   const params = useParams<{ filmId: string }>();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const filmId = params.filmId;
   const prevStatusRef = useRef<string | null>(null);
@@ -82,6 +83,12 @@ export default function WatchlistFilmPage() {
         onStatusTransition={(status) =>
           statusTransition.mutate({ filmId, status })
         }
+        onRemove={() => {
+          statusTransition.mutate(
+            { filmId, status: "archived" },
+            { onSuccess: () => router.push("/watchlist") },
+          );
+        }}
         onMarkWatched={async () => {
           await statusTransition.mutateAsync({
             filmId,

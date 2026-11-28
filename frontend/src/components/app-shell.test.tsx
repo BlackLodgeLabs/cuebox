@@ -191,6 +191,26 @@ describe("AppShell", () => {
     }
   });
 
+  it("hides the header and tab bar on a film detail screen", () => {
+    navigationState.pathname = "/watchlist/film-1";
+    renderShell();
+
+    expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
+    expect(document.querySelector("header")).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(document.querySelector("main")?.className).toContain("px-0");
+  });
+
+  it("keeps the shell on the watchlist and the add-film route", () => {
+    for (const pathname of ["/watchlist", "/watchlist/add"]) {
+      navigationState.pathname = pathname;
+      const { unmount } = renderShell();
+      expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
+      expect(document.querySelector("header")).not.toBeNull();
+      unmount();
+    }
+  });
+
   it("does not render a FAB control", () => {
     renderShell();
 
