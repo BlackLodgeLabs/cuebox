@@ -104,6 +104,9 @@ export interface FilmSummary {
   runtime: number | null;
   genres: string[];
   backdrop_url: string | null;
+  synopsis?: string | null;
+  tones?: string[];
+  emotional_outcomes?: string[];
   latest_score: number | null;
   created_at: string;
   updated_at: string;

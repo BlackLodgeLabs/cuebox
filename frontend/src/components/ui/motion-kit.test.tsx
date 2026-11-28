@@ -9,9 +9,12 @@ import { Reveal } from "@/components/ui/reveal";
 import { SearchCard } from "@/components/ui/search-card";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Toaster, toast } from "@/components/ui/sonner";
+import { createQueryWrapper } from "@/test/query-wrapper";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
 }));
 
 function mockReduced(matches: boolean) {
@@ -114,10 +117,13 @@ describe("shared motion kit", () => {
   it("opens the search card from 96% over 700ms", async () => {
     mockReduced(false);
     const user = userEvent.setup();
+    const { Wrapper } = createQueryWrapper();
     render(
-      <AppShell>
-        <p>Home</p>
-      </AppShell>,
+      <Wrapper>
+        <AppShell>
+          <p>Home</p>
+        </AppShell>
+      </Wrapper>,
     );
 
     expect(document.querySelector("[data-cb-screen]")).toHaveAttribute("data-fade-ms", "400");
