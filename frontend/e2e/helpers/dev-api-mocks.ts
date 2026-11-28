@@ -21,6 +21,8 @@ const recommendationDetail = {
     tmdb_rating: 7.6,
     rotten_tomatoes_score: 91,
     poster_url: null,
+    backdrop_url: null,
+    genres: ["Horror"],
     explanation: {
       why_it_matches: "Atmospheric folk horror aligns with your profile.",
       most_influential_factors: ["theme fit", "pacing fit"],

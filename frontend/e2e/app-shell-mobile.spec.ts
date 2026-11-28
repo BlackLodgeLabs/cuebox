@@ -221,14 +221,16 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     await expect(header).toHaveClass(/safe-area-inset-top/);
   });
 
-  test("off-tab pages expose ← Home chrome", async ({ page }) => {
+  test("history sits under More, and other off-tab pages keep ← Home", async ({ page }) => {
     await stubShellApis(page);
 
     await page.goto("/history");
-    await expect(page.getByRole("link", { name: /← home/i })).toHaveAttribute(
-      "href",
-      "/",
+    await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
+      "aria-current",
+      "page",
     );
+    await expect(page.getByRole("link", { name: /← home/i })).toHaveCount(0);
 
     await page.goto("/import");
     await expect(page.getByRole("link", { name: /← home/i })).toHaveAttribute(

@@ -77,6 +77,15 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
   });
 
+  it("opens a past night under the wordmark with More selected", () => {
+    navigationState.pathname = "/history/session-1";
+    renderShell();
+
+    expect(screen.getByRole("link", { name: "Cuebox" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Search films" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
+  });
+
   it("routes More to /more", () => {
     renderShell();
 
@@ -94,6 +103,8 @@ describe("AppShell", () => {
     { pathname: "/recommend/abc", active: "Recommend" },
     { pathname: "/more", active: "More" },
     { pathname: "/settings/sync", active: "More" },
+    { pathname: "/history", active: "More" },
+    { pathname: "/history/session-1", active: "More" },
   ] as const)(
     "marks $active active on $pathname",
     ({ pathname, active }) => {
@@ -118,8 +129,8 @@ describe("AppShell", () => {
     },
   );
 
-  it("does not force More active on /import or /history", () => {
-    for (const pathname of ["/import", "/history"] as const) {
+  it("does not force More active on /import", () => {
+    for (const pathname of ["/import"] as const) {
       navigationState.pathname = pathname;
       const { unmount } = renderShell();
 

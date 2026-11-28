@@ -84,7 +84,7 @@ describe("shared motion kit", () => {
       />,
     );
 
-    const dialog = screen.getByRole("alertdialog", { name: "Remove from history" });
+    const dialog = screen.getByRole("alertdialog", { name: "Remove this night?" });
     expect(dialog).toHaveAttribute("data-duration-ms", "400");
     expect(dialog).toHaveAttribute("data-from-scale", "0.92");
     expect(dialog).toHaveAttribute("data-travel", "scale");

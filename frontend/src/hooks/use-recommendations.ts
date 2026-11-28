@@ -1,13 +1,18 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { HISTORY_PAGE_SIZE, useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import {
   getRecommendation,
   listRecommendations,
   postRecommendation,
   deleteRecommendation,
 } from "@/lib/api-client";
-import type { CreateRecommendationRequest, HistoryQueryParams } from "@/types/api";
+import type {
+  CreateRecommendationRequest,
+  HistoryCard,
+  HistoryQueryParams,
+} from "@/types/api";
 
 export function useCreateRecommendation() {
   const queryClient = useQueryClient();
@@ -32,6 +37,16 @@ export function useRecommendationHistory(params?: HistoryQueryParams) {
   return useQuery({
     queryKey: ["recommendations", "history", params],
     queryFn: () => listRecommendations(params),
+  });
+}
+
+export function useInfiniteRecommendationHistory(
+  params: Omit<HistoryQueryParams, "limit" | "offset">,
+) {
+  return useInfiniteScroll<HistoryCard>({
+    queryKey: ["recommendations", "history", params],
+    pageSize: HISTORY_PAGE_SIZE,
+    fetchPage: ({ offset, limit }) => listRecommendations({ ...params, offset, limit }),
   });
 }
 

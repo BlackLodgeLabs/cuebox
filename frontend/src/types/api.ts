@@ -420,7 +420,7 @@ export interface RecommendationDetailResponse extends RecommendationResponse {
   profile_summary?: ProfileSummary;
 }
 
-export type WatchStatusFilter = "watched" | "unwatched";
+export type WatchStatusFilter = "watched" | "unwatched" | "archived";
 
 export interface HistoryCard {
   session_id: string;
