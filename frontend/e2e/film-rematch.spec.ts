@@ -50,11 +50,15 @@ test.describe("Film rematch UI (mocked API)", () => {
     await expect(page.getByText("Updating metadata…")).toBeVisible({
       timeout: 10_000,
     });
-    await expect(
-      page.getByText("Enrichment complete", { exact: true }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Film details updated")).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText("Possession")).toBeVisible();
-    await expect(page.getByText(String(UPDATED_TMDB_ID))).toBeVisible();
+    await page.getByRole("button", { name: "More", exact: true }).click();
+    await expect(page.getByRole("link", { name: /open in tmdb/i })).toHaveAttribute(
+      "href",
+      `https://www.themoviedb.org/movie/${UPDATED_TMDB_ID}`,
+    );
   });
 });
 

@@ -160,6 +160,9 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
       .getByRole("link", { name: "More" })
       .click();
     await expect(page).toHaveURL(/\/more$/);
+    // The 400ms screen fade keeps the previous screen mounted until it
+    // finishes, and that copy already shows the incoming page.
+    await expect(page.getByRole("heading", { name: "More" })).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "More" })).toBeVisible();
     await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
       "aria-current",
@@ -169,12 +172,22 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     const destinations = page.getByRole("navigation", {
       name: "More destinations",
     });
-    await expect(destinations.getByRole("link", { name: /sync/i })).toBeVisible();
-    await expect(destinations.getByRole("link", { name: /import/i })).toBeVisible();
-    await expect(destinations.getByRole("link", { name: /history/i })).toBeVisible();
+    const hrefs = await destinations.getByRole("link").evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")),
+    );
+    expect(hrefs).toEqual([
+      "/history",
+      "/settings/services",
+      "/settings/sync",
+      "/import",
+      "/review",
+    ]);
+    await expect(destinations.getByRole("link", { name: /reviews/i })).toBeVisible();
+    await expect(destinations.getByRole("link", { name: /reviews/i })).not.toContainText(/\d/);
 
     await destinations.getByRole("link", { name: /sync/i }).click();
     await expect(page).toHaveURL(/\/settings\/sync/);
+    await expect(page.getByRole("heading", { name: "Sync settings" })).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "Sync settings" })).toBeVisible();
     await expect(page.getByRole("link", { name: "More" })).toHaveAttribute(
       "aria-current",
@@ -231,6 +244,20 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     );
   });
 
+  test("More shows the pending review count when films are waiting", async ({
+    page,
+  }) => {
+    await stubShellApis(page, 2);
+    await page.goto("/more");
+
+    const reviews = page
+      .getByRole("navigation", { name: "More destinations" })
+      .getByRole("link", { name: /reviews/i });
+    await expect(reviews).toBeVisible();
+    await expect(reviews).toContainText("2");
+    await expect(page.getByRole("link", { name: /Review \d/ })).toHaveCount(0);
+  });
+
   test("header has no review-count badge", async ({ page }) => {
     await stubShellApis(page, 2);
     await page.goto("/");
@@ -249,6 +276,7 @@ test.describe("AppShell mobile chrome (mocked API)", () => {
     await expect(search).toHaveAttribute("placeholder", "Search films");
     await search.click();
     await expect(page).toHaveURL(/\/watchlist/);
+    await expect(page.getByRole("dialog", { name: "Search films" })).toBeVisible();
   });
 
   test("tab hit targets meet 44px minimum", async ({ page }) => {

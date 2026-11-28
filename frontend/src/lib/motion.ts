@@ -228,6 +228,29 @@ export function revealMotion(reduced: boolean) {
   };
 }
 
+/**
+ * Programme settle (README §6.2): 8px rise, 70ms stagger, 300ms each, ease-out.
+ * Reduced motion shows the settled layout at once: no travel.
+ */
+export function programmeSettleMotion(reduced: boolean) {
+  if (reduced) {
+    return {
+      risePx: 0,
+      staggerMs: 0,
+      durationMs: 0,
+      travel: "none" as const,
+      ease: cueboxEase,
+    };
+  }
+  return {
+    risePx: readCssNumber("--cb-reco-settle-rise", 8),
+    staggerMs: readCssNumber("--cb-reco-settle-stagger", 70),
+    durationMs: readCssNumber("--cb-reco-settle-dur", 300),
+    travel: "y" as const,
+    ease: cueboxEase,
+  };
+}
+
 export function batchMotion(reduced: boolean) {
   const fadeMs = readCssNumber("--cb-watchlist-batch-fade", REDUCED_FADE_MS);
   if (reduced) {

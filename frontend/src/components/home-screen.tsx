@@ -17,7 +17,7 @@ import { WhereToWatchSheet } from "@/components/where-to-watch-sheet";
 import { ErrorState } from "@/components/error-state";
 import { useFilms, useHomeActiveFilms } from "@/hooks/use-films";
 import { useFilmWatchProviders } from "@/hooks/use-watch-providers";
-import { featureMetaLine, primaryServiceName } from "@/lib/feature-line";
+import { filmDetailLine, firstServiceName } from "@/lib/programme-format";
 import { fillHomeRows, type HomeRowFilm } from "@/lib/home-rows";
 import { surpriseOffset } from "@/lib/surprise-pick";
 import { todayFeatureOffset, ukCalendarDate } from "@/lib/today-feature";
@@ -190,14 +190,16 @@ function FeatureHero({
   const providers = useFilmWatchProviders(film?.id ?? "", {
     enabled: Boolean(film?.id),
   });
-  const service = primaryServiceName(providers.data?.categories ?? []);
+  const service = firstServiceName(providers.data?.categories ?? []);
   const meta = film
-    ? featureMetaLine({
-        year: film.year,
-        genres: film.genres ?? [],
-        runtime: film.runtime,
+    ? filmDetailLine(
+        {
+          year: film.year,
+          genres: film.genres ?? [],
+          runtime: film.runtime,
+        },
         service,
-      })
+      )
     : "";
 
   return (
@@ -280,14 +282,16 @@ function SurpriseSheet({
   const providers = useFilmWatchProviders(film?.id ?? "", {
     enabled: offset !== null && Boolean(film?.id),
   });
-  const service = primaryServiceName(providers.data?.categories ?? []);
+  const service = firstServiceName(providers.data?.categories ?? []);
   const meta = film
-    ? featureMetaLine({
-        year: film.year,
-        genres: film.genres ?? [],
-        runtime: film.runtime,
+    ? filmDetailLine(
+        {
+          year: film.year,
+          genres: film.genres ?? [],
+          runtime: film.runtime,
+        },
         service,
-      })
+      )
     : "";
 
   return (
