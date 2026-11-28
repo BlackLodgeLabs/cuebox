@@ -221,6 +221,30 @@ describe("WatchlistPageContent", () => {
     expect(await screen.findByText("Could not load watchlist.")).toBeInTheDocument();
   });
 
+  it("applies genre and runtime filters from a Home See all link", async () => {
+    searchParams = new URLSearchParams("genres=Horror,Folk horror&runtime=le_90");
+    renderPage();
+
+    await screen.findByText("239 unwatched");
+    expect(screen.getByRole("tab", { name: "Unwatched" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Filter" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(mockGetFilms).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "active",
+        genres: ["Horror", "Folk horror"],
+        runtime: "le_90",
+        limit: 18,
+        offset: 0,
+      }),
+    );
+  });
+
   it("applies a runtime limit and genre from the filter sheet", async () => {
     const user = userEvent.setup();
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({

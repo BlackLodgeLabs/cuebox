@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Legacy add path — chains through /search → Home focus. */
+/** Legacy add path. Home opens the cmdk card. */
 export default function AddFilmPage() {
-  redirect("/search");
+  redirect("/?focus=search");
 }

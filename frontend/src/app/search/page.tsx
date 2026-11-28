@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Alias — shared picker lives on Home with ?focus=search. */
+/** Legacy search route. Home opens the cmdk card. */
 export default function SearchPage() {
   redirect("/?focus=search");
 }
